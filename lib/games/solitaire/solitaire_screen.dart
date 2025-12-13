@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:shared_preferences/shared_preferences.dart';
-import 'dart:convert';
 import 'dart:math';
+import '../../services/game_save_service.dart';
 
 enum Suit { hearts, diamonds, clubs, spades }
 
@@ -96,10 +95,9 @@ class _SolitaireScreenState extends State<SolitaireScreen> {
   }
 
   Future<void> _checkSavedGame() async {
-    final prefs = await SharedPreferences.getInstance();
-    final savedGame = prefs.getString('solitaire_save');
+    final hasSave = await GameSaveService.hasSavedGame('solitaire');
 
-    if (savedGame != null && mounted) {
+    if (hasSave && mounted) {
       // 저장된 게임이 있으면 다이얼로그 표시
       WidgetsBinding.instance.addPostFrameCallback((_) {
         _showContinueDialog();
@@ -171,8 +169,6 @@ class _SolitaireScreenState extends State<SolitaireScreen> {
   Future<void> _saveGame() async {
     if (isGameWon) return; // 승리한 게임은 저장하지 않음
 
-    final prefs = await SharedPreferences.getInstance();
-
     final gameState = {
       'tableau': tableau.map((col) => col.map((c) => c.toJson()).toList()).toList(),
       'foundations': foundations.map((col) => col.map((c) => c.toJson()).toList()).toList(),
@@ -181,17 +177,14 @@ class _SolitaireScreenState extends State<SolitaireScreen> {
       'moves': moves,
     };
 
-    await prefs.setString('solitaire_save', jsonEncode(gameState));
+    await GameSaveService.saveGame('solitaire', gameState);
   }
 
   Future<void> _loadGame() async {
-    final prefs = await SharedPreferences.getInstance();
-    final savedGame = prefs.getString('solitaire_save');
+    final gameState = await GameSaveService.loadGame('solitaire');
 
-    if (savedGame != null) {
+    if (gameState != null) {
       try {
-        final gameState = jsonDecode(savedGame) as Map<String, dynamic>;
-
         setState(() {
           tableau = (gameState['tableau'] as List)
               .map((col) => (col as List)
@@ -228,8 +221,7 @@ class _SolitaireScreenState extends State<SolitaireScreen> {
   }
 
   Future<void> _clearSavedGame() async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.remove('solitaire_save');
+    await GameSaveService.clearSave();
   }
 
   void _initGame() {
