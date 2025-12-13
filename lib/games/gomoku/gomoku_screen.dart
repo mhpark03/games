@@ -1,4 +1,6 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 enum Stone { none, black, white }
 
@@ -10,8 +12,35 @@ enum GameMode {
 
 class GomokuScreen extends StatefulWidget {
   final GameMode gameMode;
+  final bool resumeGame; // 이어하기 여부
 
-  const GomokuScreen({super.key, this.gameMode = GameMode.vsComputerWhite});
+  const GomokuScreen({
+    super.key,
+    this.gameMode = GameMode.vsComputerWhite,
+    this.resumeGame = false,
+  });
+
+  // 저장된 게임이 있는지 확인
+  static Future<bool> hasSavedGame() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.containsKey('gomoku_board');
+  }
+
+  // 저장된 게임 모드 가져오기
+  static Future<GameMode?> getSavedGameMode() async {
+    final prefs = await SharedPreferences.getInstance();
+    final modeIndex = prefs.getInt('gomoku_gameMode');
+    if (modeIndex == null) return null;
+    return GameMode.values[modeIndex];
+  }
+
+  // 저장된 게임 삭제
+  static Future<void> clearSavedGame() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.remove('gomoku_board');
+    await prefs.remove('gomoku_isBlackTurn');
+    await prefs.remove('gomoku_gameMode');
+  }
 
   @override
   State<GomokuScreen> createState() => _GomokuScreenState();
@@ -41,7 +70,11 @@ class _GomokuScreenState extends State<GomokuScreen> {
   @override
   void initState() {
     super.initState();
-    _initBoard();
+    if (widget.resumeGame) {
+      _loadGame();
+    } else {
+      _initBoard();
+    }
   }
 
   void _initBoard() {
@@ -57,6 +90,55 @@ class _GomokuScreenState extends State<GomokuScreen> {
     // 컴퓨터(흑) 모드일 때 컴퓨터가 먼저 둠
     if (widget.gameMode == GameMode.vsComputerBlack) {
       gameMessage = '컴퓨터가 생각 중...';
+      Future.delayed(const Duration(milliseconds: 500), () {
+        if (mounted) _computerMove();
+      });
+    }
+  }
+
+  // 게임 상태 저장
+  Future<void> _saveGame() async {
+    if (gameOver) {
+      await GomokuScreen.clearSavedGame();
+      return;
+    }
+
+    final prefs = await SharedPreferences.getInstance();
+
+    // 보드 상태를 2D 리스트로 변환
+    final boardData = board.map((row) => row.map((s) => s.index).toList()).toList();
+    await prefs.setString('gomoku_board', jsonEncode(boardData));
+    await prefs.setBool('gomoku_isBlackTurn', isBlackTurn);
+    await prefs.setInt('gomoku_gameMode', widget.gameMode.index);
+  }
+
+  // 저장된 게임 불러오기
+  Future<void> _loadGame() async {
+    final prefs = await SharedPreferences.getInstance();
+    final boardJson = prefs.getString('gomoku_board');
+
+    if (boardJson == null) {
+      _initBoard();
+      return;
+    }
+
+    final boardData = jsonDecode(boardJson) as List;
+    board = boardData
+        .map<List<Stone>>((row) => (row as List)
+            .map<Stone>((s) => Stone.values[s as int])
+            .toList())
+        .toList();
+
+    isBlackTurn = prefs.getBool('gomoku_isBlackTurn') ?? true;
+    gameOver = false;
+    winningStones = null;
+
+    setState(() {
+      _updateMessage();
+    });
+
+    // 컴퓨터 차례인 경우 컴퓨터가 두도록
+    if (!isUserTurn && widget.gameMode != GameMode.vsPerson) {
       Future.delayed(const Duration(milliseconds: 500), () {
         if (mounted) _computerMove();
       });
@@ -80,6 +162,7 @@ class _GomokuScreenState extends State<GomokuScreen> {
   }
 
   void _resetGame() {
+    GomokuScreen.clearSavedGame(); // 저장된 게임 삭제
     setState(() {
       _initBoard();
     });
@@ -95,16 +178,21 @@ class _GomokuScreenState extends State<GomokuScreen> {
       if (_checkWin(row, col, stone)) {
         gameOver = true;
         _setWinMessage(stone);
+        _saveGame(); // 게임 종료 시 저장 데이터 삭제
         return;
       }
       if (_isBoardFull()) {
         gameOver = true;
         gameMessage = '무승부입니다!';
+        _saveGame(); // 게임 종료 시 저장 데이터 삭제
         return;
       }
       isBlackTurn = !isBlackTurn;
       _updateMessage();
     });
+
+    // 게임 상태 저장
+    _saveGame();
 
     // 컴퓨터 모드이고 게임이 끝나지 않았으면 컴퓨터 차례
     if (!gameOver && widget.gameMode != GameMode.vsPerson) {
@@ -147,16 +235,21 @@ class _GomokuScreenState extends State<GomokuScreen> {
         if (_checkWin(move[0], move[1], computerStone)) {
           gameOver = true;
           _setWinMessage(computerStone);
+          _saveGame(); // 게임 종료 시 저장 데이터 삭제
           return;
         }
         if (_isBoardFull()) {
           gameOver = true;
           gameMessage = '무승부입니다!';
+          _saveGame(); // 게임 종료 시 저장 데이터 삭제
           return;
         }
         isBlackTurn = !isBlackTurn;
         _updateMessage();
       });
+
+      // 게임 상태 저장
+      _saveGame();
     }
   }
 
