@@ -1091,25 +1091,35 @@ class _SolitaireScreenState extends State<SolitaireScreen> {
                 topRight: Radius.circular(6),
               )
             : BorderRadius.circular(6),
-        border: Border.all(color: Colors.white, width: 1),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withAlpha(51),
-            blurRadius: 2,
-            offset: const Offset(1, 1),
-          ),
-        ],
+        border: showPartial
+            ? const Border(
+                top: BorderSide(color: Colors.white, width: 1),
+                left: BorderSide(color: Colors.white, width: 1),
+                right: BorderSide(color: Colors.white, width: 1),
+              )
+            : Border.all(color: Colors.white, width: 1),
+        boxShadow: showPartial
+            ? null
+            : [
+                BoxShadow(
+                  color: Colors.black.withAlpha(51),
+                  blurRadius: 2,
+                  offset: const Offset(1, 1),
+                ),
+              ],
       ),
-      child: Center(
-        child: Container(
-          width: width - 10,
-          height: showPartial ? 10 : height - 10,
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(4),
-            border: Border.all(color: Colors.white24),
-          ),
-        ),
-      ),
+      child: showPartial
+          ? null
+          : Center(
+              child: Container(
+                width: width - 10,
+                height: height - 10,
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(4),
+                  border: Border.all(color: Colors.white24),
+                ),
+              ),
+            ),
     );
   }
 
