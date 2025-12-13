@@ -706,17 +706,18 @@ class _SolitaireScreenState extends State<SolitaireScreen> {
               final card = cards[cardIndex];
               final isLast = cardIndex == cards.length - 1;
 
-              // 드래그 중인 카드인지 확인
+              // 드래그 중인 카드인지 확인 (첫 번째 카드 제외 - Draggable이 관리)
               final isDragging = draggedCards != null &&
                   dragSource == 'tableau_$columnIndex' &&
-                  draggedCards!.contains(card);
+                  draggedCards!.contains(card) &&
+                  draggedCards!.first != card;  // 첫 번째 카드는 Draggable이 처리
 
               // 앞면 카드는 드래그 가능
               if (card.faceUp) {
                 // 이 카드부터 끝까지의 카드들
                 final dragCards = cards.sublist(cardIndex);
 
-                // 드래그 중인 카드는 숨김
+                // 드래그 중인 카드는 숨김 (첫 번째 카드 제외)
                 if (isDragging) {
                   return SizedBox(
                     height: isLast ? 70 : 20,
