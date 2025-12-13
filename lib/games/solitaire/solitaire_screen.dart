@@ -831,7 +831,12 @@ class _SolitaireScreenState extends State<SolitaireScreen> {
       height: height,
       decoration: BoxDecoration(
         color: Colors.blue.shade800,
-        borderRadius: BorderRadius.circular(6),
+        borderRadius: showPartial
+            ? const BorderRadius.only(
+                topLeft: Radius.circular(6),
+                topRight: Radius.circular(6),
+              )
+            : BorderRadius.circular(6),
         border: Border.all(color: Colors.white, width: 1),
         boxShadow: [
           BoxShadow(
@@ -865,7 +870,12 @@ class _SolitaireScreenState extends State<SolitaireScreen> {
       height: height,
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(6),
+        borderRadius: showPartial
+            ? const BorderRadius.only(
+                topLeft: Radius.circular(6),
+                topRight: Radius.circular(6),
+              )
+            : BorderRadius.circular(6),
         border: Border.all(color: Colors.grey.shade400),
         boxShadow: [
           BoxShadow(
