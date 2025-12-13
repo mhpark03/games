@@ -526,6 +526,67 @@ class _SolitaireScreenState extends State<SolitaireScreen> {
     }
   }
 
+  // 모든 카드가 열려있는지 확인 (자동 완료 가능 여부)
+  bool _canAutoComplete() {
+    // 스톡에 카드가 남아있으면 불가
+    if (stock.isNotEmpty) return false;
+
+    // 웨이스트에 카드가 남아있으면 불가
+    if (waste.isNotEmpty) return false;
+
+    // 테이블의 모든 카드가 앞면이어야 함
+    for (var column in tableau) {
+      for (var card in column) {
+        if (!card.faceUp) return false;
+      }
+    }
+
+    return true;
+  }
+
+  // 자동 완료 체크 및 실행
+  void _checkAutoComplete() {
+    if (!_canAutoComplete()) return;
+
+    // 자동 완료 애니메이션 실행
+    _runAutoComplete();
+  }
+
+  // 자동 완료 실행
+  void _runAutoComplete() async {
+    while (!isGameWon) {
+      bool moved = false;
+
+      // 테이블에서 파운데이션으로 이동할 수 있는 카드 찾기
+      for (int col = 0; col < 7; col++) {
+        if (tableau[col].isEmpty) continue;
+
+        final card = tableau[col].last;
+
+        // 파운데이션에 놓을 수 있는지 확인
+        for (int f = 0; f < 4; f++) {
+          if (_canPlaceOnFoundation(card, f)) {
+            setState(() {
+              tableau[col].removeLast();
+              foundations[f].add(card);
+              moves++;
+            });
+            moved = true;
+            await Future.delayed(const Duration(milliseconds: 100));
+            _checkWin();
+            break;
+          }
+        }
+
+        if (moved) break;
+      }
+
+      if (!moved) break; // 더 이상 이동할 카드가 없으면 종료
+    }
+
+    _saveGame();
+  }
+
   void _onCardDragStart(List<PlayingCard> cards, String source, int? sourceIndex) {
     setState(() {
       draggedCards = cards;
@@ -583,6 +644,11 @@ class _SolitaireScreenState extends State<SolitaireScreen> {
 
       _onCardDragEnd();
     });
+
+    // 이동 후 자동 완료 체크
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _checkAutoComplete();
+    });
   }
 
   void _removeCardsFromSource() {
@@ -616,6 +682,9 @@ class _SolitaireScreenState extends State<SolitaireScreen> {
           _checkWin();
         });
         _saveGame();
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          _checkAutoComplete();
+        });
         return;
       }
     }
@@ -640,6 +709,9 @@ class _SolitaireScreenState extends State<SolitaireScreen> {
           moves++;
         });
         _saveGame();
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          _checkAutoComplete();
+        });
         return;
       }
     }
@@ -673,6 +745,9 @@ class _SolitaireScreenState extends State<SolitaireScreen> {
           moves++;
         });
         _saveGame();
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          _checkAutoComplete();
+        });
         return;
       }
     }
