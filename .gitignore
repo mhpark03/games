@@ -43,3 +43,14 @@ app.*.map.json
 /android/app/debug
 /android/app/profile
 /android/app/release
+
+# API Keys and secrets (IMPORTANT: Never commit these!)
+*.env
+.env.*
+secrets.json
+api_keys.json
+
+# Build scripts with API keys
+build_apk.bat
+build_apk.sh
+build_apk.ps1

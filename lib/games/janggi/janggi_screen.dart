@@ -85,7 +85,20 @@ class _JanggiScreenState extends State<JanggiScreen> {
     });
   }
 
+  // 빌드 시 주입된 API 키 (--dart-define=GEMINI_API_KEY=xxx)
+  static const String _buildTimeApiKey = String.fromEnvironment('GEMINI_API_KEY');
+
   Future<void> _loadGeminiApiKey() async {
+    // 1. 빌드 시 주입된 API 키 우선 사용
+    if (_buildTimeApiKey.isNotEmpty) {
+      setState(() {
+        geminiApiKey = _buildTimeApiKey;
+        geminiService = GeminiService(_buildTimeApiKey);
+      });
+      return;
+    }
+
+    // 2. SharedPreferences에서 저장된 키 사용
     final prefs = await SharedPreferences.getInstance();
     final apiKey = prefs.getString('gemini_api_key');
     if (apiKey != null && apiKey.isNotEmpty) {
