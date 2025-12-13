@@ -184,6 +184,7 @@ class _SolitaireScreenState extends State<SolitaireScreen> {
         );
       },
     ).then((selectedCount) {
+      debugPrint('🎴 Dialog returned: selectedCount = $selectedCount');
       if (selectedCount != null && mounted) {
         _startNewGame(selectedCount);
       }
@@ -191,10 +192,13 @@ class _SolitaireScreenState extends State<SolitaireScreen> {
   }
 
   void _startNewGame(int count) {
+    debugPrint('🎴 _startNewGame called with count = $count');
     setState(() {
       drawCount = count;
+      debugPrint('🎴 drawCount set to $drawCount');
       _initGame();
     });
+    debugPrint('🎴 After setState, drawCount = $drawCount');
     _saveGame();
   }
 
@@ -324,6 +328,7 @@ class _SolitaireScreenState extends State<SolitaireScreen> {
   }
 
   void _initGame() {
+    debugPrint('🎴 _initGame called, drawCount before = $drawCount');
     // 항상 풀 수 있는 게임 생성 (역방향 딜 방식)
     _generateSolvableGame();
 
@@ -333,6 +338,7 @@ class _SolitaireScreenState extends State<SolitaireScreen> {
     dragSource = null;
     dragSourceIndex = null;
     _undoHistory = [];
+    debugPrint('🎴 _initGame finished, drawCount after = $drawCount');
   }
 
   // 역방향 딜로 항상 풀 수 있는 게임 생성
@@ -474,6 +480,7 @@ class _SolitaireScreenState extends State<SolitaireScreen> {
   }
 
   void _drawFromStock() {
+    debugPrint('🎴 _drawFromStock called, drawCount = $drawCount');
     _saveStateToHistory();
     setState(() {
       if (stock.isEmpty) {
@@ -488,6 +495,7 @@ class _SolitaireScreenState extends State<SolitaireScreen> {
       } else {
         // 스톡에서 drawCount장 뽑기
         int count = min(drawCount, stock.length);
+        debugPrint('🎴 Drawing $count cards (drawCount=$drawCount, stock.length=${stock.length})');
         for (int i = 0; i < count; i++) {
           final card = stock.removeLast();
           card.faceUp = true;
