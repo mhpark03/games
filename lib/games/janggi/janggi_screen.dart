@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import '../../services/gemini_service.dart';
 
 enum JanggiPieceType { gung, cha, po, ma, sang, sa, byung }
 
@@ -59,6 +61,11 @@ class _JanggiScreenState extends State<JanggiScreen> {
   bool isThinking = false;
   bool isInCheck = false; // 현재 턴 플레이어가 장군 상태인지
 
+  // Gemini AI 설정
+  String? geminiApiKey;
+  GeminiService? geminiService;
+  bool useGeminiAI = true;
+
   // 마상 배치 설정
   bool isSetupPhase = true;
   MaSangPosition choLeftPosition = MaSangPosition.maSang;
@@ -70,11 +77,168 @@ class _JanggiScreenState extends State<JanggiScreen> {
   void initState() {
     super.initState();
     board = List.generate(10, (_) => List.filled(9, null));
+    _loadGeminiApiKey();
 
     // 게임 시작 시 마상 배치 선택 다이얼로그 표시
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _showSetupDialog();
     });
+  }
+
+  Future<void> _loadGeminiApiKey() async {
+    final prefs = await SharedPreferences.getInstance();
+    final apiKey = prefs.getString('gemini_api_key');
+    if (apiKey != null && apiKey.isNotEmpty) {
+      setState(() {
+        geminiApiKey = apiKey;
+        geminiService = GeminiService(apiKey);
+      });
+    }
+  }
+
+  Future<void> _saveGeminiApiKey(String apiKey) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString('gemini_api_key', apiKey);
+    setState(() {
+      geminiApiKey = apiKey;
+      geminiService = apiKey.isNotEmpty ? GeminiService(apiKey) : null;
+    });
+  }
+
+  void _showAISettingsDialog() {
+    final controller = TextEditingController(text: geminiApiKey ?? '');
+
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return StatefulBuilder(
+          builder: (context, setDialogState) {
+            return AlertDialog(
+              backgroundColor: const Color(0xFFF5DEB3),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16),
+                side: const BorderSide(color: Color(0xFF8B4513), width: 3),
+              ),
+              title: const Row(
+                children: [
+                  Icon(Icons.smart_toy, color: Color(0xFF8B4513)),
+                  SizedBox(width: 8),
+                  Text(
+                    'Gemini AI 설정',
+                    style: TextStyle(
+                      color: Color(0xFF8B4513),
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ],
+              ),
+              content: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Gemini API 키를 입력하면 더 똑똑한 AI와 대국할 수 있습니다.',
+                      style: TextStyle(
+                        fontSize: 13,
+                        color: Colors.grey.shade700,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      'API 키는 Google AI Studio에서 무료로 발급받을 수 있습니다:\nhttps://aistudio.google.com/apikey',
+                      style: TextStyle(
+                        fontSize: 11,
+                        color: Colors.blue.shade700,
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    TextField(
+                      controller: controller,
+                      decoration: InputDecoration(
+                        labelText: 'Gemini API Key',
+                        hintText: 'AIza...',
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        filled: true,
+                        fillColor: Colors.white,
+                      ),
+                      obscureText: true,
+                    ),
+                    const SizedBox(height: 16),
+                    Row(
+                      children: [
+                        const Text('Gemini AI 사용'),
+                        const Spacer(),
+                        Switch(
+                          value: useGeminiAI,
+                          onChanged: (value) {
+                            setDialogState(() {
+                              useGeminiAI = value;
+                            });
+                            setState(() {});
+                          },
+                          activeColor: const Color(0xFF8B4513),
+                        ),
+                      ],
+                    ),
+                    if (geminiService != null)
+                      Container(
+                        padding: const EdgeInsets.all(8),
+                        decoration: BoxDecoration(
+                          color: Colors.green.shade100,
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: const Row(
+                          children: [
+                            Icon(Icons.check_circle, color: Colors.green, size: 18),
+                            SizedBox(width: 8),
+                            Text(
+                              'API 키가 설정됨',
+                              style: TextStyle(color: Colors.green, fontSize: 13),
+                            ),
+                          ],
+                        ),
+                      ),
+                  ],
+                ),
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(context),
+                  child: const Text(
+                    '취소',
+                    style: TextStyle(color: Color(0xFF8B4513)),
+                  ),
+                ),
+                ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFF8B4513),
+                    foregroundColor: Colors.white,
+                  ),
+                  onPressed: () {
+                    _saveGeminiApiKey(controller.text.trim());
+                    Navigator.pop(context);
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text(
+                          controller.text.trim().isNotEmpty
+                              ? 'Gemini AI가 활성화되었습니다'
+                              : 'API 키가 제거되었습니다',
+                        ),
+                        backgroundColor: const Color(0xFF8B4513),
+                      ),
+                    );
+                  },
+                  child: const Text('저장'),
+                ),
+              ],
+            );
+          },
+        );
+      },
+    );
   }
 
   void _startGame() {
@@ -984,63 +1148,85 @@ class _JanggiScreenState extends State<JanggiScreen> {
     }
   }
 
-  void _makeComputerMove() {
+  void _makeComputerMove() async {
     if (isGameOver) return;
 
     setState(() {
       isThinking = true;
     });
 
-    Future.delayed(const Duration(milliseconds: 500), () {
-      JanggiColor computerColor =
-          widget.gameMode == JanggiGameMode.vsCho
-              ? JanggiColor.cho
-              : JanggiColor.han;
+    JanggiColor computerColor =
+        widget.gameMode == JanggiGameMode.vsCho
+            ? JanggiColor.cho
+            : JanggiColor.han;
 
-      List<Map<String, dynamic>> allMoves = [];
+    List<Map<String, dynamic>> allMoves = [];
 
-      // 모든 합법적인 수 수집 (장군 회피 포함)
-      for (int r = 0; r < 10; r++) {
-        for (int c = 0; c < 9; c++) {
-          final piece = board[r][c];
-          if (piece != null && piece.color == computerColor) {
-            final moves = _getLegalMoves(r, c); // 합법적인 수만 사용
-            for (var move in moves) {
-              int score = _evaluateMove(r, c, move[0], move[1], piece, computerColor);
-              allMoves.add({
-                'fromRow': r,
-                'fromCol': c,
-                'toRow': move[0],
-                'toCol': move[1],
-                'score': score,
-              });
-            }
+    // 모든 합법적인 수 수집 (장군 회피 포함)
+    for (int r = 0; r < 10; r++) {
+      for (int c = 0; c < 9; c++) {
+        final piece = board[r][c];
+        if (piece != null && piece.color == computerColor) {
+          final moves = _getLegalMoves(r, c); // 합법적인 수만 사용
+          for (var move in moves) {
+            int score = _evaluateMove(r, c, move[0], move[1], piece, computerColor);
+            allMoves.add({
+              'fromRow': r,
+              'fromCol': c,
+              'toRow': move[0],
+              'toCol': move[1],
+              'score': score,
+            });
           }
         }
       }
+    }
 
-      if (allMoves.isEmpty) {
-        setState(() {
-          isThinking = false;
-          isGameOver = true;
-          winner = computerColor == JanggiColor.cho ? '한' : '초';
-        });
-        return;
+    if (allMoves.isEmpty) {
+      setState(() {
+        isThinking = false;
+        isGameOver = true;
+        winner = computerColor == JanggiColor.cho ? '한' : '초';
+      });
+      return;
+    }
+
+    Map<String, dynamic>? bestMove;
+
+    // Gemini AI 사용 시도
+    if (useGeminiAI && geminiService != null) {
+      try {
+        final geminiMove = await geminiService!.getBestMove(
+          board: board,
+          currentPlayer: computerColor == JanggiColor.cho ? 'cho' : 'han',
+          legalMoves: allMoves,
+        );
+
+        if (geminiMove != null) {
+          bestMove = geminiMove;
+        }
+      } catch (e) {
+        // Gemini 실패 시 로컬 AI 사용
       }
+    }
 
+    // Gemini가 실패하거나 비활성화된 경우 로컬 AI 사용
+    if (bestMove == null) {
       // 최고 점수 수 선택
       allMoves.sort((a, b) => b['score'].compareTo(a['score']));
 
       // 상위 수 중에서 랜덤 선택 (같은 점수인 경우)
       int topScore = allMoves[0]['score'];
       var topMoves = allMoves.where((m) => m['score'] == topScore).toList();
-      var bestMove = topMoves[(topMoves.length * (DateTime.now().millisecond / 1000)).floor() % topMoves.length];
+      bestMove = topMoves[(topMoves.length * (DateTime.now().millisecond / 1000)).floor() % topMoves.length];
+    }
 
-      setState(() {
-        isThinking = false;
-        _movePiece(
-            bestMove['fromRow'], bestMove['fromCol'], bestMove['toRow'], bestMove['toCol']);
-      });
+    if (!mounted) return;
+
+    setState(() {
+      isThinking = false;
+      _movePiece(
+          bestMove!['fromRow'], bestMove['fromCol'], bestMove['toRow'], bestMove['toCol']);
     });
   }
 
@@ -1149,6 +1335,16 @@ class _JanggiScreenState extends State<JanggiScreen> {
         backgroundColor: const Color(0xFFD2691E),
         foregroundColor: Colors.white,
         actions: [
+          // Gemini AI 상태 표시
+          if (widget.gameMode != JanggiGameMode.vsHuman)
+            IconButton(
+              icon: Icon(
+                geminiService != null ? Icons.smart_toy : Icons.smart_toy_outlined,
+                color: geminiService != null ? Colors.lightGreenAccent : Colors.white70,
+              ),
+              onPressed: _showAISettingsDialog,
+              tooltip: geminiService != null ? 'Gemini AI 활성화됨' : 'AI 설정',
+            ),
           IconButton(
             icon: const Icon(Icons.refresh),
             onPressed: _resetGame,
@@ -1189,7 +1385,12 @@ class _JanggiScreenState extends State<JanggiScreen> {
       status = '$winner 승리!';
       bgColor = Colors.purple;
     } else if (isThinking) {
-      status = '컴퓨터 생각 중...';
+      status = useGeminiAI && geminiService != null
+          ? 'Gemini AI 생각 중...'
+          : '컴퓨터 생각 중...';
+      bgColor = useGeminiAI && geminiService != null
+          ? Colors.indigo
+          : const Color(0xFFD2691E);
     } else if (isInCheck) {
       status = '${currentTurn == JanggiColor.cho ? "초" : "한"} 장군!';
       bgColor = Colors.red.shade700;
