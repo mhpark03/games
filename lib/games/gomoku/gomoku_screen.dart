@@ -2,8 +2,16 @@ import 'package:flutter/material.dart';
 
 enum Stone { none, black, white }
 
+enum GameMode {
+  vsComputerWhite, // 사용자 흑돌(선공), 컴퓨터 백돌
+  vsComputerBlack, // 컴퓨터 흑돌(선공), 사용자 백돌
+  vsPerson,        // 2인 플레이
+}
+
 class GomokuScreen extends StatefulWidget {
-  const GomokuScreen({super.key});
+  final GameMode gameMode;
+
+  const GomokuScreen({super.key, this.gameMode = GameMode.vsComputerWhite});
 
   @override
   State<GomokuScreen> createState() => _GomokuScreenState();
@@ -12,10 +20,23 @@ class GomokuScreen extends StatefulWidget {
 class _GomokuScreenState extends State<GomokuScreen> {
   static const int boardSize = 15;
   late List<List<Stone>> board;
-  bool isPlayerTurn = true;
+  bool isBlackTurn = true; // 흑돌 차례 여부
   bool gameOver = false;
-  String gameMessage = '당신의 차례입니다 (흑돌)';
+  String gameMessage = '';
   List<List<int>>? winningStones;
+
+  // 현재 플레이어가 두는 돌 색상
+  Stone get currentPlayerStone => isBlackTurn ? Stone.black : Stone.white;
+
+  // 사용자가 흑돌인지 여부 (vsComputerBlack에서는 사용자가 백돌)
+  bool get isUserBlack => widget.gameMode != GameMode.vsComputerBlack;
+
+  // 현재 차례가 사용자 차례인지 여부
+  bool get isUserTurn {
+    if (widget.gameMode == GameMode.vsPerson) return true; // 2인 플레이는 항상 사용자
+    if (widget.gameMode == GameMode.vsComputerWhite) return isBlackTurn; // 사용자가 흑돌
+    return !isBlackTurn; // vsComputerBlack: 사용자가 백돌
+  }
 
   @override
   void initState() {
@@ -28,10 +49,34 @@ class _GomokuScreenState extends State<GomokuScreen> {
       boardSize,
       (_) => List.generate(boardSize, (_) => Stone.none),
     );
-    isPlayerTurn = true;
+    isBlackTurn = true;
     gameOver = false;
-    gameMessage = '당신의 차례입니다 (흑돌)';
     winningStones = null;
+    _updateMessage();
+
+    // 컴퓨터(흑) 모드일 때 컴퓨터가 먼저 둠
+    if (widget.gameMode == GameMode.vsComputerBlack) {
+      gameMessage = '컴퓨터가 생각 중...';
+      Future.delayed(const Duration(milliseconds: 500), () {
+        if (mounted) _computerMove();
+      });
+    }
+  }
+
+  void _updateMessage() {
+    if (gameOver) return;
+
+    switch (widget.gameMode) {
+      case GameMode.vsComputerWhite:
+        gameMessage = isBlackTurn ? '당신의 차례입니다 (흑돌)' : '컴퓨터가 생각 중...';
+        break;
+      case GameMode.vsComputerBlack:
+        gameMessage = isBlackTurn ? '컴퓨터가 생각 중...' : '당신의 차례입니다 (백돌)';
+        break;
+      case GameMode.vsPerson:
+        gameMessage = isBlackTurn ? '흑돌 차례입니다' : '백돌 차례입니다';
+        break;
+    }
   }
 
   void _resetGame() {
@@ -41,13 +86,15 @@ class _GomokuScreenState extends State<GomokuScreen> {
   }
 
   void _placeStone(int row, int col) {
-    if (gameOver || board[row][col] != Stone.none || !isPlayerTurn) return;
+    if (gameOver || board[row][col] != Stone.none || !isUserTurn) return;
+
+    final stone = currentPlayerStone;
 
     setState(() {
-      board[row][col] = Stone.black;
-      if (_checkWin(row, col, Stone.black)) {
+      board[row][col] = stone;
+      if (_checkWin(row, col, stone)) {
         gameOver = true;
-        gameMessage = '축하합니다! 당신이 이겼습니다!';
+        _setWinMessage(stone);
         return;
       }
       if (_isBoardFull()) {
@@ -55,27 +102,51 @@ class _GomokuScreenState extends State<GomokuScreen> {
         gameMessage = '무승부입니다!';
         return;
       }
-      isPlayerTurn = false;
-      gameMessage = '컴퓨터가 생각 중...';
+      isBlackTurn = !isBlackTurn;
+      _updateMessage();
     });
 
-    if (!gameOver) {
+    // 컴퓨터 모드이고 게임이 끝나지 않았으면 컴퓨터 차례
+    if (!gameOver && widget.gameMode != GameMode.vsPerson) {
       Future.delayed(const Duration(milliseconds: 500), () {
-        _computerMove();
+        if (mounted) _computerMove();
       });
+    }
+  }
+
+  void _setWinMessage(Stone winner) {
+    switch (widget.gameMode) {
+      case GameMode.vsComputerWhite:
+        gameMessage = winner == Stone.black
+            ? '축하합니다! 당신이 이겼습니다!'
+            : '컴퓨터가 이겼습니다!';
+        break;
+      case GameMode.vsComputerBlack:
+        gameMessage = winner == Stone.white
+            ? '축하합니다! 당신이 이겼습니다!'
+            : '컴퓨터가 이겼습니다!';
+        break;
+      case GameMode.vsPerson:
+        gameMessage = winner == Stone.black
+            ? '흑돌이 이겼습니다!'
+            : '백돌이 이겼습니다!';
+        break;
     }
   }
 
   void _computerMove() {
     if (gameOver) return;
 
-    final move = _findBestMove();
+    final computerStone = currentPlayerStone;
+    final userStone = computerStone == Stone.black ? Stone.white : Stone.black;
+    final move = _findBestMove(computerStone, userStone);
+
     if (move != null) {
       setState(() {
-        board[move[0]][move[1]] = Stone.white;
-        if (_checkWin(move[0], move[1], Stone.white)) {
+        board[move[0]][move[1]] = computerStone;
+        if (_checkWin(move[0], move[1], computerStone)) {
           gameOver = true;
-          gameMessage = '컴퓨터가 이겼습니다!';
+          _setWinMessage(computerStone);
           return;
         }
         if (_isBoardFull()) {
@@ -83,21 +154,22 @@ class _GomokuScreenState extends State<GomokuScreen> {
           gameMessage = '무승부입니다!';
           return;
         }
-        isPlayerTurn = true;
-        gameMessage = '당신의 차례입니다 (흑돌)';
+        isBlackTurn = !isBlackTurn;
+        _updateMessage();
       });
     }
   }
 
-  List<int>? _findBestMove() {
+  List<int>? _findBestMove(Stone computerStone, Stone userStone) {
     int bestScore = -1;
     List<int>? bestMove;
 
+    // 컴퓨터가 이길 수 있는지 확인
     for (int i = 0; i < boardSize; i++) {
       for (int j = 0; j < boardSize; j++) {
         if (board[i][j] == Stone.none) {
-          board[i][j] = Stone.white;
-          if (_checkWinWithoutHighlight(i, j, Stone.white)) {
+          board[i][j] = computerStone;
+          if (_checkWinWithoutHighlight(i, j, computerStone)) {
             board[i][j] = Stone.none;
             return [i, j];
           }
@@ -106,11 +178,12 @@ class _GomokuScreenState extends State<GomokuScreen> {
       }
     }
 
+    // 사용자가 이기는 것을 막기
     for (int i = 0; i < boardSize; i++) {
       for (int j = 0; j < boardSize; j++) {
         if (board[i][j] == Stone.none) {
-          board[i][j] = Stone.black;
-          if (_checkWinWithoutHighlight(i, j, Stone.black)) {
+          board[i][j] = userStone;
+          if (_checkWinWithoutHighlight(i, j, userStone)) {
             board[i][j] = Stone.none;
             return [i, j];
           }
@@ -119,10 +192,11 @@ class _GomokuScreenState extends State<GomokuScreen> {
       }
     }
 
+    // 최선의 위치 찾기
     for (int i = 0; i < boardSize; i++) {
       for (int j = 0; j < boardSize; j++) {
         if (board[i][j] == Stone.none) {
-          int score = _evaluatePosition(i, j);
+          int score = _evaluatePositionForStone(i, j, computerStone, userStone);
           if (score > bestScore) {
             bestScore = score;
             bestMove = [i, j];
@@ -134,7 +208,7 @@ class _GomokuScreenState extends State<GomokuScreen> {
     return bestMove;
   }
 
-  int _evaluatePosition(int row, int col) {
+  int _evaluatePositionForStone(int row, int col, Stone computerStone, Stone userStone) {
     int score = 0;
 
     int centerDist = (row - boardSize ~/ 2).abs() + (col - boardSize ~/ 2).abs();
@@ -153,8 +227,8 @@ class _GomokuScreenState extends State<GomokuScreen> {
       }
     }
 
-    score += _evaluateLineScore(row, col, Stone.white) * 3;
-    score += _evaluateLineScore(row, col, Stone.black) * 2;
+    score += _evaluateLineScore(row, col, computerStone) * 3;
+    score += _evaluateLineScore(row, col, userStone) * 2;
 
     return score;
   }
@@ -425,11 +499,7 @@ class _GomokuScreenState extends State<GomokuScreen> {
               padding: const EdgeInsets.all(16.0),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  _buildLegend(Colors.black, '당신 (흑)'),
-                  const SizedBox(width: 32),
-                  _buildLegend(Colors.white, '컴퓨터 (백)'),
-                ],
+                children: _buildLegendByMode(),
               ),
             ),
           ],
@@ -470,6 +540,29 @@ class _GomokuScreenState extends State<GomokuScreen> {
         ),
       ),
     );
+  }
+
+  List<Widget> _buildLegendByMode() {
+    switch (widget.gameMode) {
+      case GameMode.vsComputerWhite:
+        return [
+          _buildLegend(Colors.black, '당신 (흑)'),
+          const SizedBox(width: 32),
+          _buildLegend(Colors.white, '컴퓨터 (백)'),
+        ];
+      case GameMode.vsComputerBlack:
+        return [
+          _buildLegend(Colors.black, '컴퓨터 (흑)'),
+          const SizedBox(width: 32),
+          _buildLegend(Colors.white, '당신 (백)'),
+        ];
+      case GameMode.vsPerson:
+        return [
+          _buildLegend(Colors.black, '플레이어 1 (흑)'),
+          const SizedBox(width: 32),
+          _buildLegend(Colors.white, '플레이어 2 (백)'),
+        ];
+    }
   }
 
   Widget _buildLegend(Color color, String label) {
