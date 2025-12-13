@@ -1,6 +1,5 @@
-import 'dart:convert';
 import 'package:flutter/material.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+import '../../services/game_save_service.dart';
 
 enum Stone { none, black, white }
 
@@ -22,24 +21,21 @@ class GomokuScreen extends StatefulWidget {
 
   // 저장된 게임이 있는지 확인
   static Future<bool> hasSavedGame() async {
-    final prefs = await SharedPreferences.getInstance();
-    return prefs.containsKey('gomoku_board');
+    return await GameSaveService.hasSavedGame('gomoku');
   }
 
   // 저장된 게임 모드 가져오기
   static Future<GameMode?> getSavedGameMode() async {
-    final prefs = await SharedPreferences.getInstance();
-    final modeIndex = prefs.getInt('gomoku_gameMode');
+    final gameState = await GameSaveService.loadGame('gomoku');
+    if (gameState == null) return null;
+    final modeIndex = gameState['gameMode'] as int?;
     if (modeIndex == null) return null;
     return GameMode.values[modeIndex];
   }
 
   // 저장된 게임 삭제
   static Future<void> clearSavedGame() async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.remove('gomoku_board');
-    await prefs.remove('gomoku_isBlackTurn');
-    await prefs.remove('gomoku_gameMode');
+    await GameSaveService.clearSave();
   }
 
   @override
@@ -103,33 +99,35 @@ class _GomokuScreenState extends State<GomokuScreen> {
       return;
     }
 
-    final prefs = await SharedPreferences.getInstance();
-
     // 보드 상태를 2D 리스트로 변환
     final boardData = board.map((row) => row.map((s) => s.index).toList()).toList();
-    await prefs.setString('gomoku_board', jsonEncode(boardData));
-    await prefs.setBool('gomoku_isBlackTurn', isBlackTurn);
-    await prefs.setInt('gomoku_gameMode', widget.gameMode.index);
+
+    final gameState = {
+      'board': boardData,
+      'isBlackTurn': isBlackTurn,
+      'gameMode': widget.gameMode.index,
+    };
+
+    await GameSaveService.saveGame('gomoku', gameState);
   }
 
   // 저장된 게임 불러오기
   Future<void> _loadGame() async {
-    final prefs = await SharedPreferences.getInstance();
-    final boardJson = prefs.getString('gomoku_board');
+    final gameState = await GameSaveService.loadGame('gomoku');
 
-    if (boardJson == null) {
+    if (gameState == null) {
       _initBoard();
       return;
     }
 
-    final boardData = jsonDecode(boardJson) as List;
+    final boardData = gameState['board'] as List;
     board = boardData
         .map<List<Stone>>((row) => (row as List)
             .map<Stone>((s) => Stone.values[s as int])
             .toList())
         .toList();
 
-    isBlackTurn = prefs.getBool('gomoku_isBlackTurn') ?? true;
+    isBlackTurn = gameState['isBlackTurn'] as bool? ?? true;
     gameOver = false;
     winningStones = null;
 
