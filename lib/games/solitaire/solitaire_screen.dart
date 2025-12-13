@@ -1331,33 +1331,27 @@ class _SolitaireScreenState extends State<SolitaireScreen> {
               ),
             )
           : Padding(
-              padding: const EdgeInsets.all(3),
+              padding: const EdgeInsets.all(2),
               child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // 상단: 랭크 + 수트
-                  Text(
-                    '${card.rankString}${card.suitString}',
-                    style: TextStyle(
-                      color: card.suitColor,
-                      fontSize: 13,
-                      fontWeight: FontWeight.bold,
-                      height: 1.0,
-                    ),
-                  ),
-                  // 중앙 영역: 큰 수트 심볼
-                  Expanded(
-                    child: Center(
-                      child: Text(
-                        card.suitString,
-                        style: TextStyle(
-                          color: card.suitColor,
-                          fontSize: 22,
-                        ),
+                  // 상단: 랭크 + 수트 (왼쪽 정렬)
+                  Align(
+                    alignment: Alignment.topLeft,
+                    child: Text(
+                      '${card.rankString}${card.suitString}',
+                      style: TextStyle(
+                        color: card.suitColor,
+                        fontSize: 11,
+                        fontWeight: FontWeight.bold,
+                        height: 1.0,
                       ),
                     ),
                   ),
-                  // 하단: 뒤집힌 랭크 + 수트
+                  // 중앙 영역: 숫자에 맞는 무늬 배열
+                  Expanded(
+                    child: _buildPipPattern(card),
+                  ),
+                  // 하단: 뒤집힌 랭크 + 수트 (오른쪽 정렬)
                   Align(
                     alignment: Alignment.bottomRight,
                     child: Transform.rotate(
@@ -1366,7 +1360,7 @@ class _SolitaireScreenState extends State<SolitaireScreen> {
                         '${card.rankString}${card.suitString}',
                         style: TextStyle(
                           color: card.suitColor,
-                          fontSize: 13,
+                          fontSize: 11,
                           fontWeight: FontWeight.bold,
                           height: 1.0,
                         ),
@@ -1377,5 +1371,157 @@ class _SolitaireScreenState extends State<SolitaireScreen> {
               ),
             ),
     );
+  }
+
+  // 카드 숫자에 맞는 무늬 패턴 생성
+  Widget _buildPipPattern(PlayingCard card) {
+    final suit = card.suitString;
+    final color = card.suitColor;
+    final pipSize = 10.0;
+
+    // J, Q, K는 글자로 표시
+    if (card.rank >= 11 && card.rank <= 13) {
+      return Center(
+        child: Text(
+          card.rankString,
+          style: TextStyle(
+            color: color,
+            fontSize: 20,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+      );
+    }
+
+    // A는 큰 무늬 하나
+    if (card.rank == 1) {
+      return Center(
+        child: Text(
+          suit,
+          style: TextStyle(color: color, fontSize: 18),
+        ),
+      );
+    }
+
+    // 2-10은 패턴으로 표시
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final positions = _getPipPositions(card.rank, constraints.maxWidth, constraints.maxHeight);
+        return Stack(
+          children: positions.map((pos) {
+            final isInverted = pos['inverted'] == true;
+            return Positioned(
+              left: pos['x'] as double,
+              top: pos['y'] as double,
+              child: isInverted
+                  ? Transform.rotate(
+                      angle: 3.14159,
+                      child: Text(suit, style: TextStyle(color: color, fontSize: pipSize)),
+                    )
+                  : Text(suit, style: TextStyle(color: color, fontSize: pipSize)),
+            );
+          }).toList(),
+        );
+      },
+    );
+  }
+
+  // 카드 숫자별 무늬 위치 계산
+  List<Map<String, dynamic>> _getPipPositions(int rank, double width, double height) {
+    final centerX = (width - 10) / 2;
+    final leftX = width * 0.15;
+    final rightX = width * 0.55;
+
+    final topY = height * 0.05;
+    final midTopY = height * 0.25;
+    final centerY = (height - 10) / 2;
+    final midBottomY = height * 0.55;
+    final bottomY = height * 0.75;
+
+    switch (rank) {
+      case 2:
+        return [
+          {'x': centerX, 'y': topY, 'inverted': false},
+          {'x': centerX, 'y': bottomY, 'inverted': true},
+        ];
+      case 3:
+        return [
+          {'x': centerX, 'y': topY, 'inverted': false},
+          {'x': centerX, 'y': centerY, 'inverted': false},
+          {'x': centerX, 'y': bottomY, 'inverted': true},
+        ];
+      case 4:
+        return [
+          {'x': leftX, 'y': topY, 'inverted': false},
+          {'x': rightX, 'y': topY, 'inverted': false},
+          {'x': leftX, 'y': bottomY, 'inverted': true},
+          {'x': rightX, 'y': bottomY, 'inverted': true},
+        ];
+      case 5:
+        return [
+          {'x': leftX, 'y': topY, 'inverted': false},
+          {'x': rightX, 'y': topY, 'inverted': false},
+          {'x': centerX, 'y': centerY, 'inverted': false},
+          {'x': leftX, 'y': bottomY, 'inverted': true},
+          {'x': rightX, 'y': bottomY, 'inverted': true},
+        ];
+      case 6:
+        return [
+          {'x': leftX, 'y': topY, 'inverted': false},
+          {'x': rightX, 'y': topY, 'inverted': false},
+          {'x': leftX, 'y': centerY, 'inverted': false},
+          {'x': rightX, 'y': centerY, 'inverted': false},
+          {'x': leftX, 'y': bottomY, 'inverted': true},
+          {'x': rightX, 'y': bottomY, 'inverted': true},
+        ];
+      case 7:
+        return [
+          {'x': leftX, 'y': topY, 'inverted': false},
+          {'x': rightX, 'y': topY, 'inverted': false},
+          {'x': centerX, 'y': midTopY, 'inverted': false},
+          {'x': leftX, 'y': centerY, 'inverted': false},
+          {'x': rightX, 'y': centerY, 'inverted': false},
+          {'x': leftX, 'y': bottomY, 'inverted': true},
+          {'x': rightX, 'y': bottomY, 'inverted': true},
+        ];
+      case 8:
+        return [
+          {'x': leftX, 'y': topY, 'inverted': false},
+          {'x': rightX, 'y': topY, 'inverted': false},
+          {'x': centerX, 'y': midTopY, 'inverted': false},
+          {'x': leftX, 'y': centerY, 'inverted': false},
+          {'x': rightX, 'y': centerY, 'inverted': false},
+          {'x': centerX, 'y': midBottomY, 'inverted': true},
+          {'x': leftX, 'y': bottomY, 'inverted': true},
+          {'x': rightX, 'y': bottomY, 'inverted': true},
+        ];
+      case 9:
+        return [
+          {'x': leftX, 'y': topY, 'inverted': false},
+          {'x': rightX, 'y': topY, 'inverted': false},
+          {'x': leftX, 'y': midTopY, 'inverted': false},
+          {'x': rightX, 'y': midTopY, 'inverted': false},
+          {'x': centerX, 'y': centerY, 'inverted': false},
+          {'x': leftX, 'y': midBottomY, 'inverted': true},
+          {'x': rightX, 'y': midBottomY, 'inverted': true},
+          {'x': leftX, 'y': bottomY, 'inverted': true},
+          {'x': rightX, 'y': bottomY, 'inverted': true},
+        ];
+      case 10:
+        return [
+          {'x': leftX, 'y': topY, 'inverted': false},
+          {'x': rightX, 'y': topY, 'inverted': false},
+          {'x': centerX, 'y': topY + (midTopY - topY) / 2, 'inverted': false},
+          {'x': leftX, 'y': midTopY, 'inverted': false},
+          {'x': rightX, 'y': midTopY, 'inverted': false},
+          {'x': leftX, 'y': midBottomY, 'inverted': true},
+          {'x': rightX, 'y': midBottomY, 'inverted': true},
+          {'x': centerX, 'y': midBottomY + (bottomY - midBottomY) / 2, 'inverted': true},
+          {'x': leftX, 'y': bottomY, 'inverted': true},
+          {'x': rightX, 'y': bottomY, 'inverted': true},
+        ];
+      default:
+        return [];
+    }
   }
 }
