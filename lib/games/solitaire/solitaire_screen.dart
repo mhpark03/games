@@ -322,15 +322,19 @@ class _SolitaireScreenState extends State<SolitaireScreen> {
   }
 
   void _onCardDragStart(List<PlayingCard> cards, String source, int? sourceIndex) {
-    draggedCards = cards;
-    dragSource = source;
-    dragSourceIndex = sourceIndex;
+    setState(() {
+      draggedCards = cards;
+      dragSource = source;
+      dragSourceIndex = sourceIndex;
+    });
   }
 
   void _onCardDragEnd() {
-    draggedCards = null;
-    dragSource = null;
-    dragSourceIndex = null;
+    setState(() {
+      draggedCards = null;
+      dragSource = null;
+      dragSourceIndex = null;
+    });
   }
 
   void _moveCards(String target, int? targetIndex) {
@@ -638,10 +642,22 @@ class _SolitaireScreenState extends State<SolitaireScreen> {
               final card = cards[cardIndex];
               final isLast = cardIndex == cards.length - 1;
 
+              // 드래그 중인 카드인지 확인
+              final isDragging = draggedCards != null &&
+                  dragSource == 'tableau_$columnIndex' &&
+                  draggedCards!.contains(card);
+
               // 앞면 카드는 드래그 가능
               if (card.faceUp) {
                 // 이 카드부터 끝까지의 카드들
                 final dragCards = cards.sublist(cardIndex);
+
+                // 드래그 중인 카드는 숨김
+                if (isDragging) {
+                  return SizedBox(
+                    height: isLast ? 70 : 20,
+                  );
+                }
 
                 return Padding(
                   padding: EdgeInsets.only(top: cardIndex == 0 ? 0 : 0),
