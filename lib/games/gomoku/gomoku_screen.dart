@@ -574,7 +574,10 @@ class _GomokuScreenState extends State<GomokuScreen> {
           decoration: BoxDecoration(
             shape: BoxShape.circle,
             color: color,
-            border: color == Colors.white ? Border.all(color: Colors.grey) : null,
+            border: Border.all(
+              color: color == Colors.white ? Colors.grey : Colors.grey.shade400,
+              width: color == Colors.white ? 1 : 2,
+            ),
             boxShadow: [
               BoxShadow(
                 color: Colors.black.withValues(alpha: 0.3),
