@@ -1059,15 +1059,19 @@ class _SolitaireScreenState extends State<SolitaireScreen> {
           );
         }
 
-        return Container(
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(6),
-            border: Border.all(
-              color: isHighlighted ? Colors.yellow : Colors.white30,
-              width: isHighlighted ? 3 : 2,
+        // 드래그 타겟 인식 영역을 넓히기 위해 패딩 추가
+        return Padding(
+          padding: const EdgeInsets.all(8),
+          child: Container(
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(6),
+              border: Border.all(
+                color: isHighlighted ? Colors.yellow : Colors.white30,
+                width: isHighlighted ? 3 : 2,
+              ),
             ),
+            child: cardWidget,
           ),
-          child: cardWidget,
         );
       },
     );
@@ -1089,31 +1093,38 @@ class _SolitaireScreenState extends State<SolitaireScreen> {
         final isHighlighted = candidateData.isNotEmpty;
 
         if (cards.isEmpty) {
-          return Container(
-            height: 70,
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(6),
-              border: Border.all(
-                color: isHighlighted ? Colors.yellow : Colors.white30,
-                width: isHighlighted ? 3 : 2,
+          // 드래그 타겟 인식 영역을 넓히기 위해 패딩 추가
+          return Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 8),
+            child: Container(
+              height: 70,
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(6),
+                border: Border.all(
+                  color: isHighlighted ? Colors.yellow : Colors.white30,
+                  width: isHighlighted ? 3 : 2,
+                ),
               ),
-            ),
-            child: const Center(
-              child: Text(
-                'K',
-                style: TextStyle(
-                  fontSize: 20,
-                  color: Colors.white24,
-                  fontWeight: FontWeight.bold,
+              child: const Center(
+                child: Text(
+                  'K',
+                  style: TextStyle(
+                    fontSize: 20,
+                    color: Colors.white24,
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
               ),
             ),
           );
         }
 
-        return SingleChildScrollView(
-          child: Column(
-            children: List.generate(cards.length, (cardIndex) {
+        // 드래그 타겟 인식 영역을 넓히기 위해 패딩 추가
+        return Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 4),
+          child: SingleChildScrollView(
+            child: Column(
+              children: List.generate(cards.length, (cardIndex) {
               final card = cards[cardIndex];
               final isLast = cardIndex == cards.length - 1;
 
@@ -1214,6 +1225,7 @@ class _SolitaireScreenState extends State<SolitaireScreen> {
                 );
               }
             }),
+            ),
           ),
         );
       },
