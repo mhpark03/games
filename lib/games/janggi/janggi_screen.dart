@@ -114,7 +114,7 @@ class _JanggiScreenState extends State<JanggiScreen> {
               backgroundColor: const Color(0xFFF5DEB3),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(16),
-                border: Border.all(color: const Color(0xFF8B4513), width: 3),
+                side: const BorderSide(color: Color(0xFF8B4513), width: 3),
               ),
               title: const Text(
                 '마상 배치 선택',
