@@ -51,6 +51,7 @@ class _JanggiScreenState extends State<JanggiScreen> {
   bool isGameOver = false;
   String? winner;
   bool isThinking = false;
+  bool isInCheck = false; // 현재 턴 플레이어가 장군 상태인지
 
   @override
   void initState() {
@@ -517,6 +518,100 @@ class _JanggiScreenState extends State<JanggiScreen> {
     }
   }
 
+  // 궁의 위치 찾기
+  List<int>? _findGung(JanggiColor color) {
+    for (int r = 0; r < 10; r++) {
+      for (int c = 0; c < 9; c++) {
+        final piece = board[r][c];
+        if (piece != null &&
+            piece.type == JanggiPieceType.gung &&
+            piece.color == color) {
+          return [r, c];
+        }
+      }
+    }
+    return null;
+  }
+
+  // 특정 색이 장군 상태인지 확인
+  bool _checkIsInCheck(JanggiColor color) {
+    final gungPos = _findGung(color);
+    if (gungPos == null) return false;
+
+    final enemyColor =
+        color == JanggiColor.cho ? JanggiColor.han : JanggiColor.cho;
+
+    // 모든 상대 말이 궁을 공격할 수 있는지 확인
+    for (int r = 0; r < 10; r++) {
+      for (int c = 0; c < 9; c++) {
+        final piece = board[r][c];
+        if (piece != null && piece.color == enemyColor) {
+          final moves = _getValidMoves(r, c);
+          if (moves.any((m) => m[0] == gungPos[0] && m[1] == gungPos[1])) {
+            return true;
+          }
+        }
+      }
+    }
+    return false;
+  }
+
+  // 이동 후 자신의 궁이 장군 상태가 되는지 확인
+  bool _wouldBeInCheckAfterMove(
+      int fromRow, int fromCol, int toRow, int toCol, JanggiColor color) {
+    // 임시로 이동 실행
+    final movingPiece = board[fromRow][fromCol];
+    final capturedPiece = board[toRow][toCol];
+
+    board[toRow][toCol] = movingPiece;
+    board[fromRow][fromCol] = null;
+
+    // 장군 상태 확인
+    final wouldBeInCheck = _checkIsInCheck(color);
+
+    // 원복
+    board[fromRow][fromCol] = movingPiece;
+    board[toRow][toCol] = capturedPiece;
+
+    return wouldBeInCheck;
+  }
+
+  // 합법적인 수만 필터링 (장군 회피 필수)
+  List<List<int>> _getLegalMoves(int row, int col) {
+    final piece = board[row][col];
+    if (piece == null) return [];
+
+    final basicMoves = _getValidMoves(row, col);
+    final legalMoves = <List<int>>[];
+
+    for (var move in basicMoves) {
+      if (!_wouldBeInCheckAfterMove(row, col, move[0], move[1], piece.color)) {
+        legalMoves.add(move);
+      }
+    }
+
+    return legalMoves;
+  }
+
+  // 외통수(체크메이트) 확인
+  bool _isCheckmate(JanggiColor color) {
+    if (!_checkIsInCheck(color)) return false;
+
+    // 모든 아군 말의 합법적인 수가 있는지 확인
+    for (int r = 0; r < 10; r++) {
+      for (int c = 0; c < 9; c++) {
+        final piece = board[r][c];
+        if (piece != null && piece.color == color) {
+          final legalMoves = _getLegalMoves(r, c);
+          if (legalMoves.isNotEmpty) {
+            return false;
+          }
+        }
+      }
+    }
+    return true;
+  }
+
   void _onTap(int row, int col) {
     if (isGameOver || isThinking) return;
 
@@ -542,7 +637,7 @@ class _JanggiScreenState extends State<JanggiScreen> {
           // 같은 색 다른 말 선택
           selectedRow = row;
           selectedCol = col;
-          validMoves = _getValidMoves(row, col);
+          validMoves = _getLegalMoves(row, col); // 합법적인 수만 표시
         } else {
           selectedRow = null;
           selectedCol = null;
@@ -553,7 +648,7 @@ class _JanggiScreenState extends State<JanggiScreen> {
         if (board[row][col]?.color == currentTurn) {
           selectedRow = row;
           selectedCol = col;
-          validMoves = _getValidMoves(row, col);
+          validMoves = _getLegalMoves(row, col); // 합법적인 수만 표시
         }
       }
     });
@@ -573,6 +668,15 @@ class _JanggiScreenState extends State<JanggiScreen> {
 
     currentTurn =
         currentTurn == JanggiColor.cho ? JanggiColor.han : JanggiColor.cho;
+
+    // 장군 상태 업데이트
+    isInCheck = _checkIsInCheck(currentTurn);
+
+    // 외통수(체크메이트) 확인
+    if (!isGameOver && _isCheckmate(currentTurn)) {
+      isGameOver = true;
+      winner = currentTurn == JanggiColor.cho ? '한' : '초';
+    }
 
     // 컴퓨터 턴
     if (!isGameOver && widget.gameMode != JanggiGameMode.vsHuman) {
@@ -602,14 +706,14 @@ class _JanggiScreenState extends State<JanggiScreen> {
 
       List<Map<String, dynamic>> allMoves = [];
 
-      // 모든 가능한 수 수집
+      // 모든 합법적인 수 수집 (장군 회피 포함)
       for (int r = 0; r < 10; r++) {
         for (int c = 0; c < 9; c++) {
           final piece = board[r][c];
           if (piece != null && piece.color == computerColor) {
-            final moves = _getValidMoves(r, c);
+            final moves = _getLegalMoves(r, c); // 합법적인 수만 사용
             for (var move in moves) {
-              int score = _evaluateMove(r, c, move[0], move[1], piece);
+              int score = _evaluateMove(r, c, move[0], move[1], piece, computerColor);
               allMoves.add({
                 'fromRow': r,
                 'fromCol': c,
@@ -647,9 +751,10 @@ class _JanggiScreenState extends State<JanggiScreen> {
     });
   }
 
-  int _evaluateMove(int fromRow, int fromCol, int toRow, int toCol, JanggiPiece piece) {
+  int _evaluateMove(int fromRow, int fromCol, int toRow, int toCol, JanggiPiece piece, JanggiColor computerColor) {
     int score = 0;
     final target = board[toRow][toCol];
+    final enemyColor = computerColor == JanggiColor.cho ? JanggiColor.han : JanggiColor.cho;
 
     // 상대 말 잡기
     if (target != null) {
@@ -678,6 +783,25 @@ class _JanggiScreenState extends State<JanggiScreen> {
       }
     }
 
+    // 이동 후 상대에게 장군을 걸 수 있는지 확인
+    final movingPiece = board[fromRow][fromCol];
+    final capturedPiece = board[toRow][toCol];
+    board[toRow][toCol] = movingPiece;
+    board[fromRow][fromCol] = null;
+
+    if (_checkIsInCheck(enemyColor)) {
+      score += 500; // 장군을 거는 수에 높은 점수
+
+      // 외통수 확인
+      if (_isCheckmate(enemyColor)) {
+        score += 50000; // 외통수는 최고 점수
+      }
+    }
+
+    // 원복
+    board[fromRow][fromCol] = movingPiece;
+    board[toRow][toCol] = capturedPiece;
+
     // 중앙으로 이동 선호
     int centerCol = 4;
     score += (4 - (toCol - centerCol).abs()) * 5;
@@ -696,6 +820,11 @@ class _JanggiScreenState extends State<JanggiScreen> {
       if (toCol == 4) score += 20;
     }
 
+    // 차/포: 열린 줄 선호
+    if (piece.type == JanggiPieceType.cha || piece.type == JanggiPieceType.po) {
+      score += 30;
+    }
+
     return score;
   }
 
@@ -709,6 +838,7 @@ class _JanggiScreenState extends State<JanggiScreen> {
       isGameOver = false;
       winner = null;
       isThinking = false;
+      isInCheck = false;
     });
 
     if (widget.gameMode == JanggiGameMode.vsCho) {
@@ -757,17 +887,23 @@ class _JanggiScreenState extends State<JanggiScreen> {
 
   Widget _buildStatusBar() {
     String status;
+    Color bgColor = const Color(0xFFD2691E);
+
     if (isGameOver) {
       status = '$winner 승리!';
+      bgColor = Colors.purple;
     } else if (isThinking) {
       status = '컴퓨터 생각 중...';
+    } else if (isInCheck) {
+      status = '${currentTurn == JanggiColor.cho ? "초" : "한"} 장군!';
+      bgColor = Colors.red.shade700;
     } else {
       status = '${currentTurn == JanggiColor.cho ? "초" : "한"} 차례';
     }
 
     return Container(
       padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
-      color: const Color(0xFFD2691E),
+      color: bgColor,
       child: Row(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
