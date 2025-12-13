@@ -99,6 +99,8 @@ class _SolitaireScreenState extends State<SolitaireScreen> {
 
     if (hasSave && mounted) {
       // 저장된 게임이 있으면 다이얼로그 표시
+      // 먼저 기본 초기화를 해서 late 변수 오류 방지
+      _initGame();
       WidgetsBinding.instance.addPostFrameCallback((_) {
         _showContinueDialog();
       });
