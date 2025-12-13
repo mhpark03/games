@@ -1374,17 +1374,28 @@ class _SolitaireScreenState extends State<SolitaireScreen> {
       pipSize = 8.0; // 9, 10
     }
 
-    // J, Q, K는 글자로 표시
+    // J, Q, K는 그림으로 표시
     if (card.rank >= 11 && card.rank <= 13) {
-      return Center(
-        child: Text(
-          card.rankString,
-          style: TextStyle(
-            color: color,
-            fontSize: 20,
-            fontWeight: FontWeight.bold,
+      IconData icon;
+      if (card.rank == 11) {
+        // Jack - 기사
+        icon = Icons.security;
+      } else if (card.rank == 12) {
+        // Queen - 여왕
+        icon = Icons.auto_awesome;
+      } else {
+        // King - 왕관
+        icon = Icons.workspace_premium;
+      }
+      return Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(icon, color: color, size: 24),
+          Text(
+            suit,
+            style: TextStyle(color: color, fontSize: 12),
           ),
-        ),
+        ],
       );
     }
 
@@ -1436,15 +1447,17 @@ class _SolitaireScreenState extends State<SolitaireScreen> {
 
     switch (rank) {
       case 2:
+        // 2는 상하로 넓게 배치 (0% ~ 75%)
         return [
-          {'x': centerX, 'y': topY, 'inverted': false},
-          {'x': centerX, 'y': bottomY, 'inverted': true},
+          {'x': centerX, 'y': 0.0, 'inverted': false},
+          {'x': centerX, 'y': height * 0.75, 'inverted': true},
         ];
       case 3:
+        // 3은 상중하 배치 (0%, 37%, 75%)
         return [
-          {'x': centerX, 'y': topY, 'inverted': false},
-          {'x': centerX, 'y': centerY, 'inverted': false},
-          {'x': centerX, 'y': bottomY, 'inverted': true},
+          {'x': centerX, 'y': 0.0, 'inverted': false},
+          {'x': centerX, 'y': height * 0.37, 'inverted': false},
+          {'x': centerX, 'y': height * 0.75, 'inverted': true},
         ];
       case 4:
         return [
