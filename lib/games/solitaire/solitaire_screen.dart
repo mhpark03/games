@@ -1351,22 +1351,6 @@ class _SolitaireScreenState extends State<SolitaireScreen> {
                   Expanded(
                     child: _buildPipPattern(card),
                   ),
-                  // 하단: 뒤집힌 랭크 (오른쪽 정렬)
-                  Align(
-                    alignment: Alignment.bottomRight,
-                    child: Transform.rotate(
-                      angle: 3.14159,
-                      child: Text(
-                        card.rankString,
-                        style: TextStyle(
-                          color: card.suitColor,
-                          fontSize: 10,
-                          fontWeight: FontWeight.bold,
-                          height: 1.0,
-                        ),
-                      ),
-                    ),
-                  ),
                 ],
               ),
             ),
