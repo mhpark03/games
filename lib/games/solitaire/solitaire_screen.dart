@@ -1322,7 +1322,7 @@ class _SolitaireScreenState extends State<SolitaireScreen> {
           ? Padding(
               padding: const EdgeInsets.only(left: 3, top: 2),
               child: Text(
-                card.rankString,
+                '${card.rankString}${card.suitString}',
                 style: TextStyle(
                   color: card.suitColor,
                   fontSize: 11,
