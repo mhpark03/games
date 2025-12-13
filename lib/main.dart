@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'games/tetris/tetris_screen.dart';
 import 'games/gomoku/gomoku_screen.dart';
+import 'games/othello/othello_screen.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
@@ -247,6 +248,217 @@ class HomeScreen extends StatelessWidget {
     );
   }
 
+  // 오델로 게임 대상 선택 다이얼로그
+  Future<void> _showOthelloModeDialog(BuildContext context) async {
+    final hasSaved = await OthelloScreen.hasSavedGame();
+    final savedMode = hasSaved ? await OthelloScreen.getSavedGameMode() : null;
+
+    if (!context.mounted) return;
+
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          backgroundColor: Colors.grey.shade900,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+            side: BorderSide(color: Colors.green.withValues(alpha: 0.5), width: 2),
+          ),
+          title: const Text(
+            '게임 대상 선택',
+            style: TextStyle(
+              color: Colors.green,
+              fontWeight: FontWeight.bold,
+            ),
+            textAlign: TextAlign.center,
+          ),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              if (hasSaved && savedMode != null) ...[
+                _buildOthelloResumeButton(context, savedMode),
+                const SizedBox(height: 16),
+                Divider(color: Colors.grey.shade700),
+                const SizedBox(height: 8),
+                Text(
+                  '새 게임',
+                  style: TextStyle(
+                    color: Colors.grey.shade400,
+                    fontSize: 12,
+                  ),
+                ),
+                const SizedBox(height: 8),
+              ],
+              _buildOthelloModeButton(
+                context,
+                title: '컴퓨터 (백)',
+                subtitle: '내가 흑 (선공)',
+                icon: Icons.computer,
+                mode: OthelloGameMode.vsComputerWhite,
+              ),
+              const SizedBox(height: 12),
+              _buildOthelloModeButton(
+                context,
+                title: '컴퓨터 (흑)',
+                subtitle: '내가 백 (후공)',
+                icon: Icons.computer,
+                mode: OthelloGameMode.vsComputerBlack,
+              ),
+              const SizedBox(height: 12),
+              _buildOthelloModeButton(
+                context,
+                title: '사람',
+                subtitle: '2인 플레이',
+                icon: Icons.people,
+                mode: OthelloGameMode.vsPerson,
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildOthelloResumeButton(BuildContext context, OthelloGameMode savedMode) {
+    String modeText;
+    switch (savedMode) {
+      case OthelloGameMode.vsComputerWhite:
+        modeText = 'vs 컴퓨터(백)';
+        break;
+      case OthelloGameMode.vsComputerBlack:
+        modeText = 'vs 컴퓨터(흑)';
+        break;
+      case OthelloGameMode.vsPerson:
+        modeText = '2인 플레이';
+        break;
+    }
+
+    return InkWell(
+      onTap: () {
+        Navigator.pop(context);
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => OthelloScreen(
+              gameMode: savedMode,
+              resumeGame: true,
+            ),
+          ),
+        );
+      },
+      borderRadius: BorderRadius.circular(12),
+      child: Container(
+        width: double.infinity,
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        decoration: BoxDecoration(
+          color: Colors.teal.withValues(alpha: 0.2),
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(
+            color: Colors.teal.withValues(alpha: 0.5),
+            width: 2,
+          ),
+        ),
+        child: Row(
+          children: [
+            const Icon(Icons.play_arrow, color: Colors.teal, size: 28),
+            const SizedBox(width: 12),
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  '이어하기',
+                  style: TextStyle(
+                    color: Colors.teal,
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                Text(
+                  modeText,
+                  style: TextStyle(
+                    color: Colors.grey.shade400,
+                    fontSize: 12,
+                  ),
+                ),
+              ],
+            ),
+            const Spacer(),
+            Icon(
+              Icons.arrow_forward_ios,
+              color: Colors.teal.withValues(alpha: 0.7),
+              size: 16,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildOthelloModeButton(
+    BuildContext context, {
+    required String title,
+    required String subtitle,
+    required IconData icon,
+    required OthelloGameMode mode,
+  }) {
+    return InkWell(
+      onTap: () {
+        Navigator.pop(context);
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => OthelloScreen(gameMode: mode),
+          ),
+        );
+      },
+      borderRadius: BorderRadius.circular(12),
+      child: Container(
+        width: double.infinity,
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        decoration: BoxDecoration(
+          color: Colors.green.withValues(alpha: 0.1),
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(
+            color: Colors.green.withValues(alpha: 0.3),
+            width: 1,
+          ),
+        ),
+        child: Row(
+          children: [
+            Icon(icon, color: Colors.green, size: 28),
+            const SizedBox(width: 12),
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  title,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                Text(
+                  subtitle,
+                  style: TextStyle(
+                    color: Colors.grey.shade400,
+                    fontSize: 12,
+                  ),
+                ),
+              ],
+            ),
+            const Spacer(),
+            Icon(
+              Icons.arrow_forward_ios,
+              color: Colors.green.withValues(alpha: 0.7),
+              size: 16,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -316,6 +528,15 @@ class HomeScreen extends StatelessWidget {
                         icon: Icons.circle_outlined,
                         color: Colors.amber,
                         onTap: () => _showGomokuModeDialog(context),
+                      ),
+                      const SizedBox(height: 24),
+                      _buildGameCard(
+                        context,
+                        title: 'OTHELLO',
+                        subtitle: '오델로',
+                        icon: Icons.blur_circular,
+                        color: Colors.green,
+                        onTap: () => _showOthelloModeDialog(context),
                       ),
                     ],
                   ),
