@@ -227,7 +227,12 @@ class _SolitaireScreenState extends State<SolitaireScreen> {
               onPressed: () {
                 Navigator.pop(context);
                 _clearSavedGame();
-                _initGame();
+                // 새 게임 시 모드 선택 다이얼로그 표시
+                WidgetsBinding.instance.addPostFrameCallback((_) {
+                  if (mounted) {
+                    _showDrawModeDialog();
+                  }
+                });
               },
               child: const Text(
                 '새 게임',
