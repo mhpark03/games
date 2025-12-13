@@ -88,6 +88,9 @@ class _SolitaireScreenState extends State<SolitaireScreen> {
   bool isGameWon = false;
   bool isLoading = true;
 
+  // Undo 히스토리
+  List<Map<String, dynamic>> _undoHistory = [];
+
   @override
   void initState() {
     super.initState();
@@ -270,9 +273,46 @@ class _SolitaireScreenState extends State<SolitaireScreen> {
     draggedCards = null;
     dragSource = null;
     dragSourceIndex = null;
+    _undoHistory = [];
+  }
+
+  // 현재 상태를 히스토리에 저장
+  void _saveStateToHistory() {
+    final state = {
+      'tableau': tableau
+          .map((col) => col.map((c) => PlayingCard(c.rank, c.suit, faceUp: c.faceUp)).toList())
+          .toList(),
+      'foundations': foundations
+          .map((col) => col.map((c) => PlayingCard(c.rank, c.suit, faceUp: c.faceUp)).toList())
+          .toList(),
+      'stock': stock.map((c) => PlayingCard(c.rank, c.suit, faceUp: c.faceUp)).toList(),
+      'waste': waste.map((c) => PlayingCard(c.rank, c.suit, faceUp: c.faceUp)).toList(),
+      'moves': moves,
+    };
+    _undoHistory.add(state);
+    // 최대 50개까지만 저장
+    if (_undoHistory.length > 50) {
+      _undoHistory.removeAt(0);
+    }
+  }
+
+  // Undo 실행
+  void _undo() {
+    if (_undoHistory.isEmpty) return;
+
+    final state = _undoHistory.removeLast();
+    setState(() {
+      tableau = (state['tableau'] as List).map((col) => (col as List).cast<PlayingCard>()).toList();
+      foundations = (state['foundations'] as List).map((col) => (col as List).cast<PlayingCard>()).toList();
+      stock = (state['stock'] as List).cast<PlayingCard>();
+      waste = (state['waste'] as List).cast<PlayingCard>();
+      moves = state['moves'] as int;
+    });
+    _saveGame();
   }
 
   void _drawFromStock() {
+    _saveStateToHistory();
     setState(() {
       if (stock.isEmpty) {
         // 스톡이 비면 웨이스트를 뒤집어서 스톡으로
@@ -347,6 +387,7 @@ class _SolitaireScreenState extends State<SolitaireScreen> {
   void _moveCards(String target, int? targetIndex) {
     if (draggedCards == null || dragSource == null) return;
 
+    _saveStateToHistory();
     setState(() {
       bool moved = false;
 
@@ -402,6 +443,7 @@ class _SolitaireScreenState extends State<SolitaireScreen> {
     // 1순위: 파운데이션으로 이동 시도
     for (int i = 0; i < 4; i++) {
       if (_canPlaceOnFoundation(card, i)) {
+        _saveStateToHistory();
         setState(() {
           if (source == 'waste') {
             waste.removeLast();
@@ -426,6 +468,7 @@ class _SolitaireScreenState extends State<SolitaireScreen> {
       if (source == 'tableau_$i') continue;
 
       if (_canPlaceOnTableau(card, i)) {
+        _saveStateToHistory();
         setState(() {
           if (source == 'waste') {
             waste.removeLast();
@@ -456,6 +499,7 @@ class _SolitaireScreenState extends State<SolitaireScreen> {
       if (i == sourceIndex) continue;
 
       if (_canPlaceOnTableau(firstCard, i)) {
+        _saveStateToHistory();
         setState(() {
           // 원본 열에서 카드들 제거
           tableau[sourceIndex].removeRange(
@@ -501,6 +545,11 @@ class _SolitaireScreenState extends State<SolitaireScreen> {
                 style: const TextStyle(fontSize: 16),
               ),
             ),
+          ),
+          IconButton(
+            icon: const Icon(Icons.undo),
+            onPressed: _undoHistory.isEmpty ? null : _undo,
+            tooltip: '되돌리기',
           ),
           IconButton(
             icon: const Icon(Icons.refresh),
