@@ -890,11 +890,15 @@ class _SolitaireScreenState extends State<SolitaireScreen> {
                   // 웨이스트
                   _buildWaste(),
                   const Spacer(),
-                  // 파운데이션 4개
+                  // 파운데이션 4개 (드래그 타겟 인식 영역 확대)
                   ...List.generate(4, (index) {
                     return Padding(
-                      padding: const EdgeInsets.only(left: 4),
-                      child: _buildFoundation(index),
+                      padding: const EdgeInsets.only(left: 6),
+                      child: SizedBox(
+                        width: 54,
+                        height: 74,
+                        child: _buildFoundation(index),
+                      ),
                     );
                   }),
                 ],
@@ -1059,19 +1063,15 @@ class _SolitaireScreenState extends State<SolitaireScreen> {
           );
         }
 
-        // 드래그 타겟 인식 영역을 넓히기 위해 패딩 추가
-        return Padding(
-          padding: const EdgeInsets.all(8),
-          child: Container(
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(6),
-              border: Border.all(
-                color: isHighlighted ? Colors.yellow : Colors.white30,
-                width: isHighlighted ? 3 : 2,
-              ),
+        return Container(
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(6),
+            border: Border.all(
+              color: isHighlighted ? Colors.yellow : Colors.white30,
+              width: isHighlighted ? 3 : 2,
             ),
-            child: cardWidget,
           ),
+          child: cardWidget,
         );
       },
     );
