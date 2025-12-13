@@ -1322,7 +1322,7 @@ class _SolitaireScreenState extends State<SolitaireScreen> {
           ? Padding(
               padding: const EdgeInsets.only(left: 3, top: 2),
               child: Text(
-                '${card.rankString}${card.suitString}',
+                card.rankString,
                 style: TextStyle(
                   color: card.suitColor,
                   fontSize: 11,
@@ -1334,14 +1334,14 @@ class _SolitaireScreenState extends State<SolitaireScreen> {
               padding: const EdgeInsets.all(2),
               child: Column(
                 children: [
-                  // 상단: 랭크 + 수트 (왼쪽 정렬)
+                  // 상단: 랭크만 표시 (왼쪽 정렬)
                   Align(
                     alignment: Alignment.topLeft,
                     child: Text(
-                      '${card.rankString}${card.suitString}',
+                      card.rankString,
                       style: TextStyle(
                         color: card.suitColor,
-                        fontSize: 11,
+                        fontSize: 10,
                         fontWeight: FontWeight.bold,
                         height: 1.0,
                       ),
@@ -1351,16 +1351,16 @@ class _SolitaireScreenState extends State<SolitaireScreen> {
                   Expanded(
                     child: _buildPipPattern(card),
                   ),
-                  // 하단: 뒤집힌 랭크 + 수트 (오른쪽 정렬)
+                  // 하단: 뒤집힌 랭크 (오른쪽 정렬)
                   Align(
                     alignment: Alignment.bottomRight,
                     child: Transform.rotate(
                       angle: 3.14159,
                       child: Text(
-                        '${card.rankString}${card.suitString}',
+                        card.rankString,
                         style: TextStyle(
                           color: card.suitColor,
-                          fontSize: 11,
+                          fontSize: 10,
                           fontWeight: FontWeight.bold,
                           height: 1.0,
                         ),
@@ -1377,7 +1377,18 @@ class _SolitaireScreenState extends State<SolitaireScreen> {
   Widget _buildPipPattern(PlayingCard card) {
     final suit = card.suitString;
     final color = card.suitColor;
-    final pipSize = 10.0;
+
+    // 숫자에 따라 무늬 크기 조정 (많을수록 작게)
+    double pipSize;
+    if (card.rank <= 3) {
+      pipSize = 12.0;
+    } else if (card.rank <= 6) {
+      pipSize = 10.0;
+    } else if (card.rank <= 8) {
+      pipSize = 9.0;
+    } else {
+      pipSize = 8.0; // 9, 10
+    }
 
     // J, Q, K는 글자로 표시
     if (card.rank >= 11 && card.rank <= 13) {
@@ -1398,7 +1409,7 @@ class _SolitaireScreenState extends State<SolitaireScreen> {
       return Center(
         child: Text(
           suit,
-          style: TextStyle(color: color, fontSize: 18),
+          style: TextStyle(color: color, fontSize: 20),
         ),
       );
     }
@@ -1406,7 +1417,7 @@ class _SolitaireScreenState extends State<SolitaireScreen> {
     // 2-10은 패턴으로 표시
     return LayoutBuilder(
       builder: (context, constraints) {
-        final positions = _getPipPositions(card.rank, constraints.maxWidth, constraints.maxHeight);
+        final positions = _getPipPositions(card.rank, constraints.maxWidth, constraints.maxHeight, pipSize);
         return Stack(
           children: positions.map((pos) {
             final isInverted = pos['inverted'] == true;
@@ -1427,16 +1438,17 @@ class _SolitaireScreenState extends State<SolitaireScreen> {
   }
 
   // 카드 숫자별 무늬 위치 계산
-  List<Map<String, dynamic>> _getPipPositions(int rank, double width, double height) {
-    final centerX = (width - 10) / 2;
-    final leftX = width * 0.15;
-    final rightX = width * 0.55;
+  List<Map<String, dynamic>> _getPipPositions(int rank, double width, double height, double pipSize) {
+    final halfPip = pipSize / 2;
+    final centerX = (width - pipSize) / 2;
+    final leftX = width * 0.1;
+    final rightX = width * 0.9 - pipSize;
 
-    final topY = height * 0.05;
-    final midTopY = height * 0.25;
-    final centerY = (height - 10) / 2;
-    final midBottomY = height * 0.55;
-    final bottomY = height * 0.75;
+    final topY = 0.0;
+    final midTopY = height * 0.22;
+    final centerY = (height - pipSize) / 2;
+    final midBottomY = height * 0.58;
+    final bottomY = height - pipSize;
 
     switch (rank) {
       case 2:
@@ -1499,11 +1511,11 @@ class _SolitaireScreenState extends State<SolitaireScreen> {
         return [
           {'x': leftX, 'y': topY, 'inverted': false},
           {'x': rightX, 'y': topY, 'inverted': false},
-          {'x': leftX, 'y': midTopY, 'inverted': false},
-          {'x': rightX, 'y': midTopY, 'inverted': false},
+          {'x': leftX, 'y': height * 0.2, 'inverted': false},
+          {'x': rightX, 'y': height * 0.2, 'inverted': false},
           {'x': centerX, 'y': centerY, 'inverted': false},
-          {'x': leftX, 'y': midBottomY, 'inverted': true},
-          {'x': rightX, 'y': midBottomY, 'inverted': true},
+          {'x': leftX, 'y': height * 0.6, 'inverted': true},
+          {'x': rightX, 'y': height * 0.6, 'inverted': true},
           {'x': leftX, 'y': bottomY, 'inverted': true},
           {'x': rightX, 'y': bottomY, 'inverted': true},
         ];
@@ -1511,12 +1523,12 @@ class _SolitaireScreenState extends State<SolitaireScreen> {
         return [
           {'x': leftX, 'y': topY, 'inverted': false},
           {'x': rightX, 'y': topY, 'inverted': false},
-          {'x': centerX, 'y': topY + (midTopY - topY) / 2, 'inverted': false},
-          {'x': leftX, 'y': midTopY, 'inverted': false},
-          {'x': rightX, 'y': midTopY, 'inverted': false},
-          {'x': leftX, 'y': midBottomY, 'inverted': true},
-          {'x': rightX, 'y': midBottomY, 'inverted': true},
-          {'x': centerX, 'y': midBottomY + (bottomY - midBottomY) / 2, 'inverted': true},
+          {'x': centerX, 'y': height * 0.12, 'inverted': false},
+          {'x': leftX, 'y': height * 0.22, 'inverted': false},
+          {'x': rightX, 'y': height * 0.22, 'inverted': false},
+          {'x': leftX, 'y': height * 0.58, 'inverted': true},
+          {'x': rightX, 'y': height * 0.58, 'inverted': true},
+          {'x': centerX, 'y': height * 0.68, 'inverted': true},
           {'x': leftX, 'y': bottomY, 'inverted': true},
           {'x': rightX, 'y': bottomY, 'inverted': true},
         ];
