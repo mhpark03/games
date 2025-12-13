@@ -88,6 +88,9 @@ class _SolitaireScreenState extends State<SolitaireScreen> {
   bool isGameWon = false;
   bool isLoading = true;
 
+  // 카드 뽑기 수 (1장 또는 3장)
+  int drawCount = 1;
+
   // Undo 히스토리
   List<Map<String, dynamic>> _undoHistory = [];
 
@@ -100,15 +103,19 @@ class _SolitaireScreenState extends State<SolitaireScreen> {
   Future<void> _checkSavedGame() async {
     final hasSave = await GameSaveService.hasSavedGame('solitaire');
 
+    // 먼저 기본 초기화를 해서 late 변수 오류 방지
+    _initGame();
+
     if (hasSave && mounted) {
       // 저장된 게임이 있으면 다이얼로그 표시
-      // 먼저 기본 초기화를 해서 late 변수 오류 방지
-      _initGame();
       WidgetsBinding.instance.addPostFrameCallback((_) {
         _showContinueDialog();
       });
     } else {
-      _initGame();
+      // 새 게임: 카드 뽑기 모드 선택
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        _showDrawModeDialog();
+      });
     }
 
     if (mounted) {
@@ -116,6 +123,75 @@ class _SolitaireScreenState extends State<SolitaireScreen> {
         isLoading = false;
       });
     }
+  }
+
+  void _showDrawModeDialog() {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) {
+        return AlertDialog(
+          backgroundColor: Colors.green.shade800,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+            side: const BorderSide(color: Colors.white30, width: 2),
+          ),
+          title: const Text(
+            '게임 모드 선택',
+            style: TextStyle(
+              color: Colors.white,
+              fontWeight: FontWeight.bold,
+            ),
+            textAlign: TextAlign.center,
+          ),
+          content: const Text(
+            '스톡에서 카드를 몇 장씩 뽑으시겠습니까?',
+            style: TextStyle(color: Colors.white70),
+            textAlign: TextAlign.center,
+          ),
+          actionsAlignment: MainAxisAlignment.center,
+          actions: [
+            Row(
+              children: [
+                Expanded(
+                  child: ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.white,
+                      foregroundColor: Colors.green.shade800,
+                    ),
+                    onPressed: () {
+                      Navigator.pop(context);
+                      setState(() {
+                        drawCount = 1;
+                        _initGame();
+                      });
+                    },
+                    child: const Text('1장씩'),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.orange,
+                      foregroundColor: Colors.white,
+                    ),
+                    onPressed: () {
+                      Navigator.pop(context);
+                      setState(() {
+                        drawCount = 3;
+                        _initGame();
+                      });
+                    },
+                    child: const Text('3장씩'),
+                  ),
+                ),
+              ],
+            ),
+          ],
+        );
+      },
+    );
   }
 
   void _showContinueDialog() {
@@ -180,6 +256,7 @@ class _SolitaireScreenState extends State<SolitaireScreen> {
       'stock': stock.map((c) => c.toJson()).toList(),
       'waste': waste.map((c) => c.toJson()).toList(),
       'moves': moves,
+      'drawCount': drawCount,
     };
 
     await GameSaveService.saveGame('solitaire', gameState);
@@ -212,6 +289,7 @@ class _SolitaireScreenState extends State<SolitaireScreen> {
               .toList();
 
           moves = gameState['moves'] as int;
+          drawCount = gameState['drawCount'] as int? ?? 1;
           isGameWon = false;
           draggedCards = null;
           dragSource = null;
@@ -399,10 +477,13 @@ class _SolitaireScreenState extends State<SolitaireScreen> {
           waste = [];
         }
       } else {
-        // 스톡에서 1장 뒤집기
-        final card = stock.removeLast();
-        card.faceUp = true;
-        waste.add(card);
+        // 스톡에서 drawCount장 뽑기
+        int count = min(drawCount, stock.length);
+        for (int i = 0; i < count; i++) {
+          final card = stock.removeLast();
+          card.faceUp = true;
+          waste.add(card);
+        }
         moves++;
       }
     });
@@ -616,7 +697,7 @@ class _SolitaireScreenState extends State<SolitaireScreen> {
             child: Padding(
               padding: const EdgeInsets.symmetric(horizontal: 8),
               child: Text(
-                '이동: $moves',
+                '이동: $moves (${drawCount}장)',
                 style: const TextStyle(fontSize: 16),
               ),
             ),
@@ -630,9 +711,7 @@ class _SolitaireScreenState extends State<SolitaireScreen> {
             icon: const Icon(Icons.refresh),
             onPressed: () {
               _clearSavedGame();
-              setState(() {
-                _initGame();
-              });
+              _showDrawModeDialog();
             },
           ),
         ],
