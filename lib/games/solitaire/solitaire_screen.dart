@@ -161,10 +161,7 @@ class _SolitaireScreenState extends State<SolitaireScreen> {
                     ),
                     onPressed: () {
                       Navigator.pop(context);
-                      setState(() {
-                        drawCount = 1;
-                        _initGame();
-                      });
+                      _startNewGame(1);
                     },
                     child: const Text('1장씩'),
                   ),
@@ -178,10 +175,7 @@ class _SolitaireScreenState extends State<SolitaireScreen> {
                     ),
                     onPressed: () {
                       Navigator.pop(context);
-                      setState(() {
-                        drawCount = 3;
-                        _initGame();
-                      });
+                      _startNewGame(3);
                     },
                     child: const Text('3장씩'),
                   ),
@@ -192,6 +186,14 @@ class _SolitaireScreenState extends State<SolitaireScreen> {
         );
       },
     );
+  }
+
+  void _startNewGame(int count) {
+    setState(() {
+      drawCount = count;
+      _initGame();
+    });
+    _saveGame();
   }
 
   void _showContinueDialog() {
