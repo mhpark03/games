@@ -322,15 +322,19 @@ class _SolitaireScreenState extends State<SolitaireScreen> {
   }
 
   void _onCardDragStart(List<PlayingCard> cards, String source, int? sourceIndex) {
-    draggedCards = cards;
-    dragSource = source;
-    dragSourceIndex = sourceIndex;
+    setState(() {
+      draggedCards = cards;
+      dragSource = source;
+      dragSourceIndex = sourceIndex;
+    });
   }
 
   void _onCardDragEnd() {
-    draggedCards = null;
-    dragSource = null;
-    dragSourceIndex = null;
+    setState(() {
+      draggedCards = null;
+      dragSource = null;
+      dragSourceIndex = null;
+    });
   }
 
   void _moveCards(String target, int? targetIndex) {
@@ -425,6 +429,38 @@ class _SolitaireScreenState extends State<SolitaireScreen> {
             }
           }
           tableau[i].add(card);
+          moves++;
+        });
+        _saveGame();
+        return;
+      }
+    }
+  }
+
+  // 여러 카드를 한번에 이동 (중간 카드 더블탭 시 사용)
+  void _autoMoveCards(List<PlayingCard> cards, int sourceIndex) {
+    if (cards.isEmpty) return;
+
+    final firstCard = cards.first;
+
+    // 테이블로 이동 시도 (여러 카드는 파운데이션으로 이동 불가)
+    for (int i = 0; i < 7; i++) {
+      // 같은 열로는 이동하지 않음
+      if (i == sourceIndex) continue;
+
+      if (_canPlaceOnTableau(firstCard, i)) {
+        setState(() {
+          // 원본 열에서 카드들 제거
+          tableau[sourceIndex].removeRange(
+            tableau[sourceIndex].length - cards.length,
+            tableau[sourceIndex].length,
+          );
+          // 뒤집힌 카드 오픈
+          if (tableau[sourceIndex].isNotEmpty && !tableau[sourceIndex].last.faceUp) {
+            tableau[sourceIndex].last.faceUp = true;
+          }
+          // 새 열에 카드들 추가
+          tableau[i].addAll(cards);
           moves++;
         });
         _saveGame();
@@ -638,10 +674,22 @@ class _SolitaireScreenState extends State<SolitaireScreen> {
               final card = cards[cardIndex];
               final isLast = cardIndex == cards.length - 1;
 
+              // 드래그 중인 카드인지 확인
+              final isDragging = draggedCards != null &&
+                  dragSource == 'tableau_$columnIndex' &&
+                  draggedCards!.contains(card);
+
               // 앞면 카드는 드래그 가능
               if (card.faceUp) {
                 // 이 카드부터 끝까지의 카드들
                 final dragCards = cards.sublist(cardIndex);
+
+                // 드래그 중인 카드는 숨김
+                if (isDragging) {
+                  return SizedBox(
+                    height: isLast ? 70 : 20,
+                  );
+                }
 
                 return Padding(
                   padding: EdgeInsets.only(top: cardIndex == 0 ? 0 : 0),
@@ -669,10 +717,15 @@ class _SolitaireScreenState extends State<SolitaireScreen> {
                         dragCards, 'tableau_$columnIndex', columnIndex),
                     onDragEnd: (_) => _onCardDragEnd(),
                     child: GestureDetector(
-                      onDoubleTap: isLast
-                          ? () => _autoMoveCard(
-                              card, 'tableau_$columnIndex', columnIndex)
-                          : null,
+                      onDoubleTap: () {
+                        if (isLast) {
+                          // 마지막 카드: 파운데이션 또는 테이블로 이동
+                          _autoMoveCard(card, 'tableau_$columnIndex', columnIndex);
+                        } else {
+                          // 중간 카드: 이 카드부터 끝까지 테이블로 이동
+                          _autoMoveCards(dragCards, columnIndex);
+                        }
+                      },
                       child: SizedBox(
                         height: isLast ? 70 : 20,
                         child: Align(
