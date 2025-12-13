@@ -1447,15 +1447,17 @@ class _SolitaireScreenState extends State<SolitaireScreen> {
 
     switch (rank) {
       case 2:
+        // 2는 상하로 넓게 배치 (0% ~ 75%)
         return [
-          {'x': centerX, 'y': topY, 'inverted': false},
-          {'x': centerX, 'y': bottomY, 'inverted': true},
+          {'x': centerX, 'y': 0.0, 'inverted': false},
+          {'x': centerX, 'y': height * 0.75, 'inverted': true},
         ];
       case 3:
+        // 3은 상중하 배치 (0%, 37%, 75%)
         return [
-          {'x': centerX, 'y': topY, 'inverted': false},
-          {'x': centerX, 'y': centerY, 'inverted': false},
-          {'x': centerX, 'y': bottomY, 'inverted': true},
+          {'x': centerX, 'y': 0.0, 'inverted': false},
+          {'x': centerX, 'y': height * 0.37, 'inverted': false},
+          {'x': centerX, 'y': height * 0.75, 'inverted': true},
         ];
       case 4:
         return [
