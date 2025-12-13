@@ -880,7 +880,14 @@ class HomeScreen extends StatelessWidget {
                         subtitle: '장기',
                         icon: Icons.apps,
                         color: const Color(0xFFD2691E),
-                        onTap: () => _showJanggiModeDialog(context),
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => const JanggiScreen(gameMode: JanggiGameMode.vsHuman),
+                            ),
+                          );
+                        },
                       ),
                     ],
                   ),
