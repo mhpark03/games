@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../services/gemini_service.dart';
+import '../../services/game_save_service.dart';
 
 enum JanggiPieceType { gung, cha, po, ma, sang, sa, byung }
 
@@ -36,14 +37,45 @@ class JanggiPiece {
         return color == JanggiColor.cho ? '졸' : '병';
     }
   }
+
+  Map<String, dynamic> toJson() => {
+    'type': type.index,
+    'color': color.index,
+  };
+
+  factory JanggiPiece.fromJson(Map<String, dynamic> json) => JanggiPiece(
+    JanggiPieceType.values[json['type'] as int],
+    JanggiColor.values[json['color'] as int],
+  );
 }
 
 enum JanggiGameMode { vsCho, vsHan, vsHuman }
 
 class JanggiScreen extends StatefulWidget {
   final JanggiGameMode gameMode;
+  final bool resumeGame;
 
-  const JanggiScreen({super.key, required this.gameMode});
+  const JanggiScreen({
+    super.key,
+    required this.gameMode,
+    this.resumeGame = false,
+  });
+
+  static Future<bool> hasSavedGame() async {
+    return await GameSaveService.hasSavedGame('janggi');
+  }
+
+  static Future<JanggiGameMode?> getSavedGameMode() async {
+    final gameState = await GameSaveService.loadGame('janggi');
+    if (gameState == null) return null;
+    final modeIndex = gameState['gameMode'] as int?;
+    if (modeIndex == null) return null;
+    return JanggiGameMode.values[modeIndex];
+  }
+
+  static Future<void> clearSavedGame() async {
+    await GameSaveService.clearSave();
+  }
 
   @override
   State<JanggiScreen> createState() => _JanggiScreenState();
@@ -79,10 +111,15 @@ class _JanggiScreenState extends State<JanggiScreen> {
     board = List.generate(10, (_) => List.filled(9, null));
     _loadGeminiApiKey();
 
-    // 게임 시작 시 마상 배치 선택 다이얼로그 표시
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      _showSetupDialog();
-    });
+    if (widget.resumeGame) {
+      // 저장된 게임 불러오기
+      _loadGame();
+    } else {
+      // 게임 시작 시 마상 배치 선택 다이얼로그 표시
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        _showSetupDialog();
+      });
+    }
   }
 
   // 빌드 시 주입된 API 키 (--dart-define=GEMINI_API_KEY=xxx)
@@ -116,6 +153,75 @@ class _JanggiScreenState extends State<JanggiScreen> {
       geminiApiKey = apiKey;
       geminiService = apiKey.isNotEmpty ? GeminiService(apiKey) : null;
     });
+  }
+
+  Future<void> _saveGame() async {
+    if (isGameOver || isSetupPhase) {
+      await JanggiScreen.clearSavedGame();
+      return;
+    }
+
+    final boardData = board.map((row) => row.map((p) => p?.toJson()).toList()).toList();
+
+    final gameState = {
+      'board': boardData,
+      'currentTurn': currentTurn.index,
+      'gameMode': widget.gameMode.index,
+      'isInCheck': isInCheck,
+      'choLeftPosition': choLeftPosition.index,
+      'choRightPosition': choRightPosition.index,
+      'hanLeftPosition': hanLeftPosition.index,
+      'hanRightPosition': hanRightPosition.index,
+    };
+
+    await GameSaveService.saveGame('janggi', gameState);
+  }
+
+  Future<void> _loadGame() async {
+    final gameState = await GameSaveService.loadGame('janggi');
+
+    if (gameState == null) {
+      // 저장된 게임이 없으면 새 게임 시작
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        _showSetupDialog();
+      });
+      return;
+    }
+
+    final boardData = gameState['board'] as List;
+    board = boardData.map<List<JanggiPiece?>>((row) {
+      return (row as List).map<JanggiPiece?>((p) {
+        if (p == null) return null;
+        return JanggiPiece.fromJson(p as Map<String, dynamic>);
+      }).toList();
+    }).toList();
+
+    currentTurn = JanggiColor.values[gameState['currentTurn'] as int? ?? 0];
+    isInCheck = gameState['isInCheck'] as bool? ?? false;
+    choLeftPosition = MaSangPosition.values[gameState['choLeftPosition'] as int? ?? 0];
+    choRightPosition = MaSangPosition.values[gameState['choRightPosition'] as int? ?? 0];
+    hanLeftPosition = MaSangPosition.values[gameState['hanLeftPosition'] as int? ?? 0];
+    hanRightPosition = MaSangPosition.values[gameState['hanRightPosition'] as int? ?? 0];
+
+    setState(() {
+      isSetupPhase = false;
+      isGameOver = false;
+      selectedRow = null;
+      selectedCol = null;
+      validMoves = null;
+      winner = null;
+      isThinking = false;
+    });
+
+    // 컴퓨터 턴이면 자동으로 수 두기
+    if (widget.gameMode != JanggiGameMode.vsHuman) {
+      if ((widget.gameMode == JanggiGameMode.vsCho && currentTurn == JanggiColor.cho) ||
+          (widget.gameMode == JanggiGameMode.vsHan && currentTurn == JanggiColor.han)) {
+        Future.delayed(const Duration(milliseconds: 500), () {
+          if (mounted) _makeComputerMove();
+        });
+      }
+    }
   }
 
   void _showAISettingsDialog() {
@@ -1159,6 +1265,9 @@ class _JanggiScreenState extends State<JanggiScreen> {
         });
       }
     }
+
+    // 게임 저장
+    _saveGame();
   }
 
   void _makeComputerMove() async {
@@ -1321,6 +1430,8 @@ class _JanggiScreenState extends State<JanggiScreen> {
   }
 
   void _resetGame() {
+    JanggiScreen.clearSavedGame();
+
     setState(() {
       board = List.generate(10, (_) => List.filled(9, null));
       currentTurn = JanggiColor.cho;

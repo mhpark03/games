@@ -1,6 +1,5 @@
-import 'dart:convert';
 import 'package:flutter/material.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+import '../../services/game_save_service.dart';
 
 enum Disc { none, black, white }
 
@@ -21,22 +20,19 @@ class OthelloScreen extends StatefulWidget {
   });
 
   static Future<bool> hasSavedGame() async {
-    final prefs = await SharedPreferences.getInstance();
-    return prefs.containsKey('othello_board');
+    return await GameSaveService.hasSavedGame('othello');
   }
 
   static Future<OthelloGameMode?> getSavedGameMode() async {
-    final prefs = await SharedPreferences.getInstance();
-    final modeIndex = prefs.getInt('othello_gameMode');
+    final gameState = await GameSaveService.loadGame('othello');
+    if (gameState == null) return null;
+    final modeIndex = gameState['gameMode'] as int?;
     if (modeIndex == null) return null;
     return OthelloGameMode.values[modeIndex];
   }
 
   static Future<void> clearSavedGame() async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.remove('othello_board');
-    await prefs.remove('othello_isBlackTurn');
-    await prefs.remove('othello_gameMode');
+    await GameSaveService.clearSave();
   }
 
   @override
@@ -105,30 +101,33 @@ class _OthelloScreenState extends State<OthelloScreen> {
       return;
     }
 
-    final prefs = await SharedPreferences.getInstance();
     final boardData = board.map((row) => row.map((d) => d.index).toList()).toList();
-    await prefs.setString('othello_board', jsonEncode(boardData));
-    await prefs.setBool('othello_isBlackTurn', isBlackTurn);
-    await prefs.setInt('othello_gameMode', widget.gameMode.index);
+
+    final gameState = {
+      'board': boardData,
+      'isBlackTurn': isBlackTurn,
+      'gameMode': widget.gameMode.index,
+    };
+
+    await GameSaveService.saveGame('othello', gameState);
   }
 
   Future<void> _loadGame() async {
-    final prefs = await SharedPreferences.getInstance();
-    final boardJson = prefs.getString('othello_board');
+    final gameState = await GameSaveService.loadGame('othello');
 
-    if (boardJson == null) {
+    if (gameState == null) {
       _initBoard();
       return;
     }
 
-    final boardData = jsonDecode(boardJson) as List;
+    final boardData = gameState['board'] as List;
     board = boardData
         .map<List<Disc>>((row) => (row as List)
             .map<Disc>((d) => Disc.values[d as int])
             .toList())
         .toList();
 
-    isBlackTurn = prefs.getBool('othello_isBlackTurn') ?? true;
+    isBlackTurn = gameState['isBlackTurn'] as bool? ?? true;
     gameOver = false;
     _countDiscs();
     _updateValidMoves();

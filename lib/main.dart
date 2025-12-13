@@ -673,6 +673,86 @@ class HomeScreen extends StatelessWidget {
     );
   }
 
+  // 장기 게임 이어하기 확인 다이얼로그
+  Future<void> _showJanggiContinueDialog(BuildContext context) async {
+    final hasSaved = await JanggiScreen.hasSavedGame();
+
+    if (!context.mounted) return;
+
+    if (hasSaved) {
+      showDialog(
+        context: context,
+        builder: (BuildContext context) {
+          return AlertDialog(
+            backgroundColor: Colors.grey.shade900,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(16),
+              side: BorderSide(color: const Color(0xFFD2691E).withValues(alpha: 0.5), width: 2),
+            ),
+            title: const Text(
+              '저장된 게임',
+              style: TextStyle(
+                color: Color(0xFFD2691E),
+                fontWeight: FontWeight.bold,
+              ),
+              textAlign: TextAlign.center,
+            ),
+            content: const Text(
+              '이전에 플레이하던 게임이 있습니다.\n이어서 하시겠습니까?',
+              style: TextStyle(color: Colors.white70),
+              textAlign: TextAlign.center,
+            ),
+            actions: [
+              TextButton(
+                onPressed: () {
+                  Navigator.pop(context);
+                  JanggiScreen.clearSavedGame();
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const JanggiScreen(gameMode: JanggiGameMode.vsHuman),
+                    ),
+                  );
+                },
+                child: const Text(
+                  '새 게임',
+                  style: TextStyle(color: Colors.white70),
+                ),
+              ),
+              ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFFD2691E),
+                  foregroundColor: Colors.white,
+                ),
+                onPressed: () {
+                  Navigator.pop(context);
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const JanggiScreen(
+                        gameMode: JanggiGameMode.vsHuman,
+                        resumeGame: true,
+                      ),
+                    ),
+                  );
+                },
+                child: const Text('이어하기'),
+              ),
+            ],
+          );
+        },
+      );
+    } else {
+      // 저장된 게임이 없으면 바로 새 게임 시작
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => const JanggiScreen(gameMode: JanggiGameMode.vsHuman),
+        ),
+      );
+    }
+  }
+
   // 장기 게임 대상 선택 다이얼로그
   void _showJanggiModeDialog(BuildContext context) {
     showDialog(
@@ -881,14 +961,7 @@ class HomeScreen extends StatelessWidget {
                         subtitle: '장기',
                         icon: Icons.apps,
                         color: const Color(0xFFD2691E),
-                        onTap: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => const JanggiScreen(gameMode: JanggiGameMode.vsHuman),
-                            ),
-                          );
-                        },
+                        onTap: () => _showJanggiContinueDialog(context),
                       ),
                       _buildGameCard(
                         context,

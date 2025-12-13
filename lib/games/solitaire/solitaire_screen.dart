@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'dart:math';
+import '../../services/game_save_service.dart';
 
 enum Suit { hearts, diamonds, clubs, spades }
 
@@ -11,6 +12,21 @@ class PlayingCard {
   bool faceUp;
 
   PlayingCard(this.rank, this.suit, {this.faceUp = false});
+
+  // JSON 직렬화
+  Map<String, dynamic> toJson() => {
+    'rank': rank,
+    'suit': suit.index,
+    'faceUp': faceUp,
+  };
+
+  factory PlayingCard.fromJson(Map<String, dynamic> json) {
+    return PlayingCard(
+      json['rank'] as int,
+      Suit.values[json['suit'] as int],
+      faceUp: json['faceUp'] as bool,
+    );
+  }
 
   CardColor get color =>
       (suit == Suit.hearts || suit == Suit.diamonds) ? CardColor.red : CardColor.black;
@@ -70,11 +86,142 @@ class _SolitaireScreenState extends State<SolitaireScreen> {
 
   int moves = 0;
   bool isGameWon = false;
+  bool isLoading = true;
 
   @override
   void initState() {
     super.initState();
-    _initGame();
+    _checkSavedGame();
+  }
+
+  Future<void> _checkSavedGame() async {
+    final hasSave = await GameSaveService.hasSavedGame('solitaire');
+
+    if (hasSave && mounted) {
+      // 저장된 게임이 있으면 다이얼로그 표시
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        _showContinueDialog();
+      });
+    } else {
+      _initGame();
+    }
+
+    if (mounted) {
+      setState(() {
+        isLoading = false;
+      });
+    }
+  }
+
+  void _showContinueDialog() {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          backgroundColor: Colors.green.shade800,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+            side: const BorderSide(color: Colors.white30, width: 2),
+          ),
+          title: const Text(
+            '저장된 게임',
+            style: TextStyle(
+              color: Colors.white,
+              fontWeight: FontWeight.bold,
+            ),
+            textAlign: TextAlign.center,
+          ),
+          content: const Text(
+            '이전에 플레이하던 게임이 있습니다.\n이어서 하시겠습니까?',
+            style: TextStyle(color: Colors.white70),
+            textAlign: TextAlign.center,
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.pop(context);
+                _clearSavedGame();
+                _initGame();
+              },
+              child: const Text(
+                '새 게임',
+                style: TextStyle(color: Colors.white70),
+              ),
+            ),
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.white,
+                foregroundColor: Colors.green.shade800,
+              ),
+              onPressed: () {
+                Navigator.pop(context);
+                _loadGame();
+              },
+              child: const Text('이어하기'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  Future<void> _saveGame() async {
+    if (isGameWon) return; // 승리한 게임은 저장하지 않음
+
+    final gameState = {
+      'tableau': tableau.map((col) => col.map((c) => c.toJson()).toList()).toList(),
+      'foundations': foundations.map((col) => col.map((c) => c.toJson()).toList()).toList(),
+      'stock': stock.map((c) => c.toJson()).toList(),
+      'waste': waste.map((c) => c.toJson()).toList(),
+      'moves': moves,
+    };
+
+    await GameSaveService.saveGame('solitaire', gameState);
+  }
+
+  Future<void> _loadGame() async {
+    final gameState = await GameSaveService.loadGame('solitaire');
+
+    if (gameState != null) {
+      try {
+        setState(() {
+          tableau = (gameState['tableau'] as List)
+              .map((col) => (col as List)
+                  .map((c) => PlayingCard.fromJson(c as Map<String, dynamic>))
+                  .toList())
+              .toList();
+
+          foundations = (gameState['foundations'] as List)
+              .map((col) => (col as List)
+                  .map((c) => PlayingCard.fromJson(c as Map<String, dynamic>))
+                  .toList())
+              .toList();
+
+          stock = (gameState['stock'] as List)
+              .map((c) => PlayingCard.fromJson(c as Map<String, dynamic>))
+              .toList();
+
+          waste = (gameState['waste'] as List)
+              .map((c) => PlayingCard.fromJson(c as Map<String, dynamic>))
+              .toList();
+
+          moves = gameState['moves'] as int;
+          isGameWon = false;
+          draggedCards = null;
+          dragSource = null;
+          dragSourceIndex = null;
+        });
+      } catch (e) {
+        _initGame();
+      }
+    } else {
+      _initGame();
+    }
+  }
+
+  Future<void> _clearSavedGame() async {
+    await GameSaveService.clearSave();
   }
 
   void _initGame() {
@@ -135,6 +282,7 @@ class _SolitaireScreenState extends State<SolitaireScreen> {
         moves++;
       }
     });
+    _saveGame();
   }
 
   bool _canPlaceOnTableau(PlayingCard card, int tableauIndex) {
@@ -167,6 +315,7 @@ class _SolitaireScreenState extends State<SolitaireScreen> {
       setState(() {
         isGameWon = true;
       });
+      _clearSavedGame(); // 승리 시 저장된 게임 삭제
     }
   }
 
@@ -217,6 +366,7 @@ class _SolitaireScreenState extends State<SolitaireScreen> {
           }
         }
         _checkWin();
+        _saveGame();
       }
 
       _onCardDragEnd();
@@ -252,6 +402,7 @@ class _SolitaireScreenState extends State<SolitaireScreen> {
           moves++;
           _checkWin();
         });
+        _saveGame();
         return;
       }
     }
@@ -259,6 +410,15 @@ class _SolitaireScreenState extends State<SolitaireScreen> {
 
   @override
   Widget build(BuildContext context) {
+    if (isLoading) {
+      return Scaffold(
+        backgroundColor: Colors.green.shade700,
+        body: const Center(
+          child: CircularProgressIndicator(color: Colors.white),
+        ),
+      );
+    }
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('솔리테어'),
@@ -277,6 +437,7 @@ class _SolitaireScreenState extends State<SolitaireScreen> {
           IconButton(
             icon: const Icon(Icons.refresh),
             onPressed: () {
+              _clearSavedGame();
               setState(() {
                 _initGame();
               });
@@ -586,80 +747,61 @@ class _SolitaireScreenState extends State<SolitaireScreen> {
       ),
       child: showPartial
           ? Padding(
-              padding: const EdgeInsets.only(left: 4, top: 2),
+              padding: const EdgeInsets.only(left: 3, top: 2),
               child: Text(
                 '${card.rankString}${card.suitString}',
                 style: TextStyle(
                   color: card.suitColor,
-                  fontSize: 10,
+                  fontSize: 11,
                   fontWeight: FontWeight.bold,
                 ),
               ),
             )
-          : Stack(
-              children: [
-                // 좌상단
-                Positioned(
-                  left: 4,
-                  top: 2,
-                  child: Column(
-                    children: [
-                      Text(
-                        card.rankString,
-                        style: TextStyle(
-                          color: card.suitColor,
-                          fontSize: 14,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      Text(
+          : Padding(
+              padding: const EdgeInsets.all(3),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // 상단: 랭크 + 수트
+                  Text(
+                    '${card.rankString}${card.suitString}',
+                    style: TextStyle(
+                      color: card.suitColor,
+                      fontSize: 13,
+                      fontWeight: FontWeight.bold,
+                      height: 1.0,
+                    ),
+                  ),
+                  // 중앙 영역: 큰 수트 심볼
+                  Expanded(
+                    child: Center(
+                      child: Text(
                         card.suitString,
                         style: TextStyle(
                           color: card.suitColor,
-                          fontSize: 12,
+                          fontSize: 22,
                         ),
                       ),
-                    ],
-                  ),
-                ),
-                // 중앙
-                Center(
-                  child: Text(
-                    card.suitString,
-                    style: TextStyle(
-                      color: card.suitColor,
-                      fontSize: 24,
                     ),
                   ),
-                ),
-                // 우하단 (뒤집힌)
-                Positioned(
-                  right: 4,
-                  bottom: 2,
-                  child: Transform.rotate(
-                    angle: 3.14159,
-                    child: Column(
-                      children: [
-                        Text(
-                          card.rankString,
-                          style: TextStyle(
-                            color: card.suitColor,
-                            fontSize: 14,
-                            fontWeight: FontWeight.bold,
-                          ),
+                  // 하단: 뒤집힌 랭크 + 수트
+                  Align(
+                    alignment: Alignment.bottomRight,
+                    child: Transform.rotate(
+                      angle: 3.14159,
+                      child: Text(
+                        '${card.rankString}${card.suitString}',
+                        style: TextStyle(
+                          color: card.suitColor,
+                          fontSize: 13,
+                          fontWeight: FontWeight.bold,
+                          height: 1.0,
                         ),
-                        Text(
-                          card.suitString,
-                          style: TextStyle(
-                            color: card.suitColor,
-                            fontSize: 12,
-                          ),
-                        ),
-                      ],
+                      ),
                     ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
     );
   }

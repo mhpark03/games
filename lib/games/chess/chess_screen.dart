@@ -1,7 +1,6 @@
-import 'dart:convert';
 import 'dart:math';
 import 'package:flutter/material.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+import '../../services/game_save_service.dart';
 
 enum PieceType { king, queen, rook, bishop, knight, pawn }
 enum PieceColor { white, black }
@@ -69,23 +68,19 @@ class ChessScreen extends StatefulWidget {
   });
 
   static Future<bool> hasSavedGame() async {
-    final prefs = await SharedPreferences.getInstance();
-    return prefs.containsKey('chess_board');
+    return await GameSaveService.hasSavedGame('chess');
   }
 
   static Future<ChessGameMode?> getSavedGameMode() async {
-    final prefs = await SharedPreferences.getInstance();
-    final modeIndex = prefs.getInt('chess_gameMode');
+    final gameState = await GameSaveService.loadGame('chess');
+    if (gameState == null) return null;
+    final modeIndex = gameState['gameMode'] as int?;
     if (modeIndex == null) return null;
     return ChessGameMode.values[modeIndex];
   }
 
   static Future<void> clearSavedGame() async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.remove('chess_board');
-    await prefs.remove('chess_isWhiteTurn');
-    await prefs.remove('chess_gameMode');
-    await prefs.remove('chess_enPassant');
+    await GameSaveService.clearSave();
   }
 
   @override
@@ -171,28 +166,27 @@ class _ChessScreenState extends State<ChessScreen> {
       return;
     }
 
-    final prefs = await SharedPreferences.getInstance();
     final boardData = board.map((row) => row.map((p) => p?.toJson()).toList()).toList();
-    await prefs.setString('chess_board', jsonEncode(boardData));
-    await prefs.setBool('chess_isWhiteTurn', isWhiteTurn);
-    await prefs.setInt('chess_gameMode', widget.gameMode.index);
-    if (enPassantTarget != null) {
-      await prefs.setString('chess_enPassant', jsonEncode(enPassantTarget));
-    } else {
-      await prefs.remove('chess_enPassant');
-    }
+
+    final gameState = {
+      'board': boardData,
+      'isWhiteTurn': isWhiteTurn,
+      'gameMode': widget.gameMode.index,
+      'enPassantTarget': enPassantTarget,
+    };
+
+    await GameSaveService.saveGame('chess', gameState);
   }
 
   Future<void> _loadGame() async {
-    final prefs = await SharedPreferences.getInstance();
-    final boardJson = prefs.getString('chess_board');
+    final gameState = await GameSaveService.loadGame('chess');
 
-    if (boardJson == null) {
+    if (gameState == null) {
       _initBoard();
       return;
     }
 
-    final boardData = jsonDecode(boardJson) as List;
+    final boardData = gameState['board'] as List;
     board = boardData.map<List<ChessPiece?>>((row) {
       return (row as List).map<ChessPiece?>((p) {
         if (p == null) return null;
@@ -200,9 +194,9 @@ class _ChessScreenState extends State<ChessScreen> {
       }).toList();
     }).toList();
 
-    isWhiteTurn = prefs.getBool('chess_isWhiteTurn') ?? true;
-    final epJson = prefs.getString('chess_enPassant');
-    enPassantTarget = epJson != null ? List<int>.from(jsonDecode(epJson)) : null;
+    isWhiteTurn = gameState['isWhiteTurn'] as bool? ?? true;
+    final epData = gameState['enPassantTarget'];
+    enPassantTarget = epData != null ? List<int>.from(epData as List) : null;
     gameOver = false;
     selectedSquare = null;
     validMoves = [];
