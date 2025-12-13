@@ -734,17 +734,21 @@ class _SolitaireScreenState extends State<SolitaireScreen> {
                     },
                     feedback: Material(
                       color: Colors.transparent,
-                      child: Column(
-                        children: dragCards
-                            .asMap()
-                            .entries
-                            .map((entry) => Padding(
-                                  padding: EdgeInsets.only(
-                                      top: entry.key == 0 ? 0 : 20),
-                                  child: _buildCard(entry.value,
-                                      width: 50, height: 70),
-                                ))
-                            .toList(),
+                      child: SizedBox(
+                        width: 50,
+                        height: 70 + (dragCards.length - 1) * 20.0,
+                        child: Stack(
+                          children: dragCards
+                              .asMap()
+                              .entries
+                              .map((entry) => Positioned(
+                                    top: entry.key * 20.0,
+                                    left: 0,
+                                    child: _buildCard(entry.value,
+                                        width: 50, height: 70),
+                                  ))
+                              .toList(),
+                        ),
                       ),
                     ),
                     childWhenDragging: SizedBox(
