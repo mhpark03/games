@@ -526,6 +526,90 @@ class _SolitaireScreenState extends State<SolitaireScreen> {
     }
   }
 
+  // 모든 테이블 카드가 열려있는지 확인 (자동 완료 가능 여부)
+  bool _canAutoComplete() {
+    // 테이블의 모든 카드가 앞면이어야 함
+    for (var column in tableau) {
+      for (var card in column) {
+        if (!card.faceUp) return false;
+      }
+    }
+
+    return true;
+  }
+
+  // 자동 완료 체크 및 실행
+  void _checkAutoComplete() {
+    if (!_canAutoComplete()) return;
+
+    // 자동 완료 애니메이션 실행
+    _runAutoComplete();
+  }
+
+  // 자동 완료 실행
+  void _runAutoComplete() async {
+    while (!isGameWon) {
+      bool moved = false;
+
+      // 1. 웨이스트에서 파운데이션으로 이동
+      if (waste.isNotEmpty) {
+        final card = waste.last;
+        for (int f = 0; f < 4; f++) {
+          if (_canPlaceOnFoundation(card, f)) {
+            setState(() {
+              waste.removeLast();
+              foundations[f].add(card);
+              moves++;
+            });
+            moved = true;
+            await Future.delayed(const Duration(milliseconds: 100));
+            _checkWin();
+            break;
+          }
+        }
+        if (moved) continue;
+      }
+
+      // 2. 스톡에서 웨이스트로 카드 뽑기
+      if (stock.isNotEmpty && !moved) {
+        setState(() {
+          final card = stock.removeLast();
+          card.faceUp = true;
+          waste.add(card);
+        });
+        await Future.delayed(const Duration(milliseconds: 50));
+        continue;
+      }
+
+      // 3. 테이블에서 파운데이션으로 이동
+      for (int col = 0; col < 7; col++) {
+        if (tableau[col].isEmpty) continue;
+
+        final card = tableau[col].last;
+
+        for (int f = 0; f < 4; f++) {
+          if (_canPlaceOnFoundation(card, f)) {
+            setState(() {
+              tableau[col].removeLast();
+              foundations[f].add(card);
+              moves++;
+            });
+            moved = true;
+            await Future.delayed(const Duration(milliseconds: 100));
+            _checkWin();
+            break;
+          }
+        }
+
+        if (moved) break;
+      }
+
+      if (!moved) break; // 더 이상 이동할 카드가 없으면 종료
+    }
+
+    _saveGame();
+  }
+
   void _onCardDragStart(List<PlayingCard> cards, String source, int? sourceIndex) {
     setState(() {
       draggedCards = cards;
@@ -583,6 +667,11 @@ class _SolitaireScreenState extends State<SolitaireScreen> {
 
       _onCardDragEnd();
     });
+
+    // 이동 후 자동 완료 체크
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _checkAutoComplete();
+    });
   }
 
   void _removeCardsFromSource() {
@@ -616,6 +705,9 @@ class _SolitaireScreenState extends State<SolitaireScreen> {
           _checkWin();
         });
         _saveGame();
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          _checkAutoComplete();
+        });
         return;
       }
     }
@@ -640,6 +732,9 @@ class _SolitaireScreenState extends State<SolitaireScreen> {
           moves++;
         });
         _saveGame();
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          _checkAutoComplete();
+        });
         return;
       }
     }
@@ -673,6 +768,9 @@ class _SolitaireScreenState extends State<SolitaireScreen> {
           moves++;
         });
         _saveGame();
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          _checkAutoComplete();
+        });
         return;
       }
     }
