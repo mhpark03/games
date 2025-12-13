@@ -4,6 +4,12 @@ enum JanggiPieceType { gung, cha, po, ma, sang, sa, byung }
 
 enum JanggiColor { cho, han }
 
+// 마상 배치: 좌측(1,2번 위치)과 우측(6,7번 위치)의 마/상 순서
+enum MaSangPosition {
+  maSang, // 마상 (안쪽 마, 바깥쪽 상)
+  sangMa, // 상마 (안쪽 상, 바깥쪽 마)
+}
+
 class JanggiPiece {
   final JanggiPieceType type;
   final JanggiColor color;
@@ -53,10 +59,29 @@ class _JanggiScreenState extends State<JanggiScreen> {
   bool isThinking = false;
   bool isInCheck = false; // 현재 턴 플레이어가 장군 상태인지
 
+  // 마상 배치 설정
+  bool isSetupPhase = true;
+  MaSangPosition choLeftPosition = MaSangPosition.maSang;
+  MaSangPosition choRightPosition = MaSangPosition.maSang;
+  MaSangPosition hanLeftPosition = MaSangPosition.maSang;
+  MaSangPosition hanRightPosition = MaSangPosition.maSang;
+
   @override
   void initState() {
     super.initState();
-    _initBoard();
+    board = List.generate(10, (_) => List.filled(9, null));
+
+    // 게임 시작 시 마상 배치 선택 다이얼로그 표시
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _showSetupDialog();
+    });
+  }
+
+  void _startGame() {
+    setState(() {
+      isSetupPhase = false;
+      _initBoard();
+    });
 
     // 컴퓨터가 초(선공)인 경우 첫 수 두기
     if (widget.gameMode == JanggiGameMode.vsCho) {
@@ -66,17 +91,273 @@ class _JanggiScreenState extends State<JanggiScreen> {
     }
   }
 
+  void _showSetupDialog() {
+    // 컴퓨터의 마상 배치는 랜덤으로 설정
+    final random = DateTime.now().millisecondsSinceEpoch;
+    if (widget.gameMode == JanggiGameMode.vsCho) {
+      // 컴퓨터가 초일 때, 초의 배치는 랜덤
+      choLeftPosition = random % 2 == 0 ? MaSangPosition.maSang : MaSangPosition.sangMa;
+      choRightPosition = (random ~/ 2) % 2 == 0 ? MaSangPosition.maSang : MaSangPosition.sangMa;
+    } else if (widget.gameMode == JanggiGameMode.vsHan) {
+      // 컴퓨터가 한일 때, 한의 배치는 랜덤
+      hanLeftPosition = random % 2 == 0 ? MaSangPosition.maSang : MaSangPosition.sangMa;
+      hanRightPosition = (random ~/ 2) % 2 == 0 ? MaSangPosition.maSang : MaSangPosition.sangMa;
+    }
+
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (BuildContext context) {
+        return StatefulBuilder(
+          builder: (context, setDialogState) {
+            return AlertDialog(
+              backgroundColor: const Color(0xFFF5DEB3),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(color: const Color(0xFF8B4513), width: 3),
+              ),
+              title: const Text(
+                '마상 배치 선택',
+                style: TextStyle(
+                  color: Color(0xFF8B4513),
+                  fontWeight: FontWeight.bold,
+                ),
+                textAlign: TextAlign.center,
+              ),
+              content: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    // 플레이어 초의 배치 (한과 대전 또는 2인 플레이)
+                    if (widget.gameMode == JanggiGameMode.vsHan ||
+                        widget.gameMode == JanggiGameMode.vsHuman) ...[
+                      _buildPositionSelector(
+                        '초 (플레이어)',
+                        JanggiColor.cho,
+                        choLeftPosition,
+                        choRightPosition,
+                        (left, right) {
+                          setDialogState(() {
+                            choLeftPosition = left;
+                            choRightPosition = right;
+                          });
+                        },
+                      ),
+                      const SizedBox(height: 16),
+                    ],
+                    // 플레이어 한의 배치 (초와 대전 또는 2인 플레이)
+                    if (widget.gameMode == JanggiGameMode.vsCho ||
+                        widget.gameMode == JanggiGameMode.vsHuman) ...[
+                      _buildPositionSelector(
+                        widget.gameMode == JanggiGameMode.vsHuman ? '한' : '한 (플레이어)',
+                        JanggiColor.han,
+                        hanLeftPosition,
+                        hanRightPosition,
+                        (left, right) {
+                          setDialogState(() {
+                            hanLeftPosition = left;
+                            hanRightPosition = right;
+                          });
+                        },
+                      ),
+                    ],
+                  ],
+                ),
+              ),
+              actions: [
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFF8B4513),
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                    ),
+                    onPressed: () {
+                      Navigator.pop(context);
+                      setState(() {
+                        // 메인 상태 업데이트
+                      });
+                      _startGame();
+                    },
+                    child: const Text(
+                      '게임 시작',
+                      style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                    ),
+                  ),
+                ),
+              ],
+            );
+          },
+        );
+      },
+    );
+  }
+
+  Widget _buildPositionSelector(
+    String title,
+    JanggiColor color,
+    MaSangPosition leftPos,
+    MaSangPosition rightPos,
+    Function(MaSangPosition, MaSangPosition) onChanged,
+  ) {
+    final pieceColor = color == JanggiColor.cho
+        ? const Color(0xFF006400)
+        : const Color(0xFFB22222);
+
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: pieceColor.withAlpha(26),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: pieceColor.withAlpha(128)),
+      ),
+      child: Column(
+        children: [
+          Text(
+            title,
+            style: TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.bold,
+              color: pieceColor,
+            ),
+          ),
+          const SizedBox(height: 12),
+          Row(
+            children: [
+              Expanded(
+                child: _buildSideSelector(
+                  '좌측',
+                  leftPos,
+                  pieceColor,
+                  (pos) => onChanged(pos, rightPos),
+                ),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: _buildSideSelector(
+                  '우측',
+                  rightPos,
+                  pieceColor,
+                  (pos) => onChanged(leftPos, pos),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          Text(
+            '배치: ${_getPositionName(leftPos, rightPos)}',
+            style: TextStyle(
+              fontSize: 12,
+              color: Colors.grey.shade700,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSideSelector(
+    String label,
+    MaSangPosition position,
+    Color color,
+    Function(MaSangPosition) onChanged,
+  ) {
+    return Column(
+      children: [
+        Text(
+          label,
+          style: TextStyle(fontSize: 12, color: Colors.grey.shade700),
+        ),
+        const SizedBox(height: 4),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            _buildPositionButton(
+              '마상',
+              MaSangPosition.maSang,
+              position,
+              color,
+              onChanged,
+            ),
+            const SizedBox(width: 4),
+            _buildPositionButton(
+              '상마',
+              MaSangPosition.sangMa,
+              position,
+              color,
+              onChanged,
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+
+  Widget _buildPositionButton(
+    String label,
+    MaSangPosition buttonPos,
+    MaSangPosition currentPos,
+    Color color,
+    Function(MaSangPosition) onChanged,
+  ) {
+    final isSelected = buttonPos == currentPos;
+    return GestureDetector(
+      onTap: () => onChanged(buttonPos),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+        decoration: BoxDecoration(
+          color: isSelected ? color : Colors.transparent,
+          borderRadius: BorderRadius.circular(6),
+          border: Border.all(color: color),
+        ),
+        child: Text(
+          label,
+          style: TextStyle(
+            fontSize: 12,
+            fontWeight: FontWeight.bold,
+            color: isSelected ? Colors.white : color,
+          ),
+        ),
+      ),
+    );
+  }
+
+  String _getPositionName(MaSangPosition left, MaSangPosition right) {
+    if (left == MaSangPosition.maSang && right == MaSangPosition.maSang) {
+      return '내마외상';
+    } else if (left == MaSangPosition.sangMa && right == MaSangPosition.sangMa) {
+      return '외마내상';
+    } else if (left == MaSangPosition.maSang && right == MaSangPosition.sangMa) {
+      return '좌내마 우외마';
+    } else {
+      return '좌외마 우내마';
+    }
+  }
+
   void _initBoard() {
     board = List.generate(10, (_) => List.filled(9, null));
 
-    // 한(상단) 배치
+    // 한(상단) 배치 - 마상 위치 적용
     board[0][0] = JanggiPiece(JanggiPieceType.cha, JanggiColor.han);
-    board[0][1] = JanggiPiece(JanggiPieceType.sang, JanggiColor.han);
-    board[0][2] = JanggiPiece(JanggiPieceType.ma, JanggiColor.han);
+    // 좌측 마상 (1,2번 위치)
+    if (hanLeftPosition == MaSangPosition.maSang) {
+      board[0][1] = JanggiPiece(JanggiPieceType.ma, JanggiColor.han);
+      board[0][2] = JanggiPiece(JanggiPieceType.sang, JanggiColor.han);
+    } else {
+      board[0][1] = JanggiPiece(JanggiPieceType.sang, JanggiColor.han);
+      board[0][2] = JanggiPiece(JanggiPieceType.ma, JanggiColor.han);
+    }
     board[0][3] = JanggiPiece(JanggiPieceType.sa, JanggiColor.han);
     board[0][5] = JanggiPiece(JanggiPieceType.sa, JanggiColor.han);
-    board[0][6] = JanggiPiece(JanggiPieceType.sang, JanggiColor.han);
-    board[0][7] = JanggiPiece(JanggiPieceType.ma, JanggiColor.han);
+    // 우측 마상 (6,7번 위치)
+    if (hanRightPosition == MaSangPosition.maSang) {
+      board[0][6] = JanggiPiece(JanggiPieceType.sang, JanggiColor.han);
+      board[0][7] = JanggiPiece(JanggiPieceType.ma, JanggiColor.han);
+    } else {
+      board[0][6] = JanggiPiece(JanggiPieceType.ma, JanggiColor.han);
+      board[0][7] = JanggiPiece(JanggiPieceType.sang, JanggiColor.han);
+    }
     board[0][8] = JanggiPiece(JanggiPieceType.cha, JanggiColor.han);
     board[1][4] = JanggiPiece(JanggiPieceType.gung, JanggiColor.han);
     board[2][1] = JanggiPiece(JanggiPieceType.po, JanggiColor.han);
@@ -87,14 +368,26 @@ class _JanggiScreenState extends State<JanggiScreen> {
     board[3][6] = JanggiPiece(JanggiPieceType.byung, JanggiColor.han);
     board[3][8] = JanggiPiece(JanggiPieceType.byung, JanggiColor.han);
 
-    // 초(하단) 배치
+    // 초(하단) 배치 - 마상 위치 적용
     board[9][0] = JanggiPiece(JanggiPieceType.cha, JanggiColor.cho);
-    board[9][1] = JanggiPiece(JanggiPieceType.sang, JanggiColor.cho);
-    board[9][2] = JanggiPiece(JanggiPieceType.ma, JanggiColor.cho);
+    // 좌측 마상 (1,2번 위치)
+    if (choLeftPosition == MaSangPosition.maSang) {
+      board[9][1] = JanggiPiece(JanggiPieceType.ma, JanggiColor.cho);
+      board[9][2] = JanggiPiece(JanggiPieceType.sang, JanggiColor.cho);
+    } else {
+      board[9][1] = JanggiPiece(JanggiPieceType.sang, JanggiColor.cho);
+      board[9][2] = JanggiPiece(JanggiPieceType.ma, JanggiColor.cho);
+    }
     board[9][3] = JanggiPiece(JanggiPieceType.sa, JanggiColor.cho);
     board[9][5] = JanggiPiece(JanggiPieceType.sa, JanggiColor.cho);
-    board[9][6] = JanggiPiece(JanggiPieceType.sang, JanggiColor.cho);
-    board[9][7] = JanggiPiece(JanggiPieceType.ma, JanggiColor.cho);
+    // 우측 마상 (6,7번 위치)
+    if (choRightPosition == MaSangPosition.maSang) {
+      board[9][6] = JanggiPiece(JanggiPieceType.sang, JanggiColor.cho);
+      board[9][7] = JanggiPiece(JanggiPieceType.ma, JanggiColor.cho);
+    } else {
+      board[9][6] = JanggiPiece(JanggiPieceType.ma, JanggiColor.cho);
+      board[9][7] = JanggiPiece(JanggiPieceType.sang, JanggiColor.cho);
+    }
     board[9][8] = JanggiPiece(JanggiPieceType.cha, JanggiColor.cho);
     board[8][4] = JanggiPiece(JanggiPieceType.gung, JanggiColor.cho);
     board[7][1] = JanggiPiece(JanggiPieceType.po, JanggiColor.cho);
@@ -613,7 +906,7 @@ class _JanggiScreenState extends State<JanggiScreen> {
   }
 
   void _onTap(int row, int col) {
-    if (isGameOver || isThinking) return;
+    if (isSetupPhase || isGameOver || isThinking) return;
 
     // 컴퓨터 턴인 경우 무시
     if ((widget.gameMode == JanggiGameMode.vsCho &&
@@ -830,7 +1123,7 @@ class _JanggiScreenState extends State<JanggiScreen> {
 
   void _resetGame() {
     setState(() {
-      _initBoard();
+      board = List.generate(10, (_) => List.filled(9, null));
       currentTurn = JanggiColor.cho;
       selectedRow = null;
       selectedCol = null;
@@ -839,13 +1132,13 @@ class _JanggiScreenState extends State<JanggiScreen> {
       winner = null;
       isThinking = false;
       isInCheck = false;
+      isSetupPhase = true;
     });
 
-    if (widget.gameMode == JanggiGameMode.vsCho) {
-      Future.delayed(const Duration(milliseconds: 500), () {
-        _makeComputerMove();
-      });
-    }
+    // 마상 배치 선택 다이얼로그 다시 표시
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _showSetupDialog();
+    });
   }
 
   @override
@@ -889,7 +1182,10 @@ class _JanggiScreenState extends State<JanggiScreen> {
     String status;
     Color bgColor = const Color(0xFFD2691E);
 
-    if (isGameOver) {
+    if (isSetupPhase) {
+      status = '마상 배치 선택 중...';
+      bgColor = Colors.blueGrey;
+    } else if (isGameOver) {
       status = '$winner 승리!';
       bgColor = Colors.purple;
     } else if (isThinking) {
