@@ -792,11 +792,13 @@ class _SolitaireScreenState extends State<SolitaireScreen> {
               } else {
                 // 뒷면 카드
                 return SizedBox(
-                  height: 20,
+                  height: isEffectivelyLast ? 70 : 20,
                   child: Align(
                     alignment: Alignment.topCenter,
                     child: _buildCardBack(
-                        width: double.infinity, height: 70, showPartial: true),
+                        width: double.infinity,
+                        height: 70,
+                        showPartial: !isEffectivelyLast),
                   ),
                 );
               }
