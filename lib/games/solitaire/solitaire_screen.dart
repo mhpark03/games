@@ -126,7 +126,7 @@ class _SolitaireScreenState extends State<SolitaireScreen> {
   }
 
   void _showDrawModeDialog() {
-    showDialog(
+    showDialog<int>(
       context: context,
       barrierDismissible: false,
       builder: (context) {
@@ -160,8 +160,7 @@ class _SolitaireScreenState extends State<SolitaireScreen> {
                       foregroundColor: Colors.green.shade800,
                     ),
                     onPressed: () {
-                      Navigator.pop(context);
-                      _startNewGame(1);
+                      Navigator.pop(context, 1);
                     },
                     child: const Text('1장씩'),
                   ),
@@ -174,8 +173,7 @@ class _SolitaireScreenState extends State<SolitaireScreen> {
                       foregroundColor: Colors.white,
                     ),
                     onPressed: () {
-                      Navigator.pop(context);
-                      _startNewGame(3);
+                      Navigator.pop(context, 3);
                     },
                     child: const Text('3장씩'),
                   ),
@@ -185,7 +183,11 @@ class _SolitaireScreenState extends State<SolitaireScreen> {
           ],
         );
       },
-    );
+    ).then((selectedCount) {
+      if (selectedCount != null && mounted) {
+        _startNewGame(selectedCount);
+      }
+    });
   }
 
   void _startNewGame(int count) {
