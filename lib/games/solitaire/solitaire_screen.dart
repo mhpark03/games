@@ -586,80 +586,61 @@ class _SolitaireScreenState extends State<SolitaireScreen> {
       ),
       child: showPartial
           ? Padding(
-              padding: const EdgeInsets.only(left: 4, top: 2),
+              padding: const EdgeInsets.only(left: 3, top: 2),
               child: Text(
                 '${card.rankString}${card.suitString}',
                 style: TextStyle(
                   color: card.suitColor,
-                  fontSize: 10,
+                  fontSize: 11,
                   fontWeight: FontWeight.bold,
                 ),
               ),
             )
-          : Stack(
-              children: [
-                // 좌상단
-                Positioned(
-                  left: 4,
-                  top: 2,
-                  child: Column(
-                    children: [
-                      Text(
-                        card.rankString,
-                        style: TextStyle(
-                          color: card.suitColor,
-                          fontSize: 14,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      Text(
+          : Padding(
+              padding: const EdgeInsets.all(3),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // 상단: 랭크 + 수트
+                  Text(
+                    '${card.rankString}${card.suitString}',
+                    style: TextStyle(
+                      color: card.suitColor,
+                      fontSize: 13,
+                      fontWeight: FontWeight.bold,
+                      height: 1.0,
+                    ),
+                  ),
+                  // 중앙 영역: 큰 수트 심볼
+                  Expanded(
+                    child: Center(
+                      child: Text(
                         card.suitString,
                         style: TextStyle(
                           color: card.suitColor,
-                          fontSize: 12,
+                          fontSize: 22,
                         ),
                       ),
-                    ],
-                  ),
-                ),
-                // 중앙
-                Center(
-                  child: Text(
-                    card.suitString,
-                    style: TextStyle(
-                      color: card.suitColor,
-                      fontSize: 24,
                     ),
                   ),
-                ),
-                // 우하단 (뒤집힌)
-                Positioned(
-                  right: 4,
-                  bottom: 2,
-                  child: Transform.rotate(
-                    angle: 3.14159,
-                    child: Column(
-                      children: [
-                        Text(
-                          card.rankString,
-                          style: TextStyle(
-                            color: card.suitColor,
-                            fontSize: 14,
-                            fontWeight: FontWeight.bold,
-                          ),
+                  // 하단: 뒤집힌 랭크 + 수트
+                  Align(
+                    alignment: Alignment.bottomRight,
+                    child: Transform.rotate(
+                      angle: 3.14159,
+                      child: Text(
+                        '${card.rankString}${card.suitString}',
+                        style: TextStyle(
+                          color: card.suitColor,
+                          fontSize: 13,
+                          fontWeight: FontWeight.bold,
+                          height: 1.0,
                         ),
-                        Text(
-                          card.suitString,
-                          style: TextStyle(
-                            color: card.suitColor,
-                            fontSize: 12,
-                          ),
-                        ),
-                      ],
+                      ),
                     ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
     );
   }
