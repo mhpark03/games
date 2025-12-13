@@ -5,6 +5,7 @@ import 'games/gomoku/gomoku_screen.dart';
 import 'games/othello/othello_screen.dart';
 import 'games/chess/chess_screen.dart';
 import 'games/janggi/janggi_screen.dart';
+import 'games/solitaire/solitaire_screen.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
@@ -885,6 +886,21 @@ class HomeScreen extends StatelessWidget {
                             context,
                             MaterialPageRoute(
                               builder: (context) => const JanggiScreen(gameMode: JanggiGameMode.vsHuman),
+                            ),
+                          );
+                        },
+                      ),
+                      _buildGameCard(
+                        context,
+                        title: 'SOLITAIRE',
+                        subtitle: '솔리테어',
+                        icon: Icons.style,
+                        color: Colors.green.shade700,
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => const SolitaireScreen(),
                             ),
                           );
                         },
