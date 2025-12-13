@@ -613,6 +613,41 @@ class _SolitaireScreenState extends State<SolitaireScreen> {
       },
       builder: (context, candidateData, rejectedData) {
         final isHighlighted = candidateData.isNotEmpty;
+        final pile = foundations[index];
+
+        Widget cardWidget;
+        if (pile.isEmpty) {
+          cardWidget = _buildCardPlaceholder(
+            child: Text(
+              ['♠', '♥', '♣', '♦'][index],
+              style: TextStyle(
+                fontSize: 24,
+                color: Colors.white.withAlpha(77),
+              ),
+            ),
+          );
+        } else {
+          final card = pile.last;
+          cardWidget = Draggable<Map<String, dynamic>>(
+            data: {'cards': [card], 'source': 'foundation_$index', 'index': index},
+            feedback: _buildCard(card, width: 50, height: 70),
+            childWhenDragging: pile.length > 1
+                ? _buildCard(pile[pile.length - 2], width: 50, height: 70)
+                : _buildCardPlaceholder(
+                    child: Text(
+                      ['♠', '♥', '♣', '♦'][index],
+                      style: TextStyle(
+                        fontSize: 24,
+                        color: Colors.white.withAlpha(77),
+                      ),
+                    ),
+                  ),
+            onDragStarted: () => _onCardDragStart([card], 'foundation_$index', index),
+            onDragEnd: (_) => _onCardDragEnd(),
+            child: _buildCard(card, width: 50, height: 70),
+          );
+        }
+
         return Container(
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(6),
@@ -621,17 +656,7 @@ class _SolitaireScreenState extends State<SolitaireScreen> {
               width: isHighlighted ? 3 : 2,
             ),
           ),
-          child: foundations[index].isEmpty
-              ? _buildCardPlaceholder(
-                  child: Text(
-                    ['♠', '♥', '♣', '♦'][index],
-                    style: TextStyle(
-                      fontSize: 24,
-                      color: Colors.white.withAlpha(77),
-                    ),
-                  ),
-                )
-              : _buildCard(foundations[index].last, width: 50, height: 70),
+          child: cardWidget,
         );
       },
     );
