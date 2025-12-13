@@ -736,9 +736,13 @@ class _SolitaireScreenState extends State<SolitaireScreen> {
                       color: Colors.transparent,
                       child: Column(
                         children: dragCards
-                            .map((c) => Padding(
-                                  padding: const EdgeInsets.only(top: 0),
-                                  child: _buildCard(c, width: 50, height: 70),
+                            .asMap()
+                            .entries
+                            .map((entry) => Padding(
+                                  padding: EdgeInsets.only(
+                                      top: entry.key == 0 ? 0 : 20),
+                                  child: _buildCard(entry.value,
+                                      width: 50, height: 70),
                                 ))
                             .toList(),
                       ),
