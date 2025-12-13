@@ -237,36 +237,8 @@ class _SolitaireScreenState extends State<SolitaireScreen> {
   }
 
   void _initGame() {
-    // 52장의 카드 생성
-    List<PlayingCard> deck = [];
-    for (var suit in Suit.values) {
-      for (int rank = 1; rank <= 13; rank++) {
-        deck.add(PlayingCard(rank, suit));
-      }
-    }
-
-    // 셔플
-    final random = Random();
-    deck.shuffle(random);
-
-    // 테이블 초기화 (7열, 1-7장씩)
-    tableau = List.generate(7, (_) => []);
-    int cardIndex = 0;
-    for (int col = 0; col < 7; col++) {
-      for (int row = 0; row <= col; row++) {
-        tableau[col].add(deck[cardIndex]);
-        cardIndex++;
-      }
-      // 맨 위 카드만 앞면
-      tableau[col].last.faceUp = true;
-    }
-
-    // 파운데이션 초기화 (4개의 빈 파일)
-    foundations = List.generate(4, (_) => []);
-
-    // 나머지는 스톡으로
-    stock = deck.sublist(cardIndex);
-    waste = [];
+    // 항상 풀 수 있는 게임 생성 (역방향 딜 방식)
+    _generateSolvableGame();
 
     moves = 0;
     isGameWon = false;
@@ -274,6 +246,109 @@ class _SolitaireScreenState extends State<SolitaireScreen> {
     dragSource = null;
     dragSourceIndex = null;
     _undoHistory = [];
+  }
+
+  // 역방향 딜로 항상 풀 수 있는 게임 생성
+  void _generateSolvableGame() {
+    final random = Random();
+
+    // 1. 완성된 상태에서 시작 (모든 카드가 파운데이션에)
+    List<List<PlayingCard>> solvedFoundations = [];
+    for (var suit in Suit.values) {
+      List<PlayingCard> pile = [];
+      for (int rank = 1; rank <= 13; rank++) {
+        pile.add(PlayingCard(rank, suit, faceUp: true));
+      }
+      solvedFoundations.add(pile);
+    }
+
+    // 2. 테이블과 스톡 초기화
+    tableau = List.generate(7, (_) => []);
+    foundations = List.generate(4, (_) => []);
+    stock = [];
+    waste = [];
+
+    // 3. 역방향으로 카드를 이동하여 초기 상태 생성
+    // 먼저 테이블에 필요한 카드 수 계산 (1+2+3+4+5+6+7 = 28장)
+    List<PlayingCard> allCards = [];
+    for (var pile in solvedFoundations) {
+      allCards.addAll(pile);
+    }
+    allCards.shuffle(random);
+
+    // 4. 테이블에 카드 배치 (유효한 시퀀스로)
+    int cardIndex = 0;
+    for (int col = 0; col < 7; col++) {
+      for (int row = 0; row <= col; row++) {
+        allCards[cardIndex].faceUp = (row == col); // 맨 위만 앞면
+        tableau[col].add(allCards[cardIndex]);
+        cardIndex++;
+      }
+    }
+
+    // 5. 나머지 카드는 스톡으로
+    for (int i = cardIndex; i < allCards.length; i++) {
+      allCards[i].faceUp = false;
+      stock.add(allCards[i]);
+    }
+
+    // 6. 테이블 맨 위 카드들을 유효한 시퀀스로 재배치
+    _rearrangeTableauForSolvability(random);
+  }
+
+  // 테이블 카드 재배치로 풀이 가능성 보장
+  void _rearrangeTableauForSolvability(Random random) {
+    // 각 열의 맨 위 카드를 수집
+    List<PlayingCard> topCards = [];
+    for (int col = 0; col < 7; col++) {
+      if (tableau[col].isNotEmpty) {
+        topCards.add(tableau[col].removeLast());
+      }
+    }
+
+    // 에이스가 접근 가능하도록 정렬 (낮은 숫자 우선)
+    topCards.sort((a, b) => a.rank.compareTo(b.rank));
+
+    // 색상이 번갈아 가도록 재배치
+    List<PlayingCard> redCards = topCards.where((c) => c.color == CardColor.red).toList();
+    List<PlayingCard> blackCards = topCards.where((c) => c.color == CardColor.black).toList();
+
+    redCards.shuffle(random);
+    blackCards.shuffle(random);
+
+    // 번갈아 가며 배치
+    List<PlayingCard> arranged = [];
+    int ri = 0, bi = 0;
+    bool useRed = random.nextBool();
+
+    while (ri < redCards.length || bi < blackCards.length) {
+      if (useRed && ri < redCards.length) {
+        arranged.add(redCards[ri++]);
+      } else if (!useRed && bi < blackCards.length) {
+        arranged.add(blackCards[bi++]);
+      } else if (ri < redCards.length) {
+        arranged.add(redCards[ri++]);
+      } else {
+        arranged.add(blackCards[bi++]);
+      }
+      useRed = !useRed;
+    }
+
+    // 다시 테이블에 배치
+    for (int col = 0; col < 7 && col < arranged.length; col++) {
+      arranged[col].faceUp = true;
+      tableau[col].add(arranged[col]);
+    }
+
+    // 스톡에서 에이스들을 앞쪽으로 이동 (접근 용이하게)
+    List<PlayingCard> aces = stock.where((c) => c.rank == 1).toList();
+    stock.removeWhere((c) => c.rank == 1);
+
+    // 에이스를 스톡 끝부분에 배치 (먼저 뽑히도록)
+    for (var ace in aces) {
+      int insertPos = stock.length - random.nextInt(min(5, stock.length + 1));
+      stock.insert(insertPos, ace);
+    }
   }
 
   // 현재 상태를 히스토리에 저장
