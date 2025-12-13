@@ -4,6 +4,7 @@ import 'games/tetris/tetris_screen.dart';
 import 'games/gomoku/gomoku_screen.dart';
 import 'games/othello/othello_screen.dart';
 import 'games/chess/chess_screen.dart';
+import 'games/janggi/janggi_screen.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
@@ -671,6 +672,123 @@ class HomeScreen extends StatelessWidget {
     );
   }
 
+  // 장기 게임 대상 선택 다이얼로그
+  void _showJanggiModeDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          backgroundColor: Colors.grey.shade900,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+            side: BorderSide(color: const Color(0xFFD2691E).withValues(alpha: 0.5), width: 2),
+          ),
+          title: const Text(
+            '게임 대상 선택',
+            style: TextStyle(
+              color: Color(0xFFD2691E),
+              fontWeight: FontWeight.bold,
+            ),
+            textAlign: TextAlign.center,
+          ),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              _buildJanggiModeButton(
+                context,
+                title: '컴퓨터 (한)',
+                subtitle: '내가 초 (선공)',
+                icon: Icons.computer,
+                mode: JanggiGameMode.vsHan,
+              ),
+              const SizedBox(height: 12),
+              _buildJanggiModeButton(
+                context,
+                title: '컴퓨터 (초)',
+                subtitle: '내가 한 (후공)',
+                icon: Icons.computer,
+                mode: JanggiGameMode.vsCho,
+              ),
+              const SizedBox(height: 12),
+              _buildJanggiModeButton(
+                context,
+                title: '사람',
+                subtitle: '2인 플레이',
+                icon: Icons.people,
+                mode: JanggiGameMode.vsHuman,
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildJanggiModeButton(
+    BuildContext context, {
+    required String title,
+    required String subtitle,
+    required IconData icon,
+    required JanggiGameMode mode,
+  }) {
+    return InkWell(
+      onTap: () {
+        Navigator.pop(context);
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => JanggiScreen(gameMode: mode),
+          ),
+        );
+      },
+      borderRadius: BorderRadius.circular(12),
+      child: Container(
+        width: double.infinity,
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        decoration: BoxDecoration(
+          color: const Color(0xFFD2691E).withValues(alpha: 0.1),
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(
+            color: const Color(0xFFD2691E).withValues(alpha: 0.3),
+            width: 1,
+          ),
+        ),
+        child: Row(
+          children: [
+            Icon(icon, color: const Color(0xFFD2691E), size: 28),
+            const SizedBox(width: 12),
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  title,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                Text(
+                  subtitle,
+                  style: TextStyle(
+                    color: Colors.grey.shade400,
+                    fontSize: 12,
+                  ),
+                ),
+              ],
+            ),
+            const Spacer(),
+            Icon(
+              Icons.arrow_forward_ios,
+              color: const Color(0xFFD2691E).withValues(alpha: 0.7),
+              size: 16,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -714,7 +832,7 @@ class HomeScreen extends StatelessWidget {
               ),
               const SizedBox(height: 60),
               Expanded(
-                child: Padding(
+                child: SingleChildScrollView(
                   padding: const EdgeInsets.symmetric(horizontal: 32),
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
@@ -759,6 +877,16 @@ class HomeScreen extends StatelessWidget {
                         color: Colors.brown,
                         onTap: () => _showChessModeDialog(context),
                       ),
+                      const SizedBox(height: 24),
+                      _buildGameCard(
+                        context,
+                        title: 'JANGGI',
+                        subtitle: '장기',
+                        icon: Icons.apps,
+                        color: const Color(0xFFD2691E),
+                        onTap: () => _showJanggiModeDialog(context),
+                      ),
+                      const SizedBox(height: 24),
                     ],
                   ),
                 ),
