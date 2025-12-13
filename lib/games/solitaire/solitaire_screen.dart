@@ -427,15 +427,8 @@ class _SolitaireScreenState extends State<SolitaireScreen> {
       tableau[col].add(arranged[col]);
     }
 
-    // 스톡에서 에이스들을 앞쪽으로 이동 (접근 용이하게)
-    List<PlayingCard> aces = stock.where((c) => c.rank == 1).toList();
-    stock.removeWhere((c) => c.rank == 1);
-
-    // 에이스를 스톡 끝부분에 배치 (먼저 뽑히도록)
-    for (var ace in aces) {
-      int insertPos = stock.length - random.nextInt(min(5, stock.length + 1));
-      stock.insert(insertPos, ace);
-    }
+    // 스톡 셔플 (자연스러운 카드 배치)
+    stock.shuffle(random);
   }
 
   // 현재 상태를 히스토리에 저장
