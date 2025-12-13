@@ -1423,16 +1423,16 @@ class _SolitaireScreenState extends State<SolitaireScreen> {
 
   // 카드 숫자별 무늬 위치 계산
   List<Map<String, dynamic>> _getPipPositions(int rank, double width, double height, double pipSize) {
-    final halfPip = pipSize / 2;
     final centerX = (width - pipSize) / 2;
     final leftX = width * 0.1;
     final rightX = width * 0.9 - pipSize;
 
-    final topY = 0.0;
-    final midTopY = height * 0.22;
-    final centerY = (height - pipSize) / 2;
-    final midBottomY = height * 0.58;
-    final bottomY = height - pipSize;
+    // 상하 여백을 두고 배치 (높이의 5%~85% 범위 내)
+    final topY = height * 0.05;
+    final midTopY = height * 0.25;
+    final centerY = height * 0.40;
+    final midBottomY = height * 0.55;
+    final bottomY = height * 0.70;
 
     switch (rank) {
       case 2:
@@ -1492,41 +1492,37 @@ class _SolitaireScreenState extends State<SolitaireScreen> {
           {'x': rightX, 'y': bottomY, 'inverted': true},
         ];
       case 9:
+        // 9는 4줄 + 중앙 1개 = 9개 (5% ~ 70% 범위)
         return [
-          {'x': leftX, 'y': topY, 'inverted': false},
-          {'x': rightX, 'y': topY, 'inverted': false},
-          {'x': leftX, 'y': height * 0.2, 'inverted': false},
-          {'x': rightX, 'y': height * 0.2, 'inverted': false},
-          {'x': centerX, 'y': centerY, 'inverted': false},
-          {'x': leftX, 'y': height * 0.6, 'inverted': true},
-          {'x': rightX, 'y': height * 0.6, 'inverted': true},
-          {'x': leftX, 'y': bottomY, 'inverted': true},
-          {'x': rightX, 'y': bottomY, 'inverted': true},
+          {'x': leftX, 'y': height * 0.05, 'inverted': false},
+          {'x': rightX, 'y': height * 0.05, 'inverted': false},
+          {'x': leftX, 'y': height * 0.22, 'inverted': false},
+          {'x': rightX, 'y': height * 0.22, 'inverted': false},
+          {'x': centerX, 'y': height * 0.38, 'inverted': false},
+          {'x': leftX, 'y': height * 0.53, 'inverted': true},
+          {'x': rightX, 'y': height * 0.53, 'inverted': true},
+          {'x': leftX, 'y': height * 0.70, 'inverted': true},
+          {'x': rightX, 'y': height * 0.70, 'inverted': true},
         ];
       case 10:
-        // 10은 좌우 4줄 + 중앙 2개 = 10개
-        // 좌우 줄 간격을 균등하게 배분
-        final row1 = 0.0;
-        final row2 = height * 0.27;
-        final row3 = height * 0.54;
-        final row4 = height * 0.81;
+        // 10은 좌우 4줄 + 중앙 2개 = 10개 (5% ~ 70% 범위)
         return [
-          // 1행: 좌우
-          {'x': leftX, 'y': row1, 'inverted': false},
-          {'x': rightX, 'y': row1, 'inverted': false},
-          // 중앙 상단 (1행과 2행 사이)
-          {'x': centerX, 'y': height * 0.13, 'inverted': false},
-          // 2행: 좌우
-          {'x': leftX, 'y': row2, 'inverted': false},
-          {'x': rightX, 'y': row2, 'inverted': false},
-          // 3행: 좌우
-          {'x': leftX, 'y': row3, 'inverted': true},
-          {'x': rightX, 'y': row3, 'inverted': true},
-          // 중앙 하단 (3행과 4행 사이)
-          {'x': centerX, 'y': height * 0.67, 'inverted': true},
-          // 4행: 좌우
-          {'x': leftX, 'y': row4, 'inverted': true},
-          {'x': rightX, 'y': row4, 'inverted': true},
+          // 1행
+          {'x': leftX, 'y': height * 0.05, 'inverted': false},
+          {'x': rightX, 'y': height * 0.05, 'inverted': false},
+          // 중앙 상단
+          {'x': centerX, 'y': height * 0.16, 'inverted': false},
+          // 2행
+          {'x': leftX, 'y': height * 0.27, 'inverted': false},
+          {'x': rightX, 'y': height * 0.27, 'inverted': false},
+          // 3행
+          {'x': leftX, 'y': height * 0.48, 'inverted': true},
+          {'x': rightX, 'y': height * 0.48, 'inverted': true},
+          // 중앙 하단
+          {'x': centerX, 'y': height * 0.59, 'inverted': true},
+          // 4행
+          {'x': leftX, 'y': height * 0.70, 'inverted': true},
+          {'x': rightX, 'y': height * 0.70, 'inverted': true},
         ];
       default:
         return [];
