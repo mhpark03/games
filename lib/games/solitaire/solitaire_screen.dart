@@ -523,7 +523,66 @@ class _SolitaireScreenState extends State<SolitaireScreen> {
         isGameWon = true;
       });
       _clearSavedGame(); // 승리 시 저장된 게임 삭제
+      _showWinDialog();
     }
+  }
+
+  void _showWinDialog() {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) {
+        return AlertDialog(
+          backgroundColor: Colors.green.shade800,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+            side: const BorderSide(color: Colors.amber, width: 3),
+          ),
+          title: const Column(
+            children: [
+              Text(
+                '🎉',
+                style: TextStyle(fontSize: 48),
+              ),
+              SizedBox(height: 8),
+              Text(
+                '축하합니다!',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 24,
+                ),
+                textAlign: TextAlign.center,
+              ),
+            ],
+          ),
+          content: Text(
+            '게임을 완료했습니다!\n총 $moves번 이동했습니다.',
+            style: const TextStyle(color: Colors.white70, fontSize: 16),
+            textAlign: TextAlign.center,
+          ),
+          actions: [
+            Center(
+              child: ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.amber,
+                  foregroundColor: Colors.black,
+                  padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 12),
+                ),
+                onPressed: () {
+                  Navigator.pop(context);
+                  _showDrawModeDialog();
+                },
+                child: const Text(
+                  '새 게임',
+                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                ),
+              ),
+            ),
+          ],
+        );
+      },
+    );
   }
 
   // 모든 테이블 카드가 열려있는지 확인 (자동 완료 가능 여부)
