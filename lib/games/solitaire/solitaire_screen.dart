@@ -387,8 +387,8 @@ class _SolitaireScreenState extends State<SolitaireScreen> {
     }
   }
 
-  void _autoMoveToFoundation(PlayingCard card, String source, int? sourceIndex) {
-    // 자동으로 파운데이션으로 이동 시도
+  void _autoMoveCard(PlayingCard card, String source, int? sourceIndex) {
+    // 1순위: 파운데이션으로 이동 시도
     for (int i = 0; i < 4; i++) {
       if (_canPlaceOnFoundation(card, i)) {
         setState(() {
@@ -403,6 +403,29 @@ class _SolitaireScreenState extends State<SolitaireScreen> {
           foundations[i].add(card);
           moves++;
           _checkWin();
+        });
+        _saveGame();
+        return;
+      }
+    }
+
+    // 2순위: 테이블로 이동 시도
+    for (int i = 0; i < 7; i++) {
+      // 같은 열로는 이동하지 않음
+      if (source == 'tableau_$i') continue;
+
+      if (_canPlaceOnTableau(card, i)) {
+        setState(() {
+          if (source == 'waste') {
+            waste.removeLast();
+          } else if (source.startsWith('tableau_')) {
+            tableau[sourceIndex!].removeLast();
+            if (tableau[sourceIndex].isNotEmpty && !tableau[sourceIndex].last.faceUp) {
+              tableau[sourceIndex].last.faceUp = true;
+            }
+          }
+          tableau[i].add(card);
+          moves++;
         });
         _saveGame();
         return;
@@ -527,7 +550,7 @@ class _SolitaireScreenState extends State<SolitaireScreen> {
           onDragStarted: () => _onCardDragStart([card], 'waste', null),
           onDragEnd: (_) => _onCardDragEnd(),
           child: GestureDetector(
-            onDoubleTap: () => _autoMoveToFoundation(card, 'waste', null),
+            onDoubleTap: () => _autoMoveCard(card, 'waste', null),
             child: _buildCard(card, width: 50, height: 70),
           ),
         );
@@ -647,7 +670,7 @@ class _SolitaireScreenState extends State<SolitaireScreen> {
                     onDragEnd: (_) => _onCardDragEnd(),
                     child: GestureDetector(
                       onDoubleTap: isLast
-                          ? () => _autoMoveToFoundation(
+                          ? () => _autoMoveCard(
                               card, 'tableau_$columnIndex', columnIndex)
                           : null,
                       child: SizedBox(
