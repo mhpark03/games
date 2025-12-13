@@ -35,7 +35,13 @@ class GameCenterApp extends StatelessWidget {
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
 
-  void _showGomokuModeDialog(BuildContext context) {
+  Future<void> _showGomokuModeDialog(BuildContext context) async {
+    // 저장된 게임이 있는지 확인
+    final hasSaved = await GomokuScreen.hasSavedGame();
+    final savedMode = hasSaved ? await GomokuScreen.getSavedGameMode() : null;
+
+    if (!context.mounted) return;
+
     showDialog(
       context: context,
       builder: (BuildContext context) {
@@ -56,6 +62,21 @@ class HomeScreen extends StatelessWidget {
           content: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
+              // 이어하기 버튼 (저장된 게임이 있을 때만)
+              if (hasSaved && savedMode != null) ...[
+                _buildResumeButton(context, savedMode),
+                const SizedBox(height: 16),
+                Divider(color: Colors.grey.shade700),
+                const SizedBox(height: 8),
+                Text(
+                  '새 게임',
+                  style: TextStyle(
+                    color: Colors.grey.shade400,
+                    fontSize: 12,
+                  ),
+                ),
+                const SizedBox(height: 8),
+              ],
               _buildModeButton(
                 context,
                 title: '컴퓨터 (백)',
@@ -83,6 +104,81 @@ class HomeScreen extends StatelessWidget {
           ),
         );
       },
+    );
+  }
+
+  Widget _buildResumeButton(BuildContext context, GameMode savedMode) {
+    String modeText;
+    switch (savedMode) {
+      case GameMode.vsComputerWhite:
+        modeText = 'vs 컴퓨터(백)';
+        break;
+      case GameMode.vsComputerBlack:
+        modeText = 'vs 컴퓨터(흑)';
+        break;
+      case GameMode.vsPerson:
+        modeText = '2인 플레이';
+        break;
+    }
+
+    return InkWell(
+      onTap: () {
+        Navigator.pop(context);
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => GomokuScreen(
+              gameMode: savedMode,
+              resumeGame: true,
+            ),
+          ),
+        );
+      },
+      borderRadius: BorderRadius.circular(12),
+      child: Container(
+        width: double.infinity,
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        decoration: BoxDecoration(
+          color: Colors.green.withValues(alpha: 0.2),
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(
+            color: Colors.green.withValues(alpha: 0.5),
+            width: 2,
+          ),
+        ),
+        child: Row(
+          children: [
+            const Icon(Icons.play_arrow, color: Colors.green, size: 28),
+            const SizedBox(width: 12),
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  '이어하기',
+                  style: TextStyle(
+                    color: Colors.green,
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                Text(
+                  modeText,
+                  style: TextStyle(
+                    color: Colors.grey.shade400,
+                    fontSize: 12,
+                  ),
+                ),
+              ],
+            ),
+            const Spacer(),
+            Icon(
+              Icons.arrow_forward_ios,
+              color: Colors.green.withValues(alpha: 0.7),
+              size: 16,
+            ),
+          ],
+        ),
+      ),
     );
   }
 
