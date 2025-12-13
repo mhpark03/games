@@ -712,6 +712,15 @@ class _SolitaireScreenState extends State<SolitaireScreen> {
                   draggedCards!.contains(card) &&
                   draggedCards!.first != card;  // 첫 번째 카드는 Draggable이 처리
 
+              // 이 카드가 실질적으로 마지막 카드인지 확인
+              // (실제 마지막이거나, 바로 다음 카드부터 드래그 중인 경우)
+              final isEffectivelyLast = isLast ||
+                  (draggedCards != null &&
+                   dragSource == 'tableau_$columnIndex' &&
+                   !draggedCards!.contains(card) &&
+                   cardIndex + 1 < cards.length &&
+                   draggedCards!.first == cards[cardIndex + 1]);
+
               // 앞면 카드는 드래그 가능
               if (card.faceUp) {
                 // 이 카드부터 끝까지의 카드들
@@ -768,13 +777,13 @@ class _SolitaireScreenState extends State<SolitaireScreen> {
                         }
                       },
                       child: SizedBox(
-                        height: isLast ? 70 : 20,
+                        height: isEffectivelyLast ? 70 : 20,
                         child: Align(
                           alignment: Alignment.topCenter,
                           child: _buildCard(card,
                               width: double.infinity,
                               height: 70,
-                              showPartial: !isLast),
+                              showPartial: !isEffectivelyLast),
                         ),
                       ),
                     ),
