@@ -184,7 +184,6 @@ class _SolitaireScreenState extends State<SolitaireScreen> {
         );
       },
     ).then((selectedCount) {
-      debugPrint('🎴 Dialog returned: selectedCount = $selectedCount');
       if (selectedCount != null && mounted) {
         _startNewGame(selectedCount);
       }
@@ -192,13 +191,10 @@ class _SolitaireScreenState extends State<SolitaireScreen> {
   }
 
   void _startNewGame(int count) {
-    debugPrint('🎴 _startNewGame called with count = $count');
     setState(() {
       drawCount = count;
-      debugPrint('🎴 drawCount set to $drawCount');
       _initGame();
     });
-    debugPrint('🎴 After setState, drawCount = $drawCount');
     _saveGame();
   }
 
@@ -328,7 +324,6 @@ class _SolitaireScreenState extends State<SolitaireScreen> {
   }
 
   void _initGame() {
-    debugPrint('🎴 _initGame called, drawCount before = $drawCount');
     // 항상 풀 수 있는 게임 생성 (역방향 딜 방식)
     _generateSolvableGame();
 
@@ -338,7 +333,6 @@ class _SolitaireScreenState extends State<SolitaireScreen> {
     dragSource = null;
     dragSourceIndex = null;
     _undoHistory = [];
-    debugPrint('🎴 _initGame finished, drawCount after = $drawCount');
   }
 
   // 역방향 딜로 항상 풀 수 있는 게임 생성
@@ -480,7 +474,6 @@ class _SolitaireScreenState extends State<SolitaireScreen> {
   }
 
   void _drawFromStock() {
-    debugPrint('🎴 _drawFromStock called, drawCount = $drawCount');
     _saveStateToHistory();
     setState(() {
       if (stock.isEmpty) {
@@ -495,7 +488,6 @@ class _SolitaireScreenState extends State<SolitaireScreen> {
       } else {
         // 스톡에서 drawCount장 뽑기
         int count = min(drawCount, stock.length);
-        debugPrint('🎴 Drawing $count cards (drawCount=$drawCount, stock.length=${stock.length})');
         for (int i = 0; i < count; i++) {
           final card = stock.removeLast();
           card.faceUp = true;
@@ -803,6 +795,55 @@ class _SolitaireScreenState extends State<SolitaireScreen> {
         if (waste.isEmpty) {
           return _buildCardPlaceholder();
         }
+
+        // 3장 모드일 때 최대 3장까지 겹쳐서 표시
+        if (drawCount == 3 && waste.length > 1) {
+          // 표시할 카드 수 (최대 3장)
+          final visibleCount = min(3, waste.length);
+          final startIndex = waste.length - visibleCount;
+          final topCard = waste.last;
+
+          return SizedBox(
+            width: 50 + (visibleCount - 1) * 15.0,
+            height: 70,
+            child: Stack(
+              children: List.generate(visibleCount, (i) {
+                final cardIndex = startIndex + i;
+                final card = waste[cardIndex];
+                final isTop = i == visibleCount - 1;
+
+                final cardWidget = _buildCard(card, width: 50, height: 70);
+
+                if (isTop) {
+                  // 맨 위 카드만 드래그 가능
+                  return Positioned(
+                    left: i * 15.0,
+                    child: Draggable<Map<String, dynamic>>(
+                      data: {'cards': [topCard], 'source': 'waste', 'index': null},
+                      feedback: _buildCard(topCard, width: 50, height: 70),
+                      childWhenDragging: i > 0
+                          ? _buildCard(waste[cardIndex - 1], width: 50, height: 70)
+                          : const SizedBox(width: 50, height: 70),
+                      onDragStarted: () => _onCardDragStart([topCard], 'waste', null),
+                      onDragEnd: (_) => _onCardDragEnd(),
+                      child: GestureDetector(
+                        onDoubleTap: () => _autoMoveCard(topCard, 'waste', null),
+                        child: cardWidget,
+                      ),
+                    ),
+                  );
+                } else {
+                  return Positioned(
+                    left: i * 15.0,
+                    child: cardWidget,
+                  );
+                }
+              }),
+            ),
+          );
+        }
+
+        // 1장 모드 또는 카드가 1장일 때
         final card = waste.last;
         return Draggable<Map<String, dynamic>>(
           data: {'cards': [card], 'source': 'waste', 'index': null},
