@@ -437,6 +437,38 @@ class _SolitaireScreenState extends State<SolitaireScreen> {
     }
   }
 
+  // 여러 카드를 한번에 이동 (중간 카드 더블탭 시 사용)
+  void _autoMoveCards(List<PlayingCard> cards, int sourceIndex) {
+    if (cards.isEmpty) return;
+
+    final firstCard = cards.first;
+
+    // 테이블로 이동 시도 (여러 카드는 파운데이션으로 이동 불가)
+    for (int i = 0; i < 7; i++) {
+      // 같은 열로는 이동하지 않음
+      if (i == sourceIndex) continue;
+
+      if (_canPlaceOnTableau(firstCard, i)) {
+        setState(() {
+          // 원본 열에서 카드들 제거
+          tableau[sourceIndex].removeRange(
+            tableau[sourceIndex].length - cards.length,
+            tableau[sourceIndex].length,
+          );
+          // 뒤집힌 카드 오픈
+          if (tableau[sourceIndex].isNotEmpty && !tableau[sourceIndex].last.faceUp) {
+            tableau[sourceIndex].last.faceUp = true;
+          }
+          // 새 열에 카드들 추가
+          tableau[i].addAll(cards);
+          moves++;
+        });
+        _saveGame();
+        return;
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     if (isLoading) {
@@ -685,10 +717,15 @@ class _SolitaireScreenState extends State<SolitaireScreen> {
                         dragCards, 'tableau_$columnIndex', columnIndex),
                     onDragEnd: (_) => _onCardDragEnd(),
                     child: GestureDetector(
-                      onDoubleTap: isLast
-                          ? () => _autoMoveCard(
-                              card, 'tableau_$columnIndex', columnIndex)
-                          : null,
+                      onDoubleTap: () {
+                        if (isLast) {
+                          // 마지막 카드: 파운데이션 또는 테이블로 이동
+                          _autoMoveCard(card, 'tableau_$columnIndex', columnIndex);
+                        } else {
+                          // 중간 카드: 이 카드부터 끝까지 테이블로 이동
+                          _autoMoveCards(dragCards, columnIndex);
+                        }
+                      },
                       child: SizedBox(
                         height: isLast ? 70 : 20,
                         child: Align(
