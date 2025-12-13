@@ -966,16 +966,20 @@ class _ChessScreenState extends State<ChessScreen> {
                   style: TextStyle(
                     fontSize: 36,
                     color: piece.color == PieceColor.white
-                        ? Colors.white
+                        ? const Color(0xFFFFF8DC) // 크림색으로 변경
                         : Colors.black,
-                    shadows: [
-                      Shadow(
-                        color: piece.color == PieceColor.white
-                            ? Colors.black
-                            : Colors.white,
-                        blurRadius: 2,
-                      ),
-                    ],
+                    shadows: piece.color == PieceColor.white
+                        ? const [
+                            // 흰색 말에 검은 테두리 효과
+                            Shadow(offset: Offset(-1.5, -1.5), color: Colors.black),
+                            Shadow(offset: Offset(1.5, -1.5), color: Colors.black),
+                            Shadow(offset: Offset(1.5, 1.5), color: Colors.black),
+                            Shadow(offset: Offset(-1.5, 1.5), color: Colors.black),
+                            Shadow(offset: Offset(0, 2), color: Colors.black, blurRadius: 3),
+                          ]
+                        : const [
+                            Shadow(color: Colors.white, blurRadius: 2),
+                          ],
                   ),
                 ),
               ),
