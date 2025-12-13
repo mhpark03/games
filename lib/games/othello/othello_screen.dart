@@ -349,7 +349,7 @@ class _OthelloScreenState extends State<OthelloScreen> {
 
     // 간단한 AI: 코너 우선, 그 다음 가장 많이 뒤집는 수
     List<int>? bestMove;
-    int bestScore = -1;
+    int bestScore = -9999; // 음수 점수도 선택될 수 있도록 수정
 
     // 코너 위치
     final corners = [[0, 0], [0, 7], [7, 0], [7, 7]];
@@ -364,7 +364,7 @@ class _OthelloScreenState extends State<OthelloScreen> {
       // 가장 많이 뒤집는 수 선택
       for (var move in validMoves) {
         int score = _getFlippedDiscs(move[0], move[1], currentPlayerDisc).length;
-        // 코너 옆은 피하기
+        // 코너 옆은 피하기 (하지만 다른 선택지가 없으면 선택됨)
         if (_isNearCorner(move[0], move[1])) {
           score -= 10;
         }
@@ -375,14 +375,14 @@ class _OthelloScreenState extends State<OthelloScreen> {
       }
     }
 
-    if (bestMove != null) {
-      _makeMove(bestMove[0], bestMove[1]);
+    // 여전히 bestMove가 없으면 첫 번째 유효한 수 선택
+    bestMove ??= validMoves.first;
+    _makeMove(bestMove[0], bestMove[1]);
 
-      if (!gameOver && widget.gameMode != OthelloGameMode.vsPerson && !isUserTurn) {
-        Future.delayed(const Duration(milliseconds: 500), () {
-          if (mounted) _computerMove();
-        });
-      }
+    if (!gameOver && widget.gameMode != OthelloGameMode.vsPerson && !isUserTurn) {
+      Future.delayed(const Duration(milliseconds: 500), () {
+        if (mounted) _computerMove();
+      });
     }
   }
 
