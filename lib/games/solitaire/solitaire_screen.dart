@@ -1322,7 +1322,7 @@ class _SolitaireScreenState extends State<SolitaireScreen> {
           ? Padding(
               padding: const EdgeInsets.only(left: 3, top: 2),
               child: Text(
-                card.rankString,
+                '${card.rankString}${card.suitString}',
                 style: TextStyle(
                   color: card.suitColor,
                   fontSize: 11,
@@ -1350,22 +1350,6 @@ class _SolitaireScreenState extends State<SolitaireScreen> {
                   // 중앙 영역: 숫자에 맞는 무늬 배열
                   Expanded(
                     child: _buildPipPattern(card),
-                  ),
-                  // 하단: 뒤집힌 랭크 (오른쪽 정렬)
-                  Align(
-                    alignment: Alignment.bottomRight,
-                    child: Transform.rotate(
-                      angle: 3.14159,
-                      child: Text(
-                        card.rankString,
-                        style: TextStyle(
-                          color: card.suitColor,
-                          fontSize: 10,
-                          fontWeight: FontWeight.bold,
-                          height: 1.0,
-                        ),
-                      ),
-                    ),
                   ),
                 ],
               ),
@@ -1520,17 +1504,29 @@ class _SolitaireScreenState extends State<SolitaireScreen> {
           {'x': rightX, 'y': bottomY, 'inverted': true},
         ];
       case 10:
+        // 10은 좌우 4줄 + 중앙 2개 = 10개
+        // 좌우 줄 간격을 균등하게 배분
+        final row1 = 0.0;
+        final row2 = height * 0.27;
+        final row3 = height * 0.54;
+        final row4 = height * 0.81;
         return [
-          {'x': leftX, 'y': topY, 'inverted': false},
-          {'x': rightX, 'y': topY, 'inverted': false},
-          {'x': centerX, 'y': height * 0.12, 'inverted': false},
-          {'x': leftX, 'y': height * 0.22, 'inverted': false},
-          {'x': rightX, 'y': height * 0.22, 'inverted': false},
-          {'x': leftX, 'y': height * 0.58, 'inverted': true},
-          {'x': rightX, 'y': height * 0.58, 'inverted': true},
-          {'x': centerX, 'y': height * 0.68, 'inverted': true},
-          {'x': leftX, 'y': bottomY, 'inverted': true},
-          {'x': rightX, 'y': bottomY, 'inverted': true},
+          // 1행: 좌우
+          {'x': leftX, 'y': row1, 'inverted': false},
+          {'x': rightX, 'y': row1, 'inverted': false},
+          // 중앙 상단 (1행과 2행 사이)
+          {'x': centerX, 'y': height * 0.13, 'inverted': false},
+          // 2행: 좌우
+          {'x': leftX, 'y': row2, 'inverted': false},
+          {'x': rightX, 'y': row2, 'inverted': false},
+          // 3행: 좌우
+          {'x': leftX, 'y': row3, 'inverted': true},
+          {'x': rightX, 'y': row3, 'inverted': true},
+          // 중앙 하단 (3행과 4행 사이)
+          {'x': centerX, 'y': height * 0.67, 'inverted': true},
+          // 4행: 좌우
+          {'x': leftX, 'y': row4, 'inverted': true},
+          {'x': rightX, 'y': row4, 'inverted': true},
         ];
       default:
         return [];
