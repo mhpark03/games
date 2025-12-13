@@ -806,11 +806,11 @@ class HomeScreen extends StatelessWidget {
         child: SafeArea(
           child: Column(
             children: [
-              const SizedBox(height: 60),
+              const SizedBox(height: 20),
               const Text(
                 'GAME CENTER',
                 style: TextStyle(
-                  fontSize: 36,
+                  fontSize: 28,
                   fontWeight: FontWeight.bold,
                   color: Colors.white,
                   letterSpacing: 4,
@@ -822,20 +822,20 @@ class HomeScreen extends StatelessWidget {
                   ],
                 ),
               ),
-              const SizedBox(height: 10),
+              const SizedBox(height: 6),
               Text(
                 '게임을 선택하세요',
                 style: TextStyle(
-                  fontSize: 16,
+                  fontSize: 14,
                   color: Colors.grey.shade400,
                 ),
               ),
-              const SizedBox(height: 60),
+              const SizedBox(height: 16),
               Expanded(
-                child: SingleChildScrollView(
-                  padding: const EdgeInsets.symmetric(horizontal: 32),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 24),
                   child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
+                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                     children: [
                       _buildGameCard(
                         context,
@@ -850,7 +850,6 @@ class HomeScreen extends StatelessWidget {
                           ),
                         ),
                       ),
-                      const SizedBox(height: 24),
                       _buildGameCard(
                         context,
                         title: 'OMOK',
@@ -859,7 +858,6 @@ class HomeScreen extends StatelessWidget {
                         color: Colors.amber,
                         onTap: () => _showGomokuModeDialog(context),
                       ),
-                      const SizedBox(height: 24),
                       _buildGameCard(
                         context,
                         title: 'OTHELLO',
@@ -868,7 +866,6 @@ class HomeScreen extends StatelessWidget {
                         color: Colors.green,
                         onTap: () => _showOthelloModeDialog(context),
                       ),
-                      const SizedBox(height: 24),
                       _buildGameCard(
                         context,
                         title: 'CHESS',
@@ -877,7 +874,6 @@ class HomeScreen extends StatelessWidget {
                         color: Colors.brown,
                         onTap: () => _showChessModeDialog(context),
                       ),
-                      const SizedBox(height: 24),
                       _buildGameCard(
                         context,
                         title: 'JANGGI',
@@ -886,16 +882,15 @@ class HomeScreen extends StatelessWidget {
                         color: const Color(0xFFD2691E),
                         onTap: () => _showJanggiModeDialog(context),
                       ),
-                      const SizedBox(height: 24),
                     ],
                   ),
                 ),
               ),
               Padding(
-                padding: const EdgeInsets.all(16),
+                padding: const EdgeInsets.all(8),
                 child: Text(
                   'v1.0.0',
-                  style: TextStyle(color: Colors.grey.shade600),
+                  style: TextStyle(color: Colors.grey.shade600, fontSize: 12),
                 ),
               ),
             ],
@@ -917,7 +912,7 @@ class HomeScreen extends StatelessWidget {
       onTap: onTap,
       child: Container(
         width: double.infinity,
-        padding: const EdgeInsets.all(24),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         decoration: BoxDecoration(
           gradient: LinearGradient(
             colors: [
@@ -925,7 +920,7 @@ class HomeScreen extends StatelessWidget {
               color.withValues(alpha: 0.1),
             ],
           ),
-          borderRadius: BorderRadius.circular(20),
+          borderRadius: BorderRadius.circular(16),
           border: Border.all(
             color: color.withValues(alpha: 0.5),
             width: 2,
@@ -933,7 +928,7 @@ class HomeScreen extends StatelessWidget {
           boxShadow: [
             BoxShadow(
               color: color.withValues(alpha: 0.3),
-              blurRadius: 20,
+              blurRadius: 10,
               spreadRadius: 1,
             ),
           ],
@@ -941,35 +936,34 @@ class HomeScreen extends StatelessWidget {
         child: Row(
           children: [
             Container(
-              padding: const EdgeInsets.all(16),
+              padding: const EdgeInsets.all(10),
               decoration: BoxDecoration(
                 color: color.withValues(alpha: 0.2),
-                borderRadius: BorderRadius.circular(16),
+                borderRadius: BorderRadius.circular(12),
               ),
               child: Icon(
                 icon,
-                size: 48,
+                size: 32,
                 color: color,
               ),
             ),
-            const SizedBox(width: 20),
+            const SizedBox(width: 16),
             Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
                   title,
                   style: TextStyle(
-                    fontSize: 28,
+                    fontSize: 20,
                     fontWeight: FontWeight.bold,
                     color: color,
                     letterSpacing: 2,
                   ),
                 ),
-                const SizedBox(height: 4),
                 Text(
                   subtitle,
                   style: TextStyle(
-                    fontSize: 16,
+                    fontSize: 13,
                     color: Colors.grey.shade400,
                   ),
                 ),
