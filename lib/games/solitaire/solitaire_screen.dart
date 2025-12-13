@@ -213,6 +213,13 @@ class _SolitaireScreenState extends State<SolitaireScreen> {
           draggedCards = null;
           dragSource = null;
           dragSourceIndex = null;
+
+          // 각 테이블 열의 맨 위 카드가 반드시 오픈되도록 보장
+          for (var col in tableau) {
+            if (col.isNotEmpty && !col.last.faceUp) {
+              col.last.faceUp = true;
+            }
+          }
         });
       } catch (e) {
         _initGame();
