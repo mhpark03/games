@@ -1148,7 +1148,7 @@ class _GomokuScreenState extends State<GomokuScreen> {
                   children: [
                     _buildCircleButton(
                       icon: Icons.undo,
-                      onPressed: moveHistory.isNotEmpty && !gameOver ? _undoMove : () {},
+                      onPressed: moveHistory.isNotEmpty && !gameOver ? _undoMove : null,
                       tooltip: '되돌리기',
                     ),
                     const SizedBox(width: 8),
@@ -1170,23 +1170,27 @@ class _GomokuScreenState extends State<GomokuScreen> {
   // 원형 버튼 위젯
   Widget _buildCircleButton({
     required IconData icon,
-    required VoidCallback onPressed,
+    required VoidCallback? onPressed,
     required String tooltip,
   }) {
-    return Material(
-      color: Colors.black.withValues(alpha: 0.5),
-      shape: const CircleBorder(),
-      child: InkWell(
-        onTap: onPressed,
-        customBorder: const CircleBorder(),
-        child: Tooltip(
-          message: tooltip,
-          child: Container(
-            padding: const EdgeInsets.all(10),
-            child: Icon(
-              icon,
-              color: Colors.white70,
-              size: 22,
+    final isEnabled = onPressed != null;
+    return Opacity(
+      opacity: isEnabled ? 1.0 : 0.3,
+      child: Material(
+        color: Colors.black.withValues(alpha: 0.5),
+        shape: const CircleBorder(),
+        child: InkWell(
+          onTap: onPressed,
+          customBorder: const CircleBorder(),
+          child: Tooltip(
+            message: tooltip,
+            child: Container(
+              padding: const EdgeInsets.all(10),
+              child: Icon(
+                icon,
+                color: Colors.white70,
+                size: 22,
+              ),
             ),
           ),
         ),
