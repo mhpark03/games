@@ -1414,6 +1414,7 @@ class _SolitaireScreenState extends State<SolitaireScreen> {
       builder: (context, constraints) {
         final positions = _getPipPositions(card.rank, constraints.maxWidth, constraints.maxHeight, pipSize);
         return Stack(
+          clipBehavior: Clip.none,
           children: positions.map((pos) {
             final isInverted = pos['inverted'] == true;
             return Positioned(
@@ -1445,19 +1446,20 @@ class _SolitaireScreenState extends State<SolitaireScreen> {
     final midBottomY = height * 0.55;
     final bottomY = height * 0.70;
 
+    // 2, 3번 카드는 pipSize가 12로 크므로 높이의 60% 이내에 배치
     switch (rank) {
       case 2:
-        // 2는 상하로 넓게 배치 (0% ~ 75%)
+        // 2는 상하로 배치 (0%, 60%)
         return [
           {'x': centerX, 'y': 0.0, 'inverted': false},
-          {'x': centerX, 'y': height * 0.75, 'inverted': true},
+          {'x': centerX, 'y': height * 0.55, 'inverted': true},
         ];
       case 3:
-        // 3은 상중하 배치 (0%, 37%, 75%)
+        // 3은 상중하 배치 (0%, 28%, 55%)
         return [
           {'x': centerX, 'y': 0.0, 'inverted': false},
-          {'x': centerX, 'y': height * 0.37, 'inverted': false},
-          {'x': centerX, 'y': height * 0.75, 'inverted': true},
+          {'x': centerX, 'y': height * 0.28, 'inverted': false},
+          {'x': centerX, 'y': height * 0.55, 'inverted': true},
         ];
       case 4:
         return [
