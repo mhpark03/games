@@ -97,6 +97,8 @@ class _ChessScreenState extends State<ChessScreen> {
   List<List<int>> validMoves = [];
   List<int>? enPassantTarget;
   bool isInCheck = false;
+  // 수 히스토리: 되돌리기용
+  List<Map<String, dynamic>> moveHistory = [];
 
   bool get isUserWhite => widget.gameMode != ChessGameMode.vsComputerBlack;
 
@@ -157,6 +159,7 @@ class _ChessScreenState extends State<ChessScreen> {
     validMoves = [];
     enPassantTarget = null;
     isInCheck = false;
+    moveHistory = [];
     _updateMessage();
 
     if (widget.gameMode == ChessGameMode.vsComputerBlack) {
@@ -284,23 +287,40 @@ class _ChessScreenState extends State<ChessScreen> {
   void _makeMove(int fromRow, int fromCol, int toRow, int toCol) {
     final piece = board[fromRow][fromCol]!;
     final captured = board[toRow][toCol];
+    final pieceHadMoved = piece.hasMoved;
+    final previousEnPassant = enPassantTarget != null ? List<int>.from(enPassantTarget!) : null;
+
+    // 히스토리 기록 준비
+    bool wasEnPassant = false;
+    ChessPiece? enPassantCaptured;
+    bool wasCastling = false;
+    bool castlingKingside = false;
+    bool? rookHadMoved;
+    bool wasPromotion = false;
 
     setState(() {
       // 앙파상 처리
       if (piece.type == PieceType.pawn && enPassantTarget != null &&
           toRow == enPassantTarget![0] && toCol == enPassantTarget![1]) {
+        wasEnPassant = true;
+        enPassantCaptured = board[fromRow][toCol]?.copy();
         board[fromRow][toCol] = null;
       }
 
       // 캐슬링 처리
       if (piece.type == PieceType.king && (toCol - fromCol).abs() == 2) {
+        wasCastling = true;
         if (toCol > fromCol) {
           // 킹사이드 캐슬링
+          castlingKingside = true;
+          rookHadMoved = board[fromRow][7]!.hasMoved;
           board[fromRow][5] = board[fromRow][7];
           board[fromRow][7] = null;
           board[fromRow][5]!.hasMoved = true;
         } else {
           // 퀸사이드 캐슬링
+          castlingKingside = false;
+          rookHadMoved = board[fromRow][0]!.hasMoved;
           board[fromRow][3] = board[fromRow][0];
           board[fromRow][0] = null;
           board[fromRow][3]!.hasMoved = true;
@@ -323,6 +343,7 @@ class _ChessScreenState extends State<ChessScreen> {
       if (piece.type == PieceType.pawn) {
         if ((piece.color == PieceColor.white && toRow == 0) ||
             (piece.color == PieceColor.black && toRow == 7)) {
+          wasPromotion = true;
           board[toRow][toCol] = ChessPiece(
             type: PieceType.queen,
             color: piece.color,
@@ -330,6 +351,25 @@ class _ChessScreenState extends State<ChessScreen> {
           );
         }
       }
+
+      // 히스토리에 저장
+      moveHistory.add({
+        'fromRow': fromRow,
+        'fromCol': fromCol,
+        'toRow': toRow,
+        'toCol': toCol,
+        'pieceType': piece.type,
+        'pieceColor': piece.color,
+        'pieceHadMoved': pieceHadMoved,
+        'captured': captured?.copy(),
+        'wasEnPassant': wasEnPassant,
+        'enPassantCaptured': enPassantCaptured,
+        'wasCastling': wasCastling,
+        'castlingKingside': castlingKingside,
+        'rookHadMoved': rookHadMoved,
+        'wasPromotion': wasPromotion,
+        'previousEnPassant': previousEnPassant,
+      });
 
       selectedSquare = null;
       validMoves = [];
@@ -360,6 +400,80 @@ class _ChessScreenState extends State<ChessScreen> {
         if (mounted) _computerMove();
       });
     }
+  }
+
+  // 되돌리기 기능
+  void _undoMove() {
+    if (moveHistory.isEmpty || gameOver) return;
+
+    setState(() {
+      // 컴퓨터 대전 모드에서는 2수 되돌리기 (사용자 + 컴퓨터)
+      int undoCount = widget.gameMode == ChessGameMode.vsPerson ? 1 : 2;
+
+      for (int i = 0; i < undoCount && moveHistory.isNotEmpty; i++) {
+        final lastMove = moveHistory.removeLast();
+        final fromRow = lastMove['fromRow'] as int;
+        final fromCol = lastMove['fromCol'] as int;
+        final toRow = lastMove['toRow'] as int;
+        final toCol = lastMove['toCol'] as int;
+        final pieceType = lastMove['pieceType'] as PieceType;
+        final pieceColor = lastMove['pieceColor'] as PieceColor;
+        final pieceHadMoved = lastMove['pieceHadMoved'] as bool;
+        final captured = lastMove['captured'] as ChessPiece?;
+        final wasEnPassant = lastMove['wasEnPassant'] as bool;
+        final enPassantCaptured = lastMove['enPassantCaptured'] as ChessPiece?;
+        final wasCastling = lastMove['wasCastling'] as bool;
+        final castlingKingside = lastMove['castlingKingside'] as bool;
+        final rookHadMoved = lastMove['rookHadMoved'] as bool?;
+        final wasPromotion = lastMove['wasPromotion'] as bool;
+        final previousEnPassant = lastMove['previousEnPassant'] as List<int>?;
+
+        // 기물 복원 (프로모션인 경우 폰으로 복원)
+        final restoredPiece = ChessPiece(
+          type: wasPromotion ? PieceType.pawn : pieceType,
+          color: pieceColor,
+          hasMoved: pieceHadMoved,
+        );
+        board[fromRow][fromCol] = restoredPiece;
+        board[toRow][toCol] = captured;
+
+        // 앙파상 복원
+        if (wasEnPassant && enPassantCaptured != null) {
+          board[fromRow][toCol] = enPassantCaptured;
+        }
+
+        // 캐슬링 복원
+        if (wasCastling) {
+          if (castlingKingside) {
+            // 킹사이드 캐슬링 복원
+            final rook = board[fromRow][5]!;
+            rook.hasMoved = rookHadMoved ?? false;
+            board[fromRow][7] = rook;
+            board[fromRow][5] = null;
+          } else {
+            // 퀸사이드 캐슬링 복원
+            final rook = board[fromRow][3]!;
+            rook.hasMoved = rookHadMoved ?? false;
+            board[fromRow][0] = rook;
+            board[fromRow][3] = null;
+          }
+        }
+
+        // 앙파상 타겟 복원
+        enPassantTarget = previousEnPassant;
+
+        // 턴 복원
+        isWhiteTurn = !isWhiteTurn;
+      }
+
+      // 체크 상태 업데이트
+      final currentColor = isWhiteTurn ? PieceColor.white : PieceColor.black;
+      isInCheck = _isKingInCheck(currentColor);
+
+      _updateMessage();
+    });
+
+    _saveGame();
   }
 
   void _setWinMessage(PieceColor winner) {
@@ -834,6 +948,14 @@ class _ChessScreenState extends State<ChessScreen> {
         backgroundColor: Colors.brown.shade700,
         foregroundColor: Colors.white,
         actions: [
+          Opacity(
+            opacity: moveHistory.isNotEmpty && !gameOver ? 1.0 : 0.3,
+            child: IconButton(
+              icon: const Icon(Icons.undo),
+              onPressed: moveHistory.isNotEmpty && !gameOver ? _undoMove : null,
+              tooltip: '되돌리기',
+            ),
+          ),
           IconButton(
             icon: const Icon(Icons.refresh),
             onPressed: _resetGame,
@@ -994,6 +1116,11 @@ class _ChessScreenState extends State<ChessScreen> {
                   ),
                   const Spacer(),
                   _buildCircleButton(
+                    icon: Icons.undo,
+                    onPressed: moveHistory.isNotEmpty && !gameOver ? _undoMove : null,
+                  ),
+                  const SizedBox(width: 8),
+                  _buildCircleButton(
                     icon: Icons.refresh,
                     onPressed: _resetGame,
                   ),
@@ -1046,18 +1173,22 @@ class _ChessScreenState extends State<ChessScreen> {
 
   Widget _buildCircleButton({
     required IconData icon,
-    required VoidCallback onPressed,
+    VoidCallback? onPressed,
   }) {
-    return Container(
-      decoration: BoxDecoration(
-        shape: BoxShape.circle,
-        color: Colors.brown.shade700,
-      ),
-      child: IconButton(
-        icon: Icon(icon),
-        onPressed: onPressed,
-        color: Colors.white,
-        iconSize: 24,
+    final isEnabled = onPressed != null;
+    return Opacity(
+      opacity: isEnabled ? 1.0 : 0.3,
+      child: Container(
+        decoration: BoxDecoration(
+          shape: BoxShape.circle,
+          color: Colors.brown.shade700,
+        ),
+        child: IconButton(
+          icon: Icon(icon),
+          onPressed: onPressed,
+          color: Colors.white,
+          iconSize: 24,
+        ),
       ),
     );
   }
