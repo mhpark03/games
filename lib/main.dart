@@ -1230,11 +1230,17 @@ class HomeScreen extends StatelessWidget {
                         ],
                       ),
                     ),
-                    Text(
-                      '게임을 선택하세요',
-                      style: TextStyle(
-                        fontSize: 14,
-                        color: Colors.grey.shade400,
+                    Flexible(
+                      child: Padding(
+                        padding: const EdgeInsets.only(left: 8),
+                        child: Text(
+                          '게임을 선택하세요',
+                          style: TextStyle(
+                            fontSize: 14,
+                            color: Colors.grey.shade400,
+                          ),
+                          overflow: TextOverflow.ellipsis,
+                        ),
                       ),
                     ),
                   ],
