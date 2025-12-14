@@ -1208,27 +1208,36 @@ class HomeScreen extends StatelessWidget {
           child: Column(
             children: [
               const SizedBox(height: 20),
-              const Text(
-                'GAME CENTER',
-                style: TextStyle(
-                  fontSize: 28,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.white,
-                  letterSpacing: 4,
-                  shadows: [
-                    Shadow(
-                      color: Colors.cyan,
-                      blurRadius: 20,
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 20),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  crossAxisAlignment: CrossAxisAlignment.baseline,
+                  textBaseline: TextBaseline.alphabetic,
+                  children: [
+                    const Text(
+                      'GAME CENTER',
+                      style: TextStyle(
+                        fontSize: 28,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
+                        letterSpacing: 4,
+                        shadows: [
+                          Shadow(
+                            color: Colors.cyan,
+                            blurRadius: 20,
+                          ),
+                        ],
+                      ),
+                    ),
+                    Text(
+                      '게임을 선택하세요',
+                      style: TextStyle(
+                        fontSize: 14,
+                        color: Colors.grey.shade400,
+                      ),
                     ),
                   ],
-                ),
-              ),
-              const SizedBox(height: 6),
-              Text(
-                '게임을 선택하세요',
-                style: TextStyle(
-                  fontSize: 14,
-                  color: Colors.grey.shade400,
                 ),
               ),
               const SizedBox(height: 16),
@@ -1238,7 +1247,7 @@ class HomeScreen extends StatelessWidget {
                   child: LayoutBuilder(
                     builder: (context, constraints) {
                       final isLandscape = constraints.maxWidth > constraints.maxHeight;
-                      final crossAxisCount = isLandscape ? 3 : 2;
+                      final crossAxisCount = isLandscape ? 4 : 2;
                       return GridView.count(
                         crossAxisCount: crossAxisCount,
                         mainAxisSpacing: 12,
