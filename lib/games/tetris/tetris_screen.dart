@@ -404,37 +404,39 @@ class _TetrisScreenState extends State<TetrisScreen> {
                           onPressed: () => Navigator.pop(context),
                         ),
                         const SizedBox(width: 8),
-                        Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                          decoration: BoxDecoration(
-                            color: Colors.black,
-                            borderRadius: BorderRadius.circular(16),
-                            border: Border.all(color: Colors.cyan, width: 1),
-                          ),
-                          child: const Text(
-                            'TETRIS',
-                            style: TextStyle(
-                              color: Colors.cyan,
-                              fontWeight: FontWeight.bold,
-                              fontSize: 14,
-                              letterSpacing: 2,
-                            ),
+                        const Text(
+                          'TETRIS',
+                          style: TextStyle(
+                            color: Colors.cyan,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 20,
+                            letterSpacing: 2,
+                            fontStyle: FontStyle.italic,
                           ),
                         ),
                       ],
                     ),
-                    const SizedBox(height: 12),
-                    // 점수/레벨/라인 정보
-                    _buildCompactInfoBox('SCORE', _gameBoard.score.toString()),
-                    const SizedBox(height: 6),
-                    _buildCompactInfoBox('LEVEL', _gameBoard.level.toString()),
-                    const SizedBox(height: 6),
-                    _buildCompactInfoBox('LINES', _gameBoard.linesCleared.toString()),
+                    const SizedBox(height: 16),
+                    // SCORE (전체 너비)
+                    _buildLandscapeInfoBox('SCORE', _gameBoard.score.toString()),
+                    const SizedBox(height: 8),
+                    // LV와 LINE (가로 배치)
+                    Row(
+                      children: [
+                        Expanded(
+                          child: _buildLandscapeInfoBox('LV', _gameBoard.level.toString()),
+                        ),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: _buildLandscapeInfoBox('LINE', _gameBoard.linesCleared.toString()),
+                        ),
+                      ],
+                    ),
                     const Spacer(),
                     // 왼쪽 컨트롤: Arrow Left → Rotate Left → Hard Drop
                     LayoutBuilder(
                       builder: (context, constraints) {
-                        final buttonSize = (constraints.maxWidth / 3.8).clamp(40.0, 60.0);
+                        final buttonSize = (constraints.maxWidth / 3.5).clamp(45.0, 65.0);
                         return Row(
                           mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                           children: [
@@ -468,26 +470,31 @@ class _TetrisScreenState extends State<TetrisScreen> {
               child: Center(
                 child: AspectRatio(
                   aspectRatio: 10 / 20,
-                  child: Stack(
-                    children: [
-                      GameBoardWidget(gameBoard: _gameBoard),
-                      if (_gameBoard.isPaused)
-                        Positioned.fill(
-                          child: Container(
-                            color: Colors.black54,
-                            child: const Center(
-                              child: Text(
-                                'PAUSED',
-                                style: TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 28,
-                                  fontWeight: FontWeight.bold,
+                  child: Container(
+                    decoration: BoxDecoration(
+                      border: Border.all(color: Colors.white, width: 2),
+                    ),
+                    child: Stack(
+                      children: [
+                        GameBoardWidget(gameBoard: _gameBoard),
+                        if (_gameBoard.isPaused)
+                          Positioned.fill(
+                            child: Container(
+                              color: Colors.black54,
+                              child: const Center(
+                                child: Text(
+                                  'PAUSED',
+                                  style: TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 28,
+                                    fontWeight: FontWeight.bold,
+                                  ),
                                 ),
                               ),
                             ),
                           ),
-                        ),
-                    ],
+                      ],
+                    ),
                   ),
                 ),
               ),
@@ -514,14 +521,14 @@ class _TetrisScreenState extends State<TetrisScreen> {
                         ),
                       ],
                     ),
-                    const SizedBox(height: 12),
+                    const SizedBox(height: 16),
                     // 다음 피스
                     NextPieceWidget(piece: _gameBoard.nextPiece),
                     const Spacer(),
                     // 오른쪽 컨트롤: Soft Drop → Rotate Right → Arrow Right
                     LayoutBuilder(
                       builder: (context, constraints) {
-                        final buttonSize = (constraints.maxWidth / 3.8).clamp(40.0, 60.0);
+                        final buttonSize = (constraints.maxWidth / 3.5).clamp(45.0, 65.0);
                         return Row(
                           mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                           children: [
@@ -573,6 +580,39 @@ class _TetrisScreenState extends State<TetrisScreen> {
             size: 22,
           ),
         ),
+      ),
+    );
+  }
+
+  Widget _buildLandscapeInfoBox(String label, String value) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      decoration: BoxDecoration(
+        color: Colors.black,
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: Colors.cyan, width: 2),
+      ),
+      child: Column(
+        children: [
+          Text(
+            label,
+            style: TextStyle(
+              color: Colors.grey.shade500,
+              fontSize: 12,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            value,
+            style: const TextStyle(
+              color: Colors.white,
+              fontSize: 20,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+        ],
       ),
     );
   }
