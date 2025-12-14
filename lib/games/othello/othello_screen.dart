@@ -1,3 +1,4 @@
+import 'dart:math';
 import 'package:flutter/material.dart';
 import '../../services/game_save_service.dart';
 
@@ -9,13 +10,21 @@ enum OthelloGameMode {
   vsPerson,        // 2인 플레이
 }
 
+enum OthelloDifficulty {
+  easy,   // 쉬움
+  medium, // 보통
+  hard,   // 어려움
+}
+
 class OthelloScreen extends StatefulWidget {
   final OthelloGameMode gameMode;
+  final OthelloDifficulty difficulty;
   final bool resumeGame;
 
   const OthelloScreen({
     super.key,
     this.gameMode = OthelloGameMode.vsComputerWhite,
+    this.difficulty = OthelloDifficulty.medium,
     this.resumeGame = false,
   });
 
@@ -29,6 +38,14 @@ class OthelloScreen extends StatefulWidget {
     final modeIndex = gameState['gameMode'] as int?;
     if (modeIndex == null) return null;
     return OthelloGameMode.values[modeIndex];
+  }
+
+  static Future<OthelloDifficulty?> getSavedDifficulty() async {
+    final gameState = await GameSaveService.loadGame('othello');
+    if (gameState == null) return null;
+    final difficultyIndex = gameState['difficulty'] as int?;
+    if (difficultyIndex == null) return OthelloDifficulty.medium; // 기본값
+    return OthelloDifficulty.values[difficultyIndex];
   }
 
   static Future<void> clearSavedGame() async {
@@ -107,6 +124,7 @@ class _OthelloScreenState extends State<OthelloScreen> {
       'board': boardData,
       'isBlackTurn': isBlackTurn,
       'gameMode': widget.gameMode.index,
+      'difficulty': widget.difficulty.index,
     };
 
     await GameSaveService.saveGame('othello', gameState);
@@ -343,38 +361,25 @@ class _OthelloScreenState extends State<OthelloScreen> {
     gameMessage = '$winner ($blackCount : $whiteCount)';
   }
 
+  final Random _random = Random();
+
   void _computerMove() {
     if (gameOver || validMoves.isEmpty) return;
 
-    // 간단한 AI: 코너 우선, 그 다음 가장 많이 뒤집는 수
     List<int>? bestMove;
-    int bestScore = -9999; // 음수 점수도 선택될 수 있도록 수정
 
-    // 코너 위치
-    final corners = [[0, 0], [0, 7], [7, 0], [7, 7]];
-    for (var corner in corners) {
-      if (validMoves.any((m) => m[0] == corner[0] && m[1] == corner[1])) {
-        bestMove = corner;
+    switch (widget.difficulty) {
+      case OthelloDifficulty.easy:
+        bestMove = _findMoveEasy();
         break;
-      }
+      case OthelloDifficulty.medium:
+        bestMove = _findMoveMedium();
+        break;
+      case OthelloDifficulty.hard:
+        bestMove = _findMoveHard();
+        break;
     }
 
-    if (bestMove == null) {
-      // 가장 많이 뒤집는 수 선택
-      for (var move in validMoves) {
-        int score = _getFlippedDiscs(move[0], move[1], currentPlayerDisc).length;
-        // 코너 옆은 피하기 (하지만 다른 선택지가 없으면 선택됨)
-        if (_isNearCorner(move[0], move[1])) {
-          score -= 10;
-        }
-        if (score > bestScore) {
-          bestScore = score;
-          bestMove = move;
-        }
-      }
-    }
-
-    // 여전히 bestMove가 없으면 첫 번째 유효한 수 선택
     bestMove ??= validMoves.first;
     _makeMove(bestMove[0], bestMove[1]);
 
@@ -385,6 +390,117 @@ class _OthelloScreenState extends State<OthelloScreen> {
     }
   }
 
+  // 쉬움 난이도: 랜덤 요소 추가, 코너 등 전략적 위치 무시
+  List<int>? _findMoveEasy() {
+    // 40% 확률로 완전 랜덤 수
+    if (_random.nextDouble() < 0.4) {
+      return validMoves[_random.nextInt(validMoves.length)];
+    }
+
+    // 단순히 가장 많이 뒤집는 수 선택 (전략적 위치 고려 안 함)
+    List<int>? bestMove;
+    int bestScore = -1;
+
+    for (var move in validMoves) {
+      int score = _getFlippedDiscs(move[0], move[1], currentPlayerDisc).length;
+      // 노이즈 추가
+      score += _random.nextInt(3);
+      if (score > bestScore) {
+        bestScore = score;
+        bestMove = move;
+      }
+    }
+
+    return bestMove;
+  }
+
+  // 보통 난이도: 기존 AI (코너 우선, 코너 옆 회피)
+  List<int>? _findMoveMedium() {
+    List<int>? bestMove;
+    int bestScore = -9999;
+
+    // 코너 우선
+    final corners = [[0, 0], [0, 7], [7, 0], [7, 7]];
+    for (var corner in corners) {
+      if (validMoves.any((m) => m[0] == corner[0] && m[1] == corner[1])) {
+        return corner;
+      }
+    }
+
+    // 가장 많이 뒤집는 수 선택
+    for (var move in validMoves) {
+      int score = _getFlippedDiscs(move[0], move[1], currentPlayerDisc).length;
+      // 코너 옆은 피하기
+      if (_isNearCorner(move[0], move[1])) {
+        score -= 10;
+      }
+      if (score > bestScore) {
+        bestScore = score;
+        bestMove = move;
+      }
+    }
+
+    return bestMove;
+  }
+
+  // 어려움 난이도: 위치 가중치 + 안정성 고려
+  List<int>? _findMoveHard() {
+    // 위치별 가중치 (코너 최고, 코너 옆 최악)
+    final weights = [
+      [100, -20, 10,  5,  5, 10, -20, 100],
+      [-20, -50, -2, -2, -2, -2, -50, -20],
+      [ 10,  -2,  5,  1,  1,  5,  -2,  10],
+      [  5,  -2,  1,  0,  0,  1,  -2,   5],
+      [  5,  -2,  1,  0,  0,  1,  -2,   5],
+      [ 10,  -2,  5,  1,  1,  5,  -2,  10],
+      [-20, -50, -2, -2, -2, -2, -50, -20],
+      [100, -20, 10,  5,  5, 10, -20, 100],
+    ];
+
+    List<int>? bestMove;
+    int bestScore = -10000;
+
+    for (var move in validMoves) {
+      int row = move[0];
+      int col = move[1];
+
+      // 위치 가중치
+      int score = weights[row][col];
+
+      // 뒤집는 돌 수
+      int flippedCount = _getFlippedDiscs(row, col, currentPlayerDisc).length;
+      score += flippedCount * 2;
+
+      // 코너 확보 보너스
+      if (_isCorner(row, col)) {
+        score += 50;
+      }
+
+      // 가장자리 선호
+      if (_isEdge(row, col) && !_isNearCorner(row, col)) {
+        score += 5;
+      }
+
+      // 안정적인 돌 보너스 (코너에서 연결된 돌)
+      score += _countStableDiscs(row, col, currentPlayerDisc) * 10;
+
+      if (score > bestScore) {
+        bestScore = score;
+        bestMove = move;
+      }
+    }
+
+    return bestMove;
+  }
+
+  bool _isCorner(int row, int col) {
+    return (row == 0 || row == 7) && (col == 0 || col == 7);
+  }
+
+  bool _isEdge(int row, int col) {
+    return row == 0 || row == 7 || col == 0 || col == 7;
+  }
+
   bool _isNearCorner(int row, int col) {
     final dangerous = [
       [0, 1], [1, 0], [1, 1],
@@ -393,6 +509,42 @@ class _OthelloScreenState extends State<OthelloScreen> {
       [6, 6], [6, 7], [7, 6],
     ];
     return dangerous.any((d) => d[0] == row && d[1] == col);
+  }
+
+  // 안정적인 돌 수 계산 (코너에서 연결된 돌)
+  int _countStableDiscs(int row, int col, Disc disc) {
+    int stable = 0;
+
+    // 코너 확인
+    final cornerChecks = [
+      {'corner': [0, 0], 'dirs': [[0, 1], [1, 0], [1, 1]]},
+      {'corner': [0, 7], 'dirs': [[0, -1], [1, 0], [1, -1]]},
+      {'corner': [7, 0], 'dirs': [[0, 1], [-1, 0], [-1, 1]]},
+      {'corner': [7, 7], 'dirs': [[0, -1], [-1, 0], [-1, -1]]},
+    ];
+
+    for (var check in cornerChecks) {
+      final corner = check['corner'] as List<int>;
+      if (board[corner[0]][corner[1]] == disc) {
+        // 코너가 같은 색이면 연결된 돌 수 확인
+        final dirs = check['dirs'] as List<List<int>>;
+        for (var dir in dirs) {
+          int r = corner[0];
+          int c = corner[1];
+          while (r >= 0 && r < boardSize && c >= 0 && c < boardSize) {
+            if (board[r][c] == disc) {
+              if (r == row && c == col) stable++;
+            } else {
+              break;
+            }
+            r += dir[0];
+            c += dir[1];
+          }
+        }
+      }
+    }
+
+    return stable;
   }
 
   bool _isValidMovePosition(int row, int col) {

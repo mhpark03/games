@@ -412,6 +412,7 @@ class HomeScreen extends StatelessWidget {
   Future<void> _showOthelloModeDialog(BuildContext context) async {
     final hasSaved = await OthelloScreen.hasSavedGame();
     final savedMode = hasSaved ? await OthelloScreen.getSavedGameMode() : null;
+    final savedDifficulty = hasSaved ? await OthelloScreen.getSavedDifficulty() : null;
 
     if (!context.mounted) return;
 
@@ -432,54 +433,56 @@ class HomeScreen extends StatelessWidget {
             ),
             textAlign: TextAlign.center,
           ),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              if (hasSaved && savedMode != null) ...[
-                _buildOthelloResumeButton(context, savedMode),
-                const SizedBox(height: 16),
-                Divider(color: Colors.grey.shade700),
-                const SizedBox(height: 8),
-                Text(
-                  '새 게임',
-                  style: TextStyle(
-                    color: Colors.grey.shade400,
-                    fontSize: 12,
+          content: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                if (hasSaved && savedMode != null) ...[
+                  _buildOthelloResumeButton(context, savedMode, savedDifficulty ?? OthelloDifficulty.medium),
+                  const SizedBox(height: 16),
+                  Divider(color: Colors.grey.shade700),
+                  const SizedBox(height: 8),
+                  Text(
+                    '새 게임',
+                    style: TextStyle(
+                      color: Colors.grey.shade400,
+                      fontSize: 12,
+                    ),
                   ),
+                  const SizedBox(height: 8),
+                ],
+                _buildOthelloModeButton(
+                  context,
+                  title: '컴퓨터 (백)',
+                  subtitle: '내가 흑 (선공)',
+                  icon: Icons.computer,
+                  mode: OthelloGameMode.vsComputerWhite,
                 ),
-                const SizedBox(height: 8),
+                const SizedBox(height: 12),
+                _buildOthelloModeButton(
+                  context,
+                  title: '컴퓨터 (흑)',
+                  subtitle: '내가 백 (후공)',
+                  icon: Icons.computer,
+                  mode: OthelloGameMode.vsComputerBlack,
+                ),
+                const SizedBox(height: 12),
+                _buildOthelloModeButton(
+                  context,
+                  title: '사람',
+                  subtitle: '2인 플레이',
+                  icon: Icons.people,
+                  mode: OthelloGameMode.vsPerson,
+                ),
               ],
-              _buildOthelloModeButton(
-                context,
-                title: '컴퓨터 (백)',
-                subtitle: '내가 흑 (선공)',
-                icon: Icons.computer,
-                mode: OthelloGameMode.vsComputerWhite,
-              ),
-              const SizedBox(height: 12),
-              _buildOthelloModeButton(
-                context,
-                title: '컴퓨터 (흑)',
-                subtitle: '내가 백 (후공)',
-                icon: Icons.computer,
-                mode: OthelloGameMode.vsComputerBlack,
-              ),
-              const SizedBox(height: 12),
-              _buildOthelloModeButton(
-                context,
-                title: '사람',
-                subtitle: '2인 플레이',
-                icon: Icons.people,
-                mode: OthelloGameMode.vsPerson,
-              ),
-            ],
+            ),
           ),
         );
       },
     );
   }
 
-  Widget _buildOthelloResumeButton(BuildContext context, OthelloGameMode savedMode) {
+  Widget _buildOthelloResumeButton(BuildContext context, OthelloGameMode savedMode, OthelloDifficulty savedDifficulty) {
     String modeText;
     switch (savedMode) {
       case OthelloGameMode.vsComputerWhite:
@@ -493,6 +496,21 @@ class HomeScreen extends StatelessWidget {
         break;
     }
 
+    String difficultyText = '';
+    if (savedMode != OthelloGameMode.vsPerson) {
+      switch (savedDifficulty) {
+        case OthelloDifficulty.easy:
+          difficultyText = ' - 쉬움';
+          break;
+        case OthelloDifficulty.medium:
+          difficultyText = ' - 보통';
+          break;
+        case OthelloDifficulty.hard:
+          difficultyText = ' - 어려움';
+          break;
+      }
+    }
+
     return InkWell(
       onTap: () {
         Navigator.pop(context);
@@ -501,6 +519,7 @@ class HomeScreen extends StatelessWidget {
           MaterialPageRoute(
             builder: (context) => OthelloScreen(
               gameMode: savedMode,
+              difficulty: savedDifficulty,
               resumeGame: true,
             ),
           ),
@@ -534,7 +553,7 @@ class HomeScreen extends StatelessWidget {
                   ),
                 ),
                 Text(
-                  modeText,
+                  '$modeText$difficultyText',
                   style: TextStyle(
                     color: Colors.grey.shade400,
                     fontSize: 12,
@@ -564,12 +583,18 @@ class HomeScreen extends StatelessWidget {
     return InkWell(
       onTap: () {
         Navigator.pop(context);
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (context) => OthelloScreen(gameMode: mode),
-          ),
-        );
+        if (mode == OthelloGameMode.vsPerson) {
+          // 2인 플레이는 난이도 선택 없이 바로 시작
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => OthelloScreen(gameMode: mode),
+            ),
+          );
+        } else {
+          // 컴퓨터 대전은 난이도 선택
+          _showOthelloDifficultyDialog(context, mode);
+        }
       },
       borderRadius: BorderRadius.circular(12),
       child: Container(
@@ -611,6 +636,136 @@ class HomeScreen extends StatelessWidget {
             Icon(
               Icons.arrow_forward_ios,
               color: Colors.green.withValues(alpha: 0.7),
+              size: 16,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // 오델로 난이도 선택 다이얼로그
+  void _showOthelloDifficultyDialog(BuildContext context, OthelloGameMode mode) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          backgroundColor: Colors.grey.shade900,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+            side: BorderSide(color: Colors.green.withValues(alpha: 0.5), width: 2),
+          ),
+          title: const Text(
+            '난이도 선택',
+            style: TextStyle(
+              color: Colors.green,
+              fontWeight: FontWeight.bold,
+            ),
+            textAlign: TextAlign.center,
+          ),
+          content: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                _buildOthelloDifficultyButton(
+                  context,
+                  title: '쉬움',
+                  subtitle: '초보자용',
+                  icon: Icons.sentiment_satisfied,
+                  color: Colors.green,
+                  mode: mode,
+                  difficulty: OthelloDifficulty.easy,
+                ),
+                const SizedBox(height: 12),
+                _buildOthelloDifficultyButton(
+                  context,
+                  title: '보통',
+                  subtitle: '일반 플레이어용',
+                  icon: Icons.sentiment_neutral,
+                  color: Colors.orange,
+                  mode: mode,
+                  difficulty: OthelloDifficulty.medium,
+                ),
+                const SizedBox(height: 12),
+                _buildOthelloDifficultyButton(
+                  context,
+                  title: '어려움',
+                  subtitle: '고수용',
+                  icon: Icons.sentiment_very_dissatisfied,
+                  color: Colors.red,
+                  mode: mode,
+                  difficulty: OthelloDifficulty.hard,
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildOthelloDifficultyButton(
+    BuildContext context, {
+    required String title,
+    required String subtitle,
+    required IconData icon,
+    required Color color,
+    required OthelloGameMode mode,
+    required OthelloDifficulty difficulty,
+  }) {
+    return InkWell(
+      onTap: () {
+        Navigator.pop(context);
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => OthelloScreen(
+              gameMode: mode,
+              difficulty: difficulty,
+            ),
+          ),
+        );
+      },
+      borderRadius: BorderRadius.circular(12),
+      child: Container(
+        width: double.infinity,
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        decoration: BoxDecoration(
+          color: color.withValues(alpha: 0.1),
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(
+            color: color.withValues(alpha: 0.5),
+            width: 1,
+          ),
+        ),
+        child: Row(
+          children: [
+            Icon(icon, color: color, size: 28),
+            const SizedBox(width: 12),
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  title,
+                  style: TextStyle(
+                    color: color,
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                Text(
+                  subtitle,
+                  style: TextStyle(
+                    color: Colors.grey.shade400,
+                    fontSize: 12,
+                  ),
+                ),
+              ],
+            ),
+            const Spacer(),
+            Icon(
+              Icons.arrow_forward_ios,
+              color: color.withValues(alpha: 0.7),
               size: 16,
             ),
           ],
