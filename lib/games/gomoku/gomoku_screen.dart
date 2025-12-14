@@ -70,6 +70,7 @@ class _GomokuScreenState extends State<GomokuScreen> {
   List<List<int>>? winningStones;
   int? lastMoveRow; // 마지막 수 행
   int? lastMoveCol; // 마지막 수 열
+  List<List<int>> moveHistory = []; // 수 히스토리 (되돌리기용)
 
   // 현재 플레이어가 두는 돌 색상
   Stone get currentPlayerStone => isBlackTurn ? Stone.black : Stone.white;
@@ -104,6 +105,7 @@ class _GomokuScreenState extends State<GomokuScreen> {
     winningStones = null;
     lastMoveRow = null;
     lastMoveCol = null;
+    moveHistory = [];
     _updateMessage();
 
     // 컴퓨터(흑) 모드일 때 컴퓨터가 먼저 둠
@@ -259,6 +261,37 @@ class _GomokuScreenState extends State<GomokuScreen> {
     });
   }
 
+  // 되돌리기 기능
+  void _undoMove() {
+    if (moveHistory.isEmpty || gameOver) return;
+
+    setState(() {
+      // 컴퓨터 대전 모드에서는 2수 되돌리기 (사용자 + 컴퓨터)
+      int undoCount = widget.gameMode == GameMode.vsPerson ? 1 : 2;
+
+      for (int i = 0; i < undoCount && moveHistory.isNotEmpty; i++) {
+        final lastMove = moveHistory.removeLast();
+        board[lastMove[0]][lastMove[1]] = Stone.none;
+        isBlackTurn = !isBlackTurn;
+      }
+
+      // 마지막 수 위치 업데이트
+      if (moveHistory.isNotEmpty) {
+        final prevMove = moveHistory.last;
+        lastMoveRow = prevMove[0];
+        lastMoveCol = prevMove[1];
+      } else {
+        lastMoveRow = null;
+        lastMoveCol = null;
+      }
+
+      winningStones = null;
+      _updateMessage();
+    });
+
+    _saveGame();
+  }
+
   void _placeStone(int row, int col) {
     if (gameOver || board[row][col] != Stone.none || !isUserTurn) return;
 
@@ -268,6 +301,7 @@ class _GomokuScreenState extends State<GomokuScreen> {
       board[row][col] = stone;
       lastMoveRow = row;
       lastMoveCol = col;
+      moveHistory.add([row, col]); // 히스토리에 추가
       if (_checkWin(row, col, stone)) {
         gameOver = true;
         _setWinMessage(stone);
@@ -327,6 +361,7 @@ class _GomokuScreenState extends State<GomokuScreen> {
         board[move[0]][move[1]] = computerStone;
         lastMoveRow = move[0];
         lastMoveCol = move[1];
+        moveHistory.add([move[0], move[1]]); // 히스토리에 추가
         if (_checkWin(move[0], move[1], computerStone)) {
           gameOver = true;
           _setWinMessage(computerStone);
@@ -1070,47 +1105,54 @@ class _GomokuScreenState extends State<GomokuScreen> {
                   ),
                 ],
               ),
-              // 왼쪽 상단: 뒤로가기 버튼
+              // 왼쪽 상단: 뒤로가기 버튼 + 제목
               Positioned(
                 top: 4,
                 left: 4,
-                child: _buildCircleButton(
-                  icon: Icons.arrow_back,
-                  onPressed: () => Navigator.pop(context),
-                  tooltip: '뒤로가기',
-                ),
-              ),
-              // 상단 중앙: 제목 라벨
-              Positioned(
-                top: 8,
-                left: 0,
-                right: 0,
-                child: Center(
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 6),
-                    decoration: BoxDecoration(
-                      color: Colors.black.withValues(alpha: 0.5),
-                      borderRadius: BorderRadius.circular(20),
+                child: Row(
+                  children: [
+                    _buildCircleButton(
+                      icon: Icons.arrow_back,
+                      onPressed: () => Navigator.pop(context),
+                      tooltip: '뒤로가기',
                     ),
-                    child: const Text(
-                      '오목',
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
+                    const SizedBox(width: 8),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+                      decoration: BoxDecoration(
+                        color: Colors.black.withValues(alpha: 0.5),
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      child: const Text(
+                        '오목',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
                     ),
-                  ),
+                  ],
                 ),
               ),
-              // 오른쪽 상단: 새 게임 버튼
+              // 오른쪽 상단: 되돌리기 + 새 게임 버튼
               Positioned(
                 top: 4,
                 right: 4,
-                child: _buildCircleButton(
-                  icon: Icons.refresh,
-                  onPressed: _resetGame,
-                  tooltip: '새 게임',
+                child: Row(
+                  children: [
+                    _buildCircleButton(
+                      icon: Icons.undo,
+                      onPressed: moveHistory.isNotEmpty && !gameOver ? _undoMove : () {},
+                      tooltip: '되돌리기',
+                    ),
+                    const SizedBox(width: 8),
+                    _buildCircleButton(
+                      icon: Icons.refresh,
+                      onPressed: _resetGame,
+                      tooltip: '새 게임',
+                    ),
+                  ],
                 ),
               ),
             ],
