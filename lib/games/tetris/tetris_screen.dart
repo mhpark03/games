@@ -371,7 +371,7 @@ class _TetrisScreenState extends State<TetrisScreen> {
                 },
               ),
             ),
-            const SizedBox(height: 88),
+            const SizedBox(height: 8),
           ],
         ),
       ),
@@ -454,7 +454,7 @@ class _TetrisScreenState extends State<TetrisScreen> {
                         );
                       },
                     ),
-                    const SizedBox(height: 8),
+                    const SizedBox(height: 88),
                   ],
                 ),
               ),
@@ -546,7 +546,7 @@ class _TetrisScreenState extends State<TetrisScreen> {
                         );
                       },
                     ),
-                    const SizedBox(height: 8),
+                    const SizedBox(height: 88),
                   ],
                 ),
               ),
