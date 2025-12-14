@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'dart:math';
 import '../../services/game_save_service.dart';
 
@@ -98,6 +99,13 @@ class _SolitaireScreenState extends State<SolitaireScreen> {
   void initState() {
     super.initState();
     _checkSavedGame();
+  }
+
+  @override
+  void dispose() {
+    // 화면을 나갈 때 상태바 복원
+    SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
+    super.dispose();
   }
 
   Future<void> _checkSavedGame() async {
@@ -847,6 +855,30 @@ class _SolitaireScreenState extends State<SolitaireScreen> {
     }
 
     return Scaffold(
+      body: OrientationBuilder(
+        builder: (context, orientation) {
+          if (orientation == Orientation.landscape) {
+            // 가로 모드: 상태바 숨김 (몰입 모드)
+            SystemChrome.setEnabledSystemUIMode(
+              SystemUiMode.immersiveSticky,
+              overlays: [],
+            );
+            return _buildLandscapeLayout();
+          } else {
+            // 세로 모드: 상태바 표시
+            SystemChrome.setEnabledSystemUIMode(
+              SystemUiMode.edgeToEdge,
+              overlays: SystemUiOverlay.values,
+            );
+            return _buildPortraitLayout();
+          }
+        },
+      ),
+    );
+  }
+
+  Widget _buildPortraitLayout() {
+    return Scaffold(
       appBar: AppBar(
         title: const Text('솔리테어'),
         backgroundColor: Colors.green.shade800,
@@ -861,10 +893,13 @@ class _SolitaireScreenState extends State<SolitaireScreen> {
               ),
             ),
           ),
-          IconButton(
-            icon: const Icon(Icons.undo),
-            onPressed: _undoHistory.isEmpty ? null : _undo,
-            tooltip: '되돌리기',
+          Opacity(
+            opacity: _undoHistory.isNotEmpty ? 1.0 : 0.3,
+            child: IconButton(
+              icon: const Icon(Icons.undo),
+              onPressed: _undoHistory.isEmpty ? null : _undo,
+              tooltip: '되돌리기',
+            ),
           ),
           IconButton(
             icon: const Icon(Icons.refresh),
@@ -872,62 +907,180 @@ class _SolitaireScreenState extends State<SolitaireScreen> {
               _clearSavedGame();
               _showDrawModeDialog();
             },
+            tooltip: '새 게임',
           ),
         ],
       ),
       backgroundColor: Colors.green.shade700,
       body: SafeArea(
-        child: Column(
-          children: [
-            // 상단: 스톡, 웨이스트, 파운데이션
-            Padding(
-              padding: const EdgeInsets.all(8),
-              child: Row(
-                children: [
-                  // 스톡
-                  _buildStock(),
-                  const SizedBox(width: 8),
-                  // 웨이스트
-                  _buildWaste(),
-                  const Spacer(),
-                  // 파운데이션 4개 (드래그 타겟 인식 영역 확대)
-                  ...List.generate(4, (index) {
-                    return Padding(
-                      padding: const EdgeInsets.only(left: 6),
-                      child: SizedBox(
-                        width: 54,
-                        height: 74,
-                        child: _buildFoundation(index),
-                      ),
-                    );
-                  }),
-                ],
+        child: _buildGameContent(),
+      ),
+    );
+  }
+
+  Widget _buildLandscapeLayout() {
+    return Scaffold(
+      body: Container(
+        color: Colors.green.shade700,
+        child: SafeArea(
+          child: Stack(
+            children: [
+              // 메인 게임 컨텐츠
+              Padding(
+                padding: const EdgeInsets.only(top: 48),
+                child: _buildGameContent(),
               ),
-            ),
-            // 하단: 테이블 7열
-            Expanded(
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 8),
+              // 왼쪽 상단: 뒤로가기 버튼 + 제목
+              Positioned(
+                top: 4,
+                left: 4,
                 child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: List.generate(7, (index) {
-                    return Expanded(
-                      child: Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 2),
-                        child: _buildTableauColumn(index),
+                  children: [
+                    _buildCircleButton(
+                      icon: Icons.arrow_back,
+                      onPressed: () => Navigator.pop(context),
+                      tooltip: '뒤로가기',
+                    ),
+                    const SizedBox(width: 8),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+                      decoration: BoxDecoration(
+                        color: Colors.black.withValues(alpha: 0.5),
+                        borderRadius: BorderRadius.circular(20),
                       ),
-                    );
-                  }),
+                      child: const Text(
+                        '솔리테어',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                      decoration: BoxDecoration(
+                        color: Colors.black.withValues(alpha: 0.3),
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                      child: Text(
+                        '이동: $moves (${drawCount}장)',
+                        style: const TextStyle(
+                          color: Colors.white70,
+                          fontSize: 14,
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
               ),
-            ),
-          ],
+              // 오른쪽 상단: 되돌리기 + 새 게임 버튼
+              Positioned(
+                top: 4,
+                right: 4,
+                child: Row(
+                  children: [
+                    _buildCircleButton(
+                      icon: Icons.undo,
+                      onPressed: _undoHistory.isEmpty ? null : _undo,
+                      tooltip: '되돌리기',
+                    ),
+                    const SizedBox(width: 8),
+                    _buildCircleButton(
+                      icon: Icons.refresh,
+                      onPressed: () {
+                        _clearSavedGame();
+                        _showDrawModeDialog();
+                      },
+                      tooltip: '새 게임',
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
         ),
       ),
-      // 승리 오버레이
-      floatingActionButton: isGameWon
-          ? null
-          : null,
+    );
+  }
+
+  Widget _buildGameContent() {
+    return Column(
+      children: [
+        // 상단: 스톡, 웨이스트, 파운데이션
+        Padding(
+          padding: const EdgeInsets.all(8),
+          child: Row(
+            children: [
+              // 스톡
+              _buildStock(),
+              const SizedBox(width: 8),
+              // 웨이스트
+              _buildWaste(),
+              const Spacer(),
+              // 파운데이션 4개 (드래그 타겟 인식 영역 확대)
+              ...List.generate(4, (index) {
+                return Padding(
+                  padding: const EdgeInsets.only(left: 6),
+                  child: SizedBox(
+                    width: 54,
+                    height: 74,
+                    child: _buildFoundation(index),
+                  ),
+                );
+              }),
+            ],
+          ),
+        ),
+        // 하단: 테이블 7열
+        Expanded(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 8),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: List.generate(7, (index) {
+                return Expanded(
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 2),
+                    child: _buildTableauColumn(index),
+                  ),
+                );
+              }),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildCircleButton({
+    required IconData icon,
+    VoidCallback? onPressed,
+    String? tooltip,
+  }) {
+    final isEnabled = onPressed != null;
+    return Opacity(
+      opacity: isEnabled ? 1.0 : 0.3,
+      child: Material(
+        color: Colors.black.withValues(alpha: 0.5),
+        shape: const CircleBorder(),
+        child: InkWell(
+          onTap: onPressed,
+          customBorder: const CircleBorder(),
+          child: Tooltip(
+            message: tooltip ?? '',
+            child: Container(
+              padding: const EdgeInsets.all(10),
+              child: Icon(
+                icon,
+                color: Colors.white70,
+                size: 22,
+              ),
+            ),
+          ),
+        ),
+      ),
     );
   }
 
