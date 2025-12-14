@@ -339,12 +339,12 @@ class _TetrisScreenState extends State<TetrisScreen> {
               ),
             ),
             Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 16.0),
+              padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 16.0),
               child: LayoutBuilder(
                 builder: (context, constraints) {
-                  final buttonSize = (constraints.maxWidth - 32) / 5;
+                  final buttonSize = (constraints.maxWidth - 48) / 4;
                   return Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       HoldControlButton(
                         icon: Icons.arrow_left,
@@ -361,11 +361,6 @@ class _TetrisScreenState extends State<TetrisScreen> {
                         onPressed: _gameBoard.hardDrop,
                         size: buttonSize,
                       ),
-                      ControlButton(
-                        icon: Icons.rotate_right,
-                        onPressed: _gameBoard.rotate,
-                        size: buttonSize,
-                      ),
                       HoldControlButton(
                         icon: Icons.arrow_right,
                         onPressed: _gameBoard.moveRight,
@@ -376,7 +371,7 @@ class _TetrisScreenState extends State<TetrisScreen> {
                 },
               ),
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: 88),
           ],
         ),
       ),
