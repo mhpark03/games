@@ -1088,6 +1088,29 @@ class _GomokuScreenState extends State<GomokuScreen> {
                   tooltip: '뒤로가기',
                 ),
               ),
+              // 상단 중앙: 제목 라벨
+              Positioned(
+                top: 8,
+                left: 0,
+                right: 0,
+                child: Center(
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 6),
+                    decoration: BoxDecoration(
+                      color: Colors.black.withValues(alpha: 0.5),
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    child: const Text(
+                      '오목',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
               // 오른쪽 상단: 새 게임 버튼
               Positioned(
                 top: 4,
