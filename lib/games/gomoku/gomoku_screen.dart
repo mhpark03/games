@@ -972,6 +972,11 @@ class _GomokuScreenState extends State<GomokuScreen> {
         foregroundColor: Colors.white,
         actions: [
           IconButton(
+            icon: const Icon(Icons.undo),
+            onPressed: moveHistory.isNotEmpty && !gameOver ? _undoMove : null,
+            tooltip: '되돌리기',
+          ),
+          IconButton(
             icon: const Icon(Icons.refresh),
             onPressed: _resetGame,
             tooltip: '새 게임',
