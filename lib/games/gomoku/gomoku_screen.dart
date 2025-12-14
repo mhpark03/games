@@ -308,7 +308,7 @@ class _GomokuScreenState extends State<GomokuScreen> {
         _saveGame(); // 게임 종료 시 저장 데이터 삭제
         return;
       }
-      if (_isBoardFull()) {
+      if (_isDraw()) {
         gameOver = true;
         gameMessage = '무승부입니다!';
         _saveGame(); // 게임 종료 시 저장 데이터 삭제
@@ -368,7 +368,7 @@ class _GomokuScreenState extends State<GomokuScreen> {
           _saveGame(); // 게임 종료 시 저장 데이터 삭제
           return;
         }
-        if (_isBoardFull()) {
+        if (_isDraw()) {
           gameOver = true;
           gameMessage = '무승부입니다!';
           _saveGame(); // 게임 종료 시 저장 데이터 삭제
@@ -920,6 +920,52 @@ class _GomokuScreenState extends State<GomokuScreen> {
       }
     }
     return true;
+  }
+
+  // 누군가 아직 승리할 수 있는지 확인
+  bool _canAnyoneWin() {
+    final directions = [
+      [0, 1],  // 가로
+      [1, 0],  // 세로
+      [1, 1],  // 대각선 ↘
+      [1, -1], // 대각선 ↙
+    ];
+
+    for (int row = 0; row < boardSize; row++) {
+      for (int col = 0; col < boardSize; col++) {
+        for (var dir in directions) {
+          // 5칸 라인이 보드 안에 있는지 확인
+          int endRow = row + dir[0] * 4;
+          int endCol = col + dir[1] * 4;
+
+          if (endRow < 0 || endRow >= boardSize || endCol < 0 || endCol >= boardSize) continue;
+
+          bool hasBlack = false;
+          bool hasWhite = false;
+
+          // 5칸 라인에 어떤 돌이 있는지 확인
+          for (int i = 0; i < 5; i++) {
+            int r = row + dir[0] * i;
+            int c = col + dir[1] * i;
+
+            if (board[r][c] == Stone.black) hasBlack = true;
+            if (board[r][c] == Stone.white) hasWhite = true;
+          }
+
+          // 한 색상만 있거나 빈 칸만 있으면 아직 승리 가능
+          if (!hasBlack || !hasWhite) {
+            return true;
+          }
+        }
+      }
+    }
+
+    return false; // 모든 라인에 양측 돌이 섞여있어 승리 불가
+  }
+
+  // 무승부 확인 (보드가 가득 찼거나 더 이상 승리 불가능)
+  bool _isDraw() {
+    return _isBoardFull() || !_canAnyoneWin();
   }
 
   bool _isWinningStone(int row, int col) {
