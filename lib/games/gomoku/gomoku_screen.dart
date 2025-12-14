@@ -1,5 +1,6 @@
 import 'dart:math';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import '../../services/game_save_service.dart';
 
 enum Stone { none, black, white }
@@ -895,12 +896,29 @@ class _GomokuScreenState extends State<GomokuScreen> {
   }
 
   @override
+  void dispose() {
+    // 화면을 나갈 때 상태바 복원
+    SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     return OrientationBuilder(
       builder: (context, orientation) {
         if (orientation == Orientation.landscape) {
+          // 가로 모드: 상태바 숨김 (몰입 모드)
+          SystemChrome.setEnabledSystemUIMode(
+            SystemUiMode.immersiveSticky,
+            overlays: [],
+          );
           return _buildLandscapeLayout(context);
         } else {
+          // 세로 모드: 상태바 표시
+          SystemChrome.setEnabledSystemUIMode(
+            SystemUiMode.edgeToEdge,
+            overlays: SystemUiOverlay.values,
+          );
           return _buildPortraitLayout(context);
         }
       },
@@ -1052,7 +1070,7 @@ class _GomokuScreenState extends State<GomokuScreen> {
                   children: [
                     // 왼쪽 패널: 흑돌 플레이어
                     SizedBox(
-                      width: 120,
+                      width: 110,
                       child: Center(
                         child: _buildPlayerIndicator(
                           isBlack: true,
@@ -1064,18 +1082,21 @@ class _GomokuScreenState extends State<GomokuScreen> {
                     // 가운데: 게임 보드 (최대 크기)
                     Expanded(
                       child: Center(
-                        child: AspectRatio(
-                          aspectRatio: 1,
-                          child: Padding(
-                            padding: const EdgeInsets.all(8.0),
-                            child: _buildGameBoard(),
-                          ),
+                        child: LayoutBuilder(
+                          builder: (context, constraints) {
+                            final size = constraints.maxHeight;
+                            return SizedBox(
+                              width: size,
+                              height: size,
+                              child: _buildGameBoard(),
+                            );
+                          },
                         ),
                       ),
                     ),
                     // 오른쪽 패널: 백돌 플레이어
                     SizedBox(
-                      width: 120,
+                      width: 110,
                       child: Center(
                         child: _buildPlayerIndicator(
                           isBlack: false,
@@ -1100,25 +1121,31 @@ class _GomokuScreenState extends State<GomokuScreen> {
     required String playerName,
     required bool isCurrentTurn,
   }) {
-    final highlightColor = isBlack ? Colors.grey.shade700 : Colors.white;
+    // 하이라이트 색상: 더 밝고 눈에 띄는 색상 사용
+    final highlightColor = Colors.amber;
 
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
       decoration: BoxDecoration(
         color: isCurrentTurn
-            ? highlightColor.withValues(alpha: 0.3)
-            : Colors.transparent,
+            ? highlightColor.withValues(alpha: 0.4)
+            : Colors.grey.shade900.withValues(alpha: 0.3),
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
           color: isCurrentTurn ? highlightColor : Colors.grey.shade700,
-          width: isCurrentTurn ? 3 : 1,
+          width: isCurrentTurn ? 4 : 1,
         ),
         boxShadow: isCurrentTurn
             ? [
                 BoxShadow(
-                  color: highlightColor.withValues(alpha: 0.5),
-                  blurRadius: 12,
-                  spreadRadius: 3,
+                  color: highlightColor.withValues(alpha: 0.8),
+                  blurRadius: 20,
+                  spreadRadius: 5,
+                ),
+                BoxShadow(
+                  color: Colors.orange.withValues(alpha: 0.6),
+                  blurRadius: 30,
+                  spreadRadius: 2,
                 ),
               ]
             : null,
@@ -1126,12 +1153,29 @@ class _GomokuScreenState extends State<GomokuScreen> {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          _buildStoneIcon(isBlack, size: 48),
+          // 현재 턴일 때 돌 아이콘에도 강조 표시
+          Container(
+            padding: const EdgeInsets.all(6),
+            decoration: isCurrentTurn
+                ? BoxDecoration(
+                    shape: BoxShape.circle,
+                    border: Border.all(color: highlightColor, width: 3),
+                    boxShadow: [
+                      BoxShadow(
+                        color: highlightColor.withValues(alpha: 0.6),
+                        blurRadius: 10,
+                        spreadRadius: 2,
+                      ),
+                    ],
+                  )
+                : null,
+            child: _buildStoneIcon(isBlack, size: 48),
+          ),
           const SizedBox(height: 12),
           Text(
             playerName,
             style: TextStyle(
-              color: isCurrentTurn ? Colors.white : Colors.grey.shade500,
+              color: isCurrentTurn ? Colors.amber.shade100 : Colors.grey.shade500,
               fontSize: 16,
               fontWeight: isCurrentTurn ? FontWeight.bold : FontWeight.normal,
             ),
@@ -1140,10 +1184,23 @@ class _GomokuScreenState extends State<GomokuScreen> {
           Text(
             isBlack ? '(흑)' : '(백)',
             style: TextStyle(
-              color: isCurrentTurn ? Colors.white70 : Colors.grey.shade600,
+              color: isCurrentTurn ? Colors.amber.shade200 : Colors.grey.shade600,
               fontSize: 13,
             ),
           ),
+          // 현재 턴 표시 텍스트 추가
+          if (isCurrentTurn)
+            Padding(
+              padding: const EdgeInsets.only(top: 8),
+              child: Text(
+                '차례',
+                style: TextStyle(
+                  color: highlightColor,
+                  fontSize: 14,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
         ],
       ),
     );
