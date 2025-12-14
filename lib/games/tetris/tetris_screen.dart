@@ -34,6 +34,8 @@ class _TetrisScreenState extends State<TetrisScreen> {
     _gameBoard.removeListener(_onGameUpdate);
     _gameBoard.dispose();
     _focusNode.dispose();
+    // 화면을 나갈 때 상태바 복원
+    SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
     super.dispose();
   }
 
@@ -224,135 +226,386 @@ class _TetrisScreenState extends State<TetrisScreen> {
       autofocus: true,
       onKeyEvent: _handleKeyEvent,
       child: Scaffold(
-        backgroundColor: Colors.grey.shade900,
-        appBar: AppBar(
-          backgroundColor: Colors.black,
-          leading: IconButton(
-            icon: const Icon(Icons.arrow_back, color: Colors.white),
-            onPressed: () => Navigator.pop(context),
-          ),
-          title: const Text(
-            'TETRIS',
-            style: TextStyle(
-              color: Colors.cyan,
-              fontWeight: FontWeight.bold,
-              fontSize: 24,
-              letterSpacing: 4,
-            ),
-          ),
-          centerTitle: true,
-          actions: [
-            IconButton(
-              icon: const Icon(Icons.settings, color: Colors.white),
-              onPressed: _showLevelSelectDialog,
-            ),
-            IconButton(
-              icon: Icon(
-                _gameBoard.isPaused ? Icons.play_arrow : Icons.pause,
-                color: Colors.white,
-              ),
-              onPressed: _gameBoard.pauseGame,
-            ),
-          ],
+        body: OrientationBuilder(
+          builder: (context, orientation) {
+            if (orientation == Orientation.landscape) {
+              // 가로 모드: 상태바 숨김
+              SystemChrome.setEnabledSystemUIMode(
+                SystemUiMode.immersiveSticky,
+                overlays: [],
+              );
+              return _buildLandscapeLayout();
+            } else {
+              // 세로 모드: 상태바 표시
+              SystemChrome.setEnabledSystemUIMode(
+                SystemUiMode.edgeToEdge,
+                overlays: SystemUiOverlay.values,
+              );
+              return _buildPortraitLayout();
+            }
+          },
         ),
-        body: SafeArea(
-          child: Column(
-            children: [
-              Padding(
-                padding: const EdgeInsets.all(16.0),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceAround,
-                  children: [
-                    _buildInfoBox('SCORE', _gameBoard.score.toString()),
-                    _buildInfoBox('LEVEL', _gameBoard.level.toString()),
-                    _buildInfoBox('LINES', _gameBoard.linesCleared.toString()),
-                  ],
-                ),
+      ),
+    );
+  }
+
+  Widget _buildPortraitLayout() {
+    return Scaffold(
+      backgroundColor: Colors.grey.shade900,
+      appBar: AppBar(
+        backgroundColor: Colors.black,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back, color: Colors.white),
+          onPressed: () => Navigator.pop(context),
+        ),
+        title: const Text(
+          'TETRIS',
+          style: TextStyle(
+            color: Colors.cyan,
+            fontWeight: FontWeight.bold,
+            fontSize: 24,
+            letterSpacing: 4,
+          ),
+        ),
+        centerTitle: true,
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.settings, color: Colors.white),
+            onPressed: _showLevelSelectDialog,
+          ),
+          IconButton(
+            icon: Icon(
+              _gameBoard.isPaused ? Icons.play_arrow : Icons.pause,
+              color: Colors.white,
+            ),
+            onPressed: _gameBoard.pauseGame,
+          ),
+        ],
+      ),
+      body: SafeArea(
+        child: Column(
+          children: [
+            Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceAround,
+                children: [
+                  _buildInfoBox('SCORE', _gameBoard.score.toString()),
+                  _buildInfoBox('LEVEL', _gameBoard.level.toString()),
+                  _buildInfoBox('LINES', _gameBoard.linesCleared.toString()),
+                ],
               ),
-              Expanded(
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Expanded(
-                        flex: 3,
-                        child: Center(
-                          child: ConstrainedBox(
-                            constraints: const BoxConstraints(maxWidth: 300),
-                            child: Stack(
-                              children: [
-                                GameBoardWidget(gameBoard: _gameBoard),
-                                if (_gameBoard.isPaused)
-                                  Positioned.fill(
-                                    child: Container(
-                                      color: Colors.black54,
-                                      child: const Center(
-                                        child: Text(
-                                          'PAUSED',
-                                          style: TextStyle(
-                                            color: Colors.white,
-                                            fontSize: 32,
-                                            fontWeight: FontWeight.bold,
-                                          ),
+            ),
+            Expanded(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Expanded(
+                      flex: 3,
+                      child: Center(
+                        child: ConstrainedBox(
+                          constraints: const BoxConstraints(maxWidth: 300),
+                          child: Stack(
+                            children: [
+                              GameBoardWidget(gameBoard: _gameBoard),
+                              if (_gameBoard.isPaused)
+                                Positioned.fill(
+                                  child: Container(
+                                    color: Colors.black54,
+                                    child: const Center(
+                                      child: Text(
+                                        'PAUSED',
+                                        style: TextStyle(
+                                          color: Colors.white,
+                                          fontSize: 32,
+                                          fontWeight: FontWeight.bold,
                                         ),
                                       ),
                                     ),
                                   ),
-                              ],
-                            ),
+                                ),
+                            ],
                           ),
                         ),
                       ),
-                      const SizedBox(width: 16),
-                      NextPieceWidget(piece: _gameBoard.nextPiece),
+                    ),
+                    const SizedBox(width: 16),
+                    NextPieceWidget(piece: _gameBoard.nextPiece),
+                  ],
+                ),
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 16.0),
+              child: LayoutBuilder(
+                builder: (context, constraints) {
+                  final buttonSize = (constraints.maxWidth - 32) / 5;
+                  return Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                    children: [
+                      HoldControlButton(
+                        icon: Icons.arrow_left,
+                        onPressed: _gameBoard.moveLeft,
+                        size: buttonSize,
+                      ),
+                      ControlButton(
+                        icon: Icons.rotate_left,
+                        onPressed: _gameBoard.rotateLeft,
+                        size: buttonSize,
+                      ),
+                      ControlButton(
+                        icon: Icons.vertical_align_bottom,
+                        onPressed: _gameBoard.hardDrop,
+                        size: buttonSize,
+                      ),
+                      ControlButton(
+                        icon: Icons.rotate_right,
+                        onPressed: _gameBoard.rotate,
+                        size: buttonSize,
+                      ),
+                      HoldControlButton(
+                        icon: Icons.arrow_right,
+                        onPressed: _gameBoard.moveRight,
+                        size: buttonSize,
+                      ),
+                    ],
+                  );
+                },
+              ),
+            ),
+            const SizedBox(height: 8),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildLandscapeLayout() {
+    return Scaffold(
+      backgroundColor: Colors.grey.shade900,
+      body: SafeArea(
+        child: Row(
+          children: [
+            // 왼쪽 패널: 제목, 점수/레벨, 왼쪽 컨트롤
+            Expanded(
+              flex: 2,
+              child: Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: Column(
+                  children: [
+                    // 뒤로가기 + 제목
+                    Row(
+                      children: [
+                        _buildCircleButton(
+                          icon: Icons.arrow_back,
+                          onPressed: () => Navigator.pop(context),
+                        ),
+                        const SizedBox(width: 8),
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                          decoration: BoxDecoration(
+                            color: Colors.black,
+                            borderRadius: BorderRadius.circular(16),
+                            border: Border.all(color: Colors.cyan, width: 1),
+                          ),
+                          child: const Text(
+                            'TETRIS',
+                            style: TextStyle(
+                              color: Colors.cyan,
+                              fontWeight: FontWeight.bold,
+                              fontSize: 14,
+                              letterSpacing: 2,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 12),
+                    // 점수/레벨/라인 정보
+                    _buildCompactInfoBox('SCORE', _gameBoard.score.toString()),
+                    const SizedBox(height: 6),
+                    _buildCompactInfoBox('LEVEL', _gameBoard.level.toString()),
+                    const SizedBox(height: 6),
+                    _buildCompactInfoBox('LINES', _gameBoard.linesCleared.toString()),
+                    const Spacer(),
+                    // 왼쪽 컨트롤: Arrow Left → Rotate Left → Hard Drop
+                    LayoutBuilder(
+                      builder: (context, constraints) {
+                        final buttonSize = (constraints.maxWidth / 3.8).clamp(40.0, 60.0);
+                        return Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                          children: [
+                            HoldControlButton(
+                              icon: Icons.arrow_left,
+                              onPressed: _gameBoard.moveLeft,
+                              size: buttonSize,
+                            ),
+                            ControlButton(
+                              icon: Icons.rotate_left,
+                              onPressed: _gameBoard.rotateLeft,
+                              size: buttonSize,
+                            ),
+                            ControlButton(
+                              icon: Icons.vertical_align_bottom,
+                              onPressed: _gameBoard.hardDrop,
+                              size: buttonSize,
+                            ),
+                          ],
+                        );
+                      },
+                    ),
+                    const SizedBox(height: 8),
+                  ],
+                ),
+              ),
+            ),
+            // 가운데 패널: 게임 보드
+            Expanded(
+              flex: 3,
+              child: Center(
+                child: AspectRatio(
+                  aspectRatio: 10 / 20,
+                  child: Stack(
+                    children: [
+                      GameBoardWidget(gameBoard: _gameBoard),
+                      if (_gameBoard.isPaused)
+                        Positioned.fill(
+                          child: Container(
+                            color: Colors.black54,
+                            child: const Center(
+                              child: Text(
+                                'PAUSED',
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 28,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
                     ],
                   ),
                 ),
               ),
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 16.0),
-                child: LayoutBuilder(
-                  builder: (context, constraints) {
-                    final buttonSize = (constraints.maxWidth - 32) / 5;
-                    return Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+            ),
+            // 오른쪽 패널: 설정/일시정지, 다음 피스, 오른쪽 컨트롤
+            Expanded(
+              flex: 2,
+              child: Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: Column(
+                  children: [
+                    // 설정 + 일시정지 버튼
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.end,
                       children: [
-                        HoldControlButton(
-                          icon: Icons.arrow_left,
-                          onPressed: _gameBoard.moveLeft,
-                          size: buttonSize,
+                        _buildCircleButton(
+                          icon: Icons.settings,
+                          onPressed: _showLevelSelectDialog,
                         ),
-                        ControlButton(
-                          icon: Icons.rotate_left,
-                          onPressed: _gameBoard.rotateLeft,
-                          size: buttonSize,
-                        ),
-                        ControlButton(
-                          icon: Icons.vertical_align_bottom,
-                          onPressed: _gameBoard.hardDrop,
-                          size: buttonSize,
-                        ),
-                        ControlButton(
-                          icon: Icons.rotate_right,
-                          onPressed: _gameBoard.rotate,
-                          size: buttonSize,
-                        ),
-                        HoldControlButton(
-                          icon: Icons.arrow_right,
-                          onPressed: _gameBoard.moveRight,
-                          size: buttonSize,
+                        const SizedBox(width: 8),
+                        _buildCircleButton(
+                          icon: _gameBoard.isPaused ? Icons.play_arrow : Icons.pause,
+                          onPressed: _gameBoard.pauseGame,
                         ),
                       ],
-                    );
-                  },
+                    ),
+                    const SizedBox(height: 12),
+                    // 다음 피스
+                    NextPieceWidget(piece: _gameBoard.nextPiece),
+                    const Spacer(),
+                    // 오른쪽 컨트롤: Soft Drop → Rotate Right → Arrow Right
+                    LayoutBuilder(
+                      builder: (context, constraints) {
+                        final buttonSize = (constraints.maxWidth / 3.8).clamp(40.0, 60.0);
+                        return Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                          children: [
+                            HoldControlButton(
+                              icon: Icons.arrow_drop_down,
+                              onPressed: _gameBoard.moveDown,
+                              size: buttonSize,
+                            ),
+                            ControlButton(
+                              icon: Icons.rotate_right,
+                              onPressed: _gameBoard.rotate,
+                              size: buttonSize,
+                            ),
+                            HoldControlButton(
+                              icon: Icons.arrow_right,
+                              onPressed: _gameBoard.moveRight,
+                              size: buttonSize,
+                            ),
+                          ],
+                        );
+                      },
+                    ),
+                    const SizedBox(height: 8),
+                  ],
                 ),
               ),
-              const SizedBox(height: 8),
-            ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildCircleButton({
+    required IconData icon,
+    required VoidCallback onPressed,
+  }) {
+    return Material(
+      color: Colors.grey.shade800,
+      shape: const CircleBorder(),
+      child: InkWell(
+        onTap: onPressed,
+        customBorder: const CircleBorder(),
+        child: Container(
+          padding: const EdgeInsets.all(10),
+          child: Icon(
+            icon,
+            color: Colors.white,
+            size: 22,
           ),
         ),
+      ),
+    );
+  }
+
+  Widget _buildCompactInfoBox(String label, String value) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+      decoration: BoxDecoration(
+        color: Colors.black,
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: Colors.cyan.withValues(alpha: 0.5), width: 1),
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Text(
+            label,
+            style: TextStyle(
+              color: Colors.grey.shade400,
+              fontSize: 11,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          Text(
+            value,
+            style: const TextStyle(
+              color: Colors.white,
+              fontSize: 16,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+        ],
       ),
     );
   }
