@@ -896,6 +896,19 @@ class _GomokuScreenState extends State<GomokuScreen> {
 
   @override
   Widget build(BuildContext context) {
+    return OrientationBuilder(
+      builder: (context, orientation) {
+        if (orientation == Orientation.landscape) {
+          return _buildLandscapeLayout(context);
+        } else {
+          return _buildPortraitLayout(context);
+        }
+      },
+    );
+  }
+
+  // 세로 모드 레이아웃
+  Widget _buildPortraitLayout(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         title: const Text(
@@ -950,43 +963,7 @@ class _GomokuScreenState extends State<GomokuScreen> {
               child: Center(
                 child: AspectRatio(
                   aspectRatio: 1,
-                  child: Container(
-                    margin: const EdgeInsets.all(8),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFFDEB887),
-                      borderRadius: BorderRadius.circular(8),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withValues(alpha: 0.5),
-                          blurRadius: 15,
-                          offset: const Offset(0, 8),
-                        ),
-                      ],
-                    ),
-                    child: CustomPaint(
-                      painter: BoardPainter(),
-                      child: GridView.builder(
-                        physics: const NeverScrollableScrollPhysics(),
-                        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                          crossAxisCount: boardSize,
-                        ),
-                        itemCount: boardSize * boardSize,
-                        itemBuilder: (context, index) {
-                          int row = index ~/ boardSize;
-                          int col = index % boardSize;
-                          return GestureDetector(
-                            onTap: () => _placeStone(row, col),
-                            child: Container(
-                              color: Colors.transparent,
-                              child: Center(
-                                child: _buildStone(row, col),
-                              ),
-                            ),
-                          );
-                        },
-                      ),
-                    ),
-                  ),
+                  child: _buildGameBoard(),
                 ),
               ),
             ),
@@ -998,6 +975,161 @@ class _GomokuScreenState extends State<GomokuScreen> {
               ),
             ),
           ],
+        ),
+      ),
+    );
+  }
+
+  // 가로 모드 레이아웃
+  Widget _buildLandscapeLayout(BuildContext context) {
+    return Scaffold(
+      body: Container(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [
+              Colors.brown.shade900,
+              Colors.black,
+            ],
+          ),
+        ),
+        child: SafeArea(
+          child: Row(
+            children: [
+              // 왼쪽 패널: 뒤로가기, 제목, 메시지
+              SizedBox(
+                width: 120,
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    IconButton(
+                      icon: const Icon(Icons.arrow_back, color: Colors.white),
+                      onPressed: () => Navigator.pop(context),
+                      tooltip: '뒤로가기',
+                    ),
+                    const SizedBox(height: 16),
+                    const Text(
+                      '오목',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 24,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    const SizedBox(height: 24),
+                    // 현재 차례 표시
+                    Container(
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: gameOver
+                            ? (gameMessage.contains('축하')
+                                ? Colors.green.withValues(alpha: 0.3)
+                                : Colors.red.withValues(alpha: 0.3))
+                            : Colors.amber.withValues(alpha: 0.2),
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(
+                          color: gameOver
+                              ? (gameMessage.contains('축하') ? Colors.green : Colors.red)
+                              : Colors.amber,
+                          width: 2,
+                        ),
+                      ),
+                      child: Column(
+                        children: [
+                          if (!gameOver) _buildStoneIcon(isBlackTurn, size: 30),
+                          const SizedBox(height: 8),
+                          Text(
+                            gameMessage,
+                            textAlign: TextAlign.center,
+                            style: TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.bold,
+                              color: gameOver
+                                  ? (gameMessage.contains('축하') ? Colors.green : Colors.red)
+                                  : Colors.amber,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              // 가운데: 게임 보드 (최대 크기)
+              Expanded(
+                child: Center(
+                  child: AspectRatio(
+                    aspectRatio: 1,
+                    child: Padding(
+                      padding: const EdgeInsets.all(8.0),
+                      child: _buildGameBoard(),
+                    ),
+                  ),
+                ),
+              ),
+              // 오른쪽 패널: 다시하기 버튼
+              SizedBox(
+                width: 100,
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    IconButton(
+                      icon: const Icon(Icons.refresh, color: Colors.white, size: 32),
+                      onPressed: _resetGame,
+                      tooltip: '새 게임',
+                    ),
+                    const SizedBox(height: 8),
+                    const Text(
+                      '새 게임',
+                      style: TextStyle(color: Colors.white70, fontSize: 12),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  // 게임 보드 위젯
+  Widget _buildGameBoard() {
+    return Container(
+      margin: const EdgeInsets.all(8),
+      decoration: BoxDecoration(
+        color: const Color(0xFFDEB887),
+        borderRadius: BorderRadius.circular(8),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.5),
+            blurRadius: 15,
+            offset: const Offset(0, 8),
+          ),
+        ],
+      ),
+      child: CustomPaint(
+        painter: BoardPainter(),
+        child: GridView.builder(
+          physics: const NeverScrollableScrollPhysics(),
+          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+            crossAxisCount: boardSize,
+          ),
+          itemCount: boardSize * boardSize,
+          itemBuilder: (context, index) {
+            int row = index ~/ boardSize;
+            int col = index % boardSize;
+            return GestureDetector(
+              onTap: () => _placeStone(row, col),
+              child: Container(
+                color: Colors.transparent,
+                child: Center(
+                  child: _buildStone(row, col),
+                ),
+              ),
+            );
+          },
         ),
       ),
     );
