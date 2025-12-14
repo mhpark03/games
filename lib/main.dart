@@ -1248,11 +1248,12 @@ class HomeScreen extends StatelessWidget {
                     builder: (context, constraints) {
                       final isLandscape = constraints.maxWidth > constraints.maxHeight;
                       final crossAxisCount = isLandscape ? 4 : 2;
+                      final aspectRatio = isLandscape ? 1.4 : 1.0;
                       return GridView.count(
                         crossAxisCount: crossAxisCount,
                         mainAxisSpacing: 12,
                         crossAxisSpacing: 12,
-                        childAspectRatio: 1.0,
+                        childAspectRatio: aspectRatio,
                         children: [
                           _buildGameTile(
                             context,
