@@ -1273,93 +1273,95 @@ class HomeScreen extends StatelessWidget {
                   ),
                   const SizedBox(height: 16),
                   Expanded(
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16),
-                  child: LayoutBuilder(
-                    builder: (context, constraints) {
-                      final isLandscape = constraints.maxWidth > constraints.maxHeight;
-                      final crossAxisCount = isLandscape ? 4 : 2;
-                      final aspectRatio = isLandscape ? 1.4 : 1.0;
-                      return GridView.count(
-                        crossAxisCount: crossAxisCount,
-                        mainAxisSpacing: 12,
-                        crossAxisSpacing: 12,
-                        childAspectRatio: aspectRatio,
-                        children: [
-                          _buildGameTile(
-                            context,
-                            title: 'TETRIS',
-                            subtitle: '테트리스',
-                            icon: Icons.grid_view_rounded,
-                            color: Colors.cyan,
-                            onTap: () => Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (context) => const TetrisScreen(),
-                              ),
-                            ),
-                          ),
-                          _buildGameTile(
-                            context,
-                            title: 'OMOK',
-                            subtitle: '오목',
-                            icon: Icons.circle_outlined,
-                            color: Colors.amber,
-                            onTap: () => _showGomokuModeDialog(context),
-                          ),
-                          _buildGameTile(
-                            context,
-                            title: 'OTHELLO',
-                            subtitle: '오델로',
-                            icon: Icons.blur_circular,
-                            color: Colors.green,
-                            onTap: () => _showOthelloModeDialog(context),
-                          ),
-                          _buildGameTile(
-                            context,
-                            title: 'CHESS',
-                            subtitle: '체스',
-                            icon: Icons.castle,
-                            color: Colors.brown,
-                            onTap: () => _showChessModeDialog(context),
-                          ),
-                          _buildGameTile(
-                            context,
-                            title: 'JANGGI',
-                            subtitle: '장기',
-                            icon: Icons.apps,
-                            color: const Color(0xFFD2691E),
-                            onTap: () => _showJanggiContinueDialog(context),
-                          ),
-                          _buildGameTile(
-                            context,
-                            title: 'SOLITAIRE',
-                            subtitle: '솔리테어',
-                            icon: Icons.style,
-                            color: Colors.green.shade700,
-                            onTap: () {
-                              Navigator.push(
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                      child: LayoutBuilder(
+                        builder: (context, constraints) {
+                          final isLandscapeGrid = constraints.maxWidth > constraints.maxHeight;
+                          final crossAxisCount = isLandscapeGrid ? 4 : 2;
+                          final aspectRatio = isLandscapeGrid ? 1.4 : 1.0;
+                          return GridView.count(
+                            crossAxisCount: crossAxisCount,
+                            mainAxisSpacing: 12,
+                            crossAxisSpacing: 12,
+                            childAspectRatio: aspectRatio,
+                            children: [
+                              _buildGameTile(
                                 context,
-                                MaterialPageRoute(
-                                  builder: (context) => const SolitaireScreen(),
+                                title: 'TETRIS',
+                                subtitle: '테트리스',
+                                icon: Icons.grid_view_rounded,
+                                color: Colors.cyan,
+                                onTap: () => Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) => const TetrisScreen(),
+                                  ),
                                 ),
-                              );
-                            },
-                          ),
-                        ],
-                      );
-                    },
+                              ),
+                              _buildGameTile(
+                                context,
+                                title: 'OMOK',
+                                subtitle: '오목',
+                                icon: Icons.circle_outlined,
+                                color: Colors.amber,
+                                onTap: () => _showGomokuModeDialog(context),
+                              ),
+                              _buildGameTile(
+                                context,
+                                title: 'OTHELLO',
+                                subtitle: '오델로',
+                                icon: Icons.blur_circular,
+                                color: Colors.green,
+                                onTap: () => _showOthelloModeDialog(context),
+                              ),
+                              _buildGameTile(
+                                context,
+                                title: 'CHESS',
+                                subtitle: '체스',
+                                icon: Icons.castle,
+                                color: Colors.brown,
+                                onTap: () => _showChessModeDialog(context),
+                              ),
+                              _buildGameTile(
+                                context,
+                                title: 'JANGGI',
+                                subtitle: '장기',
+                                icon: Icons.apps,
+                                color: const Color(0xFFD2691E),
+                                onTap: () => _showJanggiContinueDialog(context),
+                              ),
+                              _buildGameTile(
+                                context,
+                                title: 'SOLITAIRE',
+                                subtitle: '솔리테어',
+                                icon: Icons.style,
+                                color: Colors.green.shade700,
+                                onTap: () {
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (context) => const SolitaireScreen(),
+                                    ),
+                                  );
+                                },
+                              ),
+                            ],
+                          );
+                        },
+                      ),
+                    ),
                   ),
-                ),
-              ),
-              Padding(
-                padding: const EdgeInsets.all(8),
-                child: Text(
-                  'v1.0.0',
-                  style: TextStyle(color: Colors.grey.shade600, fontSize: 12),
-                ),
-              ),
-            ],
+                  Padding(
+                    padding: const EdgeInsets.all(8),
+                    child: Text(
+                      'v1.0.0',
+                      style: TextStyle(color: Colors.grey.shade600, fontSize: 12),
+                    ),
+                  ),
+                ],
+              );
+            },
           ),
         ),
       ),
