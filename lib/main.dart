@@ -421,6 +421,7 @@ class HomeScreen extends StatelessWidget {
       builder: (BuildContext context) {
         return AlertDialog(
           backgroundColor: Colors.grey.shade900,
+          insetPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(16),
             side: BorderSide(color: Colors.green.withValues(alpha: 0.5), width: 2),
@@ -439,7 +440,7 @@ class HomeScreen extends StatelessWidget {
               children: [
                 if (hasSaved && savedMode != null) ...[
                   _buildOthelloResumeButton(context, savedMode, savedDifficulty ?? OthelloDifficulty.medium),
-                  const SizedBox(height: 16),
+                  const SizedBox(height: 12),
                   Divider(color: Colors.grey.shade700),
                   const SizedBox(height: 8),
                   Text(
@@ -458,7 +459,7 @@ class HomeScreen extends StatelessWidget {
                   icon: Icons.computer,
                   mode: OthelloGameMode.vsComputerWhite,
                 ),
-                const SizedBox(height: 12),
+                const SizedBox(height: 8),
                 _buildOthelloModeButton(
                   context,
                   title: '컴퓨터 (흑)',
@@ -466,7 +467,7 @@ class HomeScreen extends StatelessWidget {
                   icon: Icons.computer,
                   mode: OthelloGameMode.vsComputerBlack,
                 ),
-                const SizedBox(height: 12),
+                const SizedBox(height: 8),
                 _buildOthelloModeButton(
                   context,
                   title: '사람',

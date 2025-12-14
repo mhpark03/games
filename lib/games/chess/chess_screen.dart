@@ -1,5 +1,6 @@
 import 'dart:math';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import '../../services/game_save_service.dart';
 
 enum PieceType { king, queen, rook, bishop, knight, pawn }
@@ -113,6 +114,12 @@ class _ChessScreenState extends State<ChessScreen> {
     } else {
       _initBoard();
     }
+  }
+
+  @override
+  void dispose() {
+    SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
+    super.dispose();
   }
 
   void _initBoard() {
@@ -803,6 +810,22 @@ class _ChessScreenState extends State<ChessScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      body: OrientationBuilder(
+        builder: (context, orientation) {
+          if (orientation == Orientation.landscape) {
+            SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersiveSticky);
+            return _buildLandscapeLayout();
+          } else {
+            SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
+            return _buildPortraitLayout();
+          }
+        },
+      ),
+    );
+  }
+
+  Widget _buildPortraitLayout() {
+    return Scaffold(
       appBar: AppBar(
         title: const Text(
           '체스',
@@ -913,6 +936,275 @@ class _ChessScreenState extends State<ChessScreen> {
               ),
             ),
           ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildLandscapeLayout() {
+    String whitePlayerName;
+    String blackPlayerName;
+
+    switch (widget.gameMode) {
+      case ChessGameMode.vsComputerWhite:
+        whitePlayerName = '당신';
+        blackPlayerName = '컴퓨터';
+        break;
+      case ChessGameMode.vsComputerBlack:
+        whitePlayerName = '컴퓨터';
+        blackPlayerName = '당신';
+        break;
+      case ChessGameMode.vsPerson:
+        whitePlayerName = '플레이어 1';
+        blackPlayerName = '플레이어 2';
+        break;
+    }
+
+    return Container(
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+          colors: [
+            Colors.brown.shade800,
+            Colors.black,
+          ],
+        ),
+      ),
+      child: SafeArea(
+        child: Column(
+          children: [
+            // 상단 바
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              child: Row(
+                children: [
+                  _buildCircleButton(
+                    icon: Icons.arrow_back,
+                    onPressed: () => Navigator.pop(context),
+                  ),
+                  const SizedBox(width: 12),
+                  Text(
+                    '체스',
+                    style: TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.brown.shade200,
+                    ),
+                  ),
+                  const Spacer(),
+                  _buildCircleButton(
+                    icon: Icons.refresh,
+                    onPressed: _resetGame,
+                  ),
+                ],
+              ),
+            ),
+            // 메인 컨텐츠
+            Expanded(
+              child: Row(
+                children: [
+                  // 왼쪽 플레이어 (백)
+                  Expanded(
+                    child: Center(
+                      child: FittedBox(
+                        fit: BoxFit.scaleDown,
+                        child: _buildPlayerIndicator(
+                          isWhite: true,
+                          playerName: whitePlayerName,
+                          isCurrentTurn: isWhiteTurn && !gameOver,
+                        ),
+                      ),
+                    ),
+                  ),
+                  // 체스 보드
+                  AspectRatio(
+                    aspectRatio: 1,
+                    child: _buildGameBoard(),
+                  ),
+                  // 오른쪽 플레이어 (흑)
+                  Expanded(
+                    child: Center(
+                      child: FittedBox(
+                        fit: BoxFit.scaleDown,
+                        child: _buildPlayerIndicator(
+                          isWhite: false,
+                          playerName: blackPlayerName,
+                          isCurrentTurn: !isWhiteTurn && !gameOver,
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildCircleButton({
+    required IconData icon,
+    required VoidCallback onPressed,
+  }) {
+    return Container(
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        color: Colors.brown.shade700,
+      ),
+      child: IconButton(
+        icon: Icon(icon),
+        onPressed: onPressed,
+        color: Colors.white,
+        iconSize: 24,
+      ),
+    );
+  }
+
+  Widget _buildPlayerIndicator({
+    required bool isWhite,
+    required String playerName,
+    required bool isCurrentTurn,
+  }) {
+    final color = isWhite ? Colors.white : Colors.black;
+    final borderColor = isCurrentTurn ? Colors.brown.shade300 : Colors.brown.shade700;
+
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.brown.shade900.withValues(alpha: 0.5),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: borderColor,
+          width: isCurrentTurn ? 3 : 1,
+        ),
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Container(
+            width: 50,
+            height: 50,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: color,
+              border: Border.all(
+                color: isWhite ? Colors.grey : Colors.grey.shade400,
+                width: isWhite ? 1 : 2,
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.3),
+                  blurRadius: 4,
+                  offset: const Offset(2, 2),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            playerName,
+            style: TextStyle(
+              fontSize: 14,
+              fontWeight: FontWeight.bold,
+              color: Colors.brown.shade200,
+            ),
+          ),
+          Text(
+            isWhite ? '(백)' : '(흑)',
+            style: TextStyle(
+              fontSize: 12,
+              color: Colors.brown.shade400,
+            ),
+          ),
+          if (isCurrentTurn && !gameOver)
+            Padding(
+              padding: const EdgeInsets.only(top: 8),
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                decoration: BoxDecoration(
+                  color: isInCheck ? Colors.orange : Colors.brown.shade700,
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Text(
+                  isInCheck ? '체크!' : '차례',
+                  style: const TextStyle(
+                    fontSize: 12,
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+            ),
+          if (gameOver)
+            Padding(
+              padding: const EdgeInsets.only(top: 8),
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                decoration: BoxDecoration(
+                  color: gameMessage.contains('당신이')
+                      ? (widget.gameMode == ChessGameMode.vsComputerWhite && isWhite) ||
+                        (widget.gameMode == ChessGameMode.vsComputerBlack && !isWhite)
+                          ? Colors.green
+                          : Colors.red
+                      : gameMessage.contains('백이') && isWhite || gameMessage.contains('흑이') && !isWhite
+                          ? Colors.green
+                          : gameMessage.contains('무승부')
+                              ? Colors.grey
+                              : Colors.red,
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Text(
+                  gameMessage.contains('무승부')
+                      ? '무승부'
+                      : gameMessage.contains('당신이')
+                          ? (widget.gameMode == ChessGameMode.vsComputerWhite && isWhite) ||
+                            (widget.gameMode == ChessGameMode.vsComputerBlack && !isWhite)
+                              ? '승리'
+                              : '패배'
+                          : (gameMessage.contains('백이') && isWhite) || (gameMessage.contains('흑이') && !isWhite)
+                              ? '승리'
+                              : '패배',
+                  style: const TextStyle(
+                    fontSize: 12,
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildGameBoard() {
+    return Container(
+      margin: const EdgeInsets.all(8),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(8),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.5),
+            blurRadius: 15,
+            offset: const Offset(0, 8),
+          ),
+        ],
+      ),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(8),
+        child: GridView.builder(
+          physics: const NeverScrollableScrollPhysics(),
+          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+            crossAxisCount: 8,
+          ),
+          itemCount: 64,
+          itemBuilder: (context, index) {
+            final row = index ~/ 8;
+            final col = index % 8;
+            return _buildSquare(row, col);
+          },
         ),
       ),
     );

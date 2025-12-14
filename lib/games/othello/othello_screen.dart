@@ -783,11 +783,14 @@ class _OthelloScreenState extends State<OthelloScreen> {
                   // 왼쪽 패널: 흑돌 플레이어 (상하좌우 중앙)
                   Expanded(
                     child: Center(
-                      child: _buildPlayerIndicator(
-                        isBlack: true,
-                        playerName: blackPlayerName,
-                        score: blackCount,
-                        isCurrentTurn: isBlackTurn && !gameOver,
+                      child: FittedBox(
+                        fit: BoxFit.scaleDown,
+                        child: _buildPlayerIndicator(
+                          isBlack: true,
+                          playerName: blackPlayerName,
+                          score: blackCount,
+                          isCurrentTurn: isBlackTurn && !gameOver,
+                        ),
                       ),
                     ),
                   ),
@@ -805,11 +808,14 @@ class _OthelloScreenState extends State<OthelloScreen> {
                   // 오른쪽 패널: 백돌 플레이어 (상하좌우 중앙)
                   Expanded(
                     child: Center(
-                      child: _buildPlayerIndicator(
-                        isBlack: false,
-                        playerName: whitePlayerName,
-                        score: whiteCount,
-                        isCurrentTurn: !isBlackTurn && !gameOver,
+                      child: FittedBox(
+                        fit: BoxFit.scaleDown,
+                        child: _buildPlayerIndicator(
+                          isBlack: false,
+                          playerName: whitePlayerName,
+                          score: whiteCount,
+                          isCurrentTurn: !isBlackTurn && !gameOver,
+                        ),
                       ),
                     ),
                   ),
