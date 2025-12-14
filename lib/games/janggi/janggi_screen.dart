@@ -1647,74 +1647,102 @@ class _JanggiScreenState extends State<JanggiScreen> {
         break;
     }
 
-    return Container(
-      color: const Color(0xFFF5DEB3),
-      child: SafeArea(
-        child: Row(
-          children: [
-            // 왼쪽 플레이어 (초) + 뒤로가기/AI설정 버튼
-            Expanded(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
+    return Scaffold(
+      body: Container(
+        color: const Color(0xFFF5DEB3),
+        child: SafeArea(
+          child: Stack(
+            children: [
+              // 메인 영역: 플레이어 표시 + 게임 보드
+              Row(
                 children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      _buildCircleButton(
-                        icon: Icons.arrow_back,
-                        onPressed: () => Navigator.pop(context),
+                  // 왼쪽 패널: 초 플레이어
+                  Expanded(
+                    child: Center(
+                      child: _buildPlayerIndicator(
+                        color: JanggiColor.cho,
+                        playerName: choPlayerName,
+                        isCurrentTurn: currentTurn == JanggiColor.cho && !isGameOver,
                       ),
-                      if (widget.gameMode != JanggiGameMode.vsHuman) ...[
-                        const SizedBox(width: 8),
-                        _buildCircleButton(
-                          icon: geminiService != null ? Icons.smart_toy : Icons.smart_toy_outlined,
-                          onPressed: _showAISettingsDialog,
+                    ),
+                  ),
+                  // 가운데: 장기 보드
+                  LayoutBuilder(
+                    builder: (context, constraints) {
+                      final size = constraints.maxHeight;
+                      return SizedBox(
+                        width: size * 0.9,
+                        height: size,
+                        child: _buildBoard(),
+                      );
+                    },
+                  ),
+                  // 오른쪽 패널: 한 플레이어
+                  Expanded(
+                    child: Center(
+                      child: _buildPlayerIndicator(
+                        color: JanggiColor.han,
+                        playerName: hanPlayerName,
+                        isCurrentTurn: currentTurn == JanggiColor.han && !isGameOver,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              // 왼쪽 상단: 뒤로가기 버튼 + 제목
+              Positioned(
+                top: 4,
+                left: 4,
+                child: Row(
+                  children: [
+                    _buildCircleButton(
+                      icon: Icons.arrow_back,
+                      onPressed: () => Navigator.pop(context),
+                      tooltip: '뒤로가기',
+                    ),
+                    const SizedBox(width: 8),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFF8B4513).withValues(alpha: 0.7),
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      child: const Text(
+                        '장기',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
                         ),
-                      ],
-                    ],
-                  ),
-                  const SizedBox(height: 12),
-                  FittedBox(
-                    fit: BoxFit.scaleDown,
-                    child: _buildPlayerIndicator(
-                      color: JanggiColor.cho,
-                      playerName: choPlayerName,
-                      isCurrentTurn: currentTurn == JanggiColor.cho && !isGameOver,
+                      ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
-            ),
-            // 장기 보드
-            AspectRatio(
-              aspectRatio: 9 / 10,
-              child: Container(
-                margin: const EdgeInsets.symmetric(vertical: 4),
-                child: _buildBoard(),
-              ),
-            ),
-            // 오른쪽 플레이어 (한) + 새로고침 버튼
-            Expanded(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  _buildCircleButton(
-                    icon: Icons.refresh,
-                    onPressed: _resetGame,
-                  ),
-                  const SizedBox(height: 12),
-                  FittedBox(
-                    fit: BoxFit.scaleDown,
-                    child: _buildPlayerIndicator(
-                      color: JanggiColor.han,
-                      playerName: hanPlayerName,
-                      isCurrentTurn: currentTurn == JanggiColor.han && !isGameOver,
+              // 오른쪽 상단: AI설정 + 새 게임 버튼
+              Positioned(
+                top: 4,
+                right: 4,
+                child: Row(
+                  children: [
+                    if (widget.gameMode != JanggiGameMode.vsHuman)
+                      _buildCircleButton(
+                        icon: geminiService != null ? Icons.smart_toy : Icons.smart_toy_outlined,
+                        onPressed: _showAISettingsDialog,
+                        tooltip: geminiService != null ? 'Gemini AI 활성화됨' : 'AI 설정',
+                      ),
+                    if (widget.gameMode != JanggiGameMode.vsHuman)
+                      const SizedBox(width: 8),
+                    _buildCircleButton(
+                      icon: Icons.refresh,
+                      onPressed: _resetGame,
+                      tooltip: '새 게임',
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
@@ -1723,20 +1751,28 @@ class _JanggiScreenState extends State<JanggiScreen> {
   Widget _buildCircleButton({
     required IconData icon,
     VoidCallback? onPressed,
+    String? tooltip,
   }) {
     final isEnabled = onPressed != null;
     return Opacity(
       opacity: isEnabled ? 1.0 : 0.3,
-      child: Container(
-        decoration: BoxDecoration(
-          shape: BoxShape.circle,
-          color: const Color(0xFFD2691E),
-        ),
-        child: IconButton(
-          icon: Icon(icon),
-          onPressed: onPressed,
-          color: Colors.white,
-          iconSize: 24,
+      child: Material(
+        color: const Color(0xFF8B4513).withValues(alpha: 0.7),
+        shape: const CircleBorder(),
+        child: InkWell(
+          onTap: onPressed,
+          customBorder: const CircleBorder(),
+          child: Tooltip(
+            message: tooltip ?? '',
+            child: Container(
+              padding: const EdgeInsets.all(10),
+              child: Icon(
+                icon,
+                color: Colors.white70,
+                size: 22,
+              ),
+            ),
+          ),
         ),
       ),
     );
