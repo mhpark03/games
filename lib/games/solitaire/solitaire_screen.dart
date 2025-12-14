@@ -926,61 +926,66 @@ class _SolitaireScreenState extends State<SolitaireScreen> {
           child: Stack(
             children: [
               // 메인 게임 컨텐츠 - 가로 모드에서 너비 제한
-              Padding(
-                padding: const EdgeInsets.only(top: 48),
-                child: LayoutBuilder(
-                  builder: (context, constraints) {
-                    // 화면 높이 기준으로 적절한 너비 계산 (카드 비율 유지)
-                    final maxWidth = constraints.maxHeight * 1.4;
-                    final actualWidth = min(constraints.maxWidth, maxWidth);
-                    return Center(
-                      child: SizedBox(
-                        width: actualWidth,
-                        child: _buildGameContent(),
-                      ),
-                    );
-                  },
-                ),
+              LayoutBuilder(
+                builder: (context, constraints) {
+                  // 화면 높이 기준으로 적절한 너비 계산 (카드 비율 유지)
+                  final maxWidth = constraints.maxHeight * 1.4;
+                  final actualWidth = min(constraints.maxWidth, maxWidth);
+                  return Center(
+                    child: SizedBox(
+                      width: actualWidth,
+                      child: _buildGameContent(),
+                    ),
+                  );
+                },
               ),
-              // 왼쪽 상단: 뒤로가기 버튼 + 제목
+              // 왼쪽 상단: 뒤로가기 버튼 + 제목 + 이동 수
               Positioned(
                 top: 4,
                 left: 4,
-                child: Row(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    _buildCircleButton(
-                      icon: Icons.arrow_back,
-                      onPressed: () => Navigator.pop(context),
-                      tooltip: '뒤로가기',
-                    ),
-                    const SizedBox(width: 8),
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
-                      decoration: BoxDecoration(
-                        color: Colors.black.withValues(alpha: 0.5),
-                        borderRadius: BorderRadius.circular(20),
-                      ),
-                      child: const Text(
-                        '솔리테어',
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
+                    Row(
+                      children: [
+                        _buildCircleButton(
+                          icon: Icons.arrow_back,
+                          onPressed: () => Navigator.pop(context),
+                          tooltip: '뒤로가기',
                         ),
-                      ),
+                        const SizedBox(width: 8),
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+                          decoration: BoxDecoration(
+                            color: Colors.black.withValues(alpha: 0.5),
+                            borderRadius: BorderRadius.circular(20),
+                          ),
+                          child: const Text(
+                            '솔리테어',
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
-                    const SizedBox(width: 8),
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                      decoration: BoxDecoration(
-                        color: Colors.black.withValues(alpha: 0.3),
-                        borderRadius: BorderRadius.circular(16),
-                      ),
-                      child: Text(
-                        '이동: $moves (${drawCount}장)',
-                        style: const TextStyle(
-                          color: Colors.white70,
-                          fontSize: 14,
+                    const SizedBox(height: 4),
+                    Padding(
+                      padding: const EdgeInsets.only(left: 50),
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                        decoration: BoxDecoration(
+                          color: Colors.black.withValues(alpha: 0.3),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Text(
+                          '이동: $moves (${drawCount}장)',
+                          style: const TextStyle(
+                            color: Colors.white70,
+                            fontSize: 12,
+                          ),
                         ),
                       ),
                     ),
