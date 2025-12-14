@@ -982,6 +982,25 @@ class _GomokuScreenState extends State<GomokuScreen> {
 
   // 가로 모드 레이아웃
   Widget _buildLandscapeLayout(BuildContext context) {
+    // 플레이어 정보 결정
+    String blackPlayerName;
+    String whitePlayerName;
+
+    switch (widget.gameMode) {
+      case GameMode.vsComputerWhite:
+        blackPlayerName = '당신';
+        whitePlayerName = '컴퓨터';
+        break;
+      case GameMode.vsComputerBlack:
+        blackPlayerName = '컴퓨터';
+        whitePlayerName = '당신';
+        break;
+      case GameMode.vsPerson:
+        blackPlayerName = '흑돌';
+        whitePlayerName = '백돌';
+        break;
+    }
+
     return Scaffold(
       body: Container(
         decoration: BoxDecoration(
@@ -997,9 +1016,9 @@ class _GomokuScreenState extends State<GomokuScreen> {
         child: SafeArea(
           child: Row(
             children: [
-              // 왼쪽 패널: 뒤로가기, 제목, 메시지
+              // 왼쪽 패널: 뒤로가기, 흑돌 플레이어
               SizedBox(
-                width: 120,
+                width: 110,
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
@@ -1008,50 +1027,11 @@ class _GomokuScreenState extends State<GomokuScreen> {
                       onPressed: () => Navigator.pop(context),
                       tooltip: '뒤로가기',
                     ),
-                    const SizedBox(height: 16),
-                    const Text(
-                      '오목',
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 24,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
                     const SizedBox(height: 24),
-                    // 현재 차례 표시
-                    Container(
-                      padding: const EdgeInsets.all(12),
-                      decoration: BoxDecoration(
-                        color: gameOver
-                            ? (gameMessage.contains('축하')
-                                ? Colors.green.withValues(alpha: 0.3)
-                                : Colors.red.withValues(alpha: 0.3))
-                            : Colors.amber.withValues(alpha: 0.2),
-                        borderRadius: BorderRadius.circular(12),
-                        border: Border.all(
-                          color: gameOver
-                              ? (gameMessage.contains('축하') ? Colors.green : Colors.red)
-                              : Colors.amber,
-                          width: 2,
-                        ),
-                      ),
-                      child: Column(
-                        children: [
-                          if (!gameOver) _buildStoneIcon(isBlackTurn, size: 30),
-                          const SizedBox(height: 8),
-                          Text(
-                            gameMessage,
-                            textAlign: TextAlign.center,
-                            style: TextStyle(
-                              fontSize: 12,
-                              fontWeight: FontWeight.bold,
-                              color: gameOver
-                                  ? (gameMessage.contains('축하') ? Colors.green : Colors.red)
-                                  : Colors.amber,
-                            ),
-                          ),
-                        ],
-                      ),
+                    _buildPlayerIndicator(
+                      isBlack: true,
+                      playerName: blackPlayerName,
+                      isCurrentTurn: isBlackTurn && !gameOver,
                     ),
                   ],
                 ),
@@ -1068,21 +1048,26 @@ class _GomokuScreenState extends State<GomokuScreen> {
                   ),
                 ),
               ),
-              // 오른쪽 패널: 다시하기 버튼
+              // 오른쪽 패널: 백돌 플레이어, 다시하기 버튼
               SizedBox(
-                width: 100,
+                width: 110,
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
+                    _buildPlayerIndicator(
+                      isBlack: false,
+                      playerName: whitePlayerName,
+                      isCurrentTurn: !isBlackTurn && !gameOver,
+                    ),
+                    const SizedBox(height: 24),
                     IconButton(
-                      icon: const Icon(Icons.refresh, color: Colors.white, size: 32),
+                      icon: const Icon(Icons.refresh, color: Colors.white, size: 28),
                       onPressed: _resetGame,
                       tooltip: '새 게임',
                     ),
-                    const SizedBox(height: 8),
                     const Text(
                       '새 게임',
-                      style: TextStyle(color: Colors.white70, fontSize: 12),
+                      style: TextStyle(color: Colors.white70, fontSize: 11),
                     ),
                   ],
                 ),
@@ -1090,6 +1075,60 @@ class _GomokuScreenState extends State<GomokuScreen> {
             ],
           ),
         ),
+      ),
+    );
+  }
+
+  // 가로 모드용 플레이어 표시 위젯
+  Widget _buildPlayerIndicator({
+    required bool isBlack,
+    required String playerName,
+    required bool isCurrentTurn,
+  }) {
+    final highlightColor = isBlack ? Colors.grey.shade700 : Colors.white;
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 16),
+      decoration: BoxDecoration(
+        color: isCurrentTurn
+            ? highlightColor.withValues(alpha: 0.3)
+            : Colors.transparent,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: isCurrentTurn ? highlightColor : Colors.grey.shade700,
+          width: isCurrentTurn ? 3 : 1,
+        ),
+        boxShadow: isCurrentTurn
+            ? [
+                BoxShadow(
+                  color: highlightColor.withValues(alpha: 0.5),
+                  blurRadius: 10,
+                  spreadRadius: 2,
+                ),
+              ]
+            : null,
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          _buildStoneIcon(isBlack, size: 36),
+          const SizedBox(height: 8),
+          Text(
+            playerName,
+            style: TextStyle(
+              color: isCurrentTurn ? Colors.white : Colors.grey.shade500,
+              fontSize: 14,
+              fontWeight: isCurrentTurn ? FontWeight.bold : FontWeight.normal,
+            ),
+          ),
+          Text(
+            isBlack ? '(흑)' : '(백)',
+            style: TextStyle(
+              color: isCurrentTurn ? Colors.white70 : Colors.grey.shade600,
+              fontSize: 11,
+            ),
+          ),
+        ],
       ),
     );
   }
