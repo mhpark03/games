@@ -1205,43 +1205,74 @@ class HomeScreen extends StatelessWidget {
           ),
         ),
         child: SafeArea(
-          child: Column(
-            children: [
-              const SizedBox(height: 20),
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 20),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  crossAxisAlignment: CrossAxisAlignment.baseline,
-                  textBaseline: TextBaseline.alphabetic,
-                  children: [
-                    const Text(
-                      'GAME CENTER',
-                      style: TextStyle(
-                        fontSize: 28,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.white,
-                        letterSpacing: 4,
-                        shadows: [
-                          Shadow(
-                            color: Colors.cyan,
-                            blurRadius: 20,
+          child: LayoutBuilder(
+            builder: (context, constraints) {
+              final isLandscape = constraints.maxWidth > constraints.maxHeight;
+              return Column(
+                children: [
+                  const SizedBox(height: 20),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 20),
+                    child: isLandscape
+                        ? Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            crossAxisAlignment: CrossAxisAlignment.baseline,
+                            textBaseline: TextBaseline.alphabetic,
+                            children: [
+                              const Text(
+                                'GAME CENTER',
+                                style: TextStyle(
+                                  fontSize: 28,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.white,
+                                  letterSpacing: 4,
+                                  shadows: [
+                                    Shadow(
+                                      color: Colors.cyan,
+                                      blurRadius: 20,
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              Text(
+                                '게임을 선택하세요',
+                                style: TextStyle(
+                                  fontSize: 14,
+                                  color: Colors.grey.shade400,
+                                ),
+                              ),
+                            ],
+                          )
+                        : Column(
+                            children: [
+                              const Text(
+                                'GAME CENTER',
+                                style: TextStyle(
+                                  fontSize: 28,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.white,
+                                  letterSpacing: 4,
+                                  shadows: [
+                                    Shadow(
+                                      color: Colors.cyan,
+                                      blurRadius: 20,
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              const SizedBox(height: 6),
+                              Text(
+                                '게임을 선택하세요',
+                                style: TextStyle(
+                                  fontSize: 14,
+                                  color: Colors.grey.shade400,
+                                ),
+                              ),
+                            ],
                           ),
-                        ],
-                      ),
-                    ),
-                    Text(
-                      '게임을 선택하세요',
-                      style: TextStyle(
-                        fontSize: 14,
-                        color: Colors.grey.shade400,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(height: 16),
-              Expanded(
+                  ),
+                  const SizedBox(height: 16),
+                  Expanded(
                 child: Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 16),
                   child: LayoutBuilder(
