@@ -787,6 +787,7 @@ class HomeScreen extends StatelessWidget {
       builder: (BuildContext context) {
         return AlertDialog(
           backgroundColor: Colors.grey.shade900,
+          insetPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(16),
             side: BorderSide(color: Colors.brown.withValues(alpha: 0.5), width: 2),
@@ -823,7 +824,7 @@ class HomeScreen extends StatelessWidget {
                 icon: Icons.computer,
                 mode: ChessGameMode.vsComputerWhite,
               ),
-              const SizedBox(height: 12),
+              const SizedBox(height: 8),
               _buildChessModeButton(
                 context,
                 title: '컴퓨터 (백)',
@@ -831,7 +832,7 @@ class HomeScreen extends StatelessWidget {
                 icon: Icons.computer,
                 mode: ChessGameMode.vsComputerBlack,
               ),
-              const SizedBox(height: 12),
+              const SizedBox(height: 8),
               _buildChessModeButton(
                 context,
                 title: '사람',
