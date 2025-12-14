@@ -1,5 +1,6 @@
 import 'dart:math';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import '../../services/game_save_service.dart';
 
 enum Disc { none, black, white }
@@ -607,7 +608,37 @@ class _OthelloScreenState extends State<OthelloScreen> {
   }
 
   @override
+  void dispose() {
+    // 화면을 나갈 때 상태바 복원
+    SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
+    return OrientationBuilder(
+      builder: (context, orientation) {
+        if (orientation == Orientation.landscape) {
+          // 가로 모드: 상태바 숨김 (몰입 모드)
+          SystemChrome.setEnabledSystemUIMode(
+            SystemUiMode.immersiveSticky,
+            overlays: [],
+          );
+          return _buildLandscapeLayout(context);
+        } else {
+          // 세로 모드: 상태바 표시
+          SystemChrome.setEnabledSystemUIMode(
+            SystemUiMode.edgeToEdge,
+            overlays: SystemUiOverlay.values,
+          );
+          return _buildPortraitLayout(context);
+        }
+      },
+    );
+  }
+
+  // 세로 모드 레이아웃
+  Widget _buildPortraitLayout(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         title: const Text(
@@ -692,50 +723,7 @@ class _OthelloScreenState extends State<OthelloScreen> {
               child: Center(
                 child: AspectRatio(
                   aspectRatio: 1,
-                  child: Container(
-                    margin: const EdgeInsets.all(16),
-                    decoration: BoxDecoration(
-                      color: Colors.green.shade700,
-                      borderRadius: BorderRadius.circular(8),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withValues(alpha: 0.5),
-                          blurRadius: 15,
-                          offset: const Offset(0, 8),
-                        ),
-                      ],
-                    ),
-                    child: GridView.builder(
-                      physics: const NeverScrollableScrollPhysics(),
-                      padding: const EdgeInsets.all(4),
-                      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                        crossAxisCount: boardSize,
-                        mainAxisSpacing: 2,
-                        crossAxisSpacing: 2,
-                      ),
-                      itemCount: boardSize * boardSize,
-                      itemBuilder: (context, index) {
-                        int row = index ~/ boardSize;
-                        int col = index % boardSize;
-                        bool isValid = _isValidMovePosition(row, col) && isUserTurn;
-                        return GestureDetector(
-                          onTap: () => _placeDisc(row, col),
-                          child: Container(
-                            decoration: BoxDecoration(
-                              color: Colors.green.shade600,
-                              borderRadius: BorderRadius.circular(4),
-                              border: isValid
-                                  ? Border.all(color: Colors.yellow, width: 2)
-                                  : null,
-                            ),
-                            child: Center(
-                              child: _buildDisc(row, col, isValid),
-                            ),
-                          ),
-                        );
-                      },
-                    ),
-                  ),
+                  child: _buildGameBoard(),
                 ),
               ),
             ),
@@ -749,6 +737,347 @@ class _OthelloScreenState extends State<OthelloScreen> {
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  // 가로 모드 레이아웃
+  Widget _buildLandscapeLayout(BuildContext context) {
+    // 플레이어 정보 결정
+    String blackPlayerName;
+    String whitePlayerName;
+
+    switch (widget.gameMode) {
+      case OthelloGameMode.vsComputerWhite:
+        blackPlayerName = '당신';
+        whitePlayerName = '컴퓨터';
+        break;
+      case OthelloGameMode.vsComputerBlack:
+        blackPlayerName = '컴퓨터';
+        whitePlayerName = '당신';
+        break;
+      case OthelloGameMode.vsPerson:
+        blackPlayerName = '흑';
+        whitePlayerName = '백';
+        break;
+    }
+
+    return Scaffold(
+      body: Container(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [
+              Colors.green.shade900,
+              Colors.black,
+            ],
+          ),
+        ),
+        child: SafeArea(
+          child: Stack(
+            children: [
+              // 메인 영역: 플레이어 표시 + 게임 보드
+              Row(
+                children: [
+                  // 왼쪽 패널: 흑돌 플레이어 (상하좌우 중앙)
+                  Expanded(
+                    child: Center(
+                      child: _buildPlayerIndicator(
+                        isBlack: true,
+                        playerName: blackPlayerName,
+                        score: blackCount,
+                        isCurrentTurn: isBlackTurn && !gameOver,
+                      ),
+                    ),
+                  ),
+                  // 가운데: 게임 보드 (최대 크기)
+                  LayoutBuilder(
+                    builder: (context, constraints) {
+                      final size = constraints.maxHeight;
+                      return SizedBox(
+                        width: size,
+                        height: size,
+                        child: _buildGameBoard(),
+                      );
+                    },
+                  ),
+                  // 오른쪽 패널: 백돌 플레이어 (상하좌우 중앙)
+                  Expanded(
+                    child: Center(
+                      child: _buildPlayerIndicator(
+                        isBlack: false,
+                        playerName: whitePlayerName,
+                        score: whiteCount,
+                        isCurrentTurn: !isBlackTurn && !gameOver,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              // 왼쪽 상단: 뒤로가기 버튼 + 제목
+              Positioned(
+                top: 4,
+                left: 4,
+                child: Row(
+                  children: [
+                    _buildCircleButton(
+                      icon: Icons.arrow_back,
+                      onPressed: () => Navigator.pop(context),
+                      tooltip: '뒤로가기',
+                    ),
+                    const SizedBox(width: 8),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+                      decoration: BoxDecoration(
+                        color: Colors.black.withValues(alpha: 0.5),
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      child: const Text(
+                        '오델로',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              // 오른쪽 상단: 되돌리기 + 새 게임 버튼
+              Positioned(
+                top: 4,
+                right: 4,
+                child: Row(
+                  children: [
+                    _buildCircleButton(
+                      icon: Icons.undo,
+                      onPressed: moveHistory.isNotEmpty && !gameOver ? _undoMove : null,
+                      tooltip: '되돌리기',
+                    ),
+                    const SizedBox(width: 8),
+                    _buildCircleButton(
+                      icon: Icons.refresh,
+                      onPressed: _resetGame,
+                      tooltip: '새 게임',
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  // 원형 버튼 위젯
+  Widget _buildCircleButton({
+    required IconData icon,
+    required VoidCallback? onPressed,
+    required String tooltip,
+  }) {
+    final isEnabled = onPressed != null;
+    return Opacity(
+      opacity: isEnabled ? 1.0 : 0.3,
+      child: Material(
+        color: Colors.black.withValues(alpha: 0.5),
+        shape: const CircleBorder(),
+        child: InkWell(
+          onTap: onPressed,
+          customBorder: const CircleBorder(),
+          child: Tooltip(
+            message: tooltip,
+            child: Container(
+              padding: const EdgeInsets.all(10),
+              child: Icon(
+                icon,
+                color: Colors.white70,
+                size: 22,
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  // 가로 모드용 플레이어 표시 위젯
+  Widget _buildPlayerIndicator({
+    required bool isBlack,
+    required String playerName,
+    required int score,
+    required bool isCurrentTurn,
+  }) {
+    // 하이라이트 색상: 오델로는 teal 사용
+    final highlightColor = Colors.teal;
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
+      decoration: BoxDecoration(
+        color: isCurrentTurn
+            ? highlightColor.withValues(alpha: 0.4)
+            : Colors.grey.shade900.withValues(alpha: 0.3),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: isCurrentTurn ? highlightColor : Colors.grey.shade700,
+          width: isCurrentTurn ? 4 : 1,
+        ),
+        boxShadow: isCurrentTurn
+            ? [
+                BoxShadow(
+                  color: highlightColor.withValues(alpha: 0.8),
+                  blurRadius: 20,
+                  spreadRadius: 5,
+                ),
+                BoxShadow(
+                  color: Colors.green.withValues(alpha: 0.6),
+                  blurRadius: 30,
+                  spreadRadius: 2,
+                ),
+              ]
+            : null,
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          // 현재 턴일 때 돌 아이콘에도 강조 표시
+          Container(
+            padding: const EdgeInsets.all(6),
+            decoration: isCurrentTurn
+                ? BoxDecoration(
+                    shape: BoxShape.circle,
+                    border: Border.all(color: highlightColor, width: 3),
+                    boxShadow: [
+                      BoxShadow(
+                        color: highlightColor.withValues(alpha: 0.6),
+                        blurRadius: 10,
+                        spreadRadius: 2,
+                      ),
+                    ],
+                  )
+                : null,
+            child: _buildDiscIcon(isBlack, size: 48),
+          ),
+          const SizedBox(height: 8),
+          // 점수 표시
+          Text(
+            '$score',
+            style: TextStyle(
+              color: isCurrentTurn ? Colors.white : Colors.grey.shade400,
+              fontSize: 32,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            playerName,
+            style: TextStyle(
+              color: isCurrentTurn ? Colors.teal.shade100 : Colors.grey.shade500,
+              fontSize: 16,
+              fontWeight: isCurrentTurn ? FontWeight.bold : FontWeight.normal,
+            ),
+          ),
+          const SizedBox(height: 2),
+          Text(
+            isBlack ? '(흑)' : '(백)',
+            style: TextStyle(
+              color: isCurrentTurn ? Colors.teal.shade200 : Colors.grey.shade600,
+              fontSize: 13,
+            ),
+          ),
+          // 현재 턴 표시 텍스트 추가
+          if (isCurrentTurn)
+            Padding(
+              padding: const EdgeInsets.only(top: 8),
+              child: Text(
+                '차례',
+                style: TextStyle(
+                  color: highlightColor,
+                  fontSize: 14,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+
+  // 돌 아이콘 위젯
+  Widget _buildDiscIcon(bool isBlack, {double size = 20}) {
+    return Container(
+      width: size,
+      height: size,
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        color: isBlack ? Colors.black : Colors.white,
+        border: Border.all(
+          color: isBlack ? Colors.grey.shade600 : Colors.grey,
+          width: 1,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.3),
+            blurRadius: 2,
+            offset: const Offset(1, 1),
+          ),
+        ],
+        gradient: RadialGradient(
+          colors: isBlack
+              ? [Colors.grey.shade600, Colors.black]
+              : [Colors.white, Colors.grey.shade300],
+          center: const Alignment(-0.3, -0.3),
+        ),
+      ),
+    );
+  }
+
+  // 게임 보드 위젯
+  Widget _buildGameBoard() {
+    return Container(
+      margin: const EdgeInsets.all(8),
+      decoration: BoxDecoration(
+        color: Colors.green.shade700,
+        borderRadius: BorderRadius.circular(8),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.5),
+            blurRadius: 15,
+            offset: const Offset(0, 8),
+          ),
+        ],
+      ),
+      child: GridView.builder(
+        physics: const NeverScrollableScrollPhysics(),
+        padding: const EdgeInsets.all(4),
+        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+          crossAxisCount: boardSize,
+          mainAxisSpacing: 2,
+          crossAxisSpacing: 2,
+        ),
+        itemCount: boardSize * boardSize,
+        itemBuilder: (context, index) {
+          int row = index ~/ boardSize;
+          int col = index % boardSize;
+          bool isValid = _isValidMovePosition(row, col) && isUserTurn;
+          return GestureDetector(
+            onTap: () => _placeDisc(row, col),
+            child: Container(
+              decoration: BoxDecoration(
+                color: Colors.green.shade600,
+                borderRadius: BorderRadius.circular(4),
+                border: isValid
+                    ? Border.all(color: Colors.yellow, width: 2)
+                    : null,
+              ),
+              child: Center(
+                child: _buildDisc(row, col, isValid),
+              ),
+            ),
+          );
+        },
       ),
     );
   }
