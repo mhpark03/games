@@ -67,6 +67,8 @@ class _GomokuScreenState extends State<GomokuScreen> {
   bool gameOver = false;
   String gameMessage = '';
   List<List<int>>? winningStones;
+  int? lastMoveRow; // 마지막 수 행
+  int? lastMoveCol; // 마지막 수 열
 
   // 현재 플레이어가 두는 돌 색상
   Stone get currentPlayerStone => isBlackTurn ? Stone.black : Stone.white;
@@ -99,6 +101,8 @@ class _GomokuScreenState extends State<GomokuScreen> {
     isBlackTurn = true;
     gameOver = false;
     winningStones = null;
+    lastMoveRow = null;
+    lastMoveCol = null;
     _updateMessage();
 
     // 컴퓨터(흑) 모드일 때 컴퓨터가 먼저 둠
@@ -125,6 +129,8 @@ class _GomokuScreenState extends State<GomokuScreen> {
       'isBlackTurn': isBlackTurn,
       'gameMode': widget.gameMode.index,
       'difficulty': widget.difficulty.index,
+      'lastMoveRow': lastMoveRow,
+      'lastMoveCol': lastMoveCol,
     };
 
     await GameSaveService.saveGame('gomoku', gameState);
@@ -149,6 +155,8 @@ class _GomokuScreenState extends State<GomokuScreen> {
     isBlackTurn = gameState['isBlackTurn'] as bool? ?? true;
     gameOver = false;
     winningStones = null;
+    lastMoveRow = gameState['lastMoveRow'] as int?;
+    lastMoveCol = gameState['lastMoveCol'] as int?;
 
     setState(() {
       _updateMessage();
@@ -192,6 +200,8 @@ class _GomokuScreenState extends State<GomokuScreen> {
 
     setState(() {
       board[row][col] = stone;
+      lastMoveRow = row;
+      lastMoveCol = col;
       if (_checkWin(row, col, stone)) {
         gameOver = true;
         _setWinMessage(stone);
@@ -249,6 +259,8 @@ class _GomokuScreenState extends State<GomokuScreen> {
     if (move != null) {
       setState(() {
         board[move[0]][move[1]] = computerStone;
+        lastMoveRow = move[0];
+        lastMoveCol = move[1];
         if (_checkWin(move[0], move[1], computerStone)) {
           gameOver = true;
           _setWinMessage(computerStone);
@@ -939,33 +951,49 @@ class _GomokuScreenState extends State<GomokuScreen> {
     if (board[row][col] == Stone.none) return const SizedBox();
 
     bool isWinning = _isWinningStone(row, col);
+    bool isLastMove = (row == lastMoveRow && col == lastMoveCol);
     Color stoneColor = board[row][col] == Stone.black ? Colors.black : Colors.white;
 
-    return Container(
-      width: 20,
-      height: 20,
-      decoration: BoxDecoration(
-        shape: BoxShape.circle,
-        color: stoneColor,
-        border: isWinning
-            ? Border.all(color: Colors.red, width: 3)
-            : (board[row][col] == Stone.white
-                ? Border.all(color: Colors.grey, width: 1)
-                : null),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.4),
-            blurRadius: 3,
-            offset: const Offset(2, 2),
+    return Stack(
+      alignment: Alignment.center,
+      children: [
+        Container(
+          width: 20,
+          height: 20,
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            color: stoneColor,
+            border: isWinning
+                ? Border.all(color: Colors.red, width: 3)
+                : (board[row][col] == Stone.white
+                    ? Border.all(color: Colors.grey, width: 1)
+                    : null),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.4),
+                blurRadius: 3,
+                offset: const Offset(2, 2),
+              ),
+            ],
+            gradient: RadialGradient(
+              colors: board[row][col] == Stone.black
+                  ? [Colors.grey.shade700, Colors.black]
+                  : [Colors.white, Colors.grey.shade300],
+              center: const Alignment(-0.3, -0.3),
+            ),
           ),
-        ],
-        gradient: RadialGradient(
-          colors: board[row][col] == Stone.black
-              ? [Colors.grey.shade700, Colors.black]
-              : [Colors.white, Colors.grey.shade300],
-          center: const Alignment(-0.3, -0.3),
         ),
-      ),
+        // 마지막 수 표시 (빨간 점)
+        if (isLastMove && !isWinning)
+          Container(
+            width: 8,
+            height: 8,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: board[row][col] == Stone.black ? Colors.red : Colors.red.shade700,
+            ),
+          ),
+      ],
     );
   }
 
