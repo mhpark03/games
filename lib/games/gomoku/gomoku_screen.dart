@@ -1037,17 +1037,13 @@ class _GomokuScreenState extends State<GomokuScreen> {
               // 메인 영역: 플레이어 표시 + 게임 보드
               Row(
                 children: [
-                  // 왼쪽 패널: 흑돌 플레이어 (게임보드에 가깝게)
+                  // 왼쪽 패널: 흑돌 플레이어 (상하좌우 중앙)
                   Expanded(
-                    child: Align(
-                      alignment: Alignment.centerRight,
-                      child: Padding(
-                        padding: const EdgeInsets.only(right: 8),
-                        child: _buildPlayerIndicator(
-                          isBlack: true,
-                          playerName: blackPlayerName,
-                          isCurrentTurn: isBlackTurn && !gameOver,
-                        ),
+                    child: Center(
+                      child: _buildPlayerIndicator(
+                        isBlack: true,
+                        playerName: blackPlayerName,
+                        isCurrentTurn: isBlackTurn && !gameOver,
                       ),
                     ),
                   ),
@@ -1062,17 +1058,13 @@ class _GomokuScreenState extends State<GomokuScreen> {
                       );
                     },
                   ),
-                  // 오른쪽 패널: 백돌 플레이어 (게임보드에 가깝게)
+                  // 오른쪽 패널: 백돌 플레이어 (상하좌우 중앙)
                   Expanded(
-                    child: Align(
-                      alignment: Alignment.centerLeft,
-                      child: Padding(
-                        padding: const EdgeInsets.only(left: 8),
-                        child: _buildPlayerIndicator(
-                          isBlack: false,
-                          playerName: whitePlayerName,
-                          isCurrentTurn: !isBlackTurn && !gameOver,
-                        ),
+                    child: Center(
+                      child: _buildPlayerIndicator(
+                        isBlack: false,
+                        playerName: whitePlayerName,
+                        isCurrentTurn: !isBlackTurn && !gameOver,
                       ),
                     ),
                   ),
@@ -1086,6 +1078,29 @@ class _GomokuScreenState extends State<GomokuScreen> {
                   icon: Icons.arrow_back,
                   onPressed: () => Navigator.pop(context),
                   tooltip: '뒤로가기',
+                ),
+              ),
+              // 상단 중앙: 제목 라벨
+              Positioned(
+                top: 8,
+                left: 0,
+                right: 0,
+                child: Center(
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 6),
+                    decoration: BoxDecoration(
+                      color: Colors.black.withValues(alpha: 0.5),
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    child: const Text(
+                      '오목',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
                 ),
               ),
               // 오른쪽 상단: 새 게임 버튼
