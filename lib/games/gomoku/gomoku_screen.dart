@@ -273,6 +273,10 @@ class _GomokuScreenState extends State<GomokuScreen> {
   final Random _random = Random();
 
   List<int>? _findBestMove(Stone computerStone, Stone userStone) {
+    // 컴퓨터의 첫 수인 경우: 사용자 돌 근처 2칸 범위 내에서 랜덤 선택
+    final firstMove = _findFirstMoveNearUser(userStone);
+    if (firstMove != null) return firstMove;
+
     switch (widget.difficulty) {
       case Difficulty.easy:
         return _findMoveEasy(computerStone, userStone);
@@ -281,6 +285,47 @@ class _GomokuScreenState extends State<GomokuScreen> {
       case Difficulty.hard:
         return _findMoveHard(computerStone, userStone);
     }
+  }
+
+  // 컴퓨터 첫 수: 사용자 돌 근처 2칸 범위 내 랜덤 선택
+  List<int>? _findFirstMoveNearUser(Stone userStone) {
+    // 보드에 사용자 돌이 1개만 있는 경우 (컴퓨터 첫 수)
+    int userStoneCount = 0;
+    int? userRow, userCol;
+
+    for (int i = 0; i < boardSize; i++) {
+      for (int j = 0; j < boardSize; j++) {
+        if (board[i][j] == userStone) {
+          userStoneCount++;
+          userRow = i;
+          userCol = j;
+        } else if (board[i][j] != Stone.none) {
+          return null; // 컴퓨터 돌이 이미 있으면 첫 수가 아님
+        }
+      }
+    }
+
+    if (userStoneCount != 1 || userRow == null || userCol == null) {
+      return null;
+    }
+
+    // 사용자 돌 주변 2칸 범위 내 빈 칸 수집
+    final candidates = <List<int>>[];
+    for (int dr = -2; dr <= 2; dr++) {
+      for (int dc = -2; dc <= 2; dc++) {
+        if (dr == 0 && dc == 0) continue;
+        int nr = userRow + dr;
+        int nc = userCol + dc;
+        if (nr >= 0 && nr < boardSize && nc >= 0 && nc < boardSize && board[nr][nc] == Stone.none) {
+          candidates.add([nr, nc]);
+        }
+      }
+    }
+
+    if (candidates.isEmpty) return null;
+
+    // 랜덤 선택
+    return candidates[_random.nextInt(candidates.length)];
   }
 
   // 쉬움 난이도: 랜덤 요소 추가, 일부 위협 무시
