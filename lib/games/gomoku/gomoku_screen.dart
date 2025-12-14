@@ -1037,17 +1037,13 @@ class _GomokuScreenState extends State<GomokuScreen> {
               // 메인 영역: 플레이어 표시 + 게임 보드
               Row(
                 children: [
-                  // 왼쪽 패널: 흑돌 플레이어 (게임보드에 가깝게)
+                  // 왼쪽 패널: 흑돌 플레이어 (상하좌우 중앙)
                   Expanded(
-                    child: Align(
-                      alignment: Alignment.centerRight,
-                      child: Padding(
-                        padding: const EdgeInsets.only(right: 8),
-                        child: _buildPlayerIndicator(
-                          isBlack: true,
-                          playerName: blackPlayerName,
-                          isCurrentTurn: isBlackTurn && !gameOver,
-                        ),
+                    child: Center(
+                      child: _buildPlayerIndicator(
+                        isBlack: true,
+                        playerName: blackPlayerName,
+                        isCurrentTurn: isBlackTurn && !gameOver,
                       ),
                     ),
                   ),
@@ -1062,17 +1058,13 @@ class _GomokuScreenState extends State<GomokuScreen> {
                       );
                     },
                   ),
-                  // 오른쪽 패널: 백돌 플레이어 (게임보드에 가깝게)
+                  // 오른쪽 패널: 백돌 플레이어 (상하좌우 중앙)
                   Expanded(
-                    child: Align(
-                      alignment: Alignment.centerLeft,
-                      child: Padding(
-                        padding: const EdgeInsets.only(left: 8),
-                        child: _buildPlayerIndicator(
-                          isBlack: false,
-                          playerName: whitePlayerName,
-                          isCurrentTurn: !isBlackTurn && !gameOver,
-                        ),
+                    child: Center(
+                      child: _buildPlayerIndicator(
+                        isBlack: false,
+                        playerName: whitePlayerName,
+                        isCurrentTurn: !isBlackTurn && !gameOver,
                       ),
                     ),
                   ),
