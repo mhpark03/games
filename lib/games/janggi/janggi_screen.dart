@@ -1650,76 +1650,65 @@ class _JanggiScreenState extends State<JanggiScreen> {
     return Container(
       color: const Color(0xFFF5DEB3),
       child: SafeArea(
-        child: Column(
+        child: Row(
           children: [
-            // 상단 바
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-              child: Row(
+            // 왼쪽 플레이어 (초) + 뒤로가기/AI설정 버튼
+            Expanded(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  _buildCircleButton(
-                    icon: Icons.arrow_back,
-                    onPressed: () => Navigator.pop(context),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      _buildCircleButton(
+                        icon: Icons.arrow_back,
+                        onPressed: () => Navigator.pop(context),
+                      ),
+                      if (widget.gameMode != JanggiGameMode.vsHuman) ...[
+                        const SizedBox(width: 8),
+                        _buildCircleButton(
+                          icon: geminiService != null ? Icons.smart_toy : Icons.smart_toy_outlined,
+                          onPressed: _showAISettingsDialog,
+                        ),
+                      ],
+                    ],
                   ),
-                  const SizedBox(width: 12),
-                  Text(
-                    '장기',
-                    style: TextStyle(
-                      fontSize: 20,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.brown.shade800,
+                  const SizedBox(height: 12),
+                  FittedBox(
+                    fit: BoxFit.scaleDown,
+                    child: _buildPlayerIndicator(
+                      color: JanggiColor.cho,
+                      playerName: choPlayerName,
+                      isCurrentTurn: currentTurn == JanggiColor.cho && !isGameOver,
                     ),
-                  ),
-                  const Spacer(),
-                  if (widget.gameMode != JanggiGameMode.vsHuman)
-                    _buildCircleButton(
-                      icon: geminiService != null ? Icons.smart_toy : Icons.smart_toy_outlined,
-                      onPressed: _showAISettingsDialog,
-                    ),
-                  const SizedBox(width: 8),
-                  _buildCircleButton(
-                    icon: Icons.refresh,
-                    onPressed: _resetGame,
                   ),
                 ],
               ),
             ),
-            // 메인 컨텐츠
+            // 장기 보드
+            AspectRatio(
+              aspectRatio: 9 / 10,
+              child: Container(
+                margin: const EdgeInsets.symmetric(vertical: 4),
+                child: _buildBoard(),
+              ),
+            ),
+            // 오른쪽 플레이어 (한) + 새로고침 버튼
             Expanded(
-              child: Row(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  // 왼쪽 플레이어 (초)
-                  Expanded(
-                    child: Center(
-                      child: FittedBox(
-                        fit: BoxFit.scaleDown,
-                        child: _buildPlayerIndicator(
-                          color: JanggiColor.cho,
-                          playerName: choPlayerName,
-                          isCurrentTurn: currentTurn == JanggiColor.cho && !isGameOver,
-                        ),
-                      ),
-                    ),
+                  _buildCircleButton(
+                    icon: Icons.refresh,
+                    onPressed: _resetGame,
                   ),
-                  // 장기 보드
-                  AspectRatio(
-                    aspectRatio: 9 / 10,
-                    child: Container(
-                      margin: const EdgeInsets.all(4),
-                      child: _buildBoard(),
-                    ),
-                  ),
-                  // 오른쪽 플레이어 (한)
-                  Expanded(
-                    child: Center(
-                      child: FittedBox(
-                        fit: BoxFit.scaleDown,
-                        child: _buildPlayerIndicator(
-                          color: JanggiColor.han,
-                          playerName: hanPlayerName,
-                          isCurrentTurn: currentTurn == JanggiColor.han && !isGameOver,
-                        ),
-                      ),
+                  const SizedBox(height: 12),
+                  FittedBox(
+                    fit: BoxFit.scaleDown,
+                    child: _buildPlayerIndicator(
+                      color: JanggiColor.han,
+                      playerName: hanPlayerName,
+                      isCurrentTurn: currentTurn == JanggiColor.han && !isGameOver,
                     ),
                   ),
                 ],
