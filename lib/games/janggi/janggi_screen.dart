@@ -397,31 +397,138 @@ class _JanggiScreenState extends State<JanggiScreen> {
     showDialog(
       context: context,
       barrierDismissible: false,
-      builder: (BuildContext context) {
+      builder: (BuildContext dialogContext) {
         return StatefulBuilder(
           builder: (context, setDialogState) {
-            return AlertDialog(
-              backgroundColor: const Color(0xFFF5DEB3),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(16),
-                side: const BorderSide(color: Color(0xFF8B4513), width: 3),
+            return OrientationBuilder(
+              builder: (context, orientation) {
+                if (orientation == Orientation.landscape) {
+                  return _buildLandscapeSetupDialog(setDialogState);
+                } else {
+                  return _buildPortraitSetupDialog(setDialogState);
+                }
+              },
+            );
+          },
+        );
+      },
+    );
+  }
+
+  Widget _buildPortraitSetupDialog(StateSetter setDialogState) {
+    return AlertDialog(
+      backgroundColor: const Color(0xFFF5DEB3),
+      insetPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(16),
+        side: const BorderSide(color: Color(0xFF8B4513), width: 3),
+      ),
+      title: const Text(
+        '마상 배치 선택',
+        style: TextStyle(
+          color: Color(0xFF8B4513),
+          fontWeight: FontWeight.bold,
+        ),
+        textAlign: TextAlign.center,
+      ),
+      content: SingleChildScrollView(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            // 플레이어 초의 배치 (한과 대전 또는 2인 플레이)
+            if (widget.gameMode == JanggiGameMode.vsHan ||
+                widget.gameMode == JanggiGameMode.vsHuman) ...[
+              _buildPositionSelector(
+                '초 (플레이어)',
+                JanggiColor.cho,
+                choLeftPosition,
+                choRightPosition,
+                (left, right) {
+                  setDialogState(() {
+                    choLeftPosition = left;
+                    choRightPosition = right;
+                  });
+                },
               ),
-              title: const Text(
-                '마상 배치 선택',
-                style: TextStyle(
-                  color: Color(0xFF8B4513),
-                  fontWeight: FontWeight.bold,
-                ),
-                textAlign: TextAlign.center,
+              const SizedBox(height: 16),
+            ],
+            // 플레이어 한의 배치 (초와 대전 또는 2인 플레이)
+            if (widget.gameMode == JanggiGameMode.vsCho ||
+                widget.gameMode == JanggiGameMode.vsHuman) ...[
+              _buildPositionSelector(
+                widget.gameMode == JanggiGameMode.vsHuman ? '한' : '한 (플레이어)',
+                JanggiColor.han,
+                hanLeftPosition,
+                hanRightPosition,
+                (left, right) {
+                  setDialogState(() {
+                    hanLeftPosition = left;
+                    hanRightPosition = right;
+                  });
+                },
               ),
-              content: SingleChildScrollView(
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    // 플레이어 초의 배치 (한과 대전 또는 2인 플레이)
-                    if (widget.gameMode == JanggiGameMode.vsHan ||
-                        widget.gameMode == JanggiGameMode.vsHuman) ...[
-                      _buildPositionSelector(
+            ],
+          ],
+        ),
+      ),
+      actions: [
+        SizedBox(
+          width: double.infinity,
+          child: ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFF8B4513),
+              foregroundColor: Colors.white,
+              padding: const EdgeInsets.symmetric(vertical: 12),
+            ),
+            onPressed: () {
+              Navigator.pop(context);
+              setState(() {
+                // 메인 상태 업데이트
+              });
+              _startGame();
+            },
+            child: const Text(
+              '게임 시작',
+              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildLandscapeSetupDialog(StateSetter setDialogState) {
+    return Dialog(
+      backgroundColor: const Color(0xFFF5DEB3),
+      insetPadding: const EdgeInsets.symmetric(horizontal: 40, vertical: 24),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(16),
+        side: const BorderSide(color: Color(0xFF8B4513), width: 3),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(20),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Text(
+              '마상 배치 선택',
+              style: TextStyle(
+                fontSize: 20,
+                color: Color(0xFF8B4513),
+                fontWeight: FontWeight.bold,
+              ),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 16),
+            Flexible(
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // 왼쪽: 초 플레이어
+                  if (widget.gameMode == JanggiGameMode.vsHan ||
+                      widget.gameMode == JanggiGameMode.vsHuman)
+                    Expanded(
+                      child: _buildPositionSelector(
                         '초 (플레이어)',
                         JanggiColor.cho,
                         choLeftPosition,
@@ -433,12 +540,14 @@ class _JanggiScreenState extends State<JanggiScreen> {
                           });
                         },
                       ),
-                      const SizedBox(height: 16),
-                    ],
-                    // 플레이어 한의 배치 (초와 대전 또는 2인 플레이)
-                    if (widget.gameMode == JanggiGameMode.vsCho ||
-                        widget.gameMode == JanggiGameMode.vsHuman) ...[
-                      _buildPositionSelector(
+                    ),
+                  if (widget.gameMode == JanggiGameMode.vsHuman)
+                    const SizedBox(width: 16),
+                  // 오른쪽: 한 플레이어
+                  if (widget.gameMode == JanggiGameMode.vsCho ||
+                      widget.gameMode == JanggiGameMode.vsHuman)
+                    Expanded(
+                      child: _buildPositionSelector(
                         widget.gameMode == JanggiGameMode.vsHuman ? '한' : '한 (플레이어)',
                         JanggiColor.han,
                         hanLeftPosition,
@@ -450,37 +559,35 @@ class _JanggiScreenState extends State<JanggiScreen> {
                           });
                         },
                       ),
-                    ],
-                  ],
+                    ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 16),
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFF8B4513),
+                  foregroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(vertical: 12),
+                ),
+                onPressed: () {
+                  Navigator.pop(context);
+                  setState(() {
+                    // 메인 상태 업데이트
+                  });
+                  _startGame();
+                },
+                child: const Text(
+                  '게임 시작',
+                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                 ),
               ),
-              actions: [
-                SizedBox(
-                  width: double.infinity,
-                  child: ElevatedButton(
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFF8B4513),
-                      foregroundColor: Colors.white,
-                      padding: const EdgeInsets.symmetric(vertical: 12),
-                    ),
-                    onPressed: () {
-                      Navigator.pop(context);
-                      setState(() {
-                        // 메인 상태 업데이트
-                      });
-                      _startGame();
-                    },
-                    child: const Text(
-                      '게임 시작',
-                      style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-                    ),
-                  ),
-                ),
-              ],
-            );
-          },
-        );
-      },
+            ),
+          ],
+        ),
+      ),
     );
   }
 
