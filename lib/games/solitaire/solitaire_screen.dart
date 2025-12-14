@@ -925,10 +925,22 @@ class _SolitaireScreenState extends State<SolitaireScreen> {
         child: SafeArea(
           child: Stack(
             children: [
-              // 메인 게임 컨텐츠
+              // 메인 게임 컨텐츠 - 가로 모드에서 너비 제한
               Padding(
                 padding: const EdgeInsets.only(top: 48),
-                child: _buildGameContent(),
+                child: LayoutBuilder(
+                  builder: (context, constraints) {
+                    // 화면 높이 기준으로 적절한 너비 계산 (카드 비율 유지)
+                    final maxWidth = constraints.maxHeight * 1.4;
+                    final actualWidth = min(constraints.maxWidth, maxWidth);
+                    return Center(
+                      child: SizedBox(
+                        width: actualWidth,
+                        child: _buildGameContent(),
+                      ),
+                    );
+                  },
+                ),
               ),
               // 왼쪽 상단: 뒤로가기 버튼 + 제목
               Positioned(
