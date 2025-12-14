@@ -65,6 +65,8 @@ class _OthelloScreenState extends State<OthelloScreen> {
   int blackCount = 2;
   int whiteCount = 2;
   List<List<int>> validMoves = [];
+  // 수 히스토리: {row, col, disc, flippedDiscs}
+  List<Map<String, dynamic>> moveHistory = [];
 
   Disc get currentPlayerDisc => isBlackTurn ? Disc.black : Disc.white;
 
@@ -101,6 +103,7 @@ class _OthelloScreenState extends State<OthelloScreen> {
     gameOver = false;
     blackCount = 2;
     whiteCount = 2;
+    moveHistory = [];
     _updateValidMoves();
     _updateMessage();
 
@@ -275,6 +278,50 @@ class _OthelloScreenState extends State<OthelloScreen> {
     });
   }
 
+  // 되돌리기 기능
+  void _undoMove() {
+    if (moveHistory.isEmpty || gameOver) return;
+
+    setState(() {
+      // 컴퓨터 대전 모드에서는 2수 되돌리기 (사용자 + 컴퓨터)
+      int undoCount = widget.gameMode == OthelloGameMode.vsPerson ? 1 : 2;
+
+      for (int i = 0; i < undoCount && moveHistory.isNotEmpty; i++) {
+        final lastMove = moveHistory.removeLast();
+        final row = lastMove['row'] as int;
+        final col = lastMove['col'] as int;
+        final disc = lastMove['disc'] as Disc;
+        final flippedDiscs = lastMove['flippedDiscs'] as List<List<int>>;
+
+        // 놓은 돌 제거
+        board[row][col] = Disc.none;
+
+        // 뒤집힌 돌 복원
+        final opponentDisc = disc == Disc.black ? Disc.white : Disc.black;
+        for (var pos in flippedDiscs) {
+          board[pos[0]][pos[1]] = opponentDisc;
+        }
+
+        // 점수 복원
+        if (disc == Disc.black) {
+          blackCount -= 1 + flippedDiscs.length;
+          whiteCount += flippedDiscs.length;
+        } else {
+          whiteCount -= 1 + flippedDiscs.length;
+          blackCount += flippedDiscs.length;
+        }
+
+        // 턴 복원
+        isBlackTurn = !isBlackTurn;
+      }
+
+      _updateValidMoves();
+      _updateMessage();
+    });
+
+    _saveGame();
+  }
+
   void _placeDisc(int row, int col) {
     if (gameOver || !isUserTurn) return;
     if (!_isValidMove(row, col, currentPlayerDisc)) return;
@@ -291,6 +338,14 @@ class _OthelloScreenState extends State<OthelloScreen> {
   void _makeMove(int row, int col) {
     final disc = currentPlayerDisc;
     final flipped = _getFlippedDiscs(row, col, disc);
+
+    // 히스토리에 저장
+    moveHistory.add({
+      'row': row,
+      'col': col,
+      'disc': disc,
+      'flippedDiscs': flipped,
+    });
 
     setState(() {
       board[row][col] = disc;
@@ -562,6 +617,14 @@ class _OthelloScreenState extends State<OthelloScreen> {
         backgroundColor: Colors.green.shade800,
         foregroundColor: Colors.white,
         actions: [
+          Opacity(
+            opacity: moveHistory.isNotEmpty && !gameOver ? 1.0 : 0.3,
+            child: IconButton(
+              icon: const Icon(Icons.undo),
+              onPressed: moveHistory.isNotEmpty && !gameOver ? _undoMove : null,
+              tooltip: '되돌리기',
+            ),
+          ),
           IconButton(
             icon: const Icon(Icons.refresh),
             onPressed: _resetGame,
