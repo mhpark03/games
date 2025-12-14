@@ -927,10 +927,18 @@ class _ChessScreenState extends State<ChessScreen> {
       body: OrientationBuilder(
         builder: (context, orientation) {
           if (orientation == Orientation.landscape) {
-            SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersiveSticky);
+            // 가로 모드: 상태바 숨김 (몰입 모드)
+            SystemChrome.setEnabledSystemUIMode(
+              SystemUiMode.immersiveSticky,
+              overlays: [],
+            );
             return _buildLandscapeLayout();
           } else {
-            SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
+            // 세로 모드: 상태바 표시
+            SystemChrome.setEnabledSystemUIMode(
+              SystemUiMode.edgeToEdge,
+              overlays: SystemUiOverlay.values,
+            );
             return _buildPortraitLayout();
           }
         },
