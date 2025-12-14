@@ -175,15 +175,80 @@ class _GomokuScreenState extends State<GomokuScreen> {
 
     switch (widget.gameMode) {
       case GameMode.vsComputerWhite:
-        gameMessage = isBlackTurn ? '당신의 차례입니다 (흑돌)' : '컴퓨터가 생각 중...';
+        gameMessage = isBlackTurn ? '당신의 차례입니다' : '컴퓨터가 생각 중...';
         break;
       case GameMode.vsComputerBlack:
-        gameMessage = isBlackTurn ? '컴퓨터가 생각 중...' : '당신의 차례입니다 (백돌)';
+        gameMessage = isBlackTurn ? '컴퓨터가 생각 중...' : '당신의 차례입니다';
         break;
       case GameMode.vsPerson:
         gameMessage = isBlackTurn ? '흑돌 차례입니다' : '백돌 차례입니다';
         break;
     }
+  }
+
+  // 돌 아이콘 위젯
+  Widget _buildStoneIcon(bool isBlack, {double size = 20}) {
+    return Container(
+      width: size,
+      height: size,
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        color: isBlack ? Colors.black : Colors.white,
+        border: Border.all(
+          color: isBlack ? Colors.grey.shade600 : Colors.grey,
+          width: 1,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.3),
+            blurRadius: 2,
+            offset: const Offset(1, 1),
+          ),
+        ],
+        gradient: RadialGradient(
+          colors: isBlack
+              ? [Colors.grey.shade600, Colors.black]
+              : [Colors.white, Colors.grey.shade300],
+          center: const Alignment(-0.3, -0.3),
+        ),
+      ),
+    );
+  }
+
+  // 메시지 위젯 빌드 (아이콘 포함)
+  Widget _buildMessageWidget() {
+    final textColor = gameOver
+        ? (gameMessage.contains('축하') ? Colors.green : Colors.red)
+        : Colors.amber;
+
+    // 게임 종료 시에는 텍스트만 표시
+    if (gameOver) {
+      return Text(
+        gameMessage,
+        style: TextStyle(
+          fontSize: 18,
+          fontWeight: FontWeight.bold,
+          color: textColor,
+        ),
+      );
+    }
+
+    // 진행 중일 때 돌 아이콘과 함께 표시
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        _buildStoneIcon(isBlackTurn, size: 22),
+        const SizedBox(width: 10),
+        Text(
+          gameMessage,
+          style: TextStyle(
+            fontSize: 18,
+            fontWeight: FontWeight.bold,
+            color: textColor,
+          ),
+        ),
+      ],
+    );
   }
 
   void _resetGame() {
@@ -878,16 +943,7 @@ class _GomokuScreenState extends State<GomokuScreen> {
                     width: 2,
                   ),
                 ),
-                child: Text(
-                  gameMessage,
-                  style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                    color: gameOver
-                        ? (gameMessage.contains('축하') ? Colors.green : Colors.red)
-                        : Colors.amber,
-                  ),
-                ),
+                child: _buildMessageWidget(),
               ),
             ),
             Expanded(
