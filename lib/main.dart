@@ -1066,8 +1066,7 @@ class HomeScreen extends StatelessWidget {
               Expanded(
                 child: Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 24),
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  child: ListView(
                     children: [
                       _buildGameCard(
                         context,
@@ -1082,6 +1081,7 @@ class HomeScreen extends StatelessWidget {
                           ),
                         ),
                       ),
+                      const SizedBox(height: 12),
                       _buildGameCard(
                         context,
                         title: 'OMOK',
@@ -1090,6 +1090,7 @@ class HomeScreen extends StatelessWidget {
                         color: Colors.amber,
                         onTap: () => _showGomokuModeDialog(context),
                       ),
+                      const SizedBox(height: 12),
                       _buildGameCard(
                         context,
                         title: 'OTHELLO',
@@ -1098,6 +1099,7 @@ class HomeScreen extends StatelessWidget {
                         color: Colors.green,
                         onTap: () => _showOthelloModeDialog(context),
                       ),
+                      const SizedBox(height: 12),
                       _buildGameCard(
                         context,
                         title: 'CHESS',
@@ -1106,6 +1108,7 @@ class HomeScreen extends StatelessWidget {
                         color: Colors.brown,
                         onTap: () => _showChessModeDialog(context),
                       ),
+                      const SizedBox(height: 12),
                       _buildGameCard(
                         context,
                         title: 'JANGGI',
@@ -1114,6 +1117,7 @@ class HomeScreen extends StatelessWidget {
                         color: const Color(0xFFD2691E),
                         onTap: () => _showJanggiContinueDialog(context),
                       ),
+                      const SizedBox(height: 12),
                       _buildGameCard(
                         context,
                         title: 'SOLITAIRE',
