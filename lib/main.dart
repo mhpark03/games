@@ -54,6 +54,7 @@ class HomeScreen extends StatelessWidget {
       builder: (BuildContext context) {
         return AlertDialog(
           backgroundColor: Colors.grey.shade900,
+          insetPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(16),
             side: BorderSide(color: Colors.amber.withValues(alpha: 0.5), width: 2),
@@ -800,47 +801,49 @@ class HomeScreen extends StatelessWidget {
             ),
             textAlign: TextAlign.center,
           ),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              if (hasSaved && savedMode != null) ...[
-                _buildChessResumeButton(context, savedMode),
-                const SizedBox(height: 16),
-                Divider(color: Colors.grey.shade700),
-                const SizedBox(height: 8),
-                Text(
-                  '새 게임',
-                  style: TextStyle(
-                    color: Colors.grey.shade400,
-                    fontSize: 12,
+          content: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                if (hasSaved && savedMode != null) ...[
+                  _buildChessResumeButton(context, savedMode),
+                  const SizedBox(height: 16),
+                  Divider(color: Colors.grey.shade700),
+                  const SizedBox(height: 8),
+                  Text(
+                    '새 게임',
+                    style: TextStyle(
+                      color: Colors.grey.shade400,
+                      fontSize: 12,
+                    ),
                   ),
+                  const SizedBox(height: 8),
+                ],
+                _buildChessModeButton(
+                  context,
+                  title: '컴퓨터 (흑)',
+                  subtitle: '내가 백 (선공)',
+                  icon: Icons.computer,
+                  mode: ChessGameMode.vsComputerWhite,
                 ),
                 const SizedBox(height: 8),
+                _buildChessModeButton(
+                  context,
+                  title: '컴퓨터 (백)',
+                  subtitle: '내가 흑 (후공)',
+                  icon: Icons.computer,
+                  mode: ChessGameMode.vsComputerBlack,
+                ),
+                const SizedBox(height: 8),
+                _buildChessModeButton(
+                  context,
+                  title: '사람',
+                  subtitle: '2인 플레이',
+                  icon: Icons.people,
+                  mode: ChessGameMode.vsPerson,
+                ),
               ],
-              _buildChessModeButton(
-                context,
-                title: '컴퓨터 (흑)',
-                subtitle: '내가 백 (선공)',
-                icon: Icons.computer,
-                mode: ChessGameMode.vsComputerWhite,
-              ),
-              const SizedBox(height: 8),
-              _buildChessModeButton(
-                context,
-                title: '컴퓨터 (백)',
-                subtitle: '내가 흑 (후공)',
-                icon: Icons.computer,
-                mode: ChessGameMode.vsComputerBlack,
-              ),
-              const SizedBox(height: 8),
-              _buildChessModeButton(
-                context,
-                title: '사람',
-                subtitle: '2인 플레이',
-                icon: Icons.people,
-                mode: ChessGameMode.vsPerson,
-              ),
-            ],
+            ),
           ),
         );
       },
@@ -1074,6 +1077,7 @@ class HomeScreen extends StatelessWidget {
       builder: (BuildContext context) {
         return AlertDialog(
           backgroundColor: Colors.grey.shade900,
+          insetPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(16),
             side: BorderSide(color: const Color(0xFFD2691E).withValues(alpha: 0.5), width: 2),
@@ -1086,33 +1090,35 @@ class HomeScreen extends StatelessWidget {
             ),
             textAlign: TextAlign.center,
           ),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              _buildJanggiModeButton(
-                context,
-                title: '컴퓨터 (한)',
-                subtitle: '내가 초 (선공)',
-                icon: Icons.computer,
-                mode: JanggiGameMode.vsHan,
-              ),
-              const SizedBox(height: 12),
-              _buildJanggiModeButton(
-                context,
-                title: '컴퓨터 (초)',
-                subtitle: '내가 한 (후공)',
-                icon: Icons.computer,
-                mode: JanggiGameMode.vsCho,
-              ),
-              const SizedBox(height: 12),
-              _buildJanggiModeButton(
-                context,
-                title: '사람',
-                subtitle: '2인 플레이',
-                icon: Icons.people,
-                mode: JanggiGameMode.vsHuman,
-              ),
-            ],
+          content: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                _buildJanggiModeButton(
+                  context,
+                  title: '컴퓨터 (한)',
+                  subtitle: '내가 초 (선공)',
+                  icon: Icons.computer,
+                  mode: JanggiGameMode.vsHan,
+                ),
+                const SizedBox(height: 12),
+                _buildJanggiModeButton(
+                  context,
+                  title: '컴퓨터 (초)',
+                  subtitle: '내가 한 (후공)',
+                  icon: Icons.computer,
+                  mode: JanggiGameMode.vsCho,
+                ),
+                const SizedBox(height: 12),
+                _buildJanggiModeButton(
+                  context,
+                  title: '사람',
+                  subtitle: '2인 플레이',
+                  icon: Icons.people,
+                  mode: JanggiGameMode.vsHuman,
+                ),
+              ],
+            ),
           ),
         );
       },
