@@ -66,48 +66,50 @@ class HomeScreen extends StatelessWidget {
             ),
             textAlign: TextAlign.center,
           ),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              // 이어하기 버튼 (저장된 게임이 있을 때만)
-              if (hasSaved && savedMode != null) ...[
-                _buildGomokuResumeButton(context, savedMode, savedDifficulty ?? Difficulty.medium),
-                const SizedBox(height: 16),
-                Divider(color: Colors.grey.shade700),
-                const SizedBox(height: 8),
-                Text(
-                  '새 게임',
-                  style: TextStyle(
-                    color: Colors.grey.shade400,
-                    fontSize: 12,
+          content: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                // 이어하기 버튼 (저장된 게임이 있을 때만)
+                if (hasSaved && savedMode != null) ...[
+                  _buildGomokuResumeButton(context, savedMode, savedDifficulty ?? Difficulty.medium),
+                  const SizedBox(height: 16),
+                  Divider(color: Colors.grey.shade700),
+                  const SizedBox(height: 8),
+                  Text(
+                    '새 게임',
+                    style: TextStyle(
+                      color: Colors.grey.shade400,
+                      fontSize: 12,
+                    ),
                   ),
+                  const SizedBox(height: 8),
+                ],
+                _buildModeButton(
+                  context,
+                  title: '컴퓨터 (백)',
+                  subtitle: '내가 흑돌 (선공)',
+                  icon: Icons.computer,
+                  mode: GameMode.vsComputerWhite,
                 ),
-                const SizedBox(height: 8),
+                const SizedBox(height: 12),
+                _buildModeButton(
+                  context,
+                  title: '컴퓨터 (흑)',
+                  subtitle: '내가 백돌 (후공)',
+                  icon: Icons.computer,
+                  mode: GameMode.vsComputerBlack,
+                ),
+                const SizedBox(height: 12),
+                _buildModeButton(
+                  context,
+                  title: '사람',
+                  subtitle: '2인 플레이',
+                  icon: Icons.people,
+                  mode: GameMode.vsPerson,
+                ),
               ],
-              _buildModeButton(
-                context,
-                title: '컴퓨터 (백)',
-                subtitle: '내가 흑돌 (선공)',
-                icon: Icons.computer,
-                mode: GameMode.vsComputerWhite,
-              ),
-              const SizedBox(height: 12),
-              _buildModeButton(
-                context,
-                title: '컴퓨터 (흑)',
-                subtitle: '내가 백돌 (후공)',
-                icon: Icons.computer,
-                mode: GameMode.vsComputerBlack,
-              ),
-              const SizedBox(height: 12),
-              _buildModeButton(
-                context,
-                title: '사람',
-                subtitle: '2인 플레이',
-                icon: Icons.people,
-                mode: GameMode.vsPerson,
-              ),
-            ],
+            ),
           ),
         );
       },
@@ -1195,14 +1197,14 @@ class HomeScreen extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Container(
-              padding: const EdgeInsets.all(12),
+              padding: const EdgeInsets.all(10),
               decoration: BoxDecoration(
                 color: color.withValues(alpha: 0.2),
                 shape: BoxShape.circle,
               ),
               child: Icon(
                 icon,
-                size: 36,
+                size: 28,
                 color: color,
               ),
             ),
