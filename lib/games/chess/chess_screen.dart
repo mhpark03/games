@@ -1082,90 +1082,109 @@ class _ChessScreenState extends State<ChessScreen> {
         break;
     }
 
-    return Container(
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topCenter,
-          end: Alignment.bottomCenter,
-          colors: [
-            Colors.brown.shade800,
-            Colors.black,
-          ],
+    return Scaffold(
+      body: Container(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [
+              Colors.brown.shade800,
+              Colors.black,
+            ],
+          ),
         ),
-      ),
-      child: SafeArea(
-        child: Column(
-          children: [
-            // 상단 바
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-              child: Row(
+        child: SafeArea(
+          child: Stack(
+            children: [
+              // 메인 영역: 플레이어 표시 + 게임 보드
+              Row(
                 children: [
-                  _buildCircleButton(
-                    icon: Icons.arrow_back,
-                    onPressed: () => Navigator.pop(context),
-                  ),
-                  const SizedBox(width: 12),
-                  Text(
-                    '체스',
-                    style: TextStyle(
-                      fontSize: 20,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.brown.shade200,
-                    ),
-                  ),
-                  const Spacer(),
-                  _buildCircleButton(
-                    icon: Icons.undo,
-                    onPressed: moveHistory.isNotEmpty && !gameOver ? _undoMove : null,
-                  ),
-                  const SizedBox(width: 8),
-                  _buildCircleButton(
-                    icon: Icons.refresh,
-                    onPressed: _resetGame,
-                  ),
-                ],
-              ),
-            ),
-            // 메인 컨텐츠
-            Expanded(
-              child: Row(
-                children: [
-                  // 왼쪽 플레이어 (백)
+                  // 왼쪽 패널: 백 플레이어
                   Expanded(
                     child: Center(
-                      child: FittedBox(
-                        fit: BoxFit.scaleDown,
-                        child: _buildPlayerIndicator(
-                          isWhite: true,
-                          playerName: whitePlayerName,
-                          isCurrentTurn: isWhiteTurn && !gameOver,
-                        ),
+                      child: _buildPlayerIndicator(
+                        isWhite: true,
+                        playerName: whitePlayerName,
+                        isCurrentTurn: isWhiteTurn && !gameOver,
                       ),
                     ),
                   ),
-                  // 체스 보드
-                  AspectRatio(
-                    aspectRatio: 1,
-                    child: _buildGameBoard(),
+                  // 가운데: 체스 보드
+                  LayoutBuilder(
+                    builder: (context, constraints) {
+                      final size = constraints.maxHeight;
+                      return SizedBox(
+                        width: size,
+                        height: size,
+                        child: _buildGameBoard(),
+                      );
+                    },
                   ),
-                  // 오른쪽 플레이어 (흑)
+                  // 오른쪽 패널: 흑 플레이어
                   Expanded(
                     child: Center(
-                      child: FittedBox(
-                        fit: BoxFit.scaleDown,
-                        child: _buildPlayerIndicator(
-                          isWhite: false,
-                          playerName: blackPlayerName,
-                          isCurrentTurn: !isWhiteTurn && !gameOver,
-                        ),
+                      child: _buildPlayerIndicator(
+                        isWhite: false,
+                        playerName: blackPlayerName,
+                        isCurrentTurn: !isWhiteTurn && !gameOver,
                       ),
                     ),
                   ),
                 ],
               ),
-            ),
-          ],
+              // 왼쪽 상단: 뒤로가기 버튼 + 제목
+              Positioned(
+                top: 4,
+                left: 4,
+                child: Row(
+                  children: [
+                    _buildCircleButton(
+                      icon: Icons.arrow_back,
+                      onPressed: () => Navigator.pop(context),
+                      tooltip: '뒤로가기',
+                    ),
+                    const SizedBox(width: 8),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+                      decoration: BoxDecoration(
+                        color: Colors.black.withValues(alpha: 0.5),
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      child: const Text(
+                        '체스',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              // 오른쪽 상단: 되돌리기 + 새 게임 버튼
+              Positioned(
+                top: 4,
+                right: 4,
+                child: Row(
+                  children: [
+                    _buildCircleButton(
+                      icon: Icons.undo,
+                      onPressed: moveHistory.isNotEmpty && !gameOver ? _undoMove : null,
+                      tooltip: '되돌리기',
+                    ),
+                    const SizedBox(width: 8),
+                    _buildCircleButton(
+                      icon: Icons.refresh,
+                      onPressed: _resetGame,
+                      tooltip: '새 게임',
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -1174,20 +1193,28 @@ class _ChessScreenState extends State<ChessScreen> {
   Widget _buildCircleButton({
     required IconData icon,
     VoidCallback? onPressed,
+    String? tooltip,
   }) {
     final isEnabled = onPressed != null;
     return Opacity(
       opacity: isEnabled ? 1.0 : 0.3,
-      child: Container(
-        decoration: BoxDecoration(
-          shape: BoxShape.circle,
-          color: Colors.brown.shade700,
-        ),
-        child: IconButton(
-          icon: Icon(icon),
-          onPressed: onPressed,
-          color: Colors.white,
-          iconSize: 24,
+      child: Material(
+        color: Colors.black.withValues(alpha: 0.5),
+        shape: const CircleBorder(),
+        child: InkWell(
+          onTap: onPressed,
+          customBorder: const CircleBorder(),
+          child: Tooltip(
+            message: tooltip ?? '',
+            child: Container(
+              padding: const EdgeInsets.all(10),
+              child: Icon(
+                icon,
+                color: Colors.white70,
+                size: 22,
+              ),
+            ),
+          ),
         ),
       ),
     );
