@@ -1,5 +1,6 @@
 import 'dart:math';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import '../../services/game_save_service.dart';
 
 enum Stone { none, black, white }
@@ -895,12 +896,29 @@ class _GomokuScreenState extends State<GomokuScreen> {
   }
 
   @override
+  void dispose() {
+    // 화면을 나갈 때 상태바 복원
+    SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     return OrientationBuilder(
       builder: (context, orientation) {
         if (orientation == Orientation.landscape) {
+          // 가로 모드: 상태바 숨김 (몰입 모드)
+          SystemChrome.setEnabledSystemUIMode(
+            SystemUiMode.immersiveSticky,
+            overlays: [],
+          );
           return _buildLandscapeLayout(context);
         } else {
+          // 세로 모드: 상태바 표시
+          SystemChrome.setEnabledSystemUIMode(
+            SystemUiMode.edgeToEdge,
+            overlays: SystemUiOverlay.values,
+          );
           return _buildPortraitLayout(context);
         }
       },
