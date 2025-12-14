@@ -1014,60 +1014,75 @@ class _GomokuScreenState extends State<GomokuScreen> {
           ),
         ),
         child: SafeArea(
-          child: Row(
+          child: Column(
             children: [
-              // 왼쪽 패널: 뒤로가기, 흑돌 플레이어
-              SizedBox(
-                width: 110,
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
+              // 상단 바: 뒤로가기 + 제목 (왼쪽), 새 게임 (오른쪽)
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                child: Row(
                   children: [
                     IconButton(
                       icon: const Icon(Icons.arrow_back, color: Colors.white),
                       onPressed: () => Navigator.pop(context),
                       tooltip: '뒤로가기',
                     ),
-                    const SizedBox(height: 24),
-                    _buildPlayerIndicator(
-                      isBlack: true,
-                      playerName: blackPlayerName,
-                      isCurrentTurn: isBlackTurn && !gameOver,
+                    const Text(
+                      '오목',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    const Spacer(),
+                    TextButton.icon(
+                      onPressed: _resetGame,
+                      icon: const Icon(Icons.refresh, color: Colors.white70, size: 20),
+                      label: const Text(
+                        '새 게임',
+                        style: TextStyle(color: Colors.white70, fontSize: 12),
+                      ),
                     ),
                   ],
                 ),
               ),
-              // 가운데: 게임 보드 (최대 크기)
+              // 메인 영역: 플레이어 표시 + 게임 보드
               Expanded(
-                child: Center(
-                  child: AspectRatio(
-                    aspectRatio: 1,
-                    child: Padding(
-                      padding: const EdgeInsets.all(8.0),
-                      child: _buildGameBoard(),
-                    ),
-                  ),
-                ),
-              ),
-              // 오른쪽 패널: 백돌 플레이어, 다시하기 버튼
-              SizedBox(
-                width: 110,
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
+                child: Row(
                   children: [
-                    _buildPlayerIndicator(
-                      isBlack: false,
-                      playerName: whitePlayerName,
-                      isCurrentTurn: !isBlackTurn && !gameOver,
+                    // 왼쪽 패널: 흑돌 플레이어
+                    SizedBox(
+                      width: 120,
+                      child: Center(
+                        child: _buildPlayerIndicator(
+                          isBlack: true,
+                          playerName: blackPlayerName,
+                          isCurrentTurn: isBlackTurn && !gameOver,
+                        ),
+                      ),
                     ),
-                    const SizedBox(height: 24),
-                    IconButton(
-                      icon: const Icon(Icons.refresh, color: Colors.white, size: 28),
-                      onPressed: _resetGame,
-                      tooltip: '새 게임',
+                    // 가운데: 게임 보드 (최대 크기)
+                    Expanded(
+                      child: Center(
+                        child: AspectRatio(
+                          aspectRatio: 1,
+                          child: Padding(
+                            padding: const EdgeInsets.all(8.0),
+                            child: _buildGameBoard(),
+                          ),
+                        ),
+                      ),
                     ),
-                    const Text(
-                      '새 게임',
-                      style: TextStyle(color: Colors.white70, fontSize: 11),
+                    // 오른쪽 패널: 백돌 플레이어
+                    SizedBox(
+                      width: 120,
+                      child: Center(
+                        child: _buildPlayerIndicator(
+                          isBlack: false,
+                          playerName: whitePlayerName,
+                          isCurrentTurn: !isBlackTurn && !gameOver,
+                        ),
+                      ),
                     ),
                   ],
                 ),
@@ -1088,12 +1103,12 @@ class _GomokuScreenState extends State<GomokuScreen> {
     final highlightColor = isBlack ? Colors.grey.shade700 : Colors.white;
 
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 16),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
       decoration: BoxDecoration(
         color: isCurrentTurn
             ? highlightColor.withValues(alpha: 0.3)
             : Colors.transparent,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(16),
         border: Border.all(
           color: isCurrentTurn ? highlightColor : Colors.grey.shade700,
           width: isCurrentTurn ? 3 : 1,
@@ -1102,8 +1117,8 @@ class _GomokuScreenState extends State<GomokuScreen> {
             ? [
                 BoxShadow(
                   color: highlightColor.withValues(alpha: 0.5),
-                  blurRadius: 10,
-                  spreadRadius: 2,
+                  blurRadius: 12,
+                  spreadRadius: 3,
                 ),
               ]
             : null,
@@ -1111,21 +1126,22 @@ class _GomokuScreenState extends State<GomokuScreen> {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          _buildStoneIcon(isBlack, size: 36),
-          const SizedBox(height: 8),
+          _buildStoneIcon(isBlack, size: 48),
+          const SizedBox(height: 12),
           Text(
             playerName,
             style: TextStyle(
               color: isCurrentTurn ? Colors.white : Colors.grey.shade500,
-              fontSize: 14,
+              fontSize: 16,
               fontWeight: isCurrentTurn ? FontWeight.bold : FontWeight.normal,
             ),
           ),
+          const SizedBox(height: 2),
           Text(
             isBlack ? '(흑)' : '(백)',
             style: TextStyle(
               color: isCurrentTurn ? Colors.white70 : Colors.grey.shade600,
-              fontSize: 11,
+              fontSize: 13,
             ),
           ),
         ],
