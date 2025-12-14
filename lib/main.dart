@@ -1065,75 +1065,80 @@ class HomeScreen extends StatelessWidget {
               const SizedBox(height: 16),
               Expanded(
                 child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 24),
-                  child: ListView(
-                    children: [
-                      _buildGameCard(
-                        context,
-                        title: 'TETRIS',
-                        subtitle: '테트리스',
-                        icon: Icons.grid_view_rounded,
-                        color: Colors.cyan,
-                        onTap: () => Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => const TetrisScreen(),
-                          ),
-                        ),
-                      ),
-                      const SizedBox(height: 12),
-                      _buildGameCard(
-                        context,
-                        title: 'OMOK',
-                        subtitle: '오목',
-                        icon: Icons.circle_outlined,
-                        color: Colors.amber,
-                        onTap: () => _showGomokuModeDialog(context),
-                      ),
-                      const SizedBox(height: 12),
-                      _buildGameCard(
-                        context,
-                        title: 'OTHELLO',
-                        subtitle: '오델로',
-                        icon: Icons.blur_circular,
-                        color: Colors.green,
-                        onTap: () => _showOthelloModeDialog(context),
-                      ),
-                      const SizedBox(height: 12),
-                      _buildGameCard(
-                        context,
-                        title: 'CHESS',
-                        subtitle: '체스',
-                        icon: Icons.castle,
-                        color: Colors.brown,
-                        onTap: () => _showChessModeDialog(context),
-                      ),
-                      const SizedBox(height: 12),
-                      _buildGameCard(
-                        context,
-                        title: 'JANGGI',
-                        subtitle: '장기',
-                        icon: Icons.apps,
-                        color: const Color(0xFFD2691E),
-                        onTap: () => _showJanggiContinueDialog(context),
-                      ),
-                      const SizedBox(height: 12),
-                      _buildGameCard(
-                        context,
-                        title: 'SOLITAIRE',
-                        subtitle: '솔리테어',
-                        icon: Icons.style,
-                        color: Colors.green.shade700,
-                        onTap: () {
-                          Navigator.push(
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  child: LayoutBuilder(
+                    builder: (context, constraints) {
+                      final isLandscape = constraints.maxWidth > constraints.maxHeight;
+                      final crossAxisCount = isLandscape ? 3 : 2;
+                      return GridView.count(
+                        crossAxisCount: crossAxisCount,
+                        mainAxisSpacing: 12,
+                        crossAxisSpacing: 12,
+                        childAspectRatio: 1.0,
+                        children: [
+                          _buildGameTile(
                             context,
-                            MaterialPageRoute(
-                              builder: (context) => const SolitaireScreen(),
+                            title: 'TETRIS',
+                            subtitle: '테트리스',
+                            icon: Icons.grid_view_rounded,
+                            color: Colors.cyan,
+                            onTap: () => Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => const TetrisScreen(),
+                              ),
                             ),
-                          );
-                        },
-                      ),
-                    ],
+                          ),
+                          _buildGameTile(
+                            context,
+                            title: 'OMOK',
+                            subtitle: '오목',
+                            icon: Icons.circle_outlined,
+                            color: Colors.amber,
+                            onTap: () => _showGomokuModeDialog(context),
+                          ),
+                          _buildGameTile(
+                            context,
+                            title: 'OTHELLO',
+                            subtitle: '오델로',
+                            icon: Icons.blur_circular,
+                            color: Colors.green,
+                            onTap: () => _showOthelloModeDialog(context),
+                          ),
+                          _buildGameTile(
+                            context,
+                            title: 'CHESS',
+                            subtitle: '체스',
+                            icon: Icons.castle,
+                            color: Colors.brown,
+                            onTap: () => _showChessModeDialog(context),
+                          ),
+                          _buildGameTile(
+                            context,
+                            title: 'JANGGI',
+                            subtitle: '장기',
+                            icon: Icons.apps,
+                            color: const Color(0xFFD2691E),
+                            onTap: () => _showJanggiContinueDialog(context),
+                          ),
+                          _buildGameTile(
+                            context,
+                            title: 'SOLITAIRE',
+                            subtitle: '솔리테어',
+                            icon: Icons.style,
+                            color: Colors.green.shade700,
+                            onTap: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) => const SolitaireScreen(),
+                                ),
+                              );
+                            },
+                          ),
+                        ],
+                      );
+                    },
                   ),
                 ),
               ),
@@ -1151,7 +1156,7 @@ class HomeScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildGameCard(
+  Widget _buildGameTile(
     BuildContext context, {
     required String title,
     required String subtitle,
@@ -1162,10 +1167,10 @@ class HomeScreen extends StatelessWidget {
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        width: double.infinity,
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         decoration: BoxDecoration(
           gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
             colors: [
               color.withValues(alpha: 0.3),
               color.withValues(alpha: 0.1),
@@ -1184,46 +1189,38 @@ class HomeScreen extends StatelessWidget {
             ),
           ],
         ),
-        child: Row(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Container(
-              padding: const EdgeInsets.all(10),
+              padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
                 color: color.withValues(alpha: 0.2),
-                borderRadius: BorderRadius.circular(12),
+                shape: BoxShape.circle,
               ),
               child: Icon(
                 icon,
-                size: 32,
+                size: 36,
                 color: color,
               ),
             ),
-            const SizedBox(width: 16),
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  title,
-                  style: TextStyle(
-                    fontSize: 20,
-                    fontWeight: FontWeight.bold,
-                    color: color,
-                    letterSpacing: 2,
-                  ),
-                ),
-                Text(
-                  subtitle,
-                  style: TextStyle(
-                    fontSize: 13,
-                    color: Colors.grey.shade400,
-                  ),
-                ),
-              ],
+            const SizedBox(height: 12),
+            Text(
+              title,
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.bold,
+                color: color,
+                letterSpacing: 2,
+              ),
             ),
-            const Spacer(),
-            Icon(
-              Icons.arrow_forward_ios,
-              color: color,
+            const SizedBox(height: 4),
+            Text(
+              subtitle,
+              style: TextStyle(
+                fontSize: 12,
+                color: Colors.grey.shade400,
+              ),
             ),
           ],
         ),
