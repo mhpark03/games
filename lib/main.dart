@@ -43,6 +43,7 @@ class HomeScreen extends StatelessWidget {
     // 저장된 게임이 있는지 확인
     final hasSaved = await GomokuScreen.hasSavedGame();
     final savedMode = hasSaved ? await GomokuScreen.getSavedGameMode() : null;
+    final savedDifficulty = hasSaved ? await GomokuScreen.getSavedDifficulty() : null;
 
     if (!context.mounted) return;
 
@@ -68,7 +69,7 @@ class HomeScreen extends StatelessWidget {
             children: [
               // 이어하기 버튼 (저장된 게임이 있을 때만)
               if (hasSaved && savedMode != null) ...[
-                _buildResumeButton(context, savedMode),
+                _buildGomokuResumeButton(context, savedMode, savedDifficulty ?? Difficulty.medium),
                 const SizedBox(height: 16),
                 Divider(color: Colors.grey.shade700),
                 const SizedBox(height: 8),
@@ -111,7 +112,7 @@ class HomeScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildResumeButton(BuildContext context, GameMode savedMode) {
+  Widget _buildGomokuResumeButton(BuildContext context, GameMode savedMode, Difficulty savedDifficulty) {
     String modeText;
     switch (savedMode) {
       case GameMode.vsComputerWhite:
@@ -125,6 +126,21 @@ class HomeScreen extends StatelessWidget {
         break;
     }
 
+    String difficultyText = '';
+    if (savedMode != GameMode.vsPerson) {
+      switch (savedDifficulty) {
+        case Difficulty.easy:
+          difficultyText = ' - 쉬움';
+          break;
+        case Difficulty.medium:
+          difficultyText = ' - 보통';
+          break;
+        case Difficulty.hard:
+          difficultyText = ' - 어려움';
+          break;
+      }
+    }
+
     return InkWell(
       onTap: () {
         Navigator.pop(context);
@@ -133,6 +149,7 @@ class HomeScreen extends StatelessWidget {
           MaterialPageRoute(
             builder: (context) => GomokuScreen(
               gameMode: savedMode,
+              difficulty: savedDifficulty,
               resumeGame: true,
             ),
           ),
@@ -166,7 +183,7 @@ class HomeScreen extends StatelessWidget {
                   ),
                 ),
                 Text(
-                  modeText,
+                  '$modeText$difficultyText',
                   style: TextStyle(
                     color: Colors.grey.shade400,
                     fontSize: 12,
@@ -196,12 +213,18 @@ class HomeScreen extends StatelessWidget {
     return InkWell(
       onTap: () {
         Navigator.pop(context); // 다이얼로그 닫기
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (context) => GomokuScreen(gameMode: mode),
-          ),
-        );
+        if (mode == GameMode.vsPerson) {
+          // 2인 플레이는 난이도 선택 없이 바로 시작
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => GomokuScreen(gameMode: mode),
+            ),
+          );
+        } else {
+          // 컴퓨터 대전은 난이도 선택
+          _showDifficultyDialog(context, mode);
+        }
       },
       borderRadius: BorderRadius.circular(12),
       child: Container(
@@ -243,6 +266,134 @@ class HomeScreen extends StatelessWidget {
             Icon(
               Icons.arrow_forward_ios,
               color: Colors.amber.withValues(alpha: 0.7),
+              size: 16,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // 오목 난이도 선택 다이얼로그
+  void _showDifficultyDialog(BuildContext context, GameMode mode) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          backgroundColor: Colors.grey.shade900,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+            side: BorderSide(color: Colors.amber.withValues(alpha: 0.5), width: 2),
+          ),
+          title: const Text(
+            '난이도 선택',
+            style: TextStyle(
+              color: Colors.amber,
+              fontWeight: FontWeight.bold,
+            ),
+            textAlign: TextAlign.center,
+          ),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              _buildDifficultyButton(
+                context,
+                title: '쉬움',
+                subtitle: '초보자용',
+                icon: Icons.sentiment_satisfied,
+                color: Colors.green,
+                mode: mode,
+                difficulty: Difficulty.easy,
+              ),
+              const SizedBox(height: 12),
+              _buildDifficultyButton(
+                context,
+                title: '보통',
+                subtitle: '일반 플레이어용',
+                icon: Icons.sentiment_neutral,
+                color: Colors.orange,
+                mode: mode,
+                difficulty: Difficulty.medium,
+              ),
+              const SizedBox(height: 12),
+              _buildDifficultyButton(
+                context,
+                title: '어려움',
+                subtitle: '고수용',
+                icon: Icons.sentiment_very_dissatisfied,
+                color: Colors.red,
+                mode: mode,
+                difficulty: Difficulty.hard,
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildDifficultyButton(
+    BuildContext context, {
+    required String title,
+    required String subtitle,
+    required IconData icon,
+    required Color color,
+    required GameMode mode,
+    required Difficulty difficulty,
+  }) {
+    return InkWell(
+      onTap: () {
+        Navigator.pop(context);
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => GomokuScreen(
+              gameMode: mode,
+              difficulty: difficulty,
+            ),
+          ),
+        );
+      },
+      borderRadius: BorderRadius.circular(12),
+      child: Container(
+        width: double.infinity,
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        decoration: BoxDecoration(
+          color: color.withValues(alpha: 0.1),
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(
+            color: color.withValues(alpha: 0.5),
+            width: 1,
+          ),
+        ),
+        child: Row(
+          children: [
+            Icon(icon, color: color, size: 28),
+            const SizedBox(width: 12),
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  title,
+                  style: TextStyle(
+                    color: color,
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                Text(
+                  subtitle,
+                  style: TextStyle(
+                    color: Colors.grey.shade400,
+                    fontSize: 12,
+                  ),
+                ),
+              ],
+            ),
+            const Spacer(),
+            Icon(
+              Icons.arrow_forward_ios,
+              color: color.withValues(alpha: 0.7),
               size: 16,
             ),
           ],
