@@ -1032,46 +1032,17 @@ class _GomokuScreenState extends State<GomokuScreen> {
           ),
         ),
         child: SafeArea(
-          child: Column(
+          child: Stack(
             children: [
-              // 상단 바: 뒤로가기 + 제목 (왼쪽), 새 게임 (오른쪽)
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                child: Row(
-                  children: [
-                    IconButton(
-                      icon: const Icon(Icons.arrow_back, color: Colors.white),
-                      onPressed: () => Navigator.pop(context),
-                      tooltip: '뒤로가기',
-                    ),
-                    const Text(
-                      '오목',
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 20,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    const Spacer(),
-                    TextButton.icon(
-                      onPressed: _resetGame,
-                      icon: const Icon(Icons.refresh, color: Colors.white70, size: 20),
-                      label: const Text(
-                        '새 게임',
-                        style: TextStyle(color: Colors.white70, fontSize: 12),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
               // 메인 영역: 플레이어 표시 + 게임 보드
-              Expanded(
-                child: Row(
-                  children: [
-                    // 왼쪽 패널: 흑돌 플레이어
-                    SizedBox(
-                      width: 110,
-                      child: Center(
+              Row(
+                children: [
+                  // 왼쪽 패널: 흑돌 플레이어 (게임보드에 가깝게)
+                  Expanded(
+                    child: Align(
+                      alignment: Alignment.centerRight,
+                      child: Padding(
+                        padding: const EdgeInsets.only(right: 8),
                         child: _buildPlayerIndicator(
                           isBlack: true,
                           playerName: blackPlayerName,
@@ -1079,25 +1050,24 @@ class _GomokuScreenState extends State<GomokuScreen> {
                         ),
                       ),
                     ),
-                    // 가운데: 게임 보드 (최대 크기)
-                    Expanded(
-                      child: Center(
-                        child: LayoutBuilder(
-                          builder: (context, constraints) {
-                            final size = constraints.maxHeight;
-                            return SizedBox(
-                              width: size,
-                              height: size,
-                              child: _buildGameBoard(),
-                            );
-                          },
-                        ),
-                      ),
-                    ),
-                    // 오른쪽 패널: 백돌 플레이어
-                    SizedBox(
-                      width: 110,
-                      child: Center(
+                  ),
+                  // 가운데: 게임 보드 (최대 크기)
+                  LayoutBuilder(
+                    builder: (context, constraints) {
+                      final size = constraints.maxHeight;
+                      return SizedBox(
+                        width: size,
+                        height: size,
+                        child: _buildGameBoard(),
+                      );
+                    },
+                  ),
+                  // 오른쪽 패널: 백돌 플레이어 (게임보드에 가깝게)
+                  Expanded(
+                    child: Align(
+                      alignment: Alignment.centerLeft,
+                      child: Padding(
+                        padding: const EdgeInsets.only(left: 8),
                         child: _buildPlayerIndicator(
                           isBlack: false,
                           playerName: whitePlayerName,
@@ -1105,10 +1075,57 @@ class _GomokuScreenState extends State<GomokuScreen> {
                         ),
                       ),
                     ),
-                  ],
+                  ),
+                ],
+              ),
+              // 왼쪽 상단: 뒤로가기 버튼
+              Positioned(
+                top: 4,
+                left: 4,
+                child: _buildCircleButton(
+                  icon: Icons.arrow_back,
+                  onPressed: () => Navigator.pop(context),
+                  tooltip: '뒤로가기',
+                ),
+              ),
+              // 오른쪽 상단: 새 게임 버튼
+              Positioned(
+                top: 4,
+                right: 4,
+                child: _buildCircleButton(
+                  icon: Icons.refresh,
+                  onPressed: _resetGame,
+                  tooltip: '새 게임',
                 ),
               ),
             ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  // 원형 버튼 위젯
+  Widget _buildCircleButton({
+    required IconData icon,
+    required VoidCallback onPressed,
+    required String tooltip,
+  }) {
+    return Material(
+      color: Colors.black.withValues(alpha: 0.5),
+      shape: const CircleBorder(),
+      child: InkWell(
+        onTap: onPressed,
+        customBorder: const CircleBorder(),
+        child: Tooltip(
+          message: tooltip,
+          child: Container(
+            padding: const EdgeInsets.all(10),
+            child: Icon(
+              icon,
+              color: Colors.white70,
+              size: 22,
+            ),
           ),
         ),
       ),
