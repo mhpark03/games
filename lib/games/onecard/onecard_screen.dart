@@ -1924,7 +1924,7 @@ class _OneCardScreenState extends State<OneCardScreen> with TickerProviderStateM
             ],
           ),
           // 조커일 때 낼 수 있는 카드 정보 표시
-          if (topCard.isJoker && attackStack == 0 && lastNormalCard != null)
+          if (topCard.isJoker && attackStack == 0 && lastNormalCard != null && lastNormalCard!.suit != null)
             Container(
               margin: const EdgeInsets.only(top: 8),
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
@@ -1940,9 +1940,9 @@ class _OneCardScreenState extends State<OneCardScreen> with TickerProviderStateM
                     style: const TextStyle(color: Colors.white, fontSize: 12),
                   ),
                   Text(
-                    _getSuitSymbol(lastNormalCard!.suit),
+                    _getSuitSymbol(lastNormalCard!.suit!),
                     style: TextStyle(
-                      color: _getSuitColor(lastNormalCard!.suit),
+                      color: _getSuitColor(lastNormalCard!.suit!),
                       fontSize: 16,
                       fontWeight: FontWeight.bold,
                     ),
