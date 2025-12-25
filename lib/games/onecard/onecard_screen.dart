@@ -1371,12 +1371,16 @@ class _OneCardScreenState extends State<OneCardScreen> with TickerProviderStateM
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(Icons.star, color: Colors.purple, size: 16),
+                  Icon(
+                    Icons.star,
+                    color: card.isBlackJoker ? Colors.grey.shade800 : Colors.red,
+                    size: 16,
+                  ),
                   Text(
-                    'JKR',
+                    card.isBlackJoker ? 'B' : 'C',
                     style: TextStyle(
-                      color: Colors.purple,
-                      fontSize: 6,
+                      color: card.isBlackJoker ? Colors.grey.shade800 : Colors.red,
+                      fontSize: 8,
                       fontWeight: FontWeight.bold,
                     ),
                   ),
@@ -1826,12 +1830,24 @@ class _OneCardScreenState extends State<OneCardScreen> with TickerProviderStateM
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(Icons.star, color: Colors.purple, size: 20 * size),
+                  Icon(
+                    Icons.star,
+                    color: card.isBlackJoker ? Colors.grey.shade800 : Colors.red,
+                    size: 20 * size,
+                  ),
                   Text(
                     'JOKER',
                     style: TextStyle(
-                      color: Colors.purple,
+                      color: card.isBlackJoker ? Colors.grey.shade800 : Colors.red,
                       fontSize: 8 * size,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  Text(
+                    card.isBlackJoker ? '(흑백)' : '(컬러)',
+                    style: TextStyle(
+                      color: card.isBlackJoker ? Colors.grey.shade600 : Colors.red.shade400,
+                      fontSize: 6 * size,
                       fontWeight: FontWeight.bold,
                     ),
                   ),
