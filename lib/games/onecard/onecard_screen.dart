@@ -1325,6 +1325,7 @@ class _OneCardScreenState extends State<OneCardScreen> with TickerProviderStateM
   // 가로모드 하단 플레이어 핸드 (겹치지 않는 개별 카드)
   Widget _buildLandscapePlayerHandHorizontal() {
     final playable = _getPlayableCards(playerHand);
+    final showOneCardButton = playerHand.length == 1 && isPlayerTurn && !gameOver;
 
     return Container(
       height: 75,
@@ -1351,6 +1352,11 @@ class _OneCardScreenState extends State<OneCardScreen> with TickerProviderStateM
             ),
           ),
           const SizedBox(width: 8),
+          // 원카드 버튼 (1장일 때)
+          if (showOneCardButton) ...[
+            _buildLandscapeOneCardButton(),
+            const SizedBox(width: 8),
+          ],
           // 플레이어 카드 (겹치지 않는 가로 스크롤)
           Expanded(
             child: ListView.builder(
@@ -1373,6 +1379,60 @@ class _OneCardScreenState extends State<OneCardScreen> with TickerProviderStateM
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  // 가로모드용 원카드 버튼 (컴팩트)
+  Widget _buildLandscapeOneCardButton() {
+    final alreadyCalled = playerCalledOneCard;
+    final buttonText = alreadyCalled
+        ? '원카드!'
+        : (_oneCardTimeLeft > 0 ? '원카드\n($_oneCardTimeLeft초)' : '원카드');
+
+    return GestureDetector(
+      onTap: alreadyCalled ? null : _callOneCard,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+        decoration: BoxDecoration(
+          color: alreadyCalled
+              ? Colors.grey.shade600
+              : (_oneCardTimeLeft <= 2 && _oneCardTimeLeft > 0
+                  ? Colors.red.shade700
+                  : Colors.orange.shade700),
+          borderRadius: BorderRadius.circular(12),
+          boxShadow: alreadyCalled
+              ? []
+              : [
+                  BoxShadow(
+                    color: (_oneCardTimeLeft <= 2 && _oneCardTimeLeft > 0
+                            ? Colors.red
+                            : Colors.orange)
+                        .withValues(alpha: 0.5),
+                    blurRadius: 8,
+                    spreadRadius: 1,
+                  ),
+                ],
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              alreadyCalled ? Icons.check_circle : Icons.campaign,
+              color: Colors.white,
+              size: 18,
+            ),
+            Text(
+              buttonText,
+              textAlign: TextAlign.center,
+              style: const TextStyle(
+                color: Colors.white,
+                fontSize: 10,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
