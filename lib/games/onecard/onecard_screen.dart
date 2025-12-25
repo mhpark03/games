@@ -494,6 +494,9 @@ class _OneCardScreenState extends State<OneCardScreen> with TickerProviderStateM
   PlayingCard get topCard => discardPile.last;
 
   List<PlayingCard> _getPlayableCards(List<PlayingCard> hand) {
+    // discardPile이 비어있으면 빈 리스트 반환
+    if (discardPile.isEmpty) return [];
+
     // 공격 상태에서는 특정 공격 카드로만 방어 가능
     // - 2 공격: 아무 2 / 같은 무늬 A / 조커
     // - A/♠A 공격: 아무 A / 조커
