@@ -172,6 +172,26 @@ class _BaseballScreenState extends State<BaseballScreen> {
 
   @override
   Widget build(BuildContext context) {
+    return OrientationBuilder(
+      builder: (context, orientation) {
+        if (orientation == Orientation.landscape) {
+          SystemChrome.setEnabledSystemUIMode(
+            SystemUiMode.immersiveSticky,
+            overlays: [],
+          );
+          return _buildLandscapeLayout();
+        } else {
+          SystemChrome.setEnabledSystemUIMode(
+            SystemUiMode.edgeToEdge,
+            overlays: SystemUiOverlay.values,
+          );
+          return _buildPortraitLayout();
+        }
+      },
+    );
+  }
+
+  Widget _buildPortraitLayout() {
     return Scaffold(
       backgroundColor: Colors.grey.shade900,
       appBar: AppBar(
@@ -204,21 +224,308 @@ class _BaseballScreenState extends State<BaseballScreen> {
       body: SafeArea(
         child: Column(
           children: [
-            // 상태 정보
             _buildInfoPanel(),
-
-            // 결과 메시지 (게임 종료 시)
             if (gameOver) _buildResultMessage(),
-
-            // 추측 기록
             Expanded(
               child: _buildGuessHistory(),
             ),
-
-            // 입력 영역
             if (!gameOver) _buildInputArea(),
           ],
         ),
+      ),
+    );
+  }
+
+  Widget _buildLandscapeLayout() {
+    return Scaffold(
+      body: Container(
+        color: Colors.grey.shade900,
+        child: SafeArea(
+          child: Row(
+            children: [
+              // 왼쪽 패널: 뒤로가기, 제목, 정보
+              SizedBox(
+                width: 160,
+                child: Column(
+                  children: [
+                    const SizedBox(height: 8),
+                    Row(
+                      children: [
+                        IconButton(
+                          icon: const Icon(Icons.arrow_back, color: Colors.white70),
+                          onPressed: () => Navigator.pop(context),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 8),
+                    const Icon(Icons.sports_baseball, color: Colors.deepOrange, size: 28),
+                    const SizedBox(height: 4),
+                    Text(
+                      'NUMBER',
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 14,
+                        letterSpacing: 2,
+                        color: Colors.orange.shade100,
+                      ),
+                    ),
+                    Text(
+                      'BASEBALL',
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 14,
+                        letterSpacing: 2,
+                        color: Colors.orange.shade100,
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    _buildCompactInfo(),
+                    const Spacer(),
+                    if (gameOver) ...[
+                      _buildCompactResultMessage(),
+                      const SizedBox(height: 8),
+                    ],
+                  ],
+                ),
+              ),
+              // 중앙: 기록 목록
+              Expanded(
+                child: Column(
+                  children: [
+                    Expanded(
+                      child: _buildGuessHistory(isLandscape: true),
+                    ),
+                  ],
+                ),
+              ),
+              // 오른쪽 패널: 입력 영역
+              SizedBox(
+                width: 200,
+                child: Column(
+                  children: [
+                    const SizedBox(height: 8),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.end,
+                      children: [
+                        IconButton(
+                          icon: const Icon(Icons.refresh, color: Colors.white70),
+                          onPressed: _restartGame,
+                        ),
+                      ],
+                    ),
+                    const Spacer(),
+                    if (!gameOver) _buildCompactInputArea(),
+                    const Spacer(),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildCompactInfo() {
+    return Container(
+      padding: const EdgeInsets.all(12),
+      margin: const EdgeInsets.symmetric(horizontal: 8),
+      decoration: BoxDecoration(
+        color: Colors.black38,
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Column(
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const Icon(Icons.tag, color: Colors.deepOrange, size: 16),
+              const SizedBox(width: 4),
+              Text(
+                _getDifficultyText(),
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 14,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const Icon(Icons.format_list_numbered, color: Colors.blue, size: 16),
+              const SizedBox(width: 4),
+              Text(
+                '${guessHistory.length}/$maxAttempts',
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 14,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const Icon(Icons.lightbulb_outline, color: Colors.amber, size: 16),
+              const SizedBox(width: 4),
+              Text(
+                gameOver ? secretNumber : '???',
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 14,
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildCompactResultMessage() {
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 8),
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: gameWon
+            ? Colors.green.withValues(alpha: 0.2)
+            : Colors.red.withValues(alpha: 0.2),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: gameWon ? Colors.green : Colors.red,
+          width: 2,
+        ),
+      ),
+      child: Column(
+        children: [
+          Icon(
+            gameWon ? Icons.emoji_events : Icons.sentiment_very_dissatisfied,
+            color: gameWon ? Colors.amber : Colors.red,
+            size: 24,
+          ),
+          const SizedBox(height: 4),
+          Text(
+            gameWon ? '정답!' : '게임 오버',
+            style: TextStyle(
+              color: gameWon ? Colors.green : Colors.red,
+              fontSize: 14,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          Text(
+            gameWon ? '${guessHistory.length}번' : secretNumber,
+            style: TextStyle(
+              color: Colors.grey.shade400,
+              fontSize: 12,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildCompactInputArea() {
+    return Container(
+      padding: const EdgeInsets.all(12),
+      margin: const EdgeInsets.symmetric(horizontal: 8),
+      decoration: BoxDecoration(
+        color: Colors.grey.shade800,
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          if (errorMessage != null)
+            Container(
+              margin: const EdgeInsets.only(bottom: 8),
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+              decoration: BoxDecoration(
+                color: Colors.red.withValues(alpha: 0.2),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Text(
+                errorMessage!,
+                style: const TextStyle(color: Colors.red, fontSize: 11),
+                textAlign: TextAlign.center,
+              ),
+            ),
+          TextField(
+            controller: _controller,
+            focusNode: _focusNode,
+            keyboardType: TextInputType.number,
+            maxLength: digitCount,
+            textAlign: TextAlign.center,
+            style: const TextStyle(
+              color: Colors.white,
+              fontSize: 24,
+              fontWeight: FontWeight.bold,
+              letterSpacing: 8,
+            ),
+            decoration: InputDecoration(
+              counterText: '',
+              hintText: '0' * digitCount,
+              hintStyle: TextStyle(
+                color: Colors.grey.shade600,
+                fontSize: 24,
+                letterSpacing: 8,
+              ),
+              filled: true,
+              fillColor: Colors.grey.shade900,
+              contentPadding: const EdgeInsets.symmetric(vertical: 12),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(8),
+                borderSide: BorderSide.none,
+              ),
+              focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(8),
+                borderSide: const BorderSide(
+                  color: Colors.deepOrange,
+                  width: 2,
+                ),
+              ),
+            ),
+            inputFormatters: [
+              FilteringTextInputFormatter.digitsOnly,
+            ],
+            onSubmitted: (_) => _submitGuess(),
+          ),
+          const SizedBox(height: 8),
+          SizedBox(
+            width: double.infinity,
+            child: ElevatedButton(
+              onPressed: _submitGuess,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.deepOrange,
+                foregroundColor: Colors.white,
+                padding: const EdgeInsets.symmetric(vertical: 12),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
+              ),
+              child: const Text(
+                '확인',
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            'S=Strike  B=Ball',
+            style: TextStyle(
+              color: Colors.grey.shade500,
+              fontSize: 10,
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -244,7 +551,7 @@ class _BaseballScreenState extends State<BaseballScreen> {
           _buildInfoItem(
             icon: Icons.lightbulb_outline,
             iconColor: Colors.amber,
-            value: gameOver && !gameWon ? secretNumber : '???',
+            value: gameOver ? secretNumber : '???',
             label: '정답',
           ),
         ],
@@ -331,7 +638,7 @@ class _BaseballScreenState extends State<BaseballScreen> {
     );
   }
 
-  Widget _buildGuessHistory() {
+  Widget _buildGuessHistory({bool isLandscape = false}) {
     if (guessHistory.isEmpty) {
       return Center(
         child: Column(
@@ -339,7 +646,7 @@ class _BaseballScreenState extends State<BaseballScreen> {
           children: [
             Icon(
               Icons.sports_baseball,
-              size: 64,
+              size: isLandscape ? 48 : 64,
               color: Colors.grey.shade700,
             ),
             const SizedBox(height: 16),
@@ -347,7 +654,7 @@ class _BaseballScreenState extends State<BaseballScreen> {
               '${digitCount}자리 숫자를 맞춰보세요!',
               style: TextStyle(
                 color: Colors.grey.shade500,
-                fontSize: 18,
+                fontSize: isLandscape ? 14 : 18,
               ),
             ),
             const SizedBox(height: 8),
@@ -355,7 +662,7 @@ class _BaseballScreenState extends State<BaseballScreen> {
               '각 자리의 숫자는 중복되지 않습니다',
               style: TextStyle(
                 color: Colors.grey.shade600,
-                fontSize: 14,
+                fontSize: isLandscape ? 11 : 14,
               ),
             ),
           ],
@@ -364,21 +671,21 @@ class _BaseballScreenState extends State<BaseballScreen> {
     }
 
     return ListView.builder(
-      padding: const EdgeInsets.symmetric(horizontal: 16),
+      padding: EdgeInsets.symmetric(horizontal: isLandscape ? 8 : 16, vertical: 8),
       itemCount: guessHistory.length,
       reverse: true,
       itemBuilder: (context, index) {
         final result = guessHistory[guessHistory.length - 1 - index];
         final attemptNumber = guessHistory.length - index;
-        return _buildGuessCard(result, attemptNumber);
+        return _buildGuessCard(result, attemptNumber, isLandscape: isLandscape);
       },
     );
   }
 
-  Widget _buildGuessCard(GuessResult result, int attemptNumber) {
+  Widget _buildGuessCard(GuessResult result, int attemptNumber, {bool isLandscape = false}) {
     return Container(
       margin: const EdgeInsets.only(bottom: 8),
-      padding: const EdgeInsets.all(12),
+      padding: EdgeInsets.all(isLandscape ? 8 : 12),
       decoration: BoxDecoration(
         color: result.isCorrect
             ? Colors.green.withValues(alpha: 0.2)
@@ -392,8 +699,8 @@ class _BaseballScreenState extends State<BaseballScreen> {
         children: [
           // 시도 번호
           Container(
-            width: 32,
-            height: 32,
+            width: isLandscape ? 24 : 32,
+            height: isLandscape ? 24 : 32,
             decoration: BoxDecoration(
               color: Colors.deepOrange.withValues(alpha: 0.3),
               shape: BoxShape.circle,
@@ -401,22 +708,23 @@ class _BaseballScreenState extends State<BaseballScreen> {
             child: Center(
               child: Text(
                 '$attemptNumber',
-                style: const TextStyle(
+                style: TextStyle(
                   color: Colors.deepOrange,
                   fontWeight: FontWeight.bold,
+                  fontSize: isLandscape ? 12 : 14,
                 ),
               ),
             ),
           ),
-          const SizedBox(width: 12),
+          SizedBox(width: isLandscape ? 8 : 12),
           // 추측한 숫자
           Text(
             result.guess,
-            style: const TextStyle(
+            style: TextStyle(
               color: Colors.white,
-              fontSize: 24,
+              fontSize: isLandscape ? 18 : 24,
               fontWeight: FontWeight.bold,
-              letterSpacing: 8,
+              letterSpacing: isLandscape ? 4 : 8,
             ),
           ),
           const Spacer(),
@@ -425,12 +733,14 @@ class _BaseballScreenState extends State<BaseballScreen> {
             label: 'S',
             count: result.strikes,
             color: Colors.red,
+            isLandscape: isLandscape,
           ),
-          const SizedBox(width: 8),
+          SizedBox(width: isLandscape ? 4 : 8),
           _buildResultBadge(
             label: 'B',
             count: result.balls,
             color: Colors.blue,
+            isLandscape: isLandscape,
           ),
         ],
       ),
@@ -441,9 +751,13 @@ class _BaseballScreenState extends State<BaseballScreen> {
     required String label,
     required int count,
     required Color color,
+    bool isLandscape = false,
   }) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+      padding: EdgeInsets.symmetric(
+        horizontal: isLandscape ? 8 : 12,
+        vertical: isLandscape ? 4 : 6,
+      ),
       decoration: BoxDecoration(
         color: color.withValues(alpha: 0.2),
         borderRadius: BorderRadius.circular(8),
@@ -455,7 +769,7 @@ class _BaseballScreenState extends State<BaseballScreen> {
             '$count',
             style: TextStyle(
               color: color,
-              fontSize: 18,
+              fontSize: isLandscape ? 14 : 18,
               fontWeight: FontWeight.bold,
             ),
           ),
@@ -463,7 +777,7 @@ class _BaseballScreenState extends State<BaseballScreen> {
             label,
             style: TextStyle(
               color: color.withValues(alpha: 0.8),
-              fontSize: 14,
+              fontSize: isLandscape ? 10 : 14,
             ),
           ),
         ],
