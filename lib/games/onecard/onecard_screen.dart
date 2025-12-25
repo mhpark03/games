@@ -438,6 +438,8 @@ class _OneCardScreenState extends State<OneCardScreen> with TickerProviderStateM
         if (currentTurn > 0 && !gameOver) {
           // 컴퓨터 턴이면 다음 버튼 대기
           waitingForNextTurn = true;
+        } else {
+          waitingForNextTurn = false;
         }
         return;
       }
@@ -460,9 +462,11 @@ class _OneCardScreenState extends State<OneCardScreen> with TickerProviderStateM
       // 다음 턴으로
       currentTurn = _getNextTurn(currentTurn);
 
-      // 다음이 컴퓨터면 대기 상태로
+      // 다음이 컴퓨터면 대기 상태로, 플레이어면 대기 해제
       if (currentTurn > 0 && !gameOver) {
         waitingForNextTurn = true;
+      } else {
+        waitingForNextTurn = false;
       }
     });
 
@@ -1076,12 +1080,16 @@ class _OneCardScreenState extends State<OneCardScreen> with TickerProviderStateM
                   onPressed: _restartGame,
                 ),
               ),
-              // 하단 중앙: 원카드 버튼
+              // 하단 중앙: 다음 순서 버튼 또는 원카드 버튼
               Positioned(
                 bottom: 8,
                 left: 0,
                 right: 0,
-                child: Center(child: _buildOneCardButton()),
+                child: Center(
+                  child: waitingForNextTurn
+                      ? _buildNextTurnButton()
+                      : _buildOneCardButton(),
+                ),
               ),
               // 무늬 선택 UI
               if (showSuitPicker) _buildSuitPicker(),
