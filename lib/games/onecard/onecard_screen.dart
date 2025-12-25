@@ -530,7 +530,7 @@ class _OneCardScreenState extends State<OneCardScreen> with TickerProviderStateM
         // K: 같은 무늬 더내기
         chainMode = true;
         chainSuit = card.suit;
-        gameMessage = '${_getPlayerName(currentTurn)}: K! 같은 무늬(${_getSuitName(card.suit!)}) 더내기';
+        gameMessage = '${_getPlayerName(currentTurn)}: K! 다음 사람은 ${_getSuitName(card.suit!)}만 가능';
       } else if (card.isChange) {
         if (newSuit != null) {
           declaredSuit = newSuit;
@@ -572,17 +572,6 @@ class _OneCardScreenState extends State<OneCardScreen> with TickerProviderStateM
         if (computerHands[i].length > 1) {
           computerCalledOneCard[i] = false;
         }
-      }
-
-      // 체인 모드면 같은 플레이어가 계속
-      if (chainMode) {
-        if (currentTurn > 0 && !gameOver) {
-          // 컴퓨터 턴이면 다음 버튼 대기
-          waitingForNextTurn = true;
-        } else {
-          waitingForNextTurn = false;
-        }
-        return;
       }
 
       // 턴 전환
