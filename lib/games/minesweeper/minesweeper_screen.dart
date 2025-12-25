@@ -400,7 +400,7 @@ class _MinesweeperScreenState extends State<MinesweeperScreen> {
           children: [
             _buildInfoPanel(isLandscape: false),
             Expanded(
-              child: _buildGameBoard(),
+              child: _buildGameBoard(isLandscape: false),
             ),
           ],
         ),
@@ -458,10 +458,10 @@ class _MinesweeperScreenState extends State<MinesweeperScreen> {
                   ],
                 ),
               ),
-              // 중앙: 게임 보드
+              // 중앙: 게임 보드 (가로 모드에서 회전)
               Expanded(
                 child: Center(
-                  child: _buildGameBoard(),
+                  child: _buildGameBoard(isLandscape: true),
                 ),
               ),
               // 오른쪽 패널: 정보, 새로고침
@@ -760,10 +760,14 @@ class _MinesweeperScreenState extends State<MinesweeperScreen> {
     );
   }
 
-  Widget _buildGameBoard() {
+  Widget _buildGameBoard({required bool isLandscape}) {
+    // 가로 모드에서는 행/열을 바꿔서 표시 (90도 회전 효과)
+    final displayRows = isLandscape ? cols : rows;
+    final displayCols = isLandscape ? rows : cols;
+
     return Center(
       child: AspectRatio(
-        aspectRatio: cols / rows,
+        aspectRatio: displayCols / displayRows,
         child: Container(
           margin: const EdgeInsets.all(8),
           decoration: BoxDecoration(
@@ -779,13 +783,24 @@ class _MinesweeperScreenState extends State<MinesweeperScreen> {
             child: GridView.builder(
               physics: const NeverScrollableScrollPhysics(),
               gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisCount: cols,
+                crossAxisCount: displayCols,
               ),
               itemCount: rows * cols,
               itemBuilder: (context, index) {
-                final row = index ~/ cols;
-                final col = index % cols;
-                return _buildCell(row, col);
+                final displayRow = index ~/ displayCols;
+                final displayCol = index % displayCols;
+
+                // 가로 모드에서 좌표 변환 (90도 시계방향 회전)
+                int dataRow, dataCol;
+                if (isLandscape) {
+                  dataRow = displayCol;
+                  dataCol = cols - 1 - displayRow;
+                } else {
+                  dataRow = displayRow;
+                  dataCol = displayCol;
+                }
+
+                return _buildCell(dataRow, dataCol);
               },
             ),
           ),
