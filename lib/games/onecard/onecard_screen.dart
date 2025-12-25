@@ -2124,26 +2124,41 @@ class _OneCardScreenState extends State<OneCardScreen> with TickerProviderStateM
   Widget _buildPlayerHand() {
     final playable = _getPlayableCards(playerHand);
 
-    // 2줄로 배열
-    final int cardsPerRow = (playerHand.length / 2).ceil();
-    final List<List<int>> rows = [];
-    for (int i = 0; i < playerHand.length; i += cardsPerRow) {
-      rows.add(List.generate(
-        (i + cardsPerRow > playerHand.length) ? playerHand.length - i : cardsPerRow,
-        (j) => i + j,
-      ));
-    }
-
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       child: Column(
         mainAxisSize: MainAxisSize.min,
-        children: rows.map((rowIndices) {
-          return Padding(
-            padding: const EdgeInsets.symmetric(vertical: 2),
+        children: [
+          // 플레이어 정보 (카드 수 표시)
+          Container(
+            margin: const EdgeInsets.only(bottom: 4),
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+            decoration: BoxDecoration(
+              color: isPlayerTurn ? Colors.blue : Colors.black38,
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Icon(Icons.person, color: Colors.white, size: 16),
+                const SizedBox(width: 4),
+                Text(
+                  '${playerHand.length}장',
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 13,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          // 카드 (스크롤 가능)
+          SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
             child: Row(
               mainAxisAlignment: MainAxisAlignment.center,
-              children: rowIndices.map((index) {
+              children: List.generate(playerHand.length, (index) {
                 final card = playerHand[index];
                 final canPlay = playable.contains(card) && isPlayerTurn && !gameOver;
 
@@ -2157,10 +2172,10 @@ class _OneCardScreenState extends State<OneCardScreen> with TickerProviderStateM
                     ),
                   ),
                 );
-              }).toList(),
+              }),
             ),
-          );
-        }).toList(),
+          ),
+        ],
       ),
     );
   }
