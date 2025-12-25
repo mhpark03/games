@@ -6,6 +6,7 @@ import 'games/othello/othello_screen.dart';
 import 'games/chess/chess_screen.dart';
 import 'games/janggi/janggi_screen.dart';
 import 'games/solitaire/solitaire_screen.dart';
+import 'games/minesweeper/minesweeper_screen.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
@@ -1190,6 +1191,226 @@ class HomeScreen extends StatelessWidget {
     );
   }
 
+  // 지뢰찾기 난이도 선택 다이얼로그
+  Future<void> _showMinesweeperDifficultyDialog(BuildContext context) async {
+    final hasSaved = await MinesweeperScreen.hasSavedGame();
+    final savedDifficulty = hasSaved ? await MinesweeperScreen.getSavedDifficulty() : null;
+
+    if (!context.mounted) return;
+
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          backgroundColor: Colors.grey.shade900,
+          insetPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+            side: BorderSide(color: Colors.blueGrey.withValues(alpha: 0.5), width: 2),
+          ),
+          title: const Text(
+            '난이도 선택',
+            style: TextStyle(
+              color: Colors.blueGrey,
+              fontWeight: FontWeight.bold,
+            ),
+            textAlign: TextAlign.center,
+          ),
+          content: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                if (hasSaved && savedDifficulty != null) ...[
+                  _buildMinesweeperResumeButton(context, savedDifficulty),
+                  const SizedBox(height: 16),
+                  Divider(color: Colors.grey.shade700),
+                  const SizedBox(height: 8),
+                  Text(
+                    '새 게임',
+                    style: TextStyle(
+                      color: Colors.grey.shade400,
+                      fontSize: 12,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                ],
+                _buildMinesweeperDifficultyButton(
+                  context,
+                  title: '초급',
+                  subtitle: '9x9, 지뢰 10개',
+                  icon: Icons.sentiment_satisfied,
+                  color: Colors.green,
+                  difficulty: MinesweeperDifficulty.easy,
+                ),
+                const SizedBox(height: 12),
+                _buildMinesweeperDifficultyButton(
+                  context,
+                  title: '중급',
+                  subtitle: '16x16, 지뢰 40개',
+                  icon: Icons.sentiment_neutral,
+                  color: Colors.orange,
+                  difficulty: MinesweeperDifficulty.medium,
+                ),
+                const SizedBox(height: 12),
+                _buildMinesweeperDifficultyButton(
+                  context,
+                  title: '고급',
+                  subtitle: '16x30, 지뢰 99개',
+                  icon: Icons.sentiment_very_dissatisfied,
+                  color: Colors.red,
+                  difficulty: MinesweeperDifficulty.hard,
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildMinesweeperResumeButton(BuildContext context, MinesweeperDifficulty savedDifficulty) {
+    String difficultyText;
+    switch (savedDifficulty) {
+      case MinesweeperDifficulty.easy:
+        difficultyText = '초급';
+        break;
+      case MinesweeperDifficulty.medium:
+        difficultyText = '중급';
+        break;
+      case MinesweeperDifficulty.hard:
+        difficultyText = '고급';
+        break;
+    }
+
+    return InkWell(
+      onTap: () {
+        Navigator.pop(context);
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => MinesweeperScreen(
+              difficulty: savedDifficulty,
+              resumeGame: true,
+            ),
+          ),
+        );
+      },
+      borderRadius: BorderRadius.circular(12),
+      child: Container(
+        width: double.infinity,
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        decoration: BoxDecoration(
+          color: Colors.teal.withValues(alpha: 0.2),
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(
+            color: Colors.teal.withValues(alpha: 0.5),
+            width: 2,
+          ),
+        ),
+        child: Row(
+          children: [
+            const Icon(Icons.play_arrow, color: Colors.teal, size: 28),
+            const SizedBox(width: 12),
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  '이어하기',
+                  style: TextStyle(
+                    color: Colors.teal,
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                Text(
+                  difficultyText,
+                  style: TextStyle(
+                    color: Colors.grey.shade400,
+                    fontSize: 12,
+                  ),
+                ),
+              ],
+            ),
+            const Spacer(),
+            Icon(
+              Icons.arrow_forward_ios,
+              color: Colors.teal.withValues(alpha: 0.7),
+              size: 16,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildMinesweeperDifficultyButton(
+    BuildContext context, {
+    required String title,
+    required String subtitle,
+    required IconData icon,
+    required Color color,
+    required MinesweeperDifficulty difficulty,
+  }) {
+    return InkWell(
+      onTap: () {
+        Navigator.pop(context);
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => MinesweeperScreen(
+              difficulty: difficulty,
+            ),
+          ),
+        );
+      },
+      borderRadius: BorderRadius.circular(12),
+      child: Container(
+        width: double.infinity,
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        decoration: BoxDecoration(
+          color: color.withValues(alpha: 0.1),
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(
+            color: color.withValues(alpha: 0.5),
+            width: 1,
+          ),
+        ),
+        child: Row(
+          children: [
+            Icon(icon, color: color, size: 28),
+            const SizedBox(width: 12),
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  title,
+                  style: TextStyle(
+                    color: color,
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                Text(
+                  subtitle,
+                  style: TextStyle(
+                    color: Colors.grey.shade400,
+                    fontSize: 12,
+                  ),
+                ),
+              ],
+            ),
+            const Spacer(),
+            Icon(
+              Icons.arrow_forward_ios,
+              color: color.withValues(alpha: 0.7),
+              size: 16,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -1345,6 +1566,14 @@ class HomeScreen extends StatelessWidget {
                                     ),
                                   );
                                 },
+                              ),
+                              _buildGameTile(
+                                context,
+                                title: 'MINESWEEPER',
+                                subtitle: '지뢰찾기',
+                                icon: Icons.terrain,
+                                color: Colors.blueGrey,
+                                onTap: () => _showMinesweeperDifficultyDialog(context),
                               ),
                             ],
                           );
