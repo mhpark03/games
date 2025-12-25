@@ -451,7 +451,7 @@ class _BaseballScreenState extends State<BaseballScreen> {
               ),
               // 오른쪽 패널: 입력 박스 + 숫자 버튼
               SizedBox(
-                width: 180,
+                width: 210,
                 child: Column(
                   children: [
                     const SizedBox(height: 8),
@@ -485,8 +485,8 @@ class _BaseballScreenState extends State<BaseballScreen> {
   }
 
   Widget _buildDigitBoxes({bool isLandscape = false}) {
-    final boxSize = isLandscape ? 32.0 : 56.0;
-    final fontSize = isLandscape ? 18.0 : 32.0;
+    final boxSize = isLandscape ? 40.0 : 56.0;
+    final fontSize = isLandscape ? 20.0 : 32.0;
 
     return Column(
       children: [
@@ -652,8 +652,8 @@ class _BaseballScreenState extends State<BaseballScreen> {
   }
 
   Widget _buildLandscapeNumberPad() {
-    const buttonSize = 36.0;
-    const fontSize = 16.0;
+    const buttonSize = 44.0;
+    const fontSize = 18.0;
     const spacing = 4.0;
 
     return Container(
