@@ -440,11 +440,6 @@ class _OneCardScreenState extends State<OneCardScreen> with TickerProviderStateM
   PlayingCard get topCard => discardPile.last;
 
   List<PlayingCard> _getPlayableCards(List<PlayingCard> hand) {
-    // 체인 모드 (K 카드) - 같은 무늬만 가능
-    if (chainMode && chainSuit != null) {
-      return hand.where((card) => card.suit == chainSuit).toList();
-    }
-
     // 공격 상태에서는 특정 공격 카드로만 방어 가능
     // - 2 공격: 아무 2 / 같은 무늬 A / 조커
     // - A 공격: 아무 A / 조커
@@ -527,10 +522,9 @@ class _OneCardScreenState extends State<OneCardScreen> with TickerProviderStateM
           gameMessage = '${_getPlayerName(currentTurn)}: Q! 방향 반대';
         }
       } else if (card.isChain) {
-        // K: 같은 무늬 더내기
+        // K: 2턴 건너뛰기
         chainMode = true;
-        chainSuit = card.suit;
-        gameMessage = '${_getPlayerName(currentTurn)}: K! 다음 사람은 ${_getSuitName(card.suit!)}만 가능';
+        gameMessage = '${_getPlayerName(currentTurn)}: K! 2턴 건너뛰기';
       } else if (card.isChange) {
         if (newSuit != null) {
           declaredSuit = newSuit;
@@ -578,6 +572,14 @@ class _OneCardScreenState extends State<OneCardScreen> with TickerProviderStateM
       if (skipNextTurn) {
         skipNextTurn = false;
         // 한 턴 건너뛰기
+        currentTurn = _getNextTurn(currentTurn);
+      }
+
+      // K 카드: 2턴 건너뛰기 (추가로 1턴 더 건너뜀)
+      if (chainMode) {
+        chainMode = false;
+        chainSuit = null;
+        currentTurn = _getNextTurn(currentTurn);
         currentTurn = _getNextTurn(currentTurn);
       }
 
@@ -644,13 +646,7 @@ class _OneCardScreenState extends State<OneCardScreen> with TickerProviderStateM
     if (!isPlayerTurn || gameOver || waitingForNextTurn) return;
 
     setState(() {
-      if (chainMode) {
-        // 체인 모드: 같은 무늬 카드 없으면 1장 먹기
-        _drawCards(playerHand, 1);
-        gameMessage = '같은 무늬 카드가 없어 1장을 뽑았습니다';
-        chainMode = false;
-        chainSuit = null;
-      } else if (attackStack > 0) {
+      if (attackStack > 0) {
         // 공격 받기
         _drawCards(playerHand, attackStack);
         gameMessage = '$attackStack장을 받았습니다';
@@ -705,13 +701,7 @@ class _OneCardScreenState extends State<OneCardScreen> with TickerProviderStateM
     if (playable.isEmpty) {
       // 낼 카드 없음
       setState(() {
-        if (chainMode) {
-          // 체인 모드: 같은 무늬 카드 없으면 1장 먹기
-          _drawCards(computerHand, 1);
-          gameMessage = '$computerName: 같은 무늬 카드가 없어 1장을 뽑았습니다';
-          chainMode = false;
-          chainSuit = null;
-        } else if (attackStack > 0) {
+        if (attackStack > 0) {
           _drawCards(computerHand, attackStack);
           gameMessage = '$computerName: $attackStack장을 받았습니다';
           attackStack = 0;
@@ -1404,31 +1394,6 @@ class _OneCardScreenState extends State<OneCardScreen> with TickerProviderStateM
               ),
             ),
           if (attackStack > 0) const SizedBox(width: 12),
-          // 체인 모드 (K)
-          if (chainMode && chainSuit != null)
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-              decoration: BoxDecoration(
-                color: Colors.amber.withValues(alpha: 0.7),
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  const Text('K', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 13)),
-                  const SizedBox(width: 2),
-                  Text(
-                    _getSuitSymbol(chainSuit!),
-                    style: TextStyle(
-                      color: _getSuitColor(chainSuit!),
-                      fontSize: 14,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          if (chainMode && chainSuit != null) const SizedBox(width: 12),
           // 선언된 무늬
           if (declaredSuit != null)
             Container(
@@ -1638,29 +1603,6 @@ class _OneCardScreenState extends State<OneCardScreen> with TickerProviderStateM
                     '+$attackStack',
                     style: const TextStyle(
                       color: Colors.white,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          // 체인 모드 (K)
-          if (chainMode && chainSuit != null)
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-              decoration: BoxDecoration(
-                color: Colors.amber.withValues(alpha: 0.7),
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: Row(
-                children: [
-                  const Text('K', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
-                  const SizedBox(width: 4),
-                  Text(
-                    _getSuitSymbol(chainSuit!),
-                    style: TextStyle(
-                      color: _getSuitColor(chainSuit!),
-                      fontSize: 16,
                       fontWeight: FontWeight.bold,
                     ),
                   ),
