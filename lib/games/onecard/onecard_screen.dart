@@ -1106,13 +1106,13 @@ class _OneCardScreenState extends State<OneCardScreen> with TickerProviderStateM
                               if (computerHands.length >= 3)
                                 _buildLandscapeSideComputer(2),
                               // 중앙 카드 영역
-                              Expanded(child: _buildCenterArea()),
+                              Expanded(child: _buildCenterArea(isLandscape: true)),
                               // 오른쪽 컴퓨터 (컴퓨터 1) - 반시계방향으로 첫 번째
                               if (computerHands.isNotEmpty)
                                 _buildLandscapeSideComputer(0),
                             ],
                           )
-                        : _buildCenterArea(),
+                        : _buildCenterArea(isLandscape: true),
                   ),
                   // 메시지
                   if (gameMessage != null) _buildMessage(),
@@ -1881,13 +1881,41 @@ class _OneCardScreenState extends State<OneCardScreen> with TickerProviderStateM
     return Colors.black;
   }
 
-  Widget _buildCenterArea() {
+  Widget _buildCenterArea({bool isLandscape = false}) {
     // discardPile이 비어있으면 로딩 표시
     if (discardPile.isEmpty) {
       return const Center(child: CircularProgressIndicator());
     }
 
     final showJokerInfo = topCard.isJoker && attackStack == 0 && lastNormalCard != null && lastNormalCard!.suit != null;
+
+    Widget jokerInfoWidget() {
+      return Container(
+        margin: EdgeInsets.only(top: isLandscape ? 0 : 4, left: isLandscape ? 8 : 0),
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+        decoration: BoxDecoration(
+          color: Colors.black.withValues(alpha: 0.7),
+          borderRadius: BorderRadius.circular(6),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              _getSuitSymbol(lastNormalCard!.suit!),
+              style: TextStyle(
+                color: _getSuitColor(lastNormalCard!.suit!),
+                fontSize: 14,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            Text(
+              ' / ${lastNormalCard!.rankString}',
+              style: const TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.bold),
+            ),
+          ],
+        ),
+      );
+    }
 
     return Center(
       child: Row(
@@ -1919,39 +1947,24 @@ class _OneCardScreenState extends State<OneCardScreen> with TickerProviderStateM
           ),
           const SizedBox(width: 24),
           // 버린 카드 더미 (현재 카드) + 조커 정보
-          Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              _buildPlayingCard(topCard, size: 1.2),
-              // 조커일 때 낼 수 있는 카드 정보 표시
-              if (showJokerInfo)
-                Container(
-                  margin: const EdgeInsets.only(top: 4),
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                  decoration: BoxDecoration(
-                    color: Colors.black.withValues(alpha: 0.7),
-                    borderRadius: BorderRadius.circular(6),
-                  ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Text(
-                        _getSuitSymbol(lastNormalCard!.suit!),
-                        style: TextStyle(
-                          color: _getSuitColor(lastNormalCard!.suit!),
-                          fontSize: 14,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      Text(
-                        ' / ${lastNormalCard!.rankString}',
-                        style: const TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.bold),
-                      ),
-                    ],
-                  ),
-                ),
-            ],
-          ),
+          if (isLandscape)
+            // 가로모드: 조커 정보를 카드 오른쪽에 표시
+            Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                _buildPlayingCard(topCard, size: 1.2),
+                if (showJokerInfo) jokerInfoWidget(),
+              ],
+            )
+          else
+            // 세로모드: 조커 정보를 카드 아래에 표시
+            Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                _buildPlayingCard(topCard, size: 1.2),
+                if (showJokerInfo) jokerInfoWidget(),
+              ],
+            ),
         ],
       ),
     );
