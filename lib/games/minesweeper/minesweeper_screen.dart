@@ -72,6 +72,7 @@ class _MinesweeperScreenState extends State<MinesweeperScreen> {
   bool firstClick = true;
   int flagCount = 0;
   int revealedCount = 0;
+  int hintCount = 3; // 힌트 사용 가능 횟수
 
   // 타이머
   int elapsedSeconds = 0;
@@ -118,8 +119,38 @@ class _MinesweeperScreenState extends State<MinesweeperScreen> {
     firstClick = true;
     flagCount = 0;
     revealedCount = 0;
+    hintCount = 3;
     elapsedSeconds = 0;
     startTime = null;
+  }
+
+  // 힌트 사용: 안전한 셀 하나를 자동으로 열기
+  void _useHint() {
+    if (gameOver || gameWon || hintCount <= 0 || firstClick) return;
+
+    // 안전한 숨겨진 셀 찾기
+    List<List<int>> safeCells = [];
+    for (int r = 0; r < rows; r++) {
+      for (int c = 0; c < cols; c++) {
+        if (board[r][c].state == CellState.hidden && !board[r][c].hasMine) {
+          safeCells.add([r, c]);
+        }
+      }
+    }
+
+    if (safeCells.isEmpty) return;
+
+    // 랜덤으로 하나 선택하여 열기
+    final random = Random();
+    final selected = safeCells[random.nextInt(safeCells.length)];
+
+    setState(() {
+      hintCount--;
+    });
+
+    _revealCell(selected[0], selected[1]);
+    _saveGame();
+    HapticFeedback.mediumImpact();
   }
 
   void _placeMines(int excludeRow, int excludeCol) {
@@ -265,6 +296,7 @@ class _MinesweeperScreenState extends State<MinesweeperScreen> {
       'difficulty': widget.difficulty.index,
       'flagCount': flagCount,
       'revealedCount': revealedCount,
+      'hintCount': hintCount,
       'elapsedSeconds': elapsedSeconds,
     };
 
@@ -294,6 +326,7 @@ class _MinesweeperScreenState extends State<MinesweeperScreen> {
     setState(() {
       flagCount = gameState['flagCount'] as int? ?? 0;
       revealedCount = gameState['revealedCount'] as int? ?? 0;
+      hintCount = gameState['hintCount'] as int? ?? 3;
       elapsedSeconds = gameState['elapsedSeconds'] as int? ?? 0;
       firstClick = false;
       gameOver = false;
@@ -388,6 +421,35 @@ class _MinesweeperScreenState extends State<MinesweeperScreen> {
         ),
         centerTitle: true,
         actions: [
+          Stack(
+            children: [
+              IconButton(
+                icon: const Icon(Icons.lightbulb_outline),
+                onPressed: (hintCount > 0 && !firstClick && !gameOver && !gameWon) ? _useHint : null,
+                tooltip: '힌트 ($hintCount)',
+              ),
+              if (hintCount > 0)
+                Positioned(
+                  right: 6,
+                  top: 6,
+                  child: Container(
+                    padding: const EdgeInsets.all(4),
+                    decoration: const BoxDecoration(
+                      color: Colors.amber,
+                      shape: BoxShape.circle,
+                    ),
+                    child: Text(
+                      '$hintCount',
+                      style: const TextStyle(
+                        color: Colors.black,
+                        fontSize: 10,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                ),
+            ],
+          ),
           IconButton(
             icon: const Icon(Icons.refresh),
             onPressed: _restartGame,
@@ -473,6 +535,7 @@ class _MinesweeperScreenState extends State<MinesweeperScreen> {
                     Row(
                       mainAxisAlignment: MainAxisAlignment.end,
                       children: [
+                        _buildHintButton(),
                         IconButton(
                           icon: const Icon(Icons.refresh, color: Colors.white70),
                           onPressed: _restartGame,
@@ -489,6 +552,41 @@ class _MinesweeperScreenState extends State<MinesweeperScreen> {
           ),
         ),
       ),
+    );
+  }
+
+  Widget _buildHintButton() {
+    final isEnabled = hintCount > 0 && !firstClick && !gameOver && !gameWon;
+    return Stack(
+      children: [
+        IconButton(
+          icon: Icon(
+            Icons.lightbulb_outline,
+            color: isEnabled ? Colors.amber : Colors.white30,
+          ),
+          onPressed: isEnabled ? _useHint : null,
+        ),
+        if (hintCount > 0)
+          Positioned(
+            right: 6,
+            top: 6,
+            child: Container(
+              padding: const EdgeInsets.all(4),
+              decoration: const BoxDecoration(
+                color: Colors.amber,
+                shape: BoxShape.circle,
+              ),
+              child: Text(
+                '$hintCount',
+                style: const TextStyle(
+                  color: Colors.black,
+                  fontSize: 10,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
+          ),
+      ],
     );
   }
 
