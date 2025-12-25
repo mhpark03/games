@@ -144,14 +144,32 @@ class _BaseballScreenState extends State<BaseballScreen> {
 
     setState(() {
       errorMessage = null;
+      // 현재 위치가 공개된 위치면 이전 편집 가능한 위치로 이동
+      if (revealedPositions.contains(selectedIndex)) {
+        _moveToPrevEditablePosition();
+        return;
+      }
+
       if (inputDigits[selectedIndex] != null) {
         inputDigits[selectedIndex] = null;
-      } else if (selectedIndex > 0) {
-        selectedIndex--;
-        inputDigits[selectedIndex] = null;
+      } else {
+        // 이전 편집 가능한 위치로 이동 후 삭제
+        _moveToPrevEditablePosition();
+        if (!revealedPositions.contains(selectedIndex)) {
+          inputDigits[selectedIndex] = null;
+        }
       }
     });
     HapticFeedback.selectionClick();
+  }
+
+  void _moveToPrevEditablePosition() {
+    for (int i = selectedIndex - 1; i >= 0; i--) {
+      if (!revealedPositions.contains(i)) {
+        selectedIndex = i;
+        return;
+      }
+    }
   }
 
   void _onClear() {
