@@ -1255,7 +1255,7 @@ class HomeScreen extends StatelessWidget {
                 _buildMinesweeperDifficultyButton(
                   context,
                   title: '고급',
-                  subtitle: '16x30, 지뢰 99개',
+                  subtitle: '24x16, 지뢰 75개',
                   icon: Icons.sentiment_very_dissatisfied,
                   color: Colors.red,
                   difficulty: MinesweeperDifficulty.hard,
