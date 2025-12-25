@@ -252,7 +252,7 @@ class _MinesweeperScreenState extends State<MinesweeperScreen> {
       return;
     }
 
-    final boardData = board.map((row) => row.map((cell) => {
+    final boardData = board.map((row) => row.map((cell) {
       return {
         'hasMine': cell.hasMine,
         'state': cell.state.index,
