@@ -263,13 +263,35 @@ class _OneCardScreenState extends State<OneCardScreen> with TickerProviderStateM
       return hand.where((card) => card.suit == chainSuit).toList();
     }
 
-    // 공격 상태에서는 같은 무늬/숫자의 공격 카드 또는 조커만 가능
+    // 공격 상태에서는 특정 공격 카드로만 방어 가능
+    // - 2 공격: 아무 2 / 같은 무늬 A / 조커
+    // - A 공격: 아무 A / 조커
+    // - 조커 공격: 조커만 가능
     if (attackStack > 0) {
       return hand.where((card) {
         if (!card.isAttack) return false;
+
+        // 조커 공격은 조커로만 방어
+        if (topCard.isJoker) {
+          return card.isJoker;
+        }
+
+        // 조커는 항상 방어 가능
         if (card.isJoker) return true;
-        // 같은 무늬 또는 같은 숫자
-        return card.suit == topCard.suit || card.rank == topCard.rank;
+
+        // A 공격: 아무 A로 방어 가능
+        if (topCard.rank == 1) {
+          return card.rank == 1; // A만 가능
+        }
+
+        // 2 공격: 아무 2 또는 같은 무늬 A로 방어 가능
+        if (topCard.rank == 2) {
+          if (card.rank == 2) return true; // 아무 2
+          if (card.rank == 1 && card.suit == topCard.suit) return true; // 같은 무늬 A
+          return false;
+        }
+
+        return false;
       }).toList();
     }
 
