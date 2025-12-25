@@ -1378,6 +1378,33 @@ class _OneCardScreenState extends State<OneCardScreen> with TickerProviderStateM
               ),
             ),
           if (declaredSuit != null) const SizedBox(width: 12),
+          // 턴 방향 표시 (3/4인용)
+          if (playerCount > 2)
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+              decoration: BoxDecoration(
+                color: turnDirection == 1
+                    ? Colors.teal.withValues(alpha: 0.7)
+                    : Colors.orange.withValues(alpha: 0.7),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(
+                    turnDirection == 1 ? Icons.rotate_left : Icons.rotate_right,
+                    color: Colors.white,
+                    size: 16,
+                  ),
+                  const SizedBox(width: 2),
+                  Text(
+                    turnDirection == 1 ? '반시계' : '시계',
+                    style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 11),
+                  ),
+                ],
+              ),
+            ),
+          if (playerCount > 2) const SizedBox(width: 12),
           // 턴 표시 (2인용에서만)
           if (playerCount == 2)
             Container(
@@ -1572,6 +1599,32 @@ class _OneCardScreenState extends State<OneCardScreen> with TickerProviderStateM
                   fontSize: 20,
                   fontWeight: FontWeight.bold,
                 ),
+              ),
+            ),
+          // 턴 방향 표시 (3/4인용)
+          if (playerCount > 2)
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+              decoration: BoxDecoration(
+                color: turnDirection == 1
+                    ? Colors.teal.withValues(alpha: 0.7)
+                    : Colors.orange.withValues(alpha: 0.7),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(
+                    turnDirection == 1 ? Icons.rotate_left : Icons.rotate_right,
+                    color: Colors.white,
+                    size: 18,
+                  ),
+                  const SizedBox(width: 4),
+                  Text(
+                    turnDirection == 1 ? '반시계' : '시계',
+                    style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 12),
+                  ),
+                ],
               ),
             ),
           // 턴 표시 (2인용에서만)
