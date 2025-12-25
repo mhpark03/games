@@ -48,7 +48,7 @@ class _BaseballScreenState extends State<BaseballScreen> {
   String? errorMessage;
 
   // 힌트 기능
-  int hintCount = 3;
+  int hintCount = 2;
   Set<int> revealedPositions = {};
 
   // 제외된 숫자
@@ -239,7 +239,7 @@ class _BaseballScreenState extends State<BaseballScreen> {
       gameOver = false;
       gameWon = false;
       errorMessage = null;
-      hintCount = 3;
+      hintCount = 2;
       revealedPositions.clear();
       excludedNumbers.clear();
     });
