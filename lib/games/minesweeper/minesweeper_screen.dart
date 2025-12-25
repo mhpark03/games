@@ -344,6 +344,28 @@ class _MinesweeperScreenState extends State<MinesweeperScreen> {
 
   @override
   Widget build(BuildContext context) {
+    return OrientationBuilder(
+      builder: (context, orientation) {
+        if (orientation == Orientation.landscape) {
+          // 가로 모드: 상태바 숨김 (몰입 모드)
+          SystemChrome.setEnabledSystemUIMode(
+            SystemUiMode.immersiveSticky,
+            overlays: [],
+          );
+          return _buildLandscapeLayout();
+        } else {
+          // 세로 모드: 상태바 표시
+          SystemChrome.setEnabledSystemUIMode(
+            SystemUiMode.edgeToEdge,
+            overlays: SystemUiOverlay.values,
+          );
+          return _buildPortraitLayout();
+        }
+      },
+    );
+  }
+
+  Widget _buildPortraitLayout() {
     return Scaffold(
       backgroundColor: Colors.grey.shade900,
       appBar: AppBar(
@@ -374,35 +396,96 @@ class _MinesweeperScreenState extends State<MinesweeperScreen> {
         ],
       ),
       body: SafeArea(
-        child: LayoutBuilder(
-          builder: (context, constraints) {
-            final isLandscape = constraints.maxWidth > constraints.maxHeight;
-
-            if (isLandscape) {
-              return Row(
-                children: [
-                  Expanded(
-                    flex: 2,
-                    child: _buildGameBoard(constraints),
-                  ),
-                  Expanded(
-                    flex: 1,
-                    child: _buildInfoPanel(isLandscape: true),
-                  ),
-                ],
-              );
-            } else {
-              return Column(
-                children: [
-                  _buildInfoPanel(isLandscape: false),
-                  Expanded(
-                    child: _buildGameBoard(constraints),
-                  ),
-                ],
-              );
-            }
-          },
+        child: Column(
+          children: [
+            _buildInfoPanel(isLandscape: false),
+            Expanded(
+              child: _buildGameBoard(),
+            ),
+          ],
         ),
+      ),
+    );
+  }
+
+  Widget _buildLandscapeLayout() {
+    return Scaffold(
+      body: Container(
+        color: Colors.grey.shade900,
+        child: SafeArea(
+          child: Stack(
+            children: [
+              // 게임 보드 - 화면 높이 기준으로 최대 크기
+              LayoutBuilder(
+                builder: (context, constraints) {
+                  return Center(
+                    child: _buildGameBoard(),
+                  );
+                },
+              ),
+              // 왼쪽 상단: 뒤로가기 버튼
+              Positioned(
+                top: 8,
+                left: 8,
+                child: IconButton(
+                  icon: const Icon(Icons.arrow_back, color: Colors.white70),
+                  onPressed: () => Navigator.pop(context),
+                ),
+              ),
+              // 오른쪽 상단: 정보 및 버튼
+              Positioned(
+                top: 8,
+                right: 8,
+                child: Row(
+                  children: [
+                    _buildCompactInfo(),
+                    const SizedBox(width: 8),
+                    IconButton(
+                      icon: const Icon(Icons.refresh, color: Colors.white70),
+                      onPressed: _restartGame,
+                    ),
+                  ],
+                ),
+              ),
+              // 게임 결과 메시지
+              if (gameOver || gameWon)
+                Positioned(
+                  bottom: 16,
+                  left: 0,
+                  right: 0,
+                  child: Center(child: _buildResultMessage()),
+                ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildCompactInfo() {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+      decoration: BoxDecoration(
+        color: Colors.black54,
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const Icon(Icons.flag, color: Colors.red, size: 18),
+          const SizedBox(width: 4),
+          Text(
+            '${totalMines - flagCount}',
+            style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+          ),
+          const SizedBox(width: 12),
+          const Icon(Icons.check_circle, color: Colors.green, size: 18),
+          const SizedBox(width: 4),
+          Text(
+            '$revealedCount/${rows * cols - totalMines}',
+            style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+          ),
+        ],
       ),
     );
   }
@@ -562,7 +645,7 @@ class _MinesweeperScreenState extends State<MinesweeperScreen> {
     );
   }
 
-  Widget _buildGameBoard(BoxConstraints constraints) {
+  Widget _buildGameBoard() {
     return Center(
       child: AspectRatio(
         aspectRatio: cols / rows,
