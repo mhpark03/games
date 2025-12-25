@@ -1251,9 +1251,10 @@ class _OneCardScreenState extends State<OneCardScreen> with TickerProviderStateM
 
     return Container(
       width: 55,
-      padding: const EdgeInsets.symmetric(vertical: 8),
+      padding: const EdgeInsets.symmetric(vertical: 4),
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
+        mainAxisSize: MainAxisSize.min,
         children: [
           // 컴퓨터 이름
           Container(
@@ -1280,29 +1281,53 @@ class _OneCardScreenState extends State<OneCardScreen> with TickerProviderStateM
             '${hand.length}장',
             style: const TextStyle(color: Colors.white, fontSize: 10),
           ),
-          const SizedBox(height: 8),
-          // 플레이 버튼 또는 카드 스택
+          const SizedBox(height: 4),
+          // 플레이 버튼 또는 카드 스택 (제한된 높이)
           if (showPlayButton)
             _buildPlayIconButton()
           else
-            _buildVerticalCardStack(hand.length),
+            _buildCompactVerticalCardStack(hand.length),
         ],
       ),
     );
   }
 
-  // 가로모드 하단 플레이어 핸드 (1줄)
+  // 컴팩트한 세로 카드 스택 (오버플로우 방지)
+  Widget _buildCompactVerticalCardStack(int cardCount) {
+    final overlap = 6.0;
+    final cardHeight = 24.0;
+    final maxVisible = 6;
+    final visibleCount = cardCount > maxVisible ? maxVisible : cardCount;
+    final totalHeight = cardHeight + (visibleCount - 1) * overlap;
+
+    return SizedBox(
+      width: 22,
+      height: totalHeight,
+      child: Stack(
+        children: List.generate(visibleCount, (index) {
+          return Positioned(
+            top: index * overlap,
+            child: Container(
+              width: 22,
+              height: cardHeight,
+              decoration: BoxDecoration(
+                color: Colors.blue.shade800,
+                borderRadius: BorderRadius.circular(2),
+                border: Border.all(color: Colors.white, width: 0.5),
+              ),
+            ),
+          );
+        }),
+      ),
+    );
+  }
+
+  // 가로모드 하단 플레이어 핸드 (겹치지 않는 개별 카드)
   Widget _buildLandscapePlayerHandHorizontal() {
     final playable = _getPlayableCards(playerHand);
 
-    // 카드 크기와 겹침
-    final cardWidth = 45.0;
-    final cardHeight = 63.0;
-    final overlap = 28.0;
-    final totalWidth = cardWidth + (playerHand.length - 1) * overlap;
-
     return Container(
-      height: cardHeight + 16,
+      height: 75,
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       child: Row(
         children: [
@@ -1326,32 +1351,25 @@ class _OneCardScreenState extends State<OneCardScreen> with TickerProviderStateM
             ),
           ),
           const SizedBox(width: 8),
-          // 플레이어 카드 (가로 스크롤)
+          // 플레이어 카드 (겹치지 않는 가로 스크롤)
           Expanded(
-            child: Center(
-              child: SingleChildScrollView(
-                scrollDirection: Axis.horizontal,
-                child: SizedBox(
-                  width: totalWidth,
-                  height: cardHeight,
-                  child: Stack(
-                    children: List.generate(playerHand.length, (index) {
-                      final card = playerHand[index];
-                      final canPlay = playable.contains(card) && isPlayerTurn && !gameOver && !waitingForNextTurn;
-                      return Positioned(
-                        left: index * overlap,
-                        child: GestureDetector(
-                          onTap: () => _onPlayerCardTap(index),
-                          child: Transform.translate(
-                            offset: Offset(0, canPlay ? -6 : 0),
-                            child: _buildSmallPlayingCard(card, highlight: canPlay),
-                          ),
-                        ),
-                      );
-                    }),
+            child: ListView.builder(
+              scrollDirection: Axis.horizontal,
+              itemCount: playerHand.length,
+              itemBuilder: (context, index) {
+                final card = playerHand[index];
+                final canPlay = playable.contains(card) && isPlayerTurn && !gameOver && !waitingForNextTurn;
+                return Padding(
+                  padding: const EdgeInsets.only(right: 6),
+                  child: GestureDetector(
+                    onTap: () => _onPlayerCardTap(index),
+                    child: Transform.translate(
+                      offset: Offset(0, canPlay ? -6 : 0),
+                      child: _buildSmallPlayingCard(card, highlight: canPlay),
+                    ),
                   ),
-                ),
-              ),
+                );
+              },
             ),
           ),
         ],
