@@ -107,9 +107,20 @@ class _OneCardScreenState extends State<OneCardScreen> with TickerProviderStateM
   List<PlayingCard> deck = [];
   List<PlayingCard> discardPile = [];
   List<PlayingCard> playerHand = [];
-  List<PlayingCard> computerHand = [];
+  List<List<PlayingCard>> computerHands = []; // 멀티 컴퓨터
 
-  bool isPlayerTurn = true;
+  // 인원 설정
+  int playerCount = 2;
+  bool showPlayerSelect = true;
+
+  // 턴 관리
+  int currentTurn = 0; // 0 = 플레이어, 1+ = 컴퓨터
+  int turnDirection = 1; // 1 = 정방향, -1 = 역방향
+  bool waitingForNextTurn = false;
+  PlayingCard? lastPlayedCard;
+  int? lastPlayerIndex;
+  String? lastPlayerName;
+
   bool gameOver = false;
   String? winner;
 
@@ -139,7 +150,7 @@ class _OneCardScreenState extends State<OneCardScreen> with TickerProviderStateM
 
   // 원카드 외치기
   bool playerCalledOneCard = false;
-  bool computerCalledOneCard = false;
+  List<bool> computerCalledOneCard = [];
 
   // 애니메이션
   late AnimationController _cardAnimController;
@@ -174,13 +185,15 @@ class _OneCardScreenState extends State<OneCardScreen> with TickerProviderStateM
     deck.shuffle(Random());
 
     playerHand = [];
-    computerHand = [];
+    computerHands = List.generate(playerCount - 1, (_) => <PlayingCard>[]);
     discardPile = [];
 
     // 각자 7장씩 분배
     for (int i = 0; i < 7; i++) {
       playerHand.add(deck.removeLast());
-      computerHand.add(deck.removeLast());
+      for (int j = 0; j < playerCount - 1; j++) {
+        computerHands[j].add(deck.removeLast());
+      }
     }
 
     // 첫 카드 오픈 (공격/특수 카드가 아닌 것으로)
@@ -198,7 +211,12 @@ class _OneCardScreenState extends State<OneCardScreen> with TickerProviderStateM
     discardPile.add(firstCard);
     lastNormalCard = firstCard;
 
-    isPlayerTurn = true;
+    currentTurn = 0;
+    turnDirection = 1;
+    waitingForNextTurn = false;
+    lastPlayedCard = null;
+    lastPlayerIndex = null;
+    lastPlayerName = null;
     gameOver = false;
     winner = null;
     attackStack = 0;
@@ -208,9 +226,32 @@ class _OneCardScreenState extends State<OneCardScreen> with TickerProviderStateM
     chainMode = false;
     chainSuit = null;
     playerCalledOneCard = false;
-    computerCalledOneCard = false;
+    computerCalledOneCard = List.generate(playerCount - 1, (_) => false);
     gameMessage = null;
     selectedCardIndex = null;
+  }
+
+  // 현재 플레이어 턴인지 확인
+  bool get isPlayerTurn => currentTurn == 0;
+
+  // 다음 턴으로 이동
+  int _getNextTurn(int current) {
+    int next = current + turnDirection;
+    if (next >= playerCount) next = 0;
+    if (next < 0) next = playerCount - 1;
+    return next;
+  }
+
+  // 플레이어 이름
+  String _getPlayerName(int turn) {
+    if (turn == 0) return '플레이어';
+    return '컴퓨터 $turn';
+  }
+
+  // 특정 턴의 핸드 가져오기
+  List<PlayingCard> _getHandForTurn(int turn) {
+    if (turn == 0) return playerHand;
+    return computerHands[turn - 1];
   }
 
   List<PlayingCard> _createDeck() {
@@ -305,11 +346,14 @@ class _OneCardScreenState extends State<OneCardScreen> with TickerProviderStateM
 
   void _playCard(PlayingCard card, {Suit? newSuit}) {
     setState(() {
-      if (isPlayerTurn) {
-        playerHand.remove(card);
-      } else {
-        computerHand.remove(card);
-      }
+      // 현재 턴 플레이어의 핸드에서 카드 제거
+      final currentHand = _getHandForTurn(currentTurn);
+      currentHand.remove(card);
+
+      // 마지막으로 낸 카드/플레이어 기록
+      lastPlayedCard = card;
+      lastPlayerIndex = currentTurn;
+      lastPlayerName = _getPlayerName(currentTurn);
 
       discardPile.add(card);
       declaredSuit = null; // 초기화
@@ -328,26 +372,31 @@ class _OneCardScreenState extends State<OneCardScreen> with TickerProviderStateM
       // 카드 효과 처리
       if (card.isAttack) {
         attackStack += card.attackPower;
-        gameMessage = '공격! +${card.attackPower}장 (총 $attackStack장)';
+        gameMessage = '${_getPlayerName(currentTurn)}: 공격! +${card.attackPower}장 (총 $attackStack장)';
       } else if (card.isJump) {
         skipNextTurn = true;
-        gameMessage = 'J! 상대 턴 건너뛰기';
+        gameMessage = '${_getPlayerName(currentTurn)}: J! 다음 턴 건너뛰기';
       } else if (card.isReverse) {
-        // Q: 방향 반대 (2인 게임에서는 건너뛰기와 동일)
-        skipNextTurn = true;
-        gameMessage = 'Q! 방향 반대 (턴 건너뛰기)';
+        // Q: 방향 반대
+        if (playerCount == 2) {
+          skipNextTurn = true;
+          gameMessage = '${_getPlayerName(currentTurn)}: Q! 턴 건너뛰기';
+        } else {
+          turnDirection *= -1;
+          gameMessage = '${_getPlayerName(currentTurn)}: Q! 방향 반대';
+        }
       } else if (card.isChain) {
         // K: 같은 무늬 더내기
         chainMode = true;
         chainSuit = card.suit;
-        gameMessage = 'K! 같은 무늬(${_getSuitName(card.suit!)}) 더내기';
+        gameMessage = '${_getPlayerName(currentTurn)}: K! 같은 무늬(${_getSuitName(card.suit!)}) 더내기';
       } else if (card.isChange) {
         if (newSuit != null) {
           declaredSuit = newSuit;
-          gameMessage = '7! 무늬 변경: ${_getSuitName(newSuit)}';
+          gameMessage = '${_getPlayerName(currentTurn)}: 7! 무늬 변경: ${_getSuitName(newSuit)}';
         }
       } else {
-        gameMessage = null;
+        gameMessage = '${_getPlayerName(currentTurn)}이(가) 카드를 냈습니다';
       }
 
       // 승리 체크
@@ -356,35 +405,39 @@ class _OneCardScreenState extends State<OneCardScreen> with TickerProviderStateM
         winner = '플레이어';
         return;
       }
-      if (computerHand.isEmpty) {
-        gameOver = true;
-        winner = '컴퓨터';
-        return;
+      for (int i = 0; i < computerHands.length; i++) {
+        if (computerHands[i].isEmpty) {
+          gameOver = true;
+          winner = '컴퓨터 ${i + 1}';
+          return;
+        }
       }
 
       // 원카드 체크 - 카드 낸 후 1장 남았을 때
-      if (isPlayerTurn && playerHand.length == 1 && !playerCalledOneCard) {
+      if (currentTurn == 0 && playerHand.length == 1 && !playerCalledOneCard) {
         // 원카드 안 외침 - 벌칙은 턴 넘길 때 체크
       }
-      if (!isPlayerTurn && computerHand.length == 1) {
+      if (currentTurn > 0 && computerHands[currentTurn - 1].length == 1) {
         // 컴퓨터는 자동으로 원카드 외침
-        computerCalledOneCard = true;
-        gameMessage = '컴퓨터: 원카드!';
+        computerCalledOneCard[currentTurn - 1] = true;
+        gameMessage = '${_getPlayerName(currentTurn)}: 원카드!';
       }
 
       // 카드가 2장 이상이면 원카드 상태 리셋
       if (playerHand.length > 1) {
         playerCalledOneCard = false;
       }
-      if (computerHand.length > 1) {
-        computerCalledOneCard = false;
+      for (int i = 0; i < computerHands.length; i++) {
+        if (computerHands[i].length > 1) {
+          computerCalledOneCard[i] = false;
+        }
       }
 
       // 체인 모드면 같은 플레이어가 계속
       if (chainMode) {
-        // 턴 유지, 같은 무늬 카드 더내기
-        if (!isPlayerTurn && !gameOver) {
-          Future.delayed(const Duration(milliseconds: 800), _computerTurn);
+        if (currentTurn > 0 && !gameOver) {
+          // 컴퓨터 턴이면 다음 버튼 대기
+          waitingForNextTurn = true;
         }
         return;
       }
@@ -392,24 +445,38 @@ class _OneCardScreenState extends State<OneCardScreen> with TickerProviderStateM
       // 턴 전환
       if (skipNextTurn) {
         skipNextTurn = false;
-        // 턴 유지
-      } else {
-        // 원카드 벌칙 체크 (턴 넘기기 전)
-        if (isPlayerTurn && playerHand.length == 1 && !playerCalledOneCard) {
-          // 플레이어가 원카드 안 외침 - 2장 벌칙
-          _drawCards(playerHand, 2);
-          gameMessage = '원카드를 외치지 않아 2장 벌칙!';
-          playerCalledOneCard = false;
-        }
-        isPlayerTurn = !isPlayerTurn;
+        // 한 턴 건너뛰기
+        currentTurn = _getNextTurn(currentTurn);
       }
 
-      if (!isPlayerTurn && !gameOver) {
-        Future.delayed(const Duration(milliseconds: 800), _computerTurn);
+      // 원카드 벌칙 체크 (턴 넘기기 전)
+      if (currentTurn == 0 && playerHand.length == 1 && !playerCalledOneCard) {
+        // 플레이어가 원카드 안 외침 - 2장 벌칙
+        _drawCards(playerHand, 2);
+        gameMessage = '원카드를 외치지 않아 2장 벌칙!';
+        playerCalledOneCard = false;
+      }
+
+      // 다음 턴으로
+      currentTurn = _getNextTurn(currentTurn);
+
+      // 다음이 컴퓨터면 대기 상태로
+      if (currentTurn > 0 && !gameOver) {
+        waitingForNextTurn = true;
       }
     });
 
     HapticFeedback.mediumImpact();
+  }
+
+  // 다음 순서 버튼 눌렀을 때
+  void _onNextTurn() {
+    setState(() {
+      waitingForNextTurn = false;
+    });
+    if (currentTurn > 0 && !gameOver) {
+      Future.delayed(const Duration(milliseconds: 300), () => _computerTurn(currentTurn));
+    }
   }
 
   void _callOneCard() {
@@ -424,7 +491,7 @@ class _OneCardScreenState extends State<OneCardScreen> with TickerProviderStateM
   }
 
   void _playerDrawCards() {
-    if (!isPlayerTurn || gameOver) return;
+    if (!isPlayerTurn || gameOver || waitingForNextTurn) return;
 
     setState(() {
       if (chainMode) {
@@ -447,25 +514,34 @@ class _OneCardScreenState extends State<OneCardScreen> with TickerProviderStateM
       // 파산 체크
       if (playerHand.length >= bankruptcyLimit) {
         gameOver = true;
-        winner = '컴퓨터';
+        winner = _getBankruptcyWinner();
         gameMessage = '파산! 카드가 ${playerHand.length}장이 되었습니다';
         return;
       }
 
-      isPlayerTurn = false;
+      // 다음 턴으로
+      currentTurn = _getNextTurn(currentTurn);
 
-      if (!gameOver) {
-        Future.delayed(const Duration(milliseconds: 800), _computerTurn);
+      if (!gameOver && currentTurn > 0) {
+        waitingForNextTurn = true;
       }
     });
 
     HapticFeedback.lightImpact();
   }
 
-  void _computerTurn() {
-    if (gameOver || isPlayerTurn) return;
+  String _getBankruptcyWinner() {
+    // 파산하지 않은 플레이어 중 카드가 가장 적은 사람
+    if (playerCount == 2) return playerHand.length >= bankruptcyLimit ? '컴퓨터 1' : '플레이어';
+    return '다른 플레이어';
+  }
 
+  void _computerTurn(int computerIndex) {
+    if (gameOver || computerIndex == 0) return;
+
+    final computerHand = computerHands[computerIndex - 1];
     final playable = _getPlayableCards(computerHand);
+    final computerName = _getPlayerName(computerIndex);
 
     if (playable.isEmpty) {
       // 낼 카드 없음
@@ -473,27 +549,39 @@ class _OneCardScreenState extends State<OneCardScreen> with TickerProviderStateM
         if (chainMode) {
           // 체인 모드: 같은 무늬 카드 없으면 1장 먹기
           _drawCards(computerHand, 1);
-          gameMessage = '컴퓨터가 같은 무늬 카드가 없어 1장을 뽑았습니다';
+          gameMessage = '$computerName: 같은 무늬 카드가 없어 1장을 뽑았습니다';
           chainMode = false;
           chainSuit = null;
         } else if (attackStack > 0) {
           _drawCards(computerHand, attackStack);
-          gameMessage = '컴퓨터가 $attackStack장을 받았습니다';
+          gameMessage = '$computerName: $attackStack장을 받았습니다';
           attackStack = 0;
         } else {
           _drawCards(computerHand, 1);
-          gameMessage = '컴퓨터가 1장을 뽑았습니다';
+          gameMessage = '$computerName: 1장을 뽑았습니다';
         }
+
+        lastPlayedCard = null;
+        lastPlayerIndex = computerIndex;
+        lastPlayerName = computerName;
 
         // 파산 체크
         if (computerHand.length >= bankruptcyLimit) {
           gameOver = true;
           winner = '플레이어';
-          gameMessage = '컴퓨터 파산! 카드가 ${computerHand.length}장이 되었습니다';
+          gameMessage = '$computerName 파산! 카드가 ${computerHand.length}장이 되었습니다';
           return;
         }
 
-        isPlayerTurn = true;
+        // 다음 턴
+        currentTurn = _getNextTurn(currentTurn);
+
+        // 다음이 플레이어면 대기 해제, 컴퓨터면 계속 대기
+        if (currentTurn == 0) {
+          waitingForNextTurn = false;
+        } else {
+          waitingForNextTurn = true;
+        }
       });
     } else {
       // 카드 선택 (우선순위: 공격 > 점프 > 무늬변경 > 일반)
@@ -619,8 +707,20 @@ class _OneCardScreenState extends State<OneCardScreen> with TickerProviderStateM
     HapticFeedback.mediumImpact();
   }
 
+  void _selectPlayerCount(int count) {
+    setState(() {
+      playerCount = count;
+      showPlayerSelect = false;
+      _initGame();
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
+    if (showPlayerSelect) {
+      return _buildPlayerSelectScreen();
+    }
+
     return Scaffold(
       body: OrientationBuilder(
         builder: (context, orientation) {
@@ -642,18 +742,111 @@ class _OneCardScreenState extends State<OneCardScreen> with TickerProviderStateM
     );
   }
 
+  Widget _buildPlayerSelectScreen() {
+    return Scaffold(
+      backgroundColor: Colors.green.shade900,
+      appBar: AppBar(
+        backgroundColor: Colors.green.shade800,
+        foregroundColor: Colors.white,
+        title: const Text('원카드', style: TextStyle(fontWeight: FontWeight.bold)),
+        centerTitle: true,
+      ),
+      body: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Text(
+              '인원 선택',
+              style: TextStyle(
+                color: Colors.white,
+                fontSize: 24,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            const SizedBox(height: 32),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                _buildPlayerCountButton(2),
+                const SizedBox(width: 16),
+                _buildPlayerCountButton(3),
+                const SizedBox(width: 16),
+                _buildPlayerCountButton(4),
+              ],
+            ),
+            const SizedBox(height: 24),
+            Text(
+              '컴퓨터 상대와 게임합니다',
+              style: TextStyle(
+                color: Colors.white.withValues(alpha: 0.7),
+                fontSize: 14,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildPlayerCountButton(int count) {
+    return GestureDetector(
+      onTap: () => _selectPlayerCount(count),
+      child: Container(
+        width: 80,
+        height: 80,
+        decoration: BoxDecoration(
+          color: Colors.green.shade700,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: Colors.white, width: 2),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.3),
+              blurRadius: 8,
+              offset: const Offset(2, 2),
+            ),
+          ],
+        ),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Text(
+              '$count',
+              style: const TextStyle(
+                color: Colors.white,
+                fontSize: 32,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            Text(
+              '인',
+              style: TextStyle(
+                color: Colors.white.withValues(alpha: 0.8),
+                fontSize: 14,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   Widget _buildPortraitLayout() {
     return Scaffold(
       backgroundColor: Colors.green.shade900,
       appBar: AppBar(
         backgroundColor: Colors.green.shade800,
         foregroundColor: Colors.white,
-        title: const Text(
-          '원카드',
-          style: TextStyle(fontWeight: FontWeight.bold),
+        title: Text(
+          '원카드 (${playerCount}인)',
+          style: const TextStyle(fontWeight: FontWeight.bold),
         ),
         centerTitle: true,
         actions: [
+          IconButton(
+            icon: const Icon(Icons.people),
+            onPressed: () => setState(() => showPlayerSelect = true),
+            tooltip: '인원 변경',
+          ),
           IconButton(
             icon: const Icon(Icons.refresh),
             onPressed: _restartGame,
@@ -666,18 +859,33 @@ class _OneCardScreenState extends State<OneCardScreen> with TickerProviderStateM
           children: [
             Column(
               children: [
-                // 컴퓨터 핸드
-                _buildComputerHand(),
+                // 상단 컴퓨터 (컴퓨터 1)
+                if (computerHands.isNotEmpty) _buildComputerHandWidget(0),
                 // 게임 정보
                 _buildGameInfo(),
-                // 중앙 카드 영역
+                // 중앙 영역 (좌우 컴퓨터 + 카드)
                 Expanded(
-                  child: _buildCenterArea(),
+                  child: playerCount > 2
+                      ? Row(
+                          children: [
+                            // 왼쪽 컴퓨터 (컴퓨터 2)
+                            if (computerHands.length >= 2)
+                              _buildSideComputerHand(1),
+                            // 중앙 카드 영역
+                            Expanded(child: _buildCenterArea()),
+                            // 오른쪽 컴퓨터 (컴퓨터 3)
+                            if (computerHands.length >= 3)
+                              _buildSideComputerHand(2),
+                          ],
+                        )
+                      : _buildCenterArea(),
                 ),
                 // 메시지
                 if (gameMessage != null) _buildMessage(),
+                // 다음 순서 버튼
+                if (waitingForNextTurn) _buildNextTurnButton(),
                 // 원카드 버튼
-                _buildOneCardButton(),
+                if (!waitingForNextTurn) _buildOneCardButton(),
                 // 플레이어 핸드
                 _buildPlayerHand(),
               ],
@@ -687,6 +895,113 @@ class _OneCardScreenState extends State<OneCardScreen> with TickerProviderStateM
             // 게임 오버 오버레이
             if (gameOver) _buildGameOverOverlay(),
           ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildNextTurnButton() {
+    return GestureDetector(
+      onTap: _onNextTurn,
+      child: Container(
+        margin: const EdgeInsets.symmetric(vertical: 8),
+        padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 12),
+        decoration: BoxDecoration(
+          color: Colors.blue.shade700,
+          borderRadius: BorderRadius.circular(24),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.blue.withValues(alpha: 0.5),
+              blurRadius: 8,
+              spreadRadius: 1,
+            ),
+          ],
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Icon(Icons.play_arrow, color: Colors.white, size: 24),
+            const SizedBox(width: 8),
+            Text(
+              '다음 순서 (${_getPlayerName(currentTurn)})',
+              style: const TextStyle(
+                color: Colors.white,
+                fontSize: 16,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSideComputerHand(int computerIndex) {
+    if (computerIndex >= computerHands.length) return const SizedBox();
+
+    final hand = computerHands[computerIndex];
+    final isCurrentTurn = currentTurn == computerIndex + 1;
+
+    return Container(
+      width: 50,
+      padding: const EdgeInsets.symmetric(vertical: 8),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          // 컴퓨터 이름
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+            decoration: BoxDecoration(
+              color: isCurrentTurn ? Colors.blue : Colors.black38,
+              borderRadius: BorderRadius.circular(4),
+            ),
+            child: Text(
+              'C${computerIndex + 1}',
+              style: const TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold),
+            ),
+          ),
+          const SizedBox(height: 4),
+          // 카드 수
+          Text(
+            '${hand.length}',
+            style: const TextStyle(color: Colors.white, fontSize: 12),
+          ),
+          const SizedBox(height: 8),
+          // 카드 뒷면 스택
+          Expanded(
+            child: _buildVerticalCardStack(hand.length),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildVerticalCardStack(int cardCount) {
+    final overlap = 12.0;
+    final cardHeight = 35.0;
+    final maxVisible = 8;
+    final visibleCount = cardCount > maxVisible ? maxVisible : cardCount;
+    final totalHeight = cardHeight + (visibleCount - 1) * overlap;
+
+    return Center(
+      child: SizedBox(
+        width: 30,
+        height: totalHeight,
+        child: Stack(
+          children: List.generate(visibleCount, (index) {
+            return Positioned(
+              top: index * overlap,
+              child: Container(
+                width: 30,
+                height: cardHeight,
+                decoration: BoxDecoration(
+                  color: Colors.blue.shade800,
+                  borderRadius: BorderRadius.circular(3),
+                  border: Border.all(color: Colors.white, width: 0.5),
+                ),
+              ),
+            );
+          }),
         ),
       ),
     );
@@ -798,10 +1113,13 @@ class _OneCardScreenState extends State<OneCardScreen> with TickerProviderStateM
   }
 
   Widget _buildLandscapeComputerHand() {
+    if (computerHands.isEmpty) return const SizedBox();
+    final hand = computerHands[0];
+
     // 카드 겹침 정도 계산
     final cardHeight = 56.0;
     final overlap = 18.0;
-    final totalHeight = cardHeight + (computerHand.length - 1) * overlap;
+    final totalHeight = cardHeight + (hand.length - 1) * overlap;
 
     return Container(
       width: 60,
@@ -811,7 +1129,7 @@ class _OneCardScreenState extends State<OneCardScreen> with TickerProviderStateM
           width: 40,
           height: totalHeight,
           child: Stack(
-            children: List.generate(computerHand.length, (index) {
+            children: List.generate(hand.length, (index) {
               return Positioned(
                 top: index * overlap,
                 child: _buildSmallCardBack(),
@@ -999,7 +1317,7 @@ class _OneCardScreenState extends State<OneCardScreen> with TickerProviderStateM
                 const Icon(Icons.computer, color: Colors.white70, size: 16),
                 const SizedBox(width: 4),
                 Text(
-                  '${computerHand.length}',
+                  computerHands.isNotEmpty ? '${computerHands[0].length}' : '0',
                   style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 13),
                 ),
               ],
@@ -1109,26 +1427,74 @@ class _OneCardScreenState extends State<OneCardScreen> with TickerProviderStateM
     );
   }
 
-  Widget _buildComputerHand() {
+  Widget _buildComputerHandWidget(int computerIndex) {
+    if (computerIndex >= computerHands.length) return const SizedBox();
+
+    final hand = computerHands[computerIndex];
+    final isCurrentTurn = currentTurn == computerIndex + 1;
+
     // 카드 겹침 정도 계산 (카드 수에 따라 동적)
     final cardWidth = 50.0;
     final overlap = 25.0; // 겹침 정도
-    final totalWidth = cardWidth + (computerHand.length - 1) * overlap;
+    final totalWidth = cardWidth + (hand.length - 1) * overlap;
 
     return Container(
-      height: 80,
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+      height: 90,
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      child: Column(
+        children: [
+          // 컴퓨터 이름과 카드 수
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+            decoration: BoxDecoration(
+              color: isCurrentTurn ? Colors.blue : Colors.black38,
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Text(
+              '컴퓨터 ${computerIndex + 1} (${hand.length}장)',
+              style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold),
+            ),
+          ),
+          const SizedBox(height: 4),
+          // 카드 스택
+          Expanded(
+            child: Center(
+              child: SizedBox(
+                width: totalWidth,
+                height: 60,
+                child: Stack(
+                  children: List.generate(hand.length, (index) {
+                    return Positioned(
+                      left: index * overlap,
+                      child: _buildSmallCardBackForTop(),
+                    );
+                  }),
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSmallCardBackForTop() {
+    return Container(
+      width: 45,
+      height: 60,
+      decoration: BoxDecoration(
+        color: Colors.blue.shade800,
+        borderRadius: BorderRadius.circular(5),
+        border: Border.all(color: Colors.white, width: 1),
+      ),
       child: Center(
-        child: SizedBox(
-          width: totalWidth,
-          height: 70,
-          child: Stack(
-            children: List.generate(computerHand.length, (index) {
-              return Positioned(
-                left: index * overlap,
-                child: _buildCardBack(),
-              );
-            }),
+        child: Container(
+          width: 35,
+          height: 50,
+          decoration: BoxDecoration(
+            color: Colors.blue.shade700,
+            borderRadius: BorderRadius.circular(3),
+            border: Border.all(color: Colors.blue.shade300, width: 1),
           ),
         ),
       ),
@@ -1186,7 +1552,7 @@ class _OneCardScreenState extends State<OneCardScreen> with TickerProviderStateM
                 const Icon(Icons.computer, color: Colors.white70, size: 18),
                 const SizedBox(width: 6),
                 Text(
-                  '${computerHand.length}장',
+                  computerHands.isNotEmpty ? '${computerHands[0].length}장' : '0장',
                   style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
                 ),
               ],
