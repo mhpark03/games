@@ -1314,14 +1314,14 @@ class _OneCardScreenState extends State<OneCardScreen> with TickerProviderStateM
                   child: Stack(
                     children: List.generate(playerHand.length, (index) {
                       final card = playerHand[index];
-                      final canPlay = playable.contains(card);
+                      final canPlay = playable.contains(card) && isPlayerTurn && !gameOver && !waitingForNextTurn;
                       return Positioned(
                         left: index * overlap,
                         child: GestureDetector(
-                          onTap: canPlay ? () => _onCardTap(card) : null,
+                          onTap: () => _onPlayerCardTap(index),
                           child: Transform.translate(
-                            offset: Offset(0, canPlay && isPlayerTurn ? -6 : 0),
-                            child: _buildSmallPlayingCard(card, highlight: canPlay && isPlayerTurn),
+                            offset: Offset(0, canPlay ? -6 : 0),
+                            child: _buildSmallPlayingCard(card, highlight: canPlay),
                           ),
                         ),
                       );
