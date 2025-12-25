@@ -51,6 +51,9 @@ class _BaseballScreenState extends State<BaseballScreen> {
   int hintCount = 3;
   Set<int> revealedPositions = {};
 
+  // 제외된 숫자
+  Set<int> excludedNumbers = {};
+
   @override
   void initState() {
     super.initState();
@@ -195,8 +198,22 @@ class _BaseballScreenState extends State<BaseballScreen> {
       errorMessage = null;
       hintCount = 3;
       revealedPositions.clear();
+      excludedNumbers.clear();
     });
     HapticFeedback.mediumImpact();
+  }
+
+  void _toggleExclude(int number) {
+    if (gameOver) return;
+
+    setState(() {
+      if (excludedNumbers.contains(number)) {
+        excludedNumbers.remove(number);
+      } else {
+        excludedNumbers.add(number);
+      }
+    });
+    HapticFeedback.selectionClick();
   }
 
   void _useHint() {
@@ -629,35 +646,54 @@ class _BaseballScreenState extends State<BaseballScreen> {
     // 이미 사용된 숫자 체크
     final isUsed = inputDigits.contains(number.toString()) &&
         inputDigits[selectedIndex] != number.toString();
+    // 제외된 숫자 체크
+    final isExcluded = excludedNumbers.contains(number);
 
     return GestureDetector(
-      onTap: (isDisabled || isUsed) ? null : () => _onDigitInput(number),
+      onTap: (isDisabled || isUsed || isExcluded) ? null : () => _onDigitInput(number),
+      onLongPress: () => _toggleExclude(number),
+      onDoubleTap: () => _toggleExclude(number),
       child: Container(
         width: size,
         height: size,
         margin: EdgeInsets.all(margin),
         decoration: BoxDecoration(
-          color: (isDisabled || isUsed)
-              ? Colors.grey.shade700
-              : Colors.grey.shade900,
+          color: isExcluded
+              ? Colors.red.withValues(alpha: 0.15)
+              : (isDisabled || isUsed)
+                  ? Colors.grey.shade700
+                  : Colors.grey.shade900,
           borderRadius: BorderRadius.circular(size > 40 ? 12 : 8),
           border: Border.all(
-            color: (isDisabled || isUsed)
-                ? Colors.grey.shade600
-                : Colors.grey.shade500,
+            color: isExcluded
+                ? Colors.red.withValues(alpha: 0.5)
+                : (isDisabled || isUsed)
+                    ? Colors.grey.shade600
+                    : Colors.grey.shade500,
           ),
         ),
-        child: Center(
-          child: Text(
-            '$number',
-            style: TextStyle(
-              color: (isDisabled || isUsed)
-                  ? Colors.grey.shade600
-                  : Colors.white,
-              fontSize: fontSize,
-              fontWeight: FontWeight.bold,
+        child: Stack(
+          alignment: Alignment.center,
+          children: [
+            Text(
+              '$number',
+              style: TextStyle(
+                color: isExcluded
+                    ? Colors.red.withValues(alpha: 0.5)
+                    : (isDisabled || isUsed)
+                        ? Colors.grey.shade600
+                        : Colors.white,
+                fontSize: fontSize,
+                fontWeight: FontWeight.bold,
+              ),
             ),
-          ),
+            if (isExcluded)
+              Icon(
+                Icons.close,
+                color: Colors.red.withValues(alpha: 0.7),
+                size: size * 0.7,
+              ),
+          ],
         ),
       ),
     );
