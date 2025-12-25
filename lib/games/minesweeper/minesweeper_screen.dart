@@ -413,51 +413,166 @@ class _MinesweeperScreenState extends State<MinesweeperScreen> {
       body: Container(
         color: Colors.grey.shade900,
         child: SafeArea(
-          child: Stack(
+          child: Row(
             children: [
-              // 게임 보드 - 화면 높이 기준으로 최대 크기
-              LayoutBuilder(
-                builder: (context, constraints) {
-                  return Center(
-                    child: _buildGameBoard(),
-                  );
-                },
-              ),
-              // 왼쪽 상단: 뒤로가기 버튼
-              Positioned(
-                top: 8,
-                left: 8,
-                child: IconButton(
-                  icon: const Icon(Icons.arrow_back, color: Colors.white70),
-                  onPressed: () => Navigator.pop(context),
-                ),
-              ),
-              // 오른쪽 상단: 정보 및 버튼
-              Positioned(
-                top: 8,
-                right: 8,
-                child: Row(
+              // 왼쪽 패널: 뒤로가기, 제목, 게임 결과
+              SizedBox(
+                width: 140,
+                child: Column(
                   children: [
-                    _buildCompactInfo(),
-                    const SizedBox(width: 8),
-                    IconButton(
-                      icon: const Icon(Icons.refresh, color: Colors.white70),
-                      onPressed: _restartGame,
+                    const SizedBox(height: 8),
+                    Row(
+                      children: [
+                        IconButton(
+                          icon: const Icon(Icons.arrow_back, color: Colors.white70),
+                          onPressed: () => Navigator.pop(context),
+                        ),
+                      ],
                     ),
+                    const SizedBox(height: 16),
+                    const Icon(Icons.terrain, color: Colors.blueGrey, size: 32),
+                    const SizedBox(height: 8),
+                    Text(
+                      'MINE',
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 18,
+                        letterSpacing: 2,
+                        color: Colors.blueGrey.shade100,
+                      ),
+                    ),
+                    Text(
+                      'SWEEPER',
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 18,
+                        letterSpacing: 2,
+                        color: Colors.blueGrey.shade100,
+                      ),
+                    ),
+                    const Spacer(),
+                    if (gameOver || gameWon) ...[
+                      _buildCompactResultMessage(),
+                      const SizedBox(height: 16),
+                    ],
                   ],
                 ),
               ),
-              // 게임 결과 메시지
-              if (gameOver || gameWon)
-                Positioned(
-                  bottom: 16,
-                  left: 0,
-                  right: 0,
-                  child: Center(child: _buildResultMessage()),
+              // 중앙: 게임 보드
+              Expanded(
+                child: Center(
+                  child: _buildGameBoard(),
                 ),
+              ),
+              // 오른쪽 패널: 정보, 새로고침
+              SizedBox(
+                width: 140,
+                child: Column(
+                  children: [
+                    const SizedBox(height: 8),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.end,
+                      children: [
+                        IconButton(
+                          icon: const Icon(Icons.refresh, color: Colors.white70),
+                          onPressed: _restartGame,
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 16),
+                    _buildVerticalInfo(),
+                    const Spacer(),
+                  ],
+                ),
+              ),
             ],
           ),
         ),
+      ),
+    );
+  }
+
+  Widget _buildCompactResultMessage() {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      decoration: BoxDecoration(
+        color: gameWon
+            ? Colors.green.withValues(alpha: 0.2)
+            : Colors.red.withValues(alpha: 0.2),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: gameWon ? Colors.green : Colors.red,
+          width: 2,
+        ),
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(
+            gameWon ? Icons.emoji_events : Icons.sentiment_very_dissatisfied,
+            color: gameWon ? Colors.amber : Colors.red,
+            size: 28,
+          ),
+          const SizedBox(height: 4),
+          Text(
+            gameWon ? '축하합니다!' : '게임 오버',
+            style: TextStyle(
+              color: gameWon ? Colors.green : Colors.red,
+              fontSize: 14,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildVerticalInfo() {
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: Colors.black38,
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const Icon(Icons.flag, color: Colors.red, size: 24),
+          const SizedBox(height: 4),
+          Text(
+            '${totalMines - flagCount}',
+            style: const TextStyle(
+              color: Colors.white,
+              fontWeight: FontWeight.bold,
+              fontSize: 18,
+            ),
+          ),
+          Text(
+            '남은 지뢰',
+            style: TextStyle(
+              color: Colors.grey.shade400,
+              fontSize: 10,
+            ),
+          ),
+          const SizedBox(height: 16),
+          const Icon(Icons.check_circle, color: Colors.green, size: 24),
+          const SizedBox(height: 4),
+          Text(
+            '$revealedCount',
+            style: const TextStyle(
+              color: Colors.white,
+              fontWeight: FontWeight.bold,
+              fontSize: 18,
+            ),
+          ),
+          Text(
+            '/ ${rows * cols - totalMines}',
+            style: TextStyle(
+              color: Colors.grey.shade400,
+              fontSize: 12,
+            ),
+          ),
+        ],
       ),
     );
   }
