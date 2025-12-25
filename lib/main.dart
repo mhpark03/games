@@ -8,6 +8,7 @@ import 'games/janggi/janggi_screen.dart';
 import 'games/solitaire/solitaire_screen.dart';
 import 'games/minesweeper/minesweeper_screen.dart';
 import 'games/baseball/baseball_screen.dart';
+import 'games/onecard/onecard_screen.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
@@ -1700,6 +1701,19 @@ class HomeScreen extends StatelessWidget {
                                 icon: Icons.sports_baseball,
                                 color: Colors.deepOrange,
                                 onTap: () => _showBaseballDifficultyDialog(context),
+                              ),
+                              _buildGameTile(
+                                context,
+                                title: '원카드',
+                                subtitle: 'One Card',
+                                icon: Icons.style,
+                                color: Colors.purple,
+                                onTap: () => Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) => const OneCardScreen(),
+                                  ),
+                                ),
                               ),
                             ],
                           );
