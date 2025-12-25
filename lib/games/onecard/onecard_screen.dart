@@ -975,23 +975,30 @@ class _OneCardScreenState extends State<OneCardScreen> with TickerProviderStateM
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          // 컴퓨터 이름
+          // 컴퓨터 이름 (아이콘 + 번호)
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
             decoration: BoxDecoration(
               color: isCurrentTurn ? Colors.blue : Colors.black38,
               borderRadius: BorderRadius.circular(4),
             ),
-            child: Text(
-              'C${computerIndex + 1}',
-              style: const TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Icon(Icons.computer, color: Colors.white, size: 10),
+                const SizedBox(width: 2),
+                Text(
+                  '${computerIndex + 1}',
+                  style: const TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold),
+                ),
+              ],
             ),
           ),
           const SizedBox(height: 4),
           // 카드 수
           Text(
-            '${hand.length}',
-            style: const TextStyle(color: Colors.white, fontSize: 12),
+            '${hand.length}장',
+            style: const TextStyle(color: Colors.white, fontSize: 11),
           ),
           const SizedBox(height: 8),
           // 카드 뒷면 스택
@@ -1466,16 +1473,23 @@ class _OneCardScreenState extends State<OneCardScreen> with TickerProviderStateM
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       child: Column(
         children: [
-          // 컴퓨터 이름과 카드 수
+          // 컴퓨터 이름과 카드 수 (아이콘 + 번호 + 장수)
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
             decoration: BoxDecoration(
               color: isCurrentTurn ? Colors.blue : Colors.black38,
               borderRadius: BorderRadius.circular(8),
             ),
-            child: Text(
-              '컴퓨터 ${computerIndex + 1} (${hand.length}장)',
-              style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Icon(Icons.computer, color: Colors.white, size: 14),
+                const SizedBox(width: 4),
+                Text(
+                  '${computerIndex + 1} (${hand.length}장)',
+                  style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold),
+                ),
+              ],
             ),
           ),
           const SizedBox(height: 4),
