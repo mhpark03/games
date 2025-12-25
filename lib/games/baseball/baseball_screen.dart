@@ -81,6 +81,13 @@ class _BaseballScreenState extends State<BaseballScreen> {
   void _onDigitInput(int digit) {
     if (gameOver) return;
 
+    // 힌트로 공개된 위치는 입력 불가
+    if (revealedPositions.contains(selectedIndex)) {
+      // 다음 입력 가능한 위치로 이동
+      _moveToNextEditablePosition();
+      return;
+    }
+
     final digitStr = digit.toString();
 
     // 첫 자리에 0 입력 불가
@@ -106,12 +113,30 @@ class _BaseballScreenState extends State<BaseballScreen> {
     setState(() {
       errorMessage = null;
       inputDigits[selectedIndex] = digitStr;
-      // 다음 빈 칸으로 이동
-      if (selectedIndex < digitCount - 1) {
-        selectedIndex++;
-      }
+      // 다음 편집 가능한 칸으로 이동
+      _moveToNextEditablePosition();
     });
     HapticFeedback.selectionClick();
+  }
+
+  void _moveToNextEditablePosition() {
+    for (int i = selectedIndex + 1; i < digitCount; i++) {
+      if (!revealedPositions.contains(i)) {
+        setState(() {
+          selectedIndex = i;
+        });
+        return;
+      }
+    }
+    // 뒤에 없으면 앞에서 찾기
+    for (int i = 0; i < selectedIndex; i++) {
+      if (!revealedPositions.contains(i) && inputDigits[i] == null) {
+        setState(() {
+          selectedIndex = i;
+        });
+        return;
+      }
+    }
   }
 
   void _onDelete() {
@@ -242,6 +267,15 @@ class _BaseballScreenState extends State<BaseballScreen> {
       inputDigits[positionToReveal] = revealedDigit;
       // 해당 숫자 버튼 제외 처리
       excludedNumbers.add(revealedNumber);
+      // 현재 선택된 위치가 공개되었다면 다른 위치로 이동
+      if (selectedIndex == positionToReveal) {
+        for (int i = 0; i < digitCount; i++) {
+          if (!revealedPositions.contains(i)) {
+            selectedIndex = i;
+            break;
+          }
+        }
+      }
     });
     HapticFeedback.mediumImpact();
   }
