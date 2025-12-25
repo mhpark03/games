@@ -1116,9 +1116,7 @@ class _OneCardScreenState extends State<OneCardScreen> with TickerProviderStateM
                   ),
                   // 메시지
                   if (gameMessage != null) _buildMessage(),
-                  // 원카드 버튼
-                  _buildOneCardButton(),
-                  // 플레이어 핸드 (하단 1줄)
+                  // 플레이어 핸드 (하단 1줄) - 원카드 버튼 포함
                   _buildLandscapePlayerHandHorizontal(),
                 ],
               ),
@@ -1325,7 +1323,9 @@ class _OneCardScreenState extends State<OneCardScreen> with TickerProviderStateM
   // 가로모드 하단 플레이어 핸드 (겹치지 않는 개별 카드)
   Widget _buildLandscapePlayerHandHorizontal() {
     final playable = _getPlayableCards(playerHand);
-    final showOneCardButton = playerHand.length == 1 && isPlayerTurn && !gameOver;
+    // 원카드 버튼: 1장이고 아직 외치지 않았을 때 표시 (타이머 진행 중이거나 플레이어 턴일 때)
+    final showOneCardButton = playerHand.length == 1 && !gameOver &&
+        (!playerCalledOneCard || _oneCardTimeLeft > 0);
 
     return Container(
       height: 75,
@@ -2107,8 +2107,9 @@ class _OneCardScreenState extends State<OneCardScreen> with TickerProviderStateM
   }
 
   Widget _buildOneCardButton() {
-    // 카드가 1장일 때만 버튼 표시
-    final showButton = playerHand.length == 1 && isPlayerTurn && !gameOver;
+    // 카드가 1장이고 아직 외치지 않았을 때 버튼 표시 (타이머 진행 중이거나 플레이어 턴일 때)
+    final showButton = playerHand.length == 1 && !gameOver &&
+        (!playerCalledOneCard || _oneCardTimeLeft > 0);
     final alreadyCalled = playerCalledOneCard;
 
     if (!showButton) {
