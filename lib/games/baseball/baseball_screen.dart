@@ -325,7 +325,7 @@ class _BaseballScreenState extends State<BaseballScreen> {
               ),
               // 오른쪽 패널: 숫자 버튼
               SizedBox(
-                width: 180,
+                width: 200,
                 child: Column(
                   children: [
                     const SizedBox(height: 8),
@@ -421,9 +421,9 @@ class _BaseballScreenState extends State<BaseballScreen> {
   }
 
   Widget _buildNumberPad({bool isLandscape = false}) {
-    final buttonSize = isLandscape ? 28.0 : 56.0;
-    final fontSize = isLandscape ? 14.0 : 24.0;
-    final spacing = isLandscape ? 4.0 : 8.0;
+    final buttonSize = isLandscape ? 32.0 : 56.0;
+    final fontSize = isLandscape ? 16.0 : 24.0;
+    final spacing = isLandscape ? 3.0 : 8.0;
 
     return Container(
       padding: EdgeInsets.all(isLandscape ? 6 : 16),
