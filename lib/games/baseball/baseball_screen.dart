@@ -232,10 +232,16 @@ class _BaseballScreenState extends State<BaseballScreen> {
     // 랜덤으로 하나 선택
     final random = Random();
     final positionToReveal = hiddenPositions[random.nextInt(hiddenPositions.length)];
+    final revealedDigit = secretNumber[positionToReveal];
+    final revealedNumber = int.parse(revealedDigit);
 
     setState(() {
       revealedPositions.add(positionToReveal);
       hintCount--;
+      // 입력 박스에 자동 입력
+      inputDigits[positionToReveal] = revealedDigit;
+      // 해당 숫자 버튼 제외 처리
+      excludedNumbers.add(revealedNumber);
     });
     HapticFeedback.mediumImpact();
   }
@@ -438,24 +444,11 @@ class _BaseballScreenState extends State<BaseballScreen> {
               ),
               // 중앙: 기록 목록
               Expanded(
-                child: Column(
-                  children: [
-                    // 숫자 입력 박스
-                    if (!gameOver)
-                      Padding(
-                        padding: const EdgeInsets.all(12),
-                        child: _buildDigitBoxes(isLandscape: true),
-                      ),
-                    // 기록 목록
-                    Expanded(
-                      child: _buildGuessHistory(isLandscape: true),
-                    ),
-                  ],
-                ),
+                child: _buildGuessHistory(isLandscape: true),
               ),
-              // 오른쪽 패널: 숫자 버튼
+              // 오른쪽 패널: 입력 박스 + 숫자 버튼
               SizedBox(
-                width: 200,
+                width: 180,
                 child: Column(
                   children: [
                     const SizedBox(height: 8),
@@ -469,6 +462,13 @@ class _BaseballScreenState extends State<BaseballScreen> {
                       ],
                     ),
                     const Spacer(),
+                    // 입력 박스
+                    if (!gameOver)
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+                        child: _buildDigitBoxes(isLandscape: true),
+                      ),
+                    // 숫자 패드 (3x4)
                     if (!gameOver) _buildNumberPad(isLandscape: true),
                     const Spacer(),
                   ],
@@ -482,8 +482,8 @@ class _BaseballScreenState extends State<BaseballScreen> {
   }
 
   Widget _buildDigitBoxes({bool isLandscape = false}) {
-    final boxSize = isLandscape ? 44.0 : 56.0;
-    final fontSize = isLandscape ? 24.0 : 32.0;
+    final boxSize = isLandscape ? 36.0 : 56.0;
+    final fontSize = isLandscape ? 20.0 : 32.0;
 
     return Column(
       children: [
@@ -508,10 +508,12 @@ class _BaseballScreenState extends State<BaseballScreen> {
           children: List.generate(digitCount, (index) {
             final isSelected = index == selectedIndex;
             final hasValue = inputDigits[index] != null;
+            final isRevealed = revealedPositions.contains(index);
 
             return GestureDetector(
               onTap: () {
-                if (!gameOver) {
+                // 힌트로 공개된 위치는 선택 불가
+                if (!gameOver && !isRevealed) {
                   setState(() {
                     selectedIndex = index;
                   });
@@ -523,20 +525,26 @@ class _BaseballScreenState extends State<BaseballScreen> {
                 height: boxSize,
                 margin: EdgeInsets.symmetric(horizontal: isLandscape ? 4 : 6),
                 decoration: BoxDecoration(
-                  color: isSelected
-                      ? Colors.deepOrange.withValues(alpha: 0.2)
-                      : Colors.grey.shade800,
-                  borderRadius: BorderRadius.circular(12),
+                  color: isRevealed
+                      ? Colors.amber.withValues(alpha: 0.2)
+                      : isSelected
+                          ? Colors.deepOrange.withValues(alpha: 0.2)
+                          : Colors.grey.shade800,
+                  borderRadius: BorderRadius.circular(isLandscape ? 8 : 12),
                   border: Border.all(
-                    color: isSelected ? Colors.deepOrange : Colors.grey.shade600,
-                    width: isSelected ? 3 : 2,
+                    color: isRevealed
+                        ? Colors.amber
+                        : isSelected
+                            ? Colors.deepOrange
+                            : Colors.grey.shade600,
+                    width: (isSelected || isRevealed) ? 3 : 2,
                   ),
                 ),
                 child: Center(
                   child: Text(
                     hasValue ? inputDigits[index]! : '',
                     style: TextStyle(
-                      color: Colors.white,
+                      color: isRevealed ? Colors.amber : Colors.white,
                       fontSize: fontSize,
                       fontWeight: FontWeight.bold,
                     ),
@@ -551,17 +559,22 @@ class _BaseballScreenState extends State<BaseballScreen> {
   }
 
   Widget _buildNumberPad({bool isLandscape = false}) {
-    final buttonSize = isLandscape ? 32.0 : 56.0;
-    final fontSize = isLandscape ? 16.0 : 24.0;
-    final spacing = isLandscape ? 3.0 : 8.0;
+    if (isLandscape) {
+      return _buildLandscapeNumberPad();
+    }
+    return _buildPortraitNumberPad();
+  }
+
+  Widget _buildPortraitNumberPad() {
+    const buttonSize = 56.0;
+    const fontSize = 24.0;
+    const spacing = 8.0;
 
     return Container(
-      padding: EdgeInsets.all(isLandscape ? 6 : 16),
+      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: Colors.grey.shade800,
-        borderRadius: isLandscape
-            ? BorderRadius.circular(12)
-            : const BorderRadius.vertical(top: Radius.circular(24)),
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
@@ -571,18 +584,17 @@ class _BaseballScreenState extends State<BaseballScreen> {
             mainAxisAlignment: MainAxisAlignment.center,
             children: [1, 2, 3, 4, 5].map((n) => _buildNumberButton(n, buttonSize, fontSize, spacing)).toList(),
           ),
-          SizedBox(height: spacing),
+          const SizedBox(height: spacing),
           // 6-0
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [6, 7, 8, 9, 0].map((n) => _buildNumberButton(n, buttonSize, fontSize, spacing)).toList(),
           ),
-          SizedBox(height: spacing + 2),
+          const SizedBox(height: spacing + 2),
           // 삭제, 확인 버튼
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              // 전체 삭제
               _buildActionButton(
                 icon: Icons.clear_all,
                 onTap: _onClear,
@@ -590,8 +602,7 @@ class _BaseballScreenState extends State<BaseballScreen> {
                 color: Colors.grey,
                 margin: spacing / 2,
               ),
-              SizedBox(width: spacing),
-              // 삭제
+              const SizedBox(width: spacing),
               _buildActionButton(
                 icon: Icons.backspace_outlined,
                 onTap: _onDelete,
@@ -599,19 +610,18 @@ class _BaseballScreenState extends State<BaseballScreen> {
                 color: Colors.orange,
                 margin: spacing / 2,
               ),
-              SizedBox(width: spacing),
-              // 확인
+              const SizedBox(width: spacing),
               GestureDetector(
                 onTap: _submitGuess,
                 child: Container(
                   width: buttonSize * 2 + spacing,
                   height: buttonSize,
-                  margin: EdgeInsets.all(spacing / 2),
+                  margin: const EdgeInsets.all(spacing / 2),
                   decoration: BoxDecoration(
                     color: Colors.deepOrange,
-                    borderRadius: BorderRadius.circular(isLandscape ? 8 : 12),
+                    borderRadius: BorderRadius.circular(12),
                   ),
-                  child: Center(
+                  child: const Center(
                     child: Text(
                       '확인',
                       style: TextStyle(
@@ -625,16 +635,97 @@ class _BaseballScreenState extends State<BaseballScreen> {
               ),
             ],
           ),
-          if (!isLandscape) ...[
-            const SizedBox(height: 8),
-            Text(
-              'S = Strike  |  B = Ball',
-              style: TextStyle(
-                color: Colors.grey.shade500,
-                fontSize: 12,
+          const SizedBox(height: 8),
+          Text(
+            'S = Strike  |  B = Ball',
+            style: TextStyle(
+              color: Colors.grey.shade500,
+              fontSize: 12,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildLandscapeNumberPad() {
+    const buttonSize = 36.0;
+    const fontSize = 16.0;
+    const spacing = 4.0;
+
+    return Container(
+      padding: const EdgeInsets.all(6),
+      margin: const EdgeInsets.symmetric(horizontal: 4),
+      decoration: BoxDecoration(
+        color: Colors.grey.shade800,
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          // 1, 2, 3
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [1, 2, 3].map((n) => _buildNumberButton(n, buttonSize, fontSize, spacing)).toList(),
+          ),
+          const SizedBox(height: spacing),
+          // 4, 5, 6
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [4, 5, 6].map((n) => _buildNumberButton(n, buttonSize, fontSize, spacing)).toList(),
+          ),
+          const SizedBox(height: spacing),
+          // 7, 8, 9
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [7, 8, 9].map((n) => _buildNumberButton(n, buttonSize, fontSize, spacing)).toList(),
+          ),
+          const SizedBox(height: spacing),
+          // 삭제, 0, 백스페이스
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              _buildActionButton(
+                icon: Icons.clear_all,
+                onTap: _onClear,
+                size: buttonSize,
+                color: Colors.grey,
+                margin: spacing / 2,
+              ),
+              _buildNumberButton(0, buttonSize, fontSize, spacing),
+              _buildActionButton(
+                icon: Icons.backspace_outlined,
+                onTap: _onDelete,
+                size: buttonSize,
+                color: Colors.orange,
+                margin: spacing / 2,
+              ),
+            ],
+          ),
+          const SizedBox(height: spacing + 2),
+          // 확인 버튼
+          GestureDetector(
+            onTap: _submitGuess,
+            child: Container(
+              width: buttonSize * 3 + spacing * 4,
+              height: buttonSize,
+              margin: const EdgeInsets.all(spacing / 2),
+              decoration: BoxDecoration(
+                color: Colors.deepOrange,
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: const Center(
+                child: Text(
+                  '확인',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: fontSize,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
               ),
             ),
-          ],
+          ),
         ],
       ),
     );
