@@ -47,6 +47,10 @@ class _BaseballScreenState extends State<BaseballScreen> {
   int maxAttempts = 10;
   String? errorMessage;
 
+  // 힌트 기능
+  int hintCount = 3;
+  Set<int> revealedPositions = {};
+
   @override
   void initState() {
     super.initState();
@@ -189,8 +193,48 @@ class _BaseballScreenState extends State<BaseballScreen> {
       gameOver = false;
       gameWon = false;
       errorMessage = null;
+      hintCount = 3;
+      revealedPositions.clear();
     });
     HapticFeedback.mediumImpact();
+  }
+
+  void _useHint() {
+    if (hintCount <= 0 || gameOver) return;
+
+    // 아직 공개되지 않은 위치들 찾기
+    List<int> hiddenPositions = [];
+    for (int i = 0; i < digitCount; i++) {
+      if (!revealedPositions.contains(i)) {
+        hiddenPositions.add(i);
+      }
+    }
+
+    if (hiddenPositions.isEmpty) return;
+
+    // 랜덤으로 하나 선택
+    final random = Random();
+    final positionToReveal = hiddenPositions[random.nextInt(hiddenPositions.length)];
+
+    setState(() {
+      revealedPositions.add(positionToReveal);
+      hintCount--;
+    });
+    HapticFeedback.mediumImpact();
+  }
+
+  String _getHintedAnswer() {
+    if (gameOver) return secretNumber;
+
+    String result = '';
+    for (int i = 0; i < secretNumber.length; i++) {
+      if (revealedPositions.contains(i)) {
+        result += secretNumber[i];
+      } else {
+        result += '?';
+      }
+    }
+    return result;
   }
 
   String _getDifficultyText() {
@@ -234,6 +278,35 @@ class _BaseballScreenState extends State<BaseballScreen> {
         ),
         centerTitle: true,
         actions: [
+          Stack(
+            children: [
+              IconButton(
+                icon: const Icon(Icons.lightbulb_outline),
+                onPressed: (hintCount > 0 && !gameOver) ? _useHint : null,
+                tooltip: '힌트 ($hintCount)',
+              ),
+              if (hintCount > 0)
+                Positioned(
+                  right: 6,
+                  top: 6,
+                  child: Container(
+                    padding: const EdgeInsets.all(4),
+                    decoration: const BoxDecoration(
+                      color: Colors.amber,
+                      shape: BoxShape.circle,
+                    ),
+                    child: Text(
+                      '$hintCount',
+                      style: const TextStyle(
+                        color: Colors.black,
+                        fontSize: 10,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                ),
+            ],
+          ),
           IconButton(
             icon: const Icon(Icons.refresh),
             onPressed: _restartGame,
@@ -298,6 +371,46 @@ class _BaseballScreenState extends State<BaseballScreen> {
                     ),
                     const SizedBox(height: 16),
                     _buildCompactInfo(),
+                    const SizedBox(height: 12),
+                    // 힌트 버튼
+                    if (!gameOver)
+                      GestureDetector(
+                        onTap: hintCount > 0 ? _useHint : null,
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                          margin: const EdgeInsets.symmetric(horizontal: 8),
+                          decoration: BoxDecoration(
+                            color: hintCount > 0
+                                ? Colors.amber.withValues(alpha: 0.2)
+                                : Colors.grey.withValues(alpha: 0.2),
+                            borderRadius: BorderRadius.circular(8),
+                            border: Border.all(
+                              color: hintCount > 0
+                                  ? Colors.amber.withValues(alpha: 0.5)
+                                  : Colors.grey.withValues(alpha: 0.3),
+                            ),
+                          ),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(
+                                Icons.lightbulb_outline,
+                                color: hintCount > 0 ? Colors.amber : Colors.grey,
+                                size: 18,
+                              ),
+                              const SizedBox(width: 6),
+                              Text(
+                                '힌트 $hintCount',
+                                style: TextStyle(
+                                  color: hintCount > 0 ? Colors.amber : Colors.grey,
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 13,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
                     const Spacer(),
                     if (gameOver) ...[
                       _buildCompactResultMessage(),
@@ -623,7 +736,7 @@ class _BaseballScreenState extends State<BaseballScreen> {
               const Icon(Icons.lightbulb_outline, color: Colors.amber, size: 16),
               const SizedBox(width: 4),
               Text(
-                gameOver ? secretNumber : '???',
+                _getHintedAnswer(),
                 style: const TextStyle(
                   color: Colors.white,
                   fontWeight: FontWeight.bold,
@@ -700,7 +813,7 @@ class _BaseballScreenState extends State<BaseballScreen> {
           _buildInfoItem(
             icon: Icons.lightbulb_outline,
             iconColor: Colors.amber,
-            value: gameOver ? secretNumber : '???',
+            value: _getHintedAnswer(),
             label: '정답',
           ),
         ],
