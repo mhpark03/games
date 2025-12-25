@@ -421,15 +421,16 @@ class _BaseballScreenState extends State<BaseballScreen> {
   }
 
   Widget _buildNumberPad({bool isLandscape = false}) {
-    final buttonSize = isLandscape ? 44.0 : 56.0;
-    final fontSize = isLandscape ? 20.0 : 24.0;
+    final buttonSize = isLandscape ? 28.0 : 56.0;
+    final fontSize = isLandscape ? 14.0 : 24.0;
+    final spacing = isLandscape ? 4.0 : 8.0;
 
     return Container(
-      padding: EdgeInsets.all(isLandscape ? 8 : 16),
+      padding: EdgeInsets.all(isLandscape ? 6 : 16),
       decoration: BoxDecoration(
         color: Colors.grey.shade800,
         borderRadius: isLandscape
-            ? BorderRadius.circular(16)
+            ? BorderRadius.circular(12)
             : const BorderRadius.vertical(top: Radius.circular(24)),
       ),
       child: Column(
@@ -438,15 +439,15 @@ class _BaseballScreenState extends State<BaseballScreen> {
           // 1-5
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
-            children: [1, 2, 3, 4, 5].map((n) => _buildNumberButton(n, buttonSize, fontSize)).toList(),
+            children: [1, 2, 3, 4, 5].map((n) => _buildNumberButton(n, buttonSize, fontSize, spacing)).toList(),
           ),
-          SizedBox(height: isLandscape ? 6 : 8),
+          SizedBox(height: spacing),
           // 6-0
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
-            children: [6, 7, 8, 9, 0].map((n) => _buildNumberButton(n, buttonSize, fontSize)).toList(),
+            children: [6, 7, 8, 9, 0].map((n) => _buildNumberButton(n, buttonSize, fontSize, spacing)).toList(),
           ),
-          SizedBox(height: isLandscape ? 8 : 12),
+          SizedBox(height: spacing + 2),
           // 삭제, 확인 버튼
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
@@ -457,32 +458,35 @@ class _BaseballScreenState extends State<BaseballScreen> {
                 onTap: _onClear,
                 size: buttonSize,
                 color: Colors.grey,
+                margin: spacing / 2,
               ),
-              SizedBox(width: isLandscape ? 6 : 8),
+              SizedBox(width: spacing),
               // 삭제
               _buildActionButton(
                 icon: Icons.backspace_outlined,
                 onTap: _onDelete,
                 size: buttonSize,
                 color: Colors.orange,
+                margin: spacing / 2,
               ),
-              SizedBox(width: isLandscape ? 6 : 8),
+              SizedBox(width: spacing),
               // 확인
               GestureDetector(
                 onTap: _submitGuess,
                 child: Container(
-                  width: buttonSize * 2 + (isLandscape ? 6 : 8),
+                  width: buttonSize * 2 + spacing,
                   height: buttonSize,
+                  margin: EdgeInsets.all(spacing / 2),
                   decoration: BoxDecoration(
                     color: Colors.deepOrange,
-                    borderRadius: BorderRadius.circular(12),
+                    borderRadius: BorderRadius.circular(isLandscape ? 8 : 12),
                   ),
                   child: Center(
                     child: Text(
                       '확인',
                       style: TextStyle(
                         color: Colors.white,
-                        fontSize: fontSize * 0.8,
+                        fontSize: fontSize * 0.85,
                         fontWeight: FontWeight.bold,
                       ),
                     ),
@@ -506,7 +510,7 @@ class _BaseballScreenState extends State<BaseballScreen> {
     );
   }
 
-  Widget _buildNumberButton(int number, double size, double fontSize) {
+  Widget _buildNumberButton(int number, double size, double fontSize, double margin) {
     // 첫 자리 선택 시 0 비활성화
     final isDisabled = selectedIndex == 0 && number == 0;
     // 이미 사용된 숫자 체크
@@ -518,12 +522,12 @@ class _BaseballScreenState extends State<BaseballScreen> {
       child: Container(
         width: size,
         height: size,
-        margin: const EdgeInsets.all(3),
+        margin: EdgeInsets.all(margin),
         decoration: BoxDecoration(
           color: (isDisabled || isUsed)
               ? Colors.grey.shade700
               : Colors.grey.shade900,
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(size > 40 ? 12 : 8),
           border: Border.all(
             color: (isDisabled || isUsed)
                 ? Colors.grey.shade600
@@ -551,15 +555,17 @@ class _BaseballScreenState extends State<BaseballScreen> {
     required VoidCallback onTap,
     required double size,
     required Color color,
+    double margin = 3,
   }) {
     return GestureDetector(
       onTap: onTap,
       child: Container(
         width: size,
         height: size,
+        margin: EdgeInsets.all(margin),
         decoration: BoxDecoration(
           color: color.withValues(alpha: 0.2),
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(size > 40 ? 12 : 8),
           border: Border.all(color: color.withValues(alpha: 0.5)),
         ),
         child: Center(
