@@ -1888,36 +1888,72 @@ class _OneCardScreenState extends State<OneCardScreen> with TickerProviderStateM
     }
 
     return Center(
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.center,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
         children: [
-          // 덱
-          GestureDetector(
-            onTap: isPlayerTurn && !gameOver ? _playerDrawCards : null,
-            child: Stack(
-              children: [
-                _buildCardBack(),
-                Positioned(
-                  bottom: 4,
-                  right: 4,
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                    decoration: BoxDecoration(
-                      color: Colors.black54,
-                      borderRadius: BorderRadius.circular(4),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              // 덱
+              GestureDetector(
+                onTap: isPlayerTurn && !gameOver ? _playerDrawCards : null,
+                child: Stack(
+                  children: [
+                    _buildCardBack(),
+                    Positioned(
+                      bottom: 4,
+                      right: 4,
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                        decoration: BoxDecoration(
+                          color: Colors.black54,
+                          borderRadius: BorderRadius.circular(4),
+                        ),
+                        child: Text(
+                          '${deck.length}',
+                          style: const TextStyle(color: Colors.white, fontSize: 10),
+                        ),
+                      ),
                     ),
-                    child: Text(
-                      '${deck.length}',
-                      style: const TextStyle(color: Colors.white, fontSize: 10),
+                  ],
+                ),
+              ),
+              const SizedBox(width: 24),
+              // 버린 카드 더미 (현재 카드)
+              _buildPlayingCard(topCard, size: 1.2),
+            ],
+          ),
+          // 조커일 때 낼 수 있는 카드 정보 표시
+          if (topCard.isJoker && attackStack == 0 && lastNormalCard != null)
+            Container(
+              margin: const EdgeInsets.only(top: 8),
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+              decoration: BoxDecoration(
+                color: Colors.black.withValues(alpha: 0.7),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    '낼 수 있는 카드: ',
+                    style: const TextStyle(color: Colors.white, fontSize: 12),
+                  ),
+                  Text(
+                    _getSuitSymbol(lastNormalCard!.suit),
+                    style: TextStyle(
+                      color: _getSuitColor(lastNormalCard!.suit),
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
                     ),
                   ),
-                ),
-              ],
+                  Text(
+                    ' 또는 ${lastNormalCard!.rankString}',
+                    style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold),
+                  ),
+                ],
+              ),
             ),
-          ),
-          const SizedBox(width: 24),
-          // 버린 카드 더미 (현재 카드)
-          _buildPlayingCard(topCard, size: 1.2),
         ],
       ),
     );
