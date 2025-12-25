@@ -8,7 +8,7 @@ enum CellState { hidden, revealed, flagged }
 enum MinesweeperDifficulty {
   easy,   // 9x9, 10개 지뢰
   medium, // 16x16, 40개 지뢰
-  hard,   // 16x30, 99개 지뢰
+  hard,   // 24x16, 75개 지뢰
 }
 
 class MinesweeperCell {
@@ -101,9 +101,9 @@ class _MinesweeperScreenState extends State<MinesweeperScreen> {
         totalMines = 40;
         break;
       case MinesweeperDifficulty.hard:
-        rows = 16;
-        cols = 30;
-        totalMines = 99;
+        rows = 24;
+        cols = 16;
+        totalMines = 75;
         break;
     }
   }
