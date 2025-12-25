@@ -689,8 +689,8 @@ class _MinesweeperScreenState extends State<MinesweeperScreen> {
         decoration: BoxDecoration(
           color: _getCellColor(cell),
           border: Border.all(
-            color: Colors.grey.shade600,
-            width: 0.5,
+            color: Colors.grey.shade800,
+            width: 1,
           ),
         ),
         child: Center(
