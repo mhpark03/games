@@ -37,8 +37,10 @@ class _BaseballScreenState extends State<BaseballScreen> {
   late String secretNumber;
   late int digitCount;
   List<GuessResult> guessHistory = [];
-  final TextEditingController _controller = TextEditingController();
-  final FocusNode _focusNode = FocusNode();
+
+  // 박스 선택 방식 입력
+  late List<String?> inputDigits;
+  int selectedIndex = 0;
 
   bool gameOver = false;
   bool gameWon = false;
@@ -49,14 +51,8 @@ class _BaseballScreenState extends State<BaseballScreen> {
   void initState() {
     super.initState();
     digitCount = widget.difficulty == BaseballDifficulty.easy ? 3 : 4;
+    inputDigits = List.filled(digitCount, null);
     _generateSecretNumber();
-  }
-
-  @override
-  void dispose() {
-    _controller.dispose();
-    _focusNode.dispose();
-    super.dispose();
   }
 
   void _generateSecretNumber() {
@@ -75,52 +71,80 @@ class _BaseballScreenState extends State<BaseballScreen> {
     secretNumber = digits.take(digitCount).join();
   }
 
-  void _submitGuess() {
-    final guess = _controller.text.trim();
+  void _onDigitInput(int digit) {
+    if (gameOver) return;
 
-    // 유효성 검사
-    if (guess.length != digitCount) {
-      setState(() {
-        errorMessage = '$digitCount자리 숫자를 입력하세요';
-      });
-      return;
-    }
+    final digitStr = digit.toString();
 
-    if (!RegExp(r'^[0-9]+$').hasMatch(guess)) {
-      setState(() {
-        errorMessage = '숫자만 입력하세요';
-      });
-      return;
-    }
-
-    if (guess[0] == '0') {
+    // 첫 자리에 0 입력 불가
+    if (selectedIndex == 0 && digit == 0) {
       setState(() {
         errorMessage = '첫 자리는 0이 될 수 없습니다';
       });
+      HapticFeedback.lightImpact();
       return;
     }
 
-    // 중복 숫자 검사
-    if (guess.split('').toSet().length != digitCount) {
-      setState(() {
-        errorMessage = '중복된 숫자가 있습니다';
-      });
-      return;
-    }
-
-    // 이미 시도한 숫자인지 검사
-    if (guessHistory.any((r) => r.guess == guess)) {
-      setState(() {
-        errorMessage = '이미 시도한 숫자입니다';
-      });
-      return;
+    // 중복 숫자 체크
+    for (int i = 0; i < digitCount; i++) {
+      if (i != selectedIndex && inputDigits[i] == digitStr) {
+        setState(() {
+          errorMessage = '이미 사용된 숫자입니다';
+        });
+        HapticFeedback.lightImpact();
+        return;
+      }
     }
 
     setState(() {
       errorMessage = null;
+      inputDigits[selectedIndex] = digitStr;
+      // 다음 빈 칸으로 이동
+      if (selectedIndex < digitCount - 1) {
+        selectedIndex++;
+      }
     });
+    HapticFeedback.selectionClick();
+  }
 
-    // 스트라이크, 볼 계산
+  void _onDelete() {
+    if (gameOver) return;
+
+    setState(() {
+      errorMessage = null;
+      if (inputDigits[selectedIndex] != null) {
+        inputDigits[selectedIndex] = null;
+      } else if (selectedIndex > 0) {
+        selectedIndex--;
+        inputDigits[selectedIndex] = null;
+      }
+    });
+    HapticFeedback.selectionClick();
+  }
+
+  void _onClear() {
+    if (gameOver) return;
+
+    setState(() {
+      errorMessage = null;
+      inputDigits = List.filled(digitCount, null);
+      selectedIndex = 0;
+    });
+    HapticFeedback.selectionClick();
+  }
+
+  void _submitGuess() {
+    // 모든 자리가 입력되었는지 확인
+    if (inputDigits.any((d) => d == null)) {
+      setState(() {
+        errorMessage = '모든 자리를 입력하세요';
+      });
+      return;
+    }
+
+    final guess = inputDigits.join();
+
+    // Strike와 Ball 계산
     int strikes = 0;
     int balls = 0;
 
@@ -140,30 +164,33 @@ class _BaseballScreenState extends State<BaseballScreen> {
 
     setState(() {
       guessHistory.add(result);
-      _controller.clear();
+      errorMessage = null;
+      inputDigits = List.filled(digitCount, null);
+      selectedIndex = 0;
 
       if (result.isCorrect) {
-        gameWon = true;
         gameOver = true;
-        HapticFeedback.heavyImpact();
+        gameWon = true;
       } else if (guessHistory.length >= maxAttempts) {
         gameOver = true;
-        HapticFeedback.heavyImpact();
-      } else {
-        HapticFeedback.lightImpact();
+        gameWon = false;
       }
     });
+
+    HapticFeedback.mediumImpact();
   }
 
   void _restartGame() {
     setState(() {
+      _generateSecretNumber();
       guessHistory.clear();
+      inputDigits = List.filled(digitCount, null);
+      selectedIndex = 0;
       gameOver = false;
       gameWon = false;
       errorMessage = null;
-      _controller.clear();
-      _generateSecretNumber();
     });
+    HapticFeedback.mediumImpact();
   }
 
   String _getDifficultyText() {
@@ -238,7 +265,7 @@ class _BaseballScreenState extends State<BaseballScreen> {
             children: [
               // 왼쪽 패널: 뒤로가기, 제목, 정보
               SizedBox(
-                width: 160,
+                width: 140,
                 child: Column(
                   children: [
                     const SizedBox(height: 8),
@@ -283,15 +310,22 @@ class _BaseballScreenState extends State<BaseballScreen> {
               Expanded(
                 child: Column(
                   children: [
+                    // 숫자 입력 박스
+                    if (!gameOver)
+                      Padding(
+                        padding: const EdgeInsets.all(12),
+                        child: _buildDigitBoxes(isLandscape: true),
+                      ),
+                    // 기록 목록
                     Expanded(
                       child: _buildGuessHistory(isLandscape: true),
                     ),
                   ],
                 ),
               ),
-              // 오른쪽 패널: 입력 영역
+              // 오른쪽 패널: 숫자 버튼
               SizedBox(
-                width: 200,
+                width: 180,
                 child: Column(
                   children: [
                     const SizedBox(height: 8),
@@ -305,13 +339,231 @@ class _BaseballScreenState extends State<BaseballScreen> {
                       ],
                     ),
                     const Spacer(),
-                    if (!gameOver) _buildCompactInputArea(),
+                    if (!gameOver) _buildNumberPad(isLandscape: true),
                     const Spacer(),
                   ],
                 ),
               ),
             ],
           ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildDigitBoxes({bool isLandscape = false}) {
+    final boxSize = isLandscape ? 44.0 : 56.0;
+    final fontSize = isLandscape ? 24.0 : 32.0;
+
+    return Column(
+      children: [
+        if (errorMessage != null)
+          Container(
+            margin: const EdgeInsets.only(bottom: 8),
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+            decoration: BoxDecoration(
+              color: Colors.red.withValues(alpha: 0.2),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Text(
+              errorMessage!,
+              style: TextStyle(
+                color: Colors.red,
+                fontSize: isLandscape ? 11 : 13,
+              ),
+            ),
+          ),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: List.generate(digitCount, (index) {
+            final isSelected = index == selectedIndex;
+            final hasValue = inputDigits[index] != null;
+
+            return GestureDetector(
+              onTap: () {
+                if (!gameOver) {
+                  setState(() {
+                    selectedIndex = index;
+                  });
+                  HapticFeedback.selectionClick();
+                }
+              },
+              child: Container(
+                width: boxSize,
+                height: boxSize,
+                margin: EdgeInsets.symmetric(horizontal: isLandscape ? 4 : 6),
+                decoration: BoxDecoration(
+                  color: isSelected
+                      ? Colors.deepOrange.withValues(alpha: 0.2)
+                      : Colors.grey.shade800,
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(
+                    color: isSelected ? Colors.deepOrange : Colors.grey.shade600,
+                    width: isSelected ? 3 : 2,
+                  ),
+                ),
+                child: Center(
+                  child: Text(
+                    hasValue ? inputDigits[index]! : '',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: fontSize,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+              ),
+            );
+          }),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildNumberPad({bool isLandscape = false}) {
+    final buttonSize = isLandscape ? 44.0 : 56.0;
+    final fontSize = isLandscape ? 20.0 : 24.0;
+
+    return Container(
+      padding: EdgeInsets.all(isLandscape ? 8 : 16),
+      decoration: BoxDecoration(
+        color: Colors.grey.shade800,
+        borderRadius: isLandscape
+            ? BorderRadius.circular(16)
+            : const BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          // 1-5
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [1, 2, 3, 4, 5].map((n) => _buildNumberButton(n, buttonSize, fontSize)).toList(),
+          ),
+          SizedBox(height: isLandscape ? 6 : 8),
+          // 6-0
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [6, 7, 8, 9, 0].map((n) => _buildNumberButton(n, buttonSize, fontSize)).toList(),
+          ),
+          SizedBox(height: isLandscape ? 8 : 12),
+          // 삭제, 확인 버튼
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              // 전체 삭제
+              _buildActionButton(
+                icon: Icons.clear_all,
+                onTap: _onClear,
+                size: buttonSize,
+                color: Colors.grey,
+              ),
+              SizedBox(width: isLandscape ? 6 : 8),
+              // 삭제
+              _buildActionButton(
+                icon: Icons.backspace_outlined,
+                onTap: _onDelete,
+                size: buttonSize,
+                color: Colors.orange,
+              ),
+              SizedBox(width: isLandscape ? 6 : 8),
+              // 확인
+              GestureDetector(
+                onTap: _submitGuess,
+                child: Container(
+                  width: buttonSize * 2 + (isLandscape ? 6 : 8),
+                  height: buttonSize,
+                  decoration: BoxDecoration(
+                    color: Colors.deepOrange,
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Center(
+                    child: Text(
+                      '확인',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: fontSize * 0.8,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+          if (!isLandscape) ...[
+            const SizedBox(height: 8),
+            Text(
+              'S = Strike  |  B = Ball',
+              style: TextStyle(
+                color: Colors.grey.shade500,
+                fontSize: 12,
+              ),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+
+  Widget _buildNumberButton(int number, double size, double fontSize) {
+    // 첫 자리 선택 시 0 비활성화
+    final isDisabled = selectedIndex == 0 && number == 0;
+    // 이미 사용된 숫자 체크
+    final isUsed = inputDigits.contains(number.toString()) &&
+        inputDigits[selectedIndex] != number.toString();
+
+    return GestureDetector(
+      onTap: (isDisabled || isUsed) ? null : () => _onDigitInput(number),
+      child: Container(
+        width: size,
+        height: size,
+        margin: const EdgeInsets.all(3),
+        decoration: BoxDecoration(
+          color: (isDisabled || isUsed)
+              ? Colors.grey.shade700
+              : Colors.grey.shade900,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(
+            color: (isDisabled || isUsed)
+                ? Colors.grey.shade600
+                : Colors.grey.shade500,
+          ),
+        ),
+        child: Center(
+          child: Text(
+            '$number',
+            style: TextStyle(
+              color: (isDisabled || isUsed)
+                  ? Colors.grey.shade600
+                  : Colors.white,
+              fontSize: fontSize,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildActionButton({
+    required IconData icon,
+    required VoidCallback onTap,
+    required double size,
+    required Color color,
+  }) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        width: size,
+        height: size,
+        decoration: BoxDecoration(
+          color: color.withValues(alpha: 0.2),
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: color.withValues(alpha: 0.5)),
+        ),
+        child: Center(
+          child: Icon(icon, color: color, size: size * 0.5),
         ),
       ),
     );
@@ -414,106 +666,6 @@ class _BaseballScreenState extends State<BaseballScreen> {
             style: TextStyle(
               color: Colors.grey.shade400,
               fontSize: 12,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildCompactInputArea() {
-    return Container(
-      padding: const EdgeInsets.all(12),
-      margin: const EdgeInsets.symmetric(horizontal: 8),
-      decoration: BoxDecoration(
-        color: Colors.grey.shade800,
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          if (errorMessage != null)
-            Container(
-              margin: const EdgeInsets.only(bottom: 8),
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-              decoration: BoxDecoration(
-                color: Colors.red.withValues(alpha: 0.2),
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: Text(
-                errorMessage!,
-                style: const TextStyle(color: Colors.red, fontSize: 11),
-                textAlign: TextAlign.center,
-              ),
-            ),
-          TextField(
-            controller: _controller,
-            focusNode: _focusNode,
-            keyboardType: TextInputType.number,
-            maxLength: digitCount,
-            textAlign: TextAlign.center,
-            style: const TextStyle(
-              color: Colors.white,
-              fontSize: 24,
-              fontWeight: FontWeight.bold,
-              letterSpacing: 8,
-            ),
-            decoration: InputDecoration(
-              counterText: '',
-              hintText: '0' * digitCount,
-              hintStyle: TextStyle(
-                color: Colors.grey.shade600,
-                fontSize: 24,
-                letterSpacing: 8,
-              ),
-              filled: true,
-              fillColor: Colors.grey.shade900,
-              contentPadding: const EdgeInsets.symmetric(vertical: 12),
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(8),
-                borderSide: BorderSide.none,
-              ),
-              focusedBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(8),
-                borderSide: const BorderSide(
-                  color: Colors.deepOrange,
-                  width: 2,
-                ),
-              ),
-            ),
-            inputFormatters: [
-              FilteringTextInputFormatter.digitsOnly,
-            ],
-            onSubmitted: (_) => _submitGuess(),
-          ),
-          const SizedBox(height: 8),
-          SizedBox(
-            width: double.infinity,
-            child: ElevatedButton(
-              onPressed: _submitGuess,
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.deepOrange,
-                foregroundColor: Colors.white,
-                padding: const EdgeInsets.symmetric(vertical: 12),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(8),
-                ),
-              ),
-              child: const Text(
-                '확인',
-                style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-            ),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            'S=Strike  B=Ball',
-            style: TextStyle(
-              color: Colors.grey.shade500,
-              fontSize: 10,
             ),
           ),
         ],
@@ -777,116 +929,16 @@ class _BaseballScreenState extends State<BaseballScreen> {
   }
 
   Widget _buildInputArea() {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.grey.shade800,
-        borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
-      ),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          // 에러 메시지
-          if (errorMessage != null)
-            Container(
-              margin: const EdgeInsets.only(bottom: 12),
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-              decoration: BoxDecoration(
-                color: Colors.red.withValues(alpha: 0.2),
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  const Icon(Icons.error_outline, color: Colors.red, size: 18),
-                  const SizedBox(width: 8),
-                  Text(
-                    errorMessage!,
-                    style: const TextStyle(color: Colors.red),
-                  ),
-                ],
-              ),
-            ),
-          Row(
-            children: [
-              // 숫자 입력 필드
-              Expanded(
-                child: TextField(
-                  controller: _controller,
-                  focusNode: _focusNode,
-                  keyboardType: TextInputType.number,
-                  maxLength: digitCount,
-                  textAlign: TextAlign.center,
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 28,
-                    fontWeight: FontWeight.bold,
-                    letterSpacing: 12,
-                  ),
-                  decoration: InputDecoration(
-                    counterText: '',
-                    hintText: '0' * digitCount,
-                    hintStyle: TextStyle(
-                      color: Colors.grey.shade600,
-                      fontSize: 28,
-                      letterSpacing: 12,
-                    ),
-                    filled: true,
-                    fillColor: Colors.grey.shade900,
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                      borderSide: BorderSide.none,
-                    ),
-                    focusedBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                      borderSide: const BorderSide(
-                        color: Colors.deepOrange,
-                        width: 2,
-                      ),
-                    ),
-                  ),
-                  inputFormatters: [
-                    FilteringTextInputFormatter.digitsOnly,
-                  ],
-                  onSubmitted: (_) => _submitGuess(),
-                ),
-              ),
-              const SizedBox(width: 12),
-              // 확인 버튼
-              ElevatedButton(
-                onPressed: _submitGuess,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.deepOrange,
-                  foregroundColor: Colors.white,
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 24,
-                    vertical: 16,
-                  ),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                ),
-                child: const Text(
-                  '확인',
-                  style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 8),
-          // 힌트
-          Text(
-            'S = Strike (숫자와 위치 모두 일치)  |  B = Ball (숫자만 일치)',
-            style: TextStyle(
-              color: Colors.grey.shade500,
-              fontSize: 12,
-            ),
-          ),
-        ],
-      ),
+    return Column(
+      children: [
+        // 숫자 입력 박스
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          child: _buildDigitBoxes(),
+        ),
+        // 숫자 패드
+        _buildNumberPad(),
+      ],
     );
   }
 }
