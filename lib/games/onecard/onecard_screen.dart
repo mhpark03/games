@@ -1188,33 +1188,87 @@ class _OneCardScreenState extends State<OneCardScreen> with TickerProviderStateM
 
   Widget _buildLandscapeComputerHand() {
     if (computerHands.isEmpty) return const SizedBox();
-    final hand = computerHands[0];
-    final isCurrentTurn = currentTurn == 1;
-    final showPlayButton = waitingForNextTurn && isCurrentTurn;
-
-    // 카드 겹침 정도 계산
-    final cardHeight = 56.0;
-    final overlap = 18.0;
-    final totalHeight = cardHeight + (hand.length - 1) * overlap;
 
     return Container(
-      width: 60,
+      width: 70,
       padding: const EdgeInsets.symmetric(vertical: 40),
-      child: Center(
-        child: showPlayButton
-            ? _buildPlayIconButton()
-            : SizedBox(
-                width: 40,
-                height: totalHeight,
-                child: Stack(
-                  children: List.generate(hand.length, (index) {
-                    return Positioned(
-                      top: index * overlap,
-                      child: _buildSmallCardBack(),
-                    );
-                  }),
-                ),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+        children: List.generate(computerHands.length, (index) {
+          return _buildLandscapeSingleComputer(index);
+        }),
+      ),
+    );
+  }
+
+  Widget _buildLandscapeSingleComputer(int computerIndex) {
+    final hand = computerHands[computerIndex];
+    final isCurrentTurn = currentTurn == computerIndex + 1;
+    final showPlayButton = waitingForNextTurn && isCurrentTurn;
+
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        // 컴퓨터 이름 (아이콘 + 번호)
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+          decoration: BoxDecoration(
+            color: isCurrentTurn ? Colors.blue : Colors.black38,
+            borderRadius: BorderRadius.circular(4),
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Icon(Icons.computer, color: Colors.white, size: 12),
+              const SizedBox(width: 2),
+              Text(
+                '${computerIndex + 1}',
+                style: const TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.bold),
               ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 2),
+        // 카드 수
+        Text(
+          '${hand.length}장',
+          style: const TextStyle(color: Colors.white, fontSize: 10),
+        ),
+        const SizedBox(height: 4),
+        // 플레이 버튼 또는 카드 스택
+        if (showPlayButton)
+          _buildPlayIconButton()
+        else
+          _buildSmallVerticalCardStack(hand.length),
+      ],
+    );
+  }
+
+  Widget _buildSmallVerticalCardStack(int cardCount) {
+    final overlap = 8.0;
+    final cardHeight = 28.0;
+    final maxVisible = 5;
+    final visibleCount = cardCount > maxVisible ? maxVisible : cardCount;
+    final totalHeight = cardHeight + (visibleCount - 1) * overlap;
+
+    return SizedBox(
+      width: 24,
+      height: totalHeight,
+      child: Stack(
+        children: List.generate(visibleCount, (index) {
+          return Positioned(
+            top: index * overlap,
+            child: Container(
+              width: 24,
+              height: cardHeight,
+              decoration: BoxDecoration(
+                color: Colors.blue.shade800,
+                borderRadius: BorderRadius.circular(2),
+                border: Border.all(color: Colors.white, width: 0.5),
+              ),
+            ),
+          );
+        }),
       ),
     );
   }
