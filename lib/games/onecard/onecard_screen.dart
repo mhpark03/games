@@ -955,10 +955,8 @@ class _OneCardScreenState extends State<OneCardScreen> with TickerProviderStateM
                 ),
                 // 메시지
                 if (gameMessage != null) _buildMessage(),
-                // 다음 순서 버튼
-                if (waitingForNextTurn) _buildNextTurnButton(),
-                // 원카드 버튼
-                if (!waitingForNextTurn) _buildOneCardButton(),
+                // 원카드 버튼 (대기 중일 때는 빈 공간)
+                _buildOneCardButton(),
                 // 플레이어 핸드
                 _buildPlayerHand(),
               ],
@@ -973,38 +971,24 @@ class _OneCardScreenState extends State<OneCardScreen> with TickerProviderStateM
     );
   }
 
-  Widget _buildNextTurnButton() {
+  Widget _buildPlayIconButton() {
     return GestureDetector(
       onTap: _onNextTurn,
       child: Container(
-        margin: const EdgeInsets.symmetric(vertical: 8),
-        padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 12),
+        width: 48,
+        height: 48,
         decoration: BoxDecoration(
           color: Colors.blue.shade700,
-          borderRadius: BorderRadius.circular(24),
+          shape: BoxShape.circle,
           boxShadow: [
             BoxShadow(
-              color: Colors.blue.withValues(alpha: 0.5),
-              blurRadius: 8,
-              spreadRadius: 1,
+              color: Colors.blue.withValues(alpha: 0.6),
+              blurRadius: 10,
+              spreadRadius: 2,
             ),
           ],
         ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const Icon(Icons.play_arrow, color: Colors.white, size: 24),
-            const SizedBox(width: 8),
-            Text(
-              '다음 순서 (${_getPlayerName(currentTurn)})',
-              style: const TextStyle(
-                color: Colors.white,
-                fontSize: 16,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-          ],
-        ),
+        child: const Icon(Icons.play_arrow, color: Colors.white, size: 32),
       ),
     );
   }
@@ -1014,6 +998,7 @@ class _OneCardScreenState extends State<OneCardScreen> with TickerProviderStateM
 
     final hand = computerHands[computerIndex];
     final isCurrentTurn = currentTurn == computerIndex + 1;
+    final showPlayButton = waitingForNextTurn && isCurrentTurn;
 
     return Container(
       width: 50,
@@ -1047,10 +1032,17 @@ class _OneCardScreenState extends State<OneCardScreen> with TickerProviderStateM
             style: const TextStyle(color: Colors.white, fontSize: 11),
           ),
           const SizedBox(height: 8),
-          // 카드 뒷면 스택
-          Expanded(
-            child: _buildVerticalCardStack(hand.length),
-          ),
+          // 플레이 버튼 또는 카드 뒷면 스택
+          if (showPlayButton)
+            Expanded(
+              child: Center(
+                child: _buildPlayIconButton(),
+              ),
+            )
+          else
+            Expanded(
+              child: _buildVerticalCardStack(hand.length),
+            ),
         ],
       ),
     );
@@ -1156,15 +1148,13 @@ class _OneCardScreenState extends State<OneCardScreen> with TickerProviderStateM
                   onPressed: _restartGame,
                 ),
               ),
-              // 하단 중앙: 다음 순서 버튼 또는 원카드 버튼
+              // 하단 중앙: 원카드 버튼 (대기 중일 때는 빈 공간)
               Positioned(
                 bottom: 8,
                 left: 0,
                 right: 0,
                 child: Center(
-                  child: waitingForNextTurn
-                      ? _buildNextTurnButton()
-                      : _buildOneCardButton(),
+                  child: _buildOneCardButton(),
                 ),
               ),
               // 무늬 선택 UI
@@ -1199,6 +1189,8 @@ class _OneCardScreenState extends State<OneCardScreen> with TickerProviderStateM
   Widget _buildLandscapeComputerHand() {
     if (computerHands.isEmpty) return const SizedBox();
     final hand = computerHands[0];
+    final isCurrentTurn = currentTurn == 1;
+    final showPlayButton = waitingForNextTurn && isCurrentTurn;
 
     // 카드 겹침 정도 계산
     final cardHeight = 56.0;
@@ -1209,18 +1201,20 @@ class _OneCardScreenState extends State<OneCardScreen> with TickerProviderStateM
       width: 60,
       padding: const EdgeInsets.symmetric(vertical: 40),
       child: Center(
-        child: SizedBox(
-          width: 40,
-          height: totalHeight,
-          child: Stack(
-            children: List.generate(hand.length, (index) {
-              return Positioned(
-                top: index * overlap,
-                child: _buildSmallCardBack(),
-              );
-            }),
-          ),
-        ),
+        child: showPlayButton
+            ? _buildPlayIconButton()
+            : SizedBox(
+                width: 40,
+                height: totalHeight,
+                child: Stack(
+                  children: List.generate(hand.length, (index) {
+                    return Positioned(
+                      top: index * overlap,
+                      child: _buildSmallCardBack(),
+                    );
+                  }),
+                ),
+              ),
       ),
     );
   }
@@ -1491,6 +1485,7 @@ class _OneCardScreenState extends State<OneCardScreen> with TickerProviderStateM
 
     final hand = computerHands[computerIndex];
     final isCurrentTurn = currentTurn == computerIndex + 1;
+    final showPlayButton = waitingForNextTurn && isCurrentTurn;
 
     // 카드 겹침 정도 계산 (카드 수에 따라 동적)
     final cardWidth = 50.0;
@@ -1522,21 +1517,23 @@ class _OneCardScreenState extends State<OneCardScreen> with TickerProviderStateM
             ),
           ),
           const SizedBox(height: 4),
-          // 카드 스택
+          // 플레이 버튼 또는 카드 스택
           Expanded(
             child: Center(
-              child: SizedBox(
-                width: totalWidth,
-                height: 60,
-                child: Stack(
-                  children: List.generate(hand.length, (index) {
-                    return Positioned(
-                      left: index * overlap,
-                      child: _buildSmallCardBackForTop(),
-                    );
-                  }),
-                ),
-              ),
+              child: showPlayButton
+                  ? _buildPlayIconButton()
+                  : SizedBox(
+                      width: totalWidth,
+                      height: 60,
+                      child: Stack(
+                        children: List.generate(hand.length, (index) {
+                          return Positioned(
+                            left: index * overlap,
+                            child: _buildSmallCardBackForTop(),
+                          );
+                        }),
+                      ),
+                    ),
             ),
           ),
         ],
