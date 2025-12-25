@@ -1165,31 +1165,22 @@ class _OneCardScreenState extends State<OneCardScreen> with TickerProviderStateM
       padding: const EdgeInsets.symmetric(vertical: 40, horizontal: 4),
       child: Center(
         child: SingleChildScrollView(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: grid.map((rowIndices) {
-              return Padding(
-                padding: const EdgeInsets.symmetric(vertical: 2),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: rowIndices.map((index) {
-                    final card = playerHand[index];
-                    final canPlay = playable.contains(card) && isPlayerTurn && !gameOver;
+          child: Wrap(
+            alignment: WrapAlignment.center,
+            spacing: 4,
+            runSpacing: 4,
+            children: List.generate(playerHand.length, (index) {
+              final card = playerHand[index];
+              final canPlay = playable.contains(card) && isPlayerTurn && !gameOver && !waitingForNextTurn;
 
-                    return Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 2),
-                      child: GestureDetector(
-                        onTap: () => _onPlayerCardTap(index),
-                        child: Opacity(
-                          opacity: canPlay ? 1.0 : 0.7,
-                          child: _buildSmallPlayingCard(card, highlight: canPlay),
-                        ),
-                      ),
-                    );
-                  }).toList(),
+              return GestureDetector(
+                onTap: () => _onPlayerCardTap(index),
+                child: Opacity(
+                  opacity: canPlay ? 1.0 : 0.7,
+                  child: _buildSmallPlayingCard(card, highlight: canPlay),
                 ),
               );
-            }).toList(),
+            }),
           ),
         ),
       ),
