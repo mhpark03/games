@@ -1086,57 +1086,46 @@ class _OneCardScreenState extends State<OneCardScreen> with TickerProviderStateM
         child: SafeArea(
           child: Stack(
             children: [
-              // 메인 게임 레이아웃
-              Row(
+              // 메인 게임 레이아웃 - 세로모드와 같은 상/하/좌/우 배치
+              Column(
                 children: [
-                  // 왼쪽: 컴퓨터 핸드 (세로 배치)
-                  _buildLandscapeComputerHand(),
-                  // 중앙: 게임 영역
+                  // 상단 컴퓨터: 2인용은 컴퓨터1, 3/4인용은 컴퓨터2 (반시계방향)
+                  if (computerHands.isNotEmpty)
+                    _buildLandscapeTopComputer(playerCount == 2 ? 0 : 1),
+                  // 게임 정보
+                  _buildLandscapeGameInfo(),
+                  // 중앙 영역 (좌우 컴퓨터 + 카드)
                   Expanded(
-                    child: Column(
-                      children: [
-                        // 게임 정보
-                        _buildLandscapeGameInfo(),
-                        // 중앙 카드 영역
-                        Expanded(
-                          child: _buildCenterArea(),
-                        ),
-                        // 메시지
-                        if (gameMessage != null) _buildMessage(),
-                      ],
-                    ),
+                    child: playerCount > 2
+                        ? Row(
+                            children: [
+                              // 왼쪽 컴퓨터 (컴퓨터 3) - 반시계방향으로 세 번째
+                              if (computerHands.length >= 3)
+                                _buildLandscapeSideComputer(2),
+                              // 중앙 카드 영역
+                              Expanded(child: _buildCenterArea()),
+                              // 오른쪽 컴퓨터 (컴퓨터 1) - 반시계방향으로 첫 번째
+                              if (computerHands.isNotEmpty)
+                                _buildLandscapeSideComputer(0),
+                            ],
+                          )
+                        : _buildCenterArea(),
                   ),
-                  // 오른쪽: 플레이어 핸드 (세로 배치)
-                  _buildLandscapePlayerHand(),
+                  // 메시지
+                  if (gameMessage != null) _buildMessage(),
+                  // 원카드 버튼
+                  _buildOneCardButton(),
+                  // 플레이어 핸드 (하단 1줄)
+                  _buildLandscapePlayerHandHorizontal(),
                 ],
               ),
               // 왼쪽 상단: 뒤로가기 버튼
               Positioned(
                 top: 8,
                 left: 8,
-                child: Row(
-                  children: [
-                    _buildCircleButton(
-                      icon: Icons.arrow_back,
-                      onPressed: () => Navigator.pop(context),
-                    ),
-                    const SizedBox(width: 8),
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                      decoration: BoxDecoration(
-                        color: Colors.black.withValues(alpha: 0.5),
-                        borderRadius: BorderRadius.circular(16),
-                      ),
-                      child: const Text(
-                        '원카드',
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 14,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ),
-                  ],
+                child: _buildCircleButton(
+                  icon: Icons.arrow_back,
+                  onPressed: () => Navigator.pop(context),
                 ),
               ),
               // 오른쪽 상단: 새 게임 버튼
@@ -1148,15 +1137,6 @@ class _OneCardScreenState extends State<OneCardScreen> with TickerProviderStateM
                   onPressed: _restartGame,
                 ),
               ),
-              // 하단 중앙: 원카드 버튼 (대기 중일 때는 빈 공간)
-              Positioned(
-                bottom: 8,
-                left: 0,
-                right: 0,
-                child: Center(
-                  child: _buildOneCardButton(),
-                ),
-              ),
               // 무늬 선택 UI
               if (showSuitPicker) _buildSuitPicker(),
               // 게임 오버 오버레이
@@ -1164,6 +1144,194 @@ class _OneCardScreenState extends State<OneCardScreen> with TickerProviderStateM
             ],
           ),
         ),
+      ),
+    );
+  }
+
+  // 가로모드 상단 컴퓨터
+  Widget _buildLandscapeTopComputer(int computerIndex) {
+    if (computerIndex >= computerHands.length) return const SizedBox();
+
+    final hand = computerHands[computerIndex];
+    final isCurrentTurn = currentTurn == computerIndex + 1;
+    final showPlayButton = waitingForNextTurn && isCurrentTurn;
+
+    // 카드 겹침 정도 계산
+    final cardWidth = 40.0;
+    final overlap = 20.0;
+    final totalWidth = cardWidth + (hand.length - 1) * overlap;
+
+    return Container(
+      height: 70,
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      child: Column(
+        children: [
+          // 컴퓨터 이름과 카드 수
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
+            decoration: BoxDecoration(
+              color: isCurrentTurn ? Colors.blue : Colors.black38,
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Icon(Icons.computer, color: Colors.white, size: 12),
+                const SizedBox(width: 4),
+                Text(
+                  '${computerIndex + 1} (${hand.length}장)',
+                  style: const TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.bold),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 4),
+          // 플레이 버튼 또는 카드 스택
+          Expanded(
+            child: Center(
+              child: showPlayButton
+                  ? _buildPlayIconButton()
+                  : SizedBox(
+                      width: totalWidth,
+                      height: 45,
+                      child: Stack(
+                        children: List.generate(hand.length, (index) {
+                          return Positioned(
+                            left: index * overlap,
+                            child: Container(
+                              width: 35,
+                              height: 45,
+                              decoration: BoxDecoration(
+                                color: Colors.blue.shade800,
+                                borderRadius: BorderRadius.circular(4),
+                                border: Border.all(color: Colors.white, width: 0.5),
+                              ),
+                            ),
+                          );
+                        }),
+                      ),
+                    ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // 가로모드 좌/우 컴퓨터
+  Widget _buildLandscapeSideComputer(int computerIndex) {
+    if (computerIndex >= computerHands.length) return const SizedBox();
+
+    final hand = computerHands[computerIndex];
+    final isCurrentTurn = currentTurn == computerIndex + 1;
+    final showPlayButton = waitingForNextTurn && isCurrentTurn;
+
+    return Container(
+      width: 55,
+      padding: const EdgeInsets.symmetric(vertical: 8),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          // 컴퓨터 이름
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+            decoration: BoxDecoration(
+              color: isCurrentTurn ? Colors.blue : Colors.black38,
+              borderRadius: BorderRadius.circular(4),
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Icon(Icons.computer, color: Colors.white, size: 10),
+                const SizedBox(width: 2),
+                Text(
+                  '${computerIndex + 1}',
+                  style: const TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 2),
+          // 카드 수
+          Text(
+            '${hand.length}장',
+            style: const TextStyle(color: Colors.white, fontSize: 10),
+          ),
+          const SizedBox(height: 8),
+          // 플레이 버튼 또는 카드 스택
+          if (showPlayButton)
+            _buildPlayIconButton()
+          else
+            _buildVerticalCardStack(hand.length),
+        ],
+      ),
+    );
+  }
+
+  // 가로모드 하단 플레이어 핸드 (1줄)
+  Widget _buildLandscapePlayerHandHorizontal() {
+    final playable = _getPlayableCards(playerHand);
+
+    // 카드 크기와 겹침
+    final cardWidth = 45.0;
+    final cardHeight = 63.0;
+    final overlap = 28.0;
+    final totalWidth = cardWidth + (playerHand.length - 1) * overlap;
+
+    return Container(
+      height: cardHeight + 16,
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      child: Row(
+        children: [
+          // 플레이어 정보
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+            decoration: BoxDecoration(
+              color: isPlayerTurn ? Colors.blue : Colors.black38,
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Icon(Icons.person, color: Colors.white, size: 14),
+                const SizedBox(width: 4),
+                Text(
+                  '${playerHand.length}장',
+                  style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(width: 8),
+          // 플레이어 카드 (가로 스크롤)
+          Expanded(
+            child: Center(
+              child: SingleChildScrollView(
+                scrollDirection: Axis.horizontal,
+                child: SizedBox(
+                  width: totalWidth,
+                  height: cardHeight,
+                  child: Stack(
+                    children: List.generate(playerHand.length, (index) {
+                      final card = playerHand[index];
+                      final canPlay = playable.contains(card);
+                      return Positioned(
+                        left: index * overlap,
+                        child: GestureDetector(
+                          onTap: canPlay ? () => _onCardTap(card) : null,
+                          child: Transform.translate(
+                            offset: Offset(0, canPlay && isPlayerTurn ? -6 : 0),
+                            child: _buildSmallPlayingCard(card, highlight: canPlay && isPlayerTurn),
+                          ),
+                        ),
+                      );
+                    }),
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -1182,139 +1350,6 @@ class _OneCardScreenState extends State<OneCardScreen> with TickerProviderStateM
           shape: BoxShape.circle,
         ),
         child: Icon(icon, color: Colors.white, size: 20),
-      ),
-    );
-  }
-
-  Widget _buildLandscapeComputerHand() {
-    if (computerHands.isEmpty) return const SizedBox();
-
-    return Container(
-      width: 70,
-      padding: const EdgeInsets.symmetric(vertical: 40),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-        children: List.generate(computerHands.length, (index) {
-          return _buildLandscapeSingleComputer(index);
-        }),
-      ),
-    );
-  }
-
-  Widget _buildLandscapeSingleComputer(int computerIndex) {
-    final hand = computerHands[computerIndex];
-    final isCurrentTurn = currentTurn == computerIndex + 1;
-    final showPlayButton = waitingForNextTurn && isCurrentTurn;
-
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        // 컴퓨터 이름 (아이콘 + 번호)
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-          decoration: BoxDecoration(
-            color: isCurrentTurn ? Colors.blue : Colors.black38,
-            borderRadius: BorderRadius.circular(4),
-          ),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const Icon(Icons.computer, color: Colors.white, size: 12),
-              const SizedBox(width: 2),
-              Text(
-                '${computerIndex + 1}',
-                style: const TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.bold),
-              ),
-            ],
-          ),
-        ),
-        const SizedBox(height: 2),
-        // 카드 수
-        Text(
-          '${hand.length}장',
-          style: const TextStyle(color: Colors.white, fontSize: 10),
-        ),
-        const SizedBox(height: 4),
-        // 플레이 버튼 또는 카드 스택
-        if (showPlayButton)
-          _buildPlayIconButton()
-        else
-          _buildSmallVerticalCardStack(hand.length),
-      ],
-    );
-  }
-
-  Widget _buildSmallVerticalCardStack(int cardCount) {
-    final overlap = 8.0;
-    final cardHeight = 28.0;
-    final maxVisible = 5;
-    final visibleCount = cardCount > maxVisible ? maxVisible : cardCount;
-    final totalHeight = cardHeight + (visibleCount - 1) * overlap;
-
-    return SizedBox(
-      width: 24,
-      height: totalHeight,
-      child: Stack(
-        children: List.generate(visibleCount, (index) {
-          return Positioned(
-            top: index * overlap,
-            child: Container(
-              width: 24,
-              height: cardHeight,
-              decoration: BoxDecoration(
-                color: Colors.blue.shade800,
-                borderRadius: BorderRadius.circular(2),
-                border: Border.all(color: Colors.white, width: 0.5),
-              ),
-            ),
-          );
-        }),
-      ),
-    );
-  }
-
-  Widget _buildLandscapePlayerHand() {
-    final playable = _getPlayableCards(playerHand);
-
-    // 3열로 배열
-    const int columns = 3;
-    final int rows = (playerHand.length / columns).ceil();
-    final List<List<int>> grid = [];
-
-    for (int row = 0; row < rows; row++) {
-      final List<int> rowIndices = [];
-      for (int col = 0; col < columns; col++) {
-        final index = row * columns + col;
-        if (index < playerHand.length) {
-          rowIndices.add(index);
-        }
-      }
-      grid.add(rowIndices);
-    }
-
-    return Container(
-      width: 160,
-      padding: const EdgeInsets.symmetric(vertical: 40, horizontal: 4),
-      child: Center(
-        child: SingleChildScrollView(
-          child: Wrap(
-            alignment: WrapAlignment.center,
-            spacing: 4,
-            runSpacing: 4,
-            children: List.generate(playerHand.length, (index) {
-              final card = playerHand[index];
-              final canPlay = playable.contains(card) && isPlayerTurn && !gameOver && !waitingForNextTurn;
-
-              return GestureDetector(
-                onTap: () => _onPlayerCardTap(index),
-                child: Opacity(
-                  opacity: canPlay ? 1.0 : 0.7,
-                  child: _buildSmallPlayingCard(card, highlight: canPlay),
-                ),
-              );
-            }),
-          ),
-        ),
       ),
     );
   }
