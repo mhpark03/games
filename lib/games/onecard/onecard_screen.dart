@@ -460,6 +460,28 @@ class _OneCardScreenState extends State<OneCardScreen> with TickerProviderStateM
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      body: OrientationBuilder(
+        builder: (context, orientation) {
+          if (orientation == Orientation.landscape) {
+            SystemChrome.setEnabledSystemUIMode(
+              SystemUiMode.immersiveSticky,
+              overlays: [],
+            );
+            return _buildLandscapeLayout();
+          } else {
+            SystemChrome.setEnabledSystemUIMode(
+              SystemUiMode.edgeToEdge,
+              overlays: SystemUiOverlay.values,
+            );
+            return _buildPortraitLayout();
+          }
+        },
+      ),
+    );
+  }
+
+  Widget _buildPortraitLayout() {
+    return Scaffold(
       backgroundColor: Colors.green.shade900,
       appBar: AppBar(
         backgroundColor: Colors.green.shade800,
@@ -502,6 +524,366 @@ class _OneCardScreenState extends State<OneCardScreen> with TickerProviderStateM
             if (gameOver) _buildGameOverOverlay(),
           ],
         ),
+      ),
+    );
+  }
+
+  Widget _buildLandscapeLayout() {
+    return Scaffold(
+      body: Container(
+        color: Colors.green.shade900,
+        child: SafeArea(
+          child: Stack(
+            children: [
+              // 메인 게임 레이아웃
+              Row(
+                children: [
+                  // 왼쪽: 컴퓨터 핸드 (세로 배치)
+                  _buildLandscapeComputerHand(),
+                  // 중앙: 게임 영역
+                  Expanded(
+                    child: Column(
+                      children: [
+                        // 게임 정보
+                        _buildLandscapeGameInfo(),
+                        // 중앙 카드 영역
+                        Expanded(
+                          child: _buildCenterArea(),
+                        ),
+                        // 메시지
+                        if (gameMessage != null) _buildMessage(),
+                      ],
+                    ),
+                  ),
+                  // 오른쪽: 플레이어 핸드 (세로 배치)
+                  _buildLandscapePlayerHand(),
+                ],
+              ),
+              // 왼쪽 상단: 뒤로가기 버튼
+              Positioned(
+                top: 8,
+                left: 8,
+                child: Row(
+                  children: [
+                    _buildCircleButton(
+                      icon: Icons.arrow_back,
+                      onPressed: () => Navigator.pop(context),
+                    ),
+                    const SizedBox(width: 8),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                      decoration: BoxDecoration(
+                        color: Colors.black.withValues(alpha: 0.5),
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                      child: const Text(
+                        '원카드',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 14,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              // 오른쪽 상단: 새 게임 버튼
+              Positioned(
+                top: 8,
+                right: 8,
+                child: _buildCircleButton(
+                  icon: Icons.refresh,
+                  onPressed: _restartGame,
+                ),
+              ),
+              // 무늬 선택 UI
+              if (showSuitPicker) _buildSuitPicker(),
+              // 게임 오버 오버레이
+              if (gameOver) _buildGameOverOverlay(),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildCircleButton({
+    required IconData icon,
+    required VoidCallback onPressed,
+  }) {
+    return GestureDetector(
+      onTap: onPressed,
+      child: Container(
+        width: 40,
+        height: 40,
+        decoration: BoxDecoration(
+          color: Colors.black.withValues(alpha: 0.5),
+          shape: BoxShape.circle,
+        ),
+        child: Icon(icon, color: Colors.white, size: 20),
+      ),
+    );
+  }
+
+  Widget _buildLandscapeComputerHand() {
+    return Container(
+      width: 70,
+      padding: const EdgeInsets.symmetric(vertical: 50),
+      child: Center(
+        child: SingleChildScrollView(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: List.generate(computerHand.length, (index) {
+              return Padding(
+                padding: const EdgeInsets.symmetric(vertical: 1),
+                child: _buildSmallCardBack(),
+              );
+            }),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildLandscapePlayerHand() {
+    final playable = _getPlayableCards(playerHand);
+
+    return Container(
+      width: 80,
+      padding: const EdgeInsets.symmetric(vertical: 50),
+      child: Center(
+        child: SingleChildScrollView(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: List.generate(playerHand.length, (index) {
+              final card = playerHand[index];
+              final canPlay = playable.contains(card) && isPlayerTurn && !gameOver;
+
+              return Padding(
+                padding: const EdgeInsets.symmetric(vertical: 2),
+                child: GestureDetector(
+                  onTap: () => _onPlayerCardTap(index),
+                  child: AnimatedContainer(
+                    duration: const Duration(milliseconds: 200),
+                    transform: Matrix4.identity()
+                      ..translate(canPlay ? -8.0 : 0.0, 0.0),
+                    child: Opacity(
+                      opacity: canPlay ? 1.0 : 0.7,
+                      child: _buildSmallPlayingCard(card, highlight: canPlay),
+                    ),
+                  ),
+                ),
+              );
+            }),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSmallCardBack() {
+    return Container(
+      width: 40,
+      height: 56,
+      decoration: BoxDecoration(
+        color: Colors.blue.shade800,
+        borderRadius: BorderRadius.circular(4),
+        border: Border.all(color: Colors.white, width: 1),
+      ),
+      child: Center(
+        child: Container(
+          width: 32,
+          height: 48,
+          decoration: BoxDecoration(
+            color: Colors.blue.shade700,
+            borderRadius: BorderRadius.circular(3),
+            border: Border.all(color: Colors.blue.shade300, width: 1),
+          ),
+          child: const Center(
+            child: Icon(Icons.style, color: Colors.white54, size: 14),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSmallPlayingCard(PlayingCard card, {bool highlight = false}) {
+    return Container(
+      width: 48,
+      height: 67,
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(6),
+        border: Border.all(
+          color: highlight ? Colors.yellow : Colors.grey.shade400,
+          width: highlight ? 2 : 1,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: highlight
+                ? Colors.yellow.withValues(alpha: 0.5)
+                : Colors.black.withValues(alpha: 0.3),
+            blurRadius: highlight ? 6 : 2,
+            offset: const Offset(1, 1),
+          ),
+        ],
+      ),
+      child: card.isJoker
+          ? Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(Icons.star, color: Colors.purple, size: 16),
+                  Text(
+                    'JKR',
+                    style: TextStyle(
+                      color: Colors.purple,
+                      fontSize: 6,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ],
+              ),
+            )
+          : Stack(
+              children: [
+                Positioned(
+                  left: 3,
+                  top: 2,
+                  child: Column(
+                    children: [
+                      Text(
+                        card.rankString,
+                        style: TextStyle(
+                          color: card.suitColor,
+                          fontSize: 10,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      Text(
+                        card.suitSymbol,
+                        style: TextStyle(
+                          color: card.suitColor,
+                          fontSize: 8,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                Center(
+                  child: Text(
+                    card.suitSymbol,
+                    style: TextStyle(
+                      color: card.suitColor,
+                      fontSize: 20,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+    );
+  }
+
+  Widget _buildLandscapeGameInfo() {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          // 컴퓨터 카드 수
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+            decoration: BoxDecoration(
+              color: Colors.black26,
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Row(
+              children: [
+                const Icon(Icons.computer, color: Colors.white70, size: 16),
+                const SizedBox(width: 4),
+                Text(
+                  '${computerHand.length}',
+                  style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 13),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(width: 12),
+          // 공격 스택
+          if (attackStack > 0)
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+              decoration: BoxDecoration(
+                color: Colors.red.withValues(alpha: 0.7),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Row(
+                children: [
+                  const Icon(Icons.bolt, color: Colors.yellow, size: 16),
+                  const SizedBox(width: 2),
+                  Text(
+                    '+$attackStack',
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 13,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          if (attackStack > 0) const SizedBox(width: 12),
+          // 선언된 무늬
+          if (declaredSuit != null)
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+              decoration: BoxDecoration(
+                color: Colors.purple.withValues(alpha: 0.7),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Text(
+                _getSuitSymbol(declaredSuit!),
+                style: TextStyle(
+                  color: _getSuitColor(declaredSuit!),
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
+          if (declaredSuit != null) const SizedBox(width: 12),
+          // 턴 표시
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+            decoration: BoxDecoration(
+              color: isPlayerTurn ? Colors.blue.withValues(alpha: 0.7) : Colors.orange.withValues(alpha: 0.7),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Text(
+              isPlayerTurn ? '내 턴' : '상대 턴',
+              style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 13),
+            ),
+          ),
+          const SizedBox(width: 12),
+          // 플레이어 카드 수
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+            decoration: BoxDecoration(
+              color: Colors.black26,
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Row(
+              children: [
+                const Icon(Icons.person, color: Colors.white70, size: 16),
+                const SizedBox(width: 4),
+                Text(
+                  '${playerHand.length}',
+                  style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 13),
+                ),
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }
