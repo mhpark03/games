@@ -15,6 +15,8 @@ class PlayingCard {
   bool get isJoker => suit == null;
   bool get isAttack => rank == 2 || rank == 1 || isJoker; // 2, A, Joker
   bool get isJump => rank == 11; // J
+  bool get isReverse => rank == 12; // Q (방향 반대)
+  bool get isChain => rank == 13; // K (같은 무늬 더내기)
   bool get isChange => rank == 7; // 7
 
   int get attackPower {
@@ -122,8 +124,18 @@ class _OneCardScreenState extends State<OneCardScreen> with TickerProviderStateM
   // 점프 상태 (J 카드)
   bool skipNextTurn = false;
 
+  // 방향 반대 (Q 카드) - 2인 게임에서는 건너뛰기와 동일
+  bool reverseDirection = false;
+
+  // 체인 모드 (K 카드) - 같은 무늬 더내기
+  bool chainMode = false;
+  Suit? chainSuit;
+
   // 조커 이전 카드 (조커 공격 후 기준 카드)
   PlayingCard? lastNormalCard;
+
+  // 파산 기준
+  static const int bankruptcyLimit = 20;
 
   // 애니메이션
   late AnimationController _cardAnimController;
@@ -171,7 +183,8 @@ class _OneCardScreenState extends State<OneCardScreen> with TickerProviderStateM
     PlayingCard firstCard;
     do {
       firstCard = deck.removeLast();
-      if (firstCard.isAttack || firstCard.isJump || firstCard.isChange) {
+      if (firstCard.isAttack || firstCard.isJump || firstCard.isReverse ||
+          firstCard.isChain || firstCard.isChange) {
         deck.insert(0, firstCard);
       } else {
         break;
@@ -187,6 +200,9 @@ class _OneCardScreenState extends State<OneCardScreen> with TickerProviderStateM
     attackStack = 0;
     declaredSuit = null;
     skipNextTurn = false;
+    reverseDirection = false;
+    chainMode = false;
+    chainSuit = null;
     gameMessage = null;
     selectedCardIndex = null;
   }
@@ -236,6 +252,11 @@ class _OneCardScreenState extends State<OneCardScreen> with TickerProviderStateM
   PlayingCard get topCard => discardPile.last;
 
   List<PlayingCard> _getPlayableCards(List<PlayingCard> hand) {
+    // 체인 모드 (K 카드) - 같은 무늬만 가능
+    if (chainMode && chainSuit != null) {
+      return hand.where((card) => card.suit == chainSuit).toList();
+    }
+
     // 공격 상태에서는 같은 무늬/숫자의 공격 카드 또는 조커만 가능
     if (attackStack > 0) {
       return hand.where((card) {
@@ -270,6 +291,12 @@ class _OneCardScreenState extends State<OneCardScreen> with TickerProviderStateM
         lastNormalCard = card;
       }
 
+      // 체인 모드 해제 (K 이후 카드를 냈으므로)
+      if (chainMode) {
+        chainMode = false;
+        chainSuit = null;
+      }
+
       // 카드 효과 처리
       if (card.isAttack) {
         attackStack += card.attackPower;
@@ -277,6 +304,15 @@ class _OneCardScreenState extends State<OneCardScreen> with TickerProviderStateM
       } else if (card.isJump) {
         skipNextTurn = true;
         gameMessage = 'J! 상대 턴 건너뛰기';
+      } else if (card.isReverse) {
+        // Q: 방향 반대 (2인 게임에서는 건너뛰기와 동일)
+        skipNextTurn = true;
+        gameMessage = 'Q! 방향 반대 (턴 건너뛰기)';
+      } else if (card.isChain) {
+        // K: 같은 무늬 더내기
+        chainMode = true;
+        chainSuit = card.suit;
+        gameMessage = 'K! 같은 무늬(${_getSuitName(card.suit!)}) 더내기';
       } else if (card.isChange) {
         if (newSuit != null) {
           declaredSuit = newSuit;
@@ -295,6 +331,15 @@ class _OneCardScreenState extends State<OneCardScreen> with TickerProviderStateM
       if (computerHand.isEmpty) {
         gameOver = true;
         winner = '컴퓨터';
+        return;
+      }
+
+      // 체인 모드면 같은 플레이어가 계속
+      if (chainMode) {
+        // 턴 유지, 같은 무늬 카드 더내기
+        if (!isPlayerTurn && !gameOver) {
+          Future.delayed(const Duration(milliseconds: 800), _computerTurn);
+        }
         return;
       }
 
@@ -318,7 +363,13 @@ class _OneCardScreenState extends State<OneCardScreen> with TickerProviderStateM
     if (!isPlayerTurn || gameOver) return;
 
     setState(() {
-      if (attackStack > 0) {
+      if (chainMode) {
+        // 체인 모드: 같은 무늬 카드 없으면 1장 먹기
+        _drawCards(playerHand, 1);
+        gameMessage = '같은 무늬 카드가 없어 1장을 뽑았습니다';
+        chainMode = false;
+        chainSuit = null;
+      } else if (attackStack > 0) {
         // 공격 받기
         _drawCards(playerHand, attackStack);
         gameMessage = '$attackStack장을 받았습니다';
@@ -327,6 +378,14 @@ class _OneCardScreenState extends State<OneCardScreen> with TickerProviderStateM
         // 일반 드로우
         _drawCards(playerHand, 1);
         gameMessage = '카드를 1장 뽑았습니다';
+      }
+
+      // 파산 체크
+      if (playerHand.length >= bankruptcyLimit) {
+        gameOver = true;
+        winner = '컴퓨터';
+        gameMessage = '파산! 카드가 ${playerHand.length}장이 되었습니다';
+        return;
       }
 
       isPlayerTurn = false;
@@ -347,7 +406,13 @@ class _OneCardScreenState extends State<OneCardScreen> with TickerProviderStateM
     if (playable.isEmpty) {
       // 낼 카드 없음
       setState(() {
-        if (attackStack > 0) {
+        if (chainMode) {
+          // 체인 모드: 같은 무늬 카드 없으면 1장 먹기
+          _drawCards(computerHand, 1);
+          gameMessage = '컴퓨터가 같은 무늬 카드가 없어 1장을 뽑았습니다';
+          chainMode = false;
+          chainSuit = null;
+        } else if (attackStack > 0) {
           _drawCards(computerHand, attackStack);
           gameMessage = '컴퓨터가 $attackStack장을 받았습니다';
           attackStack = 0;
@@ -355,6 +420,15 @@ class _OneCardScreenState extends State<OneCardScreen> with TickerProviderStateM
           _drawCards(computerHand, 1);
           gameMessage = '컴퓨터가 1장을 뽑았습니다';
         }
+
+        // 파산 체크
+        if (computerHand.length >= bankruptcyLimit) {
+          gameOver = true;
+          winner = '플레이어';
+          gameMessage = '컴퓨터 파산! 카드가 ${computerHand.length}장이 되었습니다';
+          return;
+        }
+
         isPlayerTurn = true;
       });
     } else {
@@ -365,17 +439,36 @@ class _OneCardScreenState extends State<OneCardScreen> with TickerProviderStateM
       if (attackStack > 0) {
         playable.sort((a, b) => b.attackPower.compareTo(a.attackPower));
         cardToPlay = playable.first;
+      } else if (chainMode) {
+        // 체인 모드면 같은 무늬 카드 중 아무거나
+        cardToPlay = playable[Random().nextInt(playable.length)];
       } else {
         // 전략적 선택
         final attacks = playable.where((c) => c.isAttack).toList();
         final jumps = playable.where((c) => c.isJump).toList();
+        final reverses = playable.where((c) => c.isReverse).toList();
+        final chains = playable.where((c) => c.isChain).toList();
         final changes = playable.where((c) => c.isChange).toList();
-        final normals = playable.where((c) => !c.isAttack && !c.isJump && !c.isChange).toList();
+        final normals = playable.where((c) =>
+            !c.isAttack && !c.isJump && !c.isReverse && !c.isChain && !c.isChange).toList();
 
         if (attacks.isNotEmpty && Random().nextDouble() < 0.5) {
           cardToPlay = attacks[Random().nextInt(attacks.length)];
         } else if (jumps.isNotEmpty && Random().nextDouble() < 0.3) {
           cardToPlay = jumps.first;
+        } else if (reverses.isNotEmpty && Random().nextDouble() < 0.3) {
+          cardToPlay = reverses.first;
+        } else if (chains.isNotEmpty && Random().nextDouble() < 0.4) {
+          // K는 같은 무늬 카드가 많을 때 유리
+          final kCard = chains.first;
+          final sameSuitCount = computerHand.where((c) => c.suit == kCard.suit).length;
+          if (sameSuitCount >= 2) {
+            cardToPlay = kCard;
+          } else if (normals.isNotEmpty) {
+            cardToPlay = normals[Random().nextInt(normals.length)];
+          } else {
+            cardToPlay = playable[Random().nextInt(playable.length)];
+          }
         } else if (normals.isNotEmpty) {
           cardToPlay = normals[Random().nextInt(normals.length)];
         } else if (changes.isNotEmpty) {
@@ -864,6 +957,31 @@ class _OneCardScreenState extends State<OneCardScreen> with TickerProviderStateM
               ),
             ),
           if (attackStack > 0) const SizedBox(width: 12),
+          // 체인 모드 (K)
+          if (chainMode && chainSuit != null)
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+              decoration: BoxDecoration(
+                color: Colors.amber.withValues(alpha: 0.7),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Text('K', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 13)),
+                  const SizedBox(width: 2),
+                  Text(
+                    _getSuitSymbol(chainSuit!),
+                    style: TextStyle(
+                      color: _getSuitColor(chainSuit!),
+                      fontSize: 14,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          if (chainMode && chainSuit != null) const SizedBox(width: 12),
           // 선언된 무늬
           if (declaredSuit != null)
             Container(
@@ -1017,6 +1135,29 @@ class _OneCardScreenState extends State<OneCardScreen> with TickerProviderStateM
                     '+$attackStack',
                     style: const TextStyle(
                       color: Colors.white,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          // 체인 모드 (K)
+          if (chainMode && chainSuit != null)
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+              decoration: BoxDecoration(
+                color: Colors.amber.withValues(alpha: 0.7),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Row(
+                children: [
+                  const Text('K', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                  const SizedBox(width: 4),
+                  Text(
+                    _getSuitSymbol(chainSuit!),
+                    style: TextStyle(
+                      color: _getSuitColor(chainSuit!),
+                      fontSize: 16,
                       fontWeight: FontWeight.bold,
                     ),
                   ),
