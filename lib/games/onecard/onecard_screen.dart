@@ -122,6 +122,9 @@ class _OneCardScreenState extends State<OneCardScreen> with TickerProviderStateM
   // 점프 상태 (J 카드)
   bool skipNextTurn = false;
 
+  // 조커 이전 카드 (조커 공격 후 기준 카드)
+  PlayingCard? lastNormalCard;
+
   // 애니메이션
   late AnimationController _cardAnimController;
   late Animation<double> _cardAnimation;
@@ -176,6 +179,7 @@ class _OneCardScreenState extends State<OneCardScreen> with TickerProviderStateM
     } while (true);
 
     discardPile.add(firstCard);
+    lastNormalCard = firstCard;
 
     isPlayerTurn = true;
     gameOver = false;
@@ -237,7 +241,12 @@ class _OneCardScreenState extends State<OneCardScreen> with TickerProviderStateM
       return hand.where((card) => card.isAttack).toList();
     }
 
-    return hand.where((card) => card.canPlayOn(topCard, declaredSuit)).toList();
+    // 조커가 나온 후 공격을 받은 경우, 조커 이전 카드 기준으로 판단
+    final referenceCard = (topCard.isJoker && lastNormalCard != null)
+        ? lastNormalCard!
+        : topCard;
+
+    return hand.where((card) => card.canPlayOn(referenceCard, declaredSuit)).toList();
   }
 
   void _playCard(PlayingCard card, {Suit? newSuit}) {
@@ -250,6 +259,11 @@ class _OneCardScreenState extends State<OneCardScreen> with TickerProviderStateM
 
       discardPile.add(card);
       declaredSuit = null; // 초기화
+
+      // 조커가 아닌 카드는 기준 카드로 저장
+      if (!card.isJoker) {
+        lastNormalCard = card;
+      }
 
       // 카드 효과 처리
       if (card.isAttack) {
