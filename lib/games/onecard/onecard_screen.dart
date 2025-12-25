@@ -2124,6 +2124,38 @@ class _OneCardScreenState extends State<OneCardScreen> with TickerProviderStateM
   Widget _buildPlayerHand() {
     final playable = _getPlayableCards(playerHand);
 
+    // 2줄로 배열
+    final int cardsPerRow = (playerHand.length / 2).ceil();
+    final List<int> row1 = List.generate(
+      cardsPerRow > playerHand.length ? playerHand.length : cardsPerRow,
+      (i) => i,
+    );
+    final List<int> row2 = List.generate(
+      playerHand.length - cardsPerRow > 0 ? playerHand.length - cardsPerRow : 0,
+      (i) => cardsPerRow + i,
+    );
+
+    Widget buildCardRow(List<int> indices) {
+      return Row(
+        mainAxisSize: MainAxisSize.min,
+        children: indices.map((index) {
+          final card = playerHand[index];
+          final canPlay = playable.contains(card) && isPlayerTurn && !gameOver;
+
+          return Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 2),
+            child: GestureDetector(
+              onTap: () => _onPlayerCardTap(index),
+              child: Opacity(
+                opacity: canPlay ? 1.0 : 0.7,
+                child: _buildPlayingCard(card, size: 0.85, highlight: canPlay),
+              ),
+            ),
+          );
+        }).toList(),
+      );
+    }
+
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       child: Column(
@@ -2153,26 +2185,18 @@ class _OneCardScreenState extends State<OneCardScreen> with TickerProviderStateM
               ],
             ),
           ),
-          // 카드 (스크롤 가능)
+          // 카드 (2줄, 스크롤 가능)
           SingleChildScrollView(
             scrollDirection: Axis.horizontal,
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: List.generate(playerHand.length, (index) {
-                final card = playerHand[index];
-                final canPlay = playable.contains(card) && isPlayerTurn && !gameOver;
-
-                return Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 2),
-                  child: GestureDetector(
-                    onTap: () => _onPlayerCardTap(index),
-                    child: Opacity(
-                      opacity: canPlay ? 1.0 : 0.7,
-                      child: _buildPlayingCard(card, size: 0.85, highlight: canPlay),
-                    ),
-                  ),
-                );
-              }),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                buildCardRow(row1),
+                if (row2.isNotEmpty) ...[
+                  const SizedBox(height: 4),
+                  buildCardRow(row2),
+                ],
+              ],
             ),
           ),
         ],
