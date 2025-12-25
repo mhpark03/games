@@ -1122,13 +1122,33 @@ class _OneCardScreenState extends State<OneCardScreen> with TickerProviderStateM
                   _buildLandscapePlayerHandHorizontal(),
                 ],
               ),
-              // 왼쪽 상단: 뒤로가기 버튼
+              // 왼쪽 상단: 뒤로가기 버튼 + 제목
               Positioned(
                 top: 8,
                 left: 8,
-                child: _buildCircleButton(
-                  icon: Icons.arrow_back,
-                  onPressed: () => Navigator.pop(context),
+                child: Row(
+                  children: [
+                    _buildCircleButton(
+                      icon: Icons.arrow_back,
+                      onPressed: () => Navigator.pop(context),
+                    ),
+                    const SizedBox(width: 8),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                      decoration: BoxDecoration(
+                        color: Colors.black.withValues(alpha: 0.5),
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                      child: Text(
+                        '원카드 (${playerCount}인)',
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 14,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
               ),
               // 오른쪽 상단: 새 게임 버튼
@@ -1552,25 +1572,6 @@ class _OneCardScreenState extends State<OneCardScreen> with TickerProviderStateM
                 style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 13),
               ),
             ),
-          if (playerCount == 2) const SizedBox(width: 12),
-          // 플레이어 카드 수
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-            decoration: BoxDecoration(
-              color: Colors.black26,
-              borderRadius: BorderRadius.circular(8),
-            ),
-            child: Row(
-              children: [
-                const Icon(Icons.person, color: Colors.white70, size: 16),
-                const SizedBox(width: 4),
-                Text(
-                  '${playerHand.length}',
-                  style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 13),
-                ),
-              ],
-            ),
-          ),
         ],
       ),
     );
