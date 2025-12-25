@@ -502,8 +502,8 @@ class _OneCardScreenState extends State<OneCardScreen> with TickerProviderStateM
           child: Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: List.generate(computerHand.length, (index) {
-              return Transform.translate(
-                offset: Offset(index * -20.0, 0),
+              return Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 1),
                 child: _buildCardBack(),
               );
             }),
@@ -822,14 +822,14 @@ class _OneCardScreenState extends State<OneCardScreen> with TickerProviderStateM
               final card = playerHand[index];
               final canPlay = playable.contains(card) && isPlayerTurn && !gameOver;
 
-              return GestureDetector(
-                onTap: () => _onPlayerCardTap(index),
-                child: Transform.translate(
-                  offset: Offset(index * -15.0, 0),
+              return Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 2),
+                child: GestureDetector(
+                  onTap: () => _onPlayerCardTap(index),
                   child: AnimatedContainer(
                     duration: const Duration(milliseconds: 200),
                     transform: Matrix4.identity()
-                      ..translate(0.0, canPlay && selectedCardIndex == index ? -20.0 : 0.0),
+                      ..translate(0.0, canPlay ? -10.0 : 0.0),
                     child: Opacity(
                       opacity: canPlay ? 1.0 : 0.7,
                       child: _buildPlayingCard(card, highlight: canPlay),
