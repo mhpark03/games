@@ -137,6 +137,10 @@ class _OneCardScreenState extends State<OneCardScreen> with TickerProviderStateM
   // 파산 기준
   static const int bankruptcyLimit = 20;
 
+  // 원카드 외치기
+  bool playerCalledOneCard = false;
+  bool computerCalledOneCard = false;
+
   // 애니메이션
   late AnimationController _cardAnimController;
   late Animation<double> _cardAnimation;
@@ -203,6 +207,8 @@ class _OneCardScreenState extends State<OneCardScreen> with TickerProviderStateM
     reverseDirection = false;
     chainMode = false;
     chainSuit = null;
+    playerCalledOneCard = false;
+    computerCalledOneCard = false;
     gameMessage = null;
     selectedCardIndex = null;
   }
@@ -334,6 +340,24 @@ class _OneCardScreenState extends State<OneCardScreen> with TickerProviderStateM
         return;
       }
 
+      // 원카드 체크 - 카드 낸 후 1장 남았을 때
+      if (isPlayerTurn && playerHand.length == 1 && !playerCalledOneCard) {
+        // 원카드 안 외침 - 벌칙은 턴 넘길 때 체크
+      }
+      if (!isPlayerTurn && computerHand.length == 1) {
+        // 컴퓨터는 자동으로 원카드 외침
+        computerCalledOneCard = true;
+        gameMessage = '컴퓨터: 원카드!';
+      }
+
+      // 카드가 2장 이상이면 원카드 상태 리셋
+      if (playerHand.length > 1) {
+        playerCalledOneCard = false;
+      }
+      if (computerHand.length > 1) {
+        computerCalledOneCard = false;
+      }
+
       // 체인 모드면 같은 플레이어가 계속
       if (chainMode) {
         // 턴 유지, 같은 무늬 카드 더내기
@@ -348,6 +372,13 @@ class _OneCardScreenState extends State<OneCardScreen> with TickerProviderStateM
         skipNextTurn = false;
         // 턴 유지
       } else {
+        // 원카드 벌칙 체크 (턴 넘기기 전)
+        if (isPlayerTurn && playerHand.length == 1 && !playerCalledOneCard) {
+          // 플레이어가 원카드 안 외침 - 2장 벌칙
+          _drawCards(playerHand, 2);
+          gameMessage = '원카드를 외치지 않아 2장 벌칙!';
+          playerCalledOneCard = false;
+        }
         isPlayerTurn = !isPlayerTurn;
       }
 
@@ -357,6 +388,17 @@ class _OneCardScreenState extends State<OneCardScreen> with TickerProviderStateM
     });
 
     HapticFeedback.mediumImpact();
+  }
+
+  void _callOneCard() {
+    if (!isPlayerTurn || gameOver) return;
+    if (playerHand.length > 2) return; // 2장 이하일 때만 가능
+
+    setState(() {
+      playerCalledOneCard = true;
+      gameMessage = '원카드!';
+    });
+    HapticFeedback.heavyImpact();
   }
 
   void _playerDrawCards() {
@@ -612,6 +654,8 @@ class _OneCardScreenState extends State<OneCardScreen> with TickerProviderStateM
                 ),
                 // 메시지
                 if (gameMessage != null) _buildMessage(),
+                // 원카드 버튼
+                _buildOneCardButton(),
                 // 플레이어 핸드
                 _buildPlayerHand(),
               ],
@@ -694,6 +738,13 @@ class _OneCardScreenState extends State<OneCardScreen> with TickerProviderStateM
                   icon: Icons.refresh,
                   onPressed: _restartGame,
                 ),
+              ),
+              // 하단 중앙: 원카드 버튼
+              Positioned(
+                bottom: 8,
+                left: 0,
+                right: 0,
+                child: Center(child: _buildOneCardButton()),
               ),
               // 무늬 선택 UI
               if (showSuitPicker) _buildSuitPicker(),
@@ -1375,6 +1426,58 @@ class _OneCardScreenState extends State<OneCardScreen> with TickerProviderStateM
       child: Text(
         gameMessage!,
         style: const TextStyle(color: Colors.white, fontSize: 14),
+      ),
+    );
+  }
+
+  Widget _buildOneCardButton() {
+    // 카드가 2장 이하일 때만 버튼 표시
+    final showButton = playerHand.length <= 2 && isPlayerTurn && !gameOver;
+    final alreadyCalled = playerCalledOneCard;
+
+    if (!showButton) {
+      return const SizedBox(height: 40);
+    }
+
+    return GestureDetector(
+      onTap: alreadyCalled ? null : _callOneCard,
+      child: Container(
+        margin: const EdgeInsets.symmetric(vertical: 4),
+        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 10),
+        decoration: BoxDecoration(
+          color: alreadyCalled
+              ? Colors.grey.shade600
+              : Colors.orange.shade700,
+          borderRadius: BorderRadius.circular(20),
+          boxShadow: alreadyCalled
+              ? []
+              : [
+                  BoxShadow(
+                    color: Colors.orange.withValues(alpha: 0.5),
+                    blurRadius: 8,
+                    spreadRadius: 1,
+                  ),
+                ],
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              alreadyCalled ? Icons.check_circle : Icons.campaign,
+              color: Colors.white,
+              size: 20,
+            ),
+            const SizedBox(width: 8),
+            Text(
+              alreadyCalled ? '원카드!' : '원카드',
+              style: const TextStyle(
+                color: Colors.white,
+                fontSize: 16,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
