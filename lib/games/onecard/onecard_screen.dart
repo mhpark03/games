@@ -1800,6 +1800,11 @@ class _OneCardScreenState extends State<OneCardScreen> with TickerProviderStateM
   }
 
   Widget _buildCenterArea() {
+    // discardPile이 비어있으면 로딩 표시
+    if (discardPile.isEmpty) {
+      return const Center(child: CircularProgressIndicator());
+    }
+
     return Center(
       child: Row(
         mainAxisAlignment: MainAxisAlignment.center,
