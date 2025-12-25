@@ -236,9 +236,14 @@ class _OneCardScreenState extends State<OneCardScreen> with TickerProviderStateM
   PlayingCard get topCard => discardPile.last;
 
   List<PlayingCard> _getPlayableCards(List<PlayingCard> hand) {
-    // 공격 상태에서는 공격 카드만 가능
+    // 공격 상태에서는 같은 무늬/숫자의 공격 카드 또는 조커만 가능
     if (attackStack > 0) {
-      return hand.where((card) => card.isAttack).toList();
+      return hand.where((card) {
+        if (!card.isAttack) return false;
+        if (card.isJoker) return true;
+        // 같은 무늬 또는 같은 숫자
+        return card.suit == topCard.suit || card.rank == topCard.rank;
+      }).toList();
     }
 
     // 조커가 나온 후 공격을 받은 경우, 조커 이전 카드 기준으로 판단
