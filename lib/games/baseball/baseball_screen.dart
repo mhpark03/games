@@ -444,11 +444,14 @@ class _BaseballScreenState extends State<BaseballScreen> {
               ),
               // 중앙: 기록 목록
               Expanded(
-                child: _buildGuessHistory(isLandscape: true),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 24),
+                  child: _buildGuessHistory(isLandscape: true),
+                ),
               ),
               // 오른쪽 패널: 입력 박스 + 숫자 버튼
               SizedBox(
-                width: 180,
+                width: 210,
                 child: Column(
                   children: [
                     const SizedBox(height: 8),
@@ -482,7 +485,7 @@ class _BaseballScreenState extends State<BaseballScreen> {
   }
 
   Widget _buildDigitBoxes({bool isLandscape = false}) {
-    final boxSize = isLandscape ? 36.0 : 56.0;
+    final boxSize = isLandscape ? 40.0 : 56.0;
     final fontSize = isLandscape ? 20.0 : 32.0;
 
     return Column(
@@ -523,7 +526,7 @@ class _BaseballScreenState extends State<BaseballScreen> {
               child: Container(
                 width: boxSize,
                 height: boxSize,
-                margin: EdgeInsets.symmetric(horizontal: isLandscape ? 4 : 6),
+                margin: EdgeInsets.symmetric(horizontal: isLandscape ? 3 : 6),
                 decoration: BoxDecoration(
                   color: isRevealed
                       ? Colors.amber.withValues(alpha: 0.2)
@@ -649,8 +652,8 @@ class _BaseballScreenState extends State<BaseballScreen> {
   }
 
   Widget _buildLandscapeNumberPad() {
-    const buttonSize = 36.0;
-    const fontSize = 16.0;
+    const buttonSize = 44.0;
+    const fontSize = 18.0;
     const spacing = 4.0;
 
     return Container(
