@@ -7,6 +7,7 @@ import 'games/chess/chess_screen.dart';
 import 'games/janggi/janggi_screen.dart';
 import 'games/solitaire/solitaire_screen.dart';
 import 'games/minesweeper/minesweeper_screen.dart';
+import 'games/baseball/baseball_screen.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
@@ -1411,6 +1412,123 @@ class HomeScreen extends StatelessWidget {
     );
   }
 
+  // 숫자 야구 난이도 선택 다이얼로그
+  void _showBaseballDifficultyDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          backgroundColor: Colors.grey.shade900,
+          insetPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+            side: BorderSide(color: Colors.deepOrange.withValues(alpha: 0.5), width: 2),
+          ),
+          title: const Text(
+            '난이도 선택',
+            style: TextStyle(
+              color: Colors.deepOrange,
+              fontWeight: FontWeight.bold,
+            ),
+            textAlign: TextAlign.center,
+          ),
+          content: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                _buildBaseballDifficultyButton(
+                  context,
+                  title: '3자리',
+                  subtitle: '초보자용 (쉬움)',
+                  icon: Icons.looks_3,
+                  color: Colors.green,
+                  difficulty: BaseballDifficulty.easy,
+                ),
+                const SizedBox(height: 12),
+                _buildBaseballDifficultyButton(
+                  context,
+                  title: '4자리',
+                  subtitle: '고수용 (어려움)',
+                  icon: Icons.looks_4,
+                  color: Colors.red,
+                  difficulty: BaseballDifficulty.hard,
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildBaseballDifficultyButton(
+    BuildContext context, {
+    required String title,
+    required String subtitle,
+    required IconData icon,
+    required Color color,
+    required BaseballDifficulty difficulty,
+  }) {
+    return InkWell(
+      onTap: () {
+        Navigator.pop(context);
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => BaseballScreen(
+              difficulty: difficulty,
+            ),
+          ),
+        );
+      },
+      borderRadius: BorderRadius.circular(12),
+      child: Container(
+        width: double.infinity,
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        decoration: BoxDecoration(
+          color: color.withValues(alpha: 0.1),
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(
+            color: color.withValues(alpha: 0.5),
+            width: 1,
+          ),
+        ),
+        child: Row(
+          children: [
+            Icon(icon, color: color, size: 28),
+            const SizedBox(width: 12),
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  title,
+                  style: TextStyle(
+                    color: color,
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                Text(
+                  subtitle,
+                  style: TextStyle(
+                    color: Colors.grey.shade400,
+                    fontSize: 12,
+                  ),
+                ),
+              ],
+            ),
+            const Spacer(),
+            Icon(
+              Icons.arrow_forward_ios,
+              color: color.withValues(alpha: 0.7),
+              size: 16,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -1574,6 +1692,14 @@ class HomeScreen extends StatelessWidget {
                                 icon: Icons.terrain,
                                 color: Colors.blueGrey,
                                 onTap: () => _showMinesweeperDifficultyDialog(context),
+                              ),
+                              _buildGameTile(
+                                context,
+                                title: 'BASEBALL',
+                                subtitle: '숫자야구',
+                                icon: Icons.sports_baseball,
+                                color: Colors.deepOrange,
+                                onTap: () => _showBaseballDifficultyDialog(context),
                               ),
                             ],
                           );
