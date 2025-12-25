@@ -462,15 +462,30 @@ class _OneCardScreenState extends State<OneCardScreen> with TickerProviderStateM
       // 다음 턴으로
       currentTurn = _getNextTurn(currentTurn);
 
-      // 다음이 컴퓨터면 대기 상태로, 플레이어면 대기 해제
+      // 다음이 컴퓨터면 대기 상태 설정
       if (currentTurn > 0 && !gameOver) {
-        waitingForNextTurn = true;
+        if (lastPlayerIndex == 0) {
+          // 플레이어가 행동한 후 → 자동으로 컴퓨터 턴 (버튼 대기 없음)
+          waitingForNextTurn = false;
+        } else {
+          // 컴퓨터가 행동한 후 → 다음 순서 버튼 대기
+          waitingForNextTurn = true;
+        }
       } else {
         waitingForNextTurn = false;
       }
     });
 
     HapticFeedback.mediumImpact();
+
+    // 플레이어가 행동했고 다음이 컴퓨터면 자동 진행
+    if (lastPlayerIndex == 0 && currentTurn > 0 && !gameOver) {
+      Future.delayed(const Duration(milliseconds: 500), () {
+        if (!gameOver && currentTurn > 0) {
+          _computerTurn(currentTurn);
+        }
+      });
+    }
   }
 
   // 다음 순서 버튼 눌렀을 때
@@ -526,12 +541,20 @@ class _OneCardScreenState extends State<OneCardScreen> with TickerProviderStateM
       // 다음 턴으로
       currentTurn = _getNextTurn(currentTurn);
 
-      if (!gameOver && currentTurn > 0) {
-        waitingForNextTurn = true;
-      }
+      // 플레이어가 행동했으므로 버튼 대기 없이 자동 진행
+      waitingForNextTurn = false;
     });
 
     HapticFeedback.lightImpact();
+
+    // 다음이 컴퓨터면 자동 진행
+    if (!gameOver && currentTurn > 0) {
+      Future.delayed(const Duration(milliseconds: 500), () {
+        if (!gameOver && currentTurn > 0) {
+          _computerTurn(currentTurn);
+        }
+      });
+    }
   }
 
   String _getBankruptcyWinner() {
@@ -1390,19 +1413,20 @@ class _OneCardScreenState extends State<OneCardScreen> with TickerProviderStateM
               ),
             ),
           if (declaredSuit != null) const SizedBox(width: 12),
-          // 턴 표시
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-            decoration: BoxDecoration(
-              color: isPlayerTurn ? Colors.blue.withValues(alpha: 0.7) : Colors.orange.withValues(alpha: 0.7),
-              borderRadius: BorderRadius.circular(8),
+          // 턴 표시 (2인용에서만)
+          if (playerCount == 2)
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+              decoration: BoxDecoration(
+                color: isPlayerTurn ? Colors.blue.withValues(alpha: 0.7) : Colors.orange.withValues(alpha: 0.7),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Text(
+                isPlayerTurn ? '내 턴' : '상대 턴',
+                style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 13),
+              ),
             ),
-            child: Text(
-              isPlayerTurn ? '내 턴' : '상대 턴',
-              style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 13),
-            ),
-          ),
-          const SizedBox(width: 12),
+          if (playerCount == 2) const SizedBox(width: 12),
           // 플레이어 카드 수
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
@@ -1619,18 +1643,19 @@ class _OneCardScreenState extends State<OneCardScreen> with TickerProviderStateM
                 ),
               ),
             ),
-          // 턴 표시
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-            decoration: BoxDecoration(
-              color: isPlayerTurn ? Colors.blue.withValues(alpha: 0.7) : Colors.orange.withValues(alpha: 0.7),
-              borderRadius: BorderRadius.circular(8),
+          // 턴 표시 (2인용에서만)
+          if (playerCount == 2)
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+              decoration: BoxDecoration(
+                color: isPlayerTurn ? Colors.blue.withValues(alpha: 0.7) : Colors.orange.withValues(alpha: 0.7),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Text(
+                isPlayerTurn ? '내 턴' : '상대 턴',
+                style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+              ),
             ),
-            child: Text(
-              isPlayerTurn ? '내 턴' : '상대 턴',
-              style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
-            ),
-          ),
         ],
       ),
     );
