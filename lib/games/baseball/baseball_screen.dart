@@ -444,7 +444,10 @@ class _BaseballScreenState extends State<BaseballScreen> {
               ),
               // 중앙: 기록 목록
               Expanded(
-                child: _buildGuessHistory(isLandscape: true),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 24),
+                  child: _buildGuessHistory(isLandscape: true),
+                ),
               ),
               // 오른쪽 패널: 입력 박스 + 숫자 버튼
               SizedBox(
