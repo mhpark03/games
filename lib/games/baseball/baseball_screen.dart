@@ -66,15 +66,6 @@ class _BaseballScreenState extends State<BaseballScreen> {
     final random = Random();
     List<int> digits = List.generate(10, (i) => i);
     digits.shuffle(random);
-
-    // 첫 자리가 0이면 안됨
-    if (digits[0] == 0) {
-      int nonZeroIndex = digits.indexWhere((d) => d != 0);
-      int temp = digits[0];
-      digits[0] = digits[nonZeroIndex];
-      digits[nonZeroIndex] = temp;
-    }
-
     secretNumber = digits.take(digitCount).join();
   }
 
@@ -89,15 +80,6 @@ class _BaseballScreenState extends State<BaseballScreen> {
     }
 
     final digitStr = digit.toString();
-
-    // 첫 자리에 0 입력 불가
-    if (selectedIndex == 0 && digit == 0) {
-      setState(() {
-        errorMessage = '첫 자리는 0이 될 수 없습니다';
-      });
-      HapticFeedback.lightImpact();
-      return;
-    }
 
     // 중복 숫자 체크
     for (int i = 0; i < digitCount; i++) {
@@ -787,8 +769,6 @@ class _BaseballScreenState extends State<BaseballScreen> {
   }
 
   Widget _buildNumberButton(int number, double size, double fontSize, double margin) {
-    // 첫 자리 선택 시 0 비활성화
-    final isDisabled = selectedIndex == 0 && number == 0;
     // 이미 사용된 숫자 체크
     final isUsed = inputDigits.contains(number.toString()) &&
         inputDigits[selectedIndex] != number.toString();
@@ -796,7 +776,7 @@ class _BaseballScreenState extends State<BaseballScreen> {
     final isExcluded = excludedNumbers.contains(number);
 
     return GestureDetector(
-      onTap: (isDisabled || isUsed || isExcluded) ? null : () => _onDigitInput(number),
+      onTap: (isUsed || isExcluded) ? null : () => _onDigitInput(number),
       onLongPress: () => _toggleExclude(number),
       onDoubleTap: () => _toggleExclude(number),
       child: Container(
@@ -806,14 +786,14 @@ class _BaseballScreenState extends State<BaseballScreen> {
         decoration: BoxDecoration(
           color: isExcluded
               ? Colors.red.withValues(alpha: 0.15)
-              : (isDisabled || isUsed)
+              : isUsed
                   ? Colors.grey.shade700
                   : Colors.grey.shade900,
           borderRadius: BorderRadius.circular(size > 40 ? 12 : 8),
           border: Border.all(
             color: isExcluded
                 ? Colors.red.withValues(alpha: 0.5)
-                : (isDisabled || isUsed)
+                : isUsed
                     ? Colors.grey.shade600
                     : Colors.grey.shade500,
           ),
@@ -826,7 +806,7 @@ class _BaseballScreenState extends State<BaseballScreen> {
               style: TextStyle(
                 color: isExcluded
                     ? Colors.red.withValues(alpha: 0.5)
-                    : (isDisabled || isUsed)
+                    : isUsed
                         ? Colors.grey.shade600
                         : Colors.white,
                 fontSize: fontSize,
