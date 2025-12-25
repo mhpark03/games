@@ -1530,6 +1530,204 @@ class HomeScreen extends StatelessWidget {
     );
   }
 
+  // 원카드 인원 선택 다이얼로그
+  Future<void> _showOneCardModeDialog(BuildContext context) async {
+    final hasSaved = await OneCardScreen.hasSavedGame();
+    final savedPlayerCount = hasSaved ? await OneCardScreen.getSavedPlayerCount() : null;
+
+    if (!context.mounted) return;
+
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          backgroundColor: Colors.grey.shade900,
+          insetPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+            side: BorderSide(color: Colors.purple.withValues(alpha: 0.5), width: 2),
+          ),
+          title: const Text(
+            '인원 선택',
+            style: TextStyle(
+              color: Colors.purple,
+              fontWeight: FontWeight.bold,
+            ),
+            textAlign: TextAlign.center,
+          ),
+          content: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                // 이어하기 버튼 (저장된 게임이 있을 때만)
+                if (hasSaved && savedPlayerCount != null) ...[
+                  _buildOneCardResumeButton(context, savedPlayerCount),
+                  const SizedBox(height: 16),
+                  Divider(color: Colors.grey.shade700),
+                  const SizedBox(height: 8),
+                  Text(
+                    '새 게임',
+                    style: TextStyle(
+                      color: Colors.grey.shade400,
+                      fontSize: 12,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                ],
+                _buildOneCardPlayerCountButton(
+                  context,
+                  playerCount: 2,
+                  subtitle: '1 vs 1',
+                  icon: Icons.people,
+                ),
+                const SizedBox(height: 12),
+                _buildOneCardPlayerCountButton(
+                  context,
+                  playerCount: 3,
+                  subtitle: '1 vs 2',
+                  icon: Icons.groups,
+                ),
+                const SizedBox(height: 12),
+                _buildOneCardPlayerCountButton(
+                  context,
+                  playerCount: 4,
+                  subtitle: '1 vs 3',
+                  icon: Icons.groups,
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildOneCardResumeButton(BuildContext context, int savedPlayerCount) {
+    return InkWell(
+      onTap: () {
+        Navigator.pop(context);
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => OneCardScreen(
+              playerCount: savedPlayerCount,
+              resumeGame: true,
+            ),
+          ),
+        );
+      },
+      borderRadius: BorderRadius.circular(12),
+      child: Container(
+        width: double.infinity,
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        decoration: BoxDecoration(
+          color: Colors.green.withValues(alpha: 0.2),
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(
+            color: Colors.green.withValues(alpha: 0.5),
+            width: 2,
+          ),
+        ),
+        child: Row(
+          children: [
+            const Icon(Icons.play_arrow, color: Colors.green, size: 28),
+            const SizedBox(width: 12),
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  '이어하기',
+                  style: TextStyle(
+                    color: Colors.green,
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                Text(
+                  '${savedPlayerCount}인 게임',
+                  style: TextStyle(
+                    color: Colors.grey.shade400,
+                    fontSize: 12,
+                  ),
+                ),
+              ],
+            ),
+            const Spacer(),
+            Icon(
+              Icons.arrow_forward_ios,
+              color: Colors.green.withValues(alpha: 0.7),
+              size: 16,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildOneCardPlayerCountButton(
+    BuildContext context, {
+    required int playerCount,
+    required String subtitle,
+    required IconData icon,
+  }) {
+    return InkWell(
+      onTap: () {
+        Navigator.pop(context);
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => OneCardScreen(playerCount: playerCount),
+          ),
+        );
+      },
+      borderRadius: BorderRadius.circular(12),
+      child: Container(
+        width: double.infinity,
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        decoration: BoxDecoration(
+          color: Colors.purple.withValues(alpha: 0.1),
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(
+            color: Colors.purple.withValues(alpha: 0.3),
+            width: 1,
+          ),
+        ),
+        child: Row(
+          children: [
+            Icon(icon, color: Colors.purple, size: 28),
+            const SizedBox(width: 12),
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  '${playerCount}인',
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                Text(
+                  subtitle,
+                  style: TextStyle(
+                    color: Colors.grey.shade400,
+                    fontSize: 12,
+                  ),
+                ),
+              ],
+            ),
+            const Spacer(),
+            Icon(
+              Icons.arrow_forward_ios,
+              color: Colors.purple.withValues(alpha: 0.7),
+              size: 16,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -1708,12 +1906,7 @@ class HomeScreen extends StatelessWidget {
                                 subtitle: 'One Card',
                                 icon: Icons.style,
                                 color: Colors.purple,
-                                onTap: () => Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder: (context) => const OneCardScreen(),
-                                  ),
-                                ),
+                                onTap: () => _showOneCardModeDialog(context),
                               ),
                             ],
                           );

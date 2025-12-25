@@ -1,6 +1,7 @@
 import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import '../../services/game_save_service.dart';
 
 // 카드 무늬
 enum Suit { spade, heart, diamond, club }
@@ -97,7 +98,31 @@ class PlayingCard {
 }
 
 class OneCardScreen extends StatefulWidget {
-  const OneCardScreen({super.key});
+  final int playerCount;
+  final bool resumeGame;
+
+  const OneCardScreen({
+    super.key,
+    this.playerCount = 2,
+    this.resumeGame = false,
+  });
+
+  // 저장된 게임이 있는지 확인
+  static Future<bool> hasSavedGame() async {
+    return await GameSaveService.hasSavedGame('onecard');
+  }
+
+  // 저장된 인원 수 가져오기
+  static Future<int?> getSavedPlayerCount() async {
+    final gameState = await GameSaveService.loadGame('onecard');
+    if (gameState == null) return null;
+    return gameState['playerCount'] as int?;
+  }
+
+  // 저장된 게임 삭제
+  static Future<void> clearSavedGame() async {
+    await GameSaveService.clearSave();
+  }
 
   @override
   State<OneCardScreen> createState() => _OneCardScreenState();
@@ -110,8 +135,7 @@ class _OneCardScreenState extends State<OneCardScreen> with TickerProviderStateM
   List<List<PlayingCard>> computerHands = []; // 멀티 컴퓨터
 
   // 인원 설정
-  int playerCount = 2;
-  bool showPlayerSelect = true;
+  late int playerCount;
 
   // 턴 관리
   int currentTurn = 0; // 0 = 플레이어, 1+ = 컴퓨터
@@ -163,6 +187,7 @@ class _OneCardScreenState extends State<OneCardScreen> with TickerProviderStateM
   @override
   void initState() {
     super.initState();
+    playerCount = widget.playerCount;
     _cardAnimController = AnimationController(
       duration: const Duration(milliseconds: 300),
       vsync: this,
@@ -171,7 +196,11 @@ class _OneCardScreenState extends State<OneCardScreen> with TickerProviderStateM
       parent: _cardAnimController,
       curve: Curves.easeOut,
     );
-    _initGame();
+    if (widget.resumeGame) {
+      _loadGame();
+    } else {
+      _initGame();
+    }
   }
 
   @override
@@ -229,6 +258,118 @@ class _OneCardScreenState extends State<OneCardScreen> with TickerProviderStateM
     computerCalledOneCard = List.generate(playerCount - 1, (_) => false);
     gameMessage = null;
     selectedCardIndex = null;
+  }
+
+  // 게임 상태 저장
+  Future<void> _saveGame() async {
+    if (gameOver) {
+      await OneCardScreen.clearSavedGame();
+      return;
+    }
+
+    // 카드를 Map으로 변환하는 헬퍼 함수
+    Map<String, dynamic> cardToMap(PlayingCard card) {
+      return {
+        'suit': card.suit?.index,
+        'rank': card.rank,
+      };
+    }
+
+    final gameState = {
+      'playerCount': playerCount,
+      'deck': deck.map(cardToMap).toList(),
+      'discardPile': discardPile.map(cardToMap).toList(),
+      'playerHand': playerHand.map(cardToMap).toList(),
+      'computerHands': computerHands.map((hand) => hand.map(cardToMap).toList()).toList(),
+      'currentTurn': currentTurn,
+      'turnDirection': turnDirection,
+      'attackStack': attackStack,
+      'declaredSuit': declaredSuit?.index,
+      'chainMode': chainMode,
+      'chainSuit': chainSuit?.index,
+      'lastNormalCard': lastNormalCard != null ? cardToMap(lastNormalCard!) : null,
+      'playerCalledOneCard': playerCalledOneCard,
+      'computerCalledOneCard': computerCalledOneCard,
+    };
+
+    await GameSaveService.saveGame('onecard', gameState);
+  }
+
+  // 저장된 게임 불러오기
+  Future<void> _loadGame() async {
+    final gameState = await GameSaveService.loadGame('onecard');
+
+    if (gameState == null) {
+      _initGame();
+      return;
+    }
+
+    // Map에서 카드를 복원하는 헬퍼 함수
+    PlayingCard mapToCard(Map<String, dynamic> map) {
+      final suitIndex = map['suit'] as int?;
+      return PlayingCard(
+        suit: suitIndex != null ? Suit.values[suitIndex] : null,
+        rank: map['rank'] as int,
+      );
+    }
+
+    playerCount = gameState['playerCount'] as int? ?? 2;
+
+    deck = (gameState['deck'] as List)
+        .map((m) => mapToCard(Map<String, dynamic>.from(m)))
+        .toList();
+    discardPile = (gameState['discardPile'] as List)
+        .map((m) => mapToCard(Map<String, dynamic>.from(m)))
+        .toList();
+    playerHand = (gameState['playerHand'] as List)
+        .map((m) => mapToCard(Map<String, dynamic>.from(m)))
+        .toList();
+    computerHands = (gameState['computerHands'] as List)
+        .map((hand) => (hand as List)
+            .map((m) => mapToCard(Map<String, dynamic>.from(m)))
+            .toList())
+        .toList();
+
+    currentTurn = gameState['currentTurn'] as int? ?? 0;
+    turnDirection = gameState['turnDirection'] as int? ?? 1;
+    attackStack = gameState['attackStack'] as int? ?? 0;
+
+    final declaredSuitIndex = gameState['declaredSuit'] as int?;
+    declaredSuit = declaredSuitIndex != null ? Suit.values[declaredSuitIndex] : null;
+
+    chainMode = gameState['chainMode'] as bool? ?? false;
+    final chainSuitIndex = gameState['chainSuit'] as int?;
+    chainSuit = chainSuitIndex != null ? Suit.values[chainSuitIndex] : null;
+
+    final lastNormalCardMap = gameState['lastNormalCard'];
+    lastNormalCard = lastNormalCardMap != null
+        ? mapToCard(Map<String, dynamic>.from(lastNormalCardMap))
+        : null;
+
+    playerCalledOneCard = gameState['playerCalledOneCard'] as bool? ?? false;
+    computerCalledOneCard = (gameState['computerCalledOneCard'] as List?)
+        ?.map((e) => e as bool)
+        .toList() ?? List.generate(playerCount - 1, (_) => false);
+
+    waitingForNextTurn = false;
+    lastPlayedCard = null;
+    lastPlayerIndex = null;
+    lastPlayerName = null;
+    gameOver = false;
+    winner = null;
+    skipNextTurn = false;
+    reverseDirection = false;
+    selectedCardIndex = null;
+    gameMessage = '게임을 이어서 시작합니다';
+
+    setState(() {});
+
+    // 컴퓨터 턴인 경우 컴퓨터가 진행
+    if (currentTurn > 0) {
+      Future.delayed(const Duration(milliseconds: 500), () {
+        if (mounted) _computerTurn(currentTurn);
+      });
+    }
   }
 
   // 현재 플레이어 턴인지 확인
@@ -477,6 +618,7 @@ class _OneCardScreenState extends State<OneCardScreen> with TickerProviderStateM
     });
 
     HapticFeedback.mediumImpact();
+    _saveGame();
 
     // 플레이어가 행동했고 다음이 컴퓨터면 자동 진행
     if (lastPlayerIndex == 0 && currentTurn > 0 && !gameOver) {
@@ -546,6 +688,7 @@ class _OneCardScreenState extends State<OneCardScreen> with TickerProviderStateM
     });
 
     HapticFeedback.lightImpact();
+    _saveGame();
 
     // 다음이 컴퓨터면 자동 진행
     if (!gameOver && currentTurn > 0) {
@@ -734,20 +877,8 @@ class _OneCardScreenState extends State<OneCardScreen> with TickerProviderStateM
     HapticFeedback.mediumImpact();
   }
 
-  void _selectPlayerCount(int count) {
-    setState(() {
-      playerCount = count;
-      showPlayerSelect = false;
-      _initGame();
-    });
-  }
-
   @override
   Widget build(BuildContext context) {
-    if (showPlayerSelect) {
-      return _buildPlayerSelectScreen();
-    }
-
     return Scaffold(
       body: OrientationBuilder(
         builder: (context, orientation) {
@@ -769,94 +900,6 @@ class _OneCardScreenState extends State<OneCardScreen> with TickerProviderStateM
     );
   }
 
-  Widget _buildPlayerSelectScreen() {
-    return Scaffold(
-      backgroundColor: Colors.green.shade900,
-      appBar: AppBar(
-        backgroundColor: Colors.green.shade800,
-        foregroundColor: Colors.white,
-        title: const Text('원카드', style: TextStyle(fontWeight: FontWeight.bold)),
-        centerTitle: true,
-      ),
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            const Text(
-              '인원 선택',
-              style: TextStyle(
-                color: Colors.white,
-                fontSize: 24,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            const SizedBox(height: 32),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                _buildPlayerCountButton(2),
-                const SizedBox(width: 16),
-                _buildPlayerCountButton(3),
-                const SizedBox(width: 16),
-                _buildPlayerCountButton(4),
-              ],
-            ),
-            const SizedBox(height: 24),
-            Text(
-              '컴퓨터 상대와 게임합니다',
-              style: TextStyle(
-                color: Colors.white.withValues(alpha: 0.7),
-                fontSize: 14,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildPlayerCountButton(int count) {
-    return GestureDetector(
-      onTap: () => _selectPlayerCount(count),
-      child: Container(
-        width: 80,
-        height: 80,
-        decoration: BoxDecoration(
-          color: Colors.green.shade700,
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: Colors.white, width: 2),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.3),
-              blurRadius: 8,
-              offset: const Offset(2, 2),
-            ),
-          ],
-        ),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Text(
-              '$count',
-              style: const TextStyle(
-                color: Colors.white,
-                fontSize: 32,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            Text(
-              '인',
-              style: TextStyle(
-                color: Colors.white.withValues(alpha: 0.8),
-                fontSize: 14,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
   Widget _buildPortraitLayout() {
     return Scaffold(
       backgroundColor: Colors.green.shade900,
@@ -869,11 +912,6 @@ class _OneCardScreenState extends State<OneCardScreen> with TickerProviderStateM
         ),
         centerTitle: true,
         actions: [
-          IconButton(
-            icon: const Icon(Icons.people),
-            onPressed: () => setState(() => showPlayerSelect = true),
-            tooltip: '인원 변경',
-          ),
           IconButton(
             icon: const Icon(Icons.refresh),
             onPressed: _restartGame,
