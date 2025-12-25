@@ -887,8 +887,9 @@ class _OneCardScreenState extends State<OneCardScreen> with TickerProviderStateM
           children: [
             Column(
               children: [
-                // 상단 컴퓨터 (컴퓨터 1)
-                if (computerHands.isNotEmpty) _buildComputerHandWidget(0),
+                // 상단 컴퓨터: 2인용은 컴퓨터1, 3/4인용은 컴퓨터2 (반시계방향)
+                if (computerHands.isNotEmpty)
+                  _buildComputerHandWidget(playerCount == 2 ? 0 : 1),
                 // 게임 정보
                 _buildGameInfo(),
                 // 중앙 영역 (좌우 컴퓨터 + 카드)
@@ -896,14 +897,14 @@ class _OneCardScreenState extends State<OneCardScreen> with TickerProviderStateM
                   child: playerCount > 2
                       ? Row(
                           children: [
-                            // 왼쪽 컴퓨터 (컴퓨터 2)
-                            if (computerHands.length >= 2)
-                              _buildSideComputerHand(1),
-                            // 중앙 카드 영역
-                            Expanded(child: _buildCenterArea()),
-                            // 오른쪽 컴퓨터 (컴퓨터 3)
+                            // 왼쪽 컴퓨터 (컴퓨터 3) - 반시계방향으로 세 번째
                             if (computerHands.length >= 3)
                               _buildSideComputerHand(2),
+                            // 중앙 카드 영역
+                            Expanded(child: _buildCenterArea()),
+                            // 오른쪽 컴퓨터 (컴퓨터 1) - 반시계방향으로 첫 번째
+                            if (computerHands.isNotEmpty)
+                              _buildSideComputerHand(0),
                           ],
                         )
                       : _buildCenterArea(),
@@ -1335,25 +1336,6 @@ class _OneCardScreenState extends State<OneCardScreen> with TickerProviderStateM
       child: Row(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          // 컴퓨터 카드 수
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-            decoration: BoxDecoration(
-              color: Colors.black26,
-              borderRadius: BorderRadius.circular(8),
-            ),
-            child: Row(
-              children: [
-                const Icon(Icons.computer, color: Colors.white70, size: 16),
-                const SizedBox(width: 4),
-                Text(
-                  computerHands.isNotEmpty ? '${computerHands[0].length}' : '0',
-                  style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 13),
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(width: 12),
           // 공격 스택
           if (attackStack > 0)
             Container(
@@ -1551,26 +1533,8 @@ class _OneCardScreenState extends State<OneCardScreen> with TickerProviderStateM
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          // 컴퓨터 카드 수
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-            decoration: BoxDecoration(
-              color: Colors.black26,
-              borderRadius: BorderRadius.circular(8),
-            ),
-            child: Row(
-              children: [
-                const Icon(Icons.computer, color: Colors.white70, size: 18),
-                const SizedBox(width: 6),
-                Text(
-                  computerHands.isNotEmpty ? '${computerHands[0].length}장' : '0장',
-                  style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
-                ),
-              ],
-            ),
-          ),
           // 공격 스택
           if (attackStack > 0)
             Container(
