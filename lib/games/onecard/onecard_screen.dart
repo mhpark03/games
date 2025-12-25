@@ -632,16 +632,22 @@ class _OneCardScreenState extends State<OneCardScreen> with TickerProviderStateM
   }
 
   Widget _buildLandscapeComputerHand() {
+    // 카드 겹침 정도 계산
+    final cardHeight = 56.0;
+    final overlap = 18.0;
+    final totalHeight = cardHeight + (computerHand.length - 1) * overlap;
+
     return Container(
-      width: 70,
-      padding: const EdgeInsets.symmetric(vertical: 50),
+      width: 60,
+      padding: const EdgeInsets.symmetric(vertical: 40),
       child: Center(
-        child: SingleChildScrollView(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
+        child: SizedBox(
+          width: 40,
+          height: totalHeight,
+          child: Stack(
             children: List.generate(computerHand.length, (index) {
-              return Padding(
-                padding: const EdgeInsets.symmetric(vertical: 1),
+              return Positioned(
+                top: index * overlap,
                 child: _buildSmallCardBack(),
               );
             }),
@@ -654,33 +660,52 @@ class _OneCardScreenState extends State<OneCardScreen> with TickerProviderStateM
   Widget _buildLandscapePlayerHand() {
     final playable = _getPlayableCards(playerHand);
 
+    // 3열로 배열
+    const int columns = 3;
+    final int rows = (playerHand.length / columns).ceil();
+    final List<List<int>> grid = [];
+
+    for (int row = 0; row < rows; row++) {
+      final List<int> rowIndices = [];
+      for (int col = 0; col < columns; col++) {
+        final index = row * columns + col;
+        if (index < playerHand.length) {
+          rowIndices.add(index);
+        }
+      }
+      grid.add(rowIndices);
+    }
+
     return Container(
-      width: 80,
-      padding: const EdgeInsets.symmetric(vertical: 50),
+      width: 160,
+      padding: const EdgeInsets.symmetric(vertical: 40, horizontal: 4),
       child: Center(
         child: SingleChildScrollView(
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
-            children: List.generate(playerHand.length, (index) {
-              final card = playerHand[index];
-              final canPlay = playable.contains(card) && isPlayerTurn && !gameOver;
-
+            children: grid.map((rowIndices) {
               return Padding(
                 padding: const EdgeInsets.symmetric(vertical: 2),
-                child: GestureDetector(
-                  onTap: () => _onPlayerCardTap(index),
-                  child: AnimatedContainer(
-                    duration: const Duration(milliseconds: 200),
-                    transform: Matrix4.identity()
-                      ..translate(canPlay ? -8.0 : 0.0, 0.0),
-                    child: Opacity(
-                      opacity: canPlay ? 1.0 : 0.7,
-                      child: _buildSmallPlayingCard(card, highlight: canPlay),
-                    ),
-                  ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: rowIndices.map((index) {
+                    final card = playerHand[index];
+                    final canPlay = playable.contains(card) && isPlayerTurn && !gameOver;
+
+                    return Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 2),
+                      child: GestureDetector(
+                        onTap: () => _onPlayerCardTap(index),
+                        child: Opacity(
+                          opacity: canPlay ? 1.0 : 0.7,
+                          child: _buildSmallPlayingCard(card, highlight: canPlay),
+                        ),
+                      ),
+                    );
+                  }).toList(),
                 ),
               );
-            }),
+            }).toList(),
           ),
         ),
       ),
@@ -894,17 +919,22 @@ class _OneCardScreenState extends State<OneCardScreen> with TickerProviderStateM
   }
 
   Widget _buildComputerHand() {
+    // 카드 겹침 정도 계산 (카드 수에 따라 동적)
+    final cardWidth = 50.0;
+    final overlap = 25.0; // 겹침 정도
+    final totalWidth = cardWidth + (computerHand.length - 1) * overlap;
+
     return Container(
       height: 80,
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
       child: Center(
-        child: SingleChildScrollView(
-          scrollDirection: Axis.horizontal,
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.center,
+        child: SizedBox(
+          width: totalWidth,
+          height: 70,
+          child: Stack(
             children: List.generate(computerHand.length, (index) {
-              return Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 1),
+              return Positioned(
+                left: index * overlap,
                 child: _buildCardBack(),
               );
             }),
@@ -1211,36 +1241,43 @@ class _OneCardScreenState extends State<OneCardScreen> with TickerProviderStateM
   Widget _buildPlayerHand() {
     final playable = _getPlayableCards(playerHand);
 
-    return Container(
-      height: 130,
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
-      child: Center(
-        child: SingleChildScrollView(
-          scrollDirection: Axis.horizontal,
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: List.generate(playerHand.length, (index) {
-              final card = playerHand[index];
-              final canPlay = playable.contains(card) && isPlayerTurn && !gameOver;
+    // 2줄로 배열
+    final int cardsPerRow = (playerHand.length / 2).ceil();
+    final List<List<int>> rows = [];
+    for (int i = 0; i < playerHand.length; i += cardsPerRow) {
+      rows.add(List.generate(
+        (i + cardsPerRow > playerHand.length) ? playerHand.length - i : cardsPerRow,
+        (j) => i + j,
+      ));
+    }
 
-              return Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 2),
-                child: GestureDetector(
-                  onTap: () => _onPlayerCardTap(index),
-                  child: AnimatedContainer(
-                    duration: const Duration(milliseconds: 200),
-                    transform: Matrix4.identity()
-                      ..translate(0.0, canPlay ? -10.0 : 0.0),
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: rows.map((rowIndices) {
+          return Padding(
+            padding: const EdgeInsets.symmetric(vertical: 2),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: rowIndices.map((index) {
+                final card = playerHand[index];
+                final canPlay = playable.contains(card) && isPlayerTurn && !gameOver;
+
+                return Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 2),
+                  child: GestureDetector(
+                    onTap: () => _onPlayerCardTap(index),
                     child: Opacity(
                       opacity: canPlay ? 1.0 : 0.7,
-                      child: _buildPlayingCard(card, highlight: canPlay),
+                      child: _buildPlayingCard(card, size: 0.85, highlight: canPlay),
                     ),
                   ),
-                ),
-              );
-            }),
-          ),
-        ),
+                );
+              }).toList(),
+            ),
+          );
+        }).toList(),
       ),
     );
   }
