@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -182,6 +183,11 @@ class _OneCardScreenState extends State<OneCardScreen> with TickerProviderStateM
   bool playerCalledOneCard = false;
   List<bool> computerCalledOneCard = [];
 
+  // 원카드 타이머 (5초 내 외치지 않으면 벌칙)
+  Timer? _oneCardTimer;
+  int _oneCardTimeLeft = 0;
+  static const int oneCardTimeLimit = 5;
+
   // 애니메이션
   late AnimationController _cardAnimController;
   late Animation<double> _cardAnimation;
@@ -212,7 +218,49 @@ class _OneCardScreenState extends State<OneCardScreen> with TickerProviderStateM
   @override
   void dispose() {
     _cardAnimController.dispose();
+    _oneCardTimer?.cancel();
     super.dispose();
+  }
+
+  // 원카드 타이머 시작
+  void _startOneCardTimer() {
+    _oneCardTimer?.cancel();
+    _oneCardTimeLeft = oneCardTimeLimit;
+    _oneCardTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
+      if (!mounted) {
+        timer.cancel();
+        return;
+      }
+      setState(() {
+        _oneCardTimeLeft--;
+        if (_oneCardTimeLeft <= 0) {
+          timer.cancel();
+          _onOneCardTimeout();
+        }
+      });
+    });
+  }
+
+  // 원카드 타이머 취소
+  void _cancelOneCardTimer() {
+    _oneCardTimer?.cancel();
+    _oneCardTimer = null;
+    _oneCardTimeLeft = 0;
+  }
+
+  // 원카드 타이머 만료 - 벌칙
+  void _onOneCardTimeout() {
+    if (playerHand.length == 1 && !playerCalledOneCard && !gameOver) {
+      setState(() {
+        // 랜덤 컴퓨터가 원카드 외침
+        final randomComputer = Random().nextInt(playerCount - 1) + 1;
+        gameMessage = '컴퓨터 $randomComputer: 원카드! (플레이어 벌칙 1장)';
+        _drawCards(playerHand, 1);
+        playerCalledOneCard = true; // 더 이상 벌칙 없음
+      });
+      HapticFeedback.heavyImpact();
+      _saveGame();
+    }
   }
 
   void _initGame() {
@@ -547,10 +595,7 @@ class _OneCardScreenState extends State<OneCardScreen> with TickerProviderStateM
         }
       }
 
-      // 원카드 체크 - 카드 낸 후 1장 남았을 때
-      if (currentTurn == 0 && playerHand.length == 1 && !playerCalledOneCard) {
-        // 원카드 안 외침 - 벌칙은 턴 넘길 때 체크
-      }
+      // 컴퓨터 원카드 체크 - 카드 낸 후 1장 남았을 때
       if (currentTurn > 0 && computerHands[currentTurn - 1].length == 1) {
         // 컴퓨터는 자동으로 원카드 외침
         computerCalledOneCard[currentTurn - 1] = true;
@@ -560,6 +605,7 @@ class _OneCardScreenState extends State<OneCardScreen> with TickerProviderStateM
       // 카드가 2장 이상이면 원카드 상태 리셋
       if (playerHand.length > 1) {
         playerCalledOneCard = false;
+        _cancelOneCardTimer();
       }
       for (int i = 0; i < computerHands.length; i++) {
         if (computerHands[i].length > 1) {
@@ -576,14 +622,6 @@ class _OneCardScreenState extends State<OneCardScreen> with TickerProviderStateM
         if (card.isChain) {
           currentTurn = _getNextTurn(currentTurn);
         }
-      }
-
-      // 원카드 벌칙 체크 (턴 넘기기 전)
-      if (currentTurn == 0 && playerHand.length == 1 && !playerCalledOneCard) {
-        // 플레이어가 원카드 안 외침 - 2장 벌칙
-        _drawCards(playerHand, 2);
-        gameMessage = '원카드를 외치지 않아 2장 벌칙!';
-        playerCalledOneCard = false;
       }
 
       // 다음 턴으로
@@ -605,6 +643,11 @@ class _OneCardScreenState extends State<OneCardScreen> with TickerProviderStateM
 
     HapticFeedback.mediumImpact();
     _saveGame();
+
+    // 플레이어가 카드를 냈고 1장 남았으면 원카드 타이머 시작
+    if (lastPlayerIndex == 0 && playerHand.length == 1 && !playerCalledOneCard && !gameOver) {
+      _startOneCardTimer();
+    }
 
     // 플레이어가 행동했고 다음이 컴퓨터면 자동 진행
     if (lastPlayerIndex == 0 && currentTurn > 0 && !gameOver) {
@@ -628,8 +671,9 @@ class _OneCardScreenState extends State<OneCardScreen> with TickerProviderStateM
 
   void _callOneCard() {
     if (!isPlayerTurn || gameOver) return;
-    if (playerHand.length > 2) return; // 2장 이하일 때만 가능
+    if (playerHand.length != 1) return; // 1장일 때만 가능
 
+    _cancelOneCardTimer();
     setState(() {
       playerCalledOneCard = true;
       gameMessage = '원카드!';
@@ -1827,13 +1871,18 @@ class _OneCardScreenState extends State<OneCardScreen> with TickerProviderStateM
   }
 
   Widget _buildOneCardButton() {
-    // 카드가 2장 이하일 때만 버튼 표시
-    final showButton = playerHand.length <= 2 && isPlayerTurn && !gameOver;
+    // 카드가 1장일 때만 버튼 표시
+    final showButton = playerHand.length == 1 && isPlayerTurn && !gameOver;
     final alreadyCalled = playerCalledOneCard;
 
     if (!showButton) {
       return const SizedBox(height: 40);
     }
+
+    // 타이머가 작동 중이면 남은 시간 표시
+    final buttonText = alreadyCalled
+        ? '원카드!'
+        : (_oneCardTimeLeft > 0 ? '원카드 ($_oneCardTimeLeft초)' : '원카드');
 
     return GestureDetector(
       onTap: alreadyCalled ? null : _callOneCard,
@@ -1843,13 +1892,18 @@ class _OneCardScreenState extends State<OneCardScreen> with TickerProviderStateM
         decoration: BoxDecoration(
           color: alreadyCalled
               ? Colors.grey.shade600
-              : Colors.orange.shade700,
+              : (_oneCardTimeLeft <= 2 && _oneCardTimeLeft > 0
+                  ? Colors.red.shade700
+                  : Colors.orange.shade700),
           borderRadius: BorderRadius.circular(20),
           boxShadow: alreadyCalled
               ? []
               : [
                   BoxShadow(
-                    color: Colors.orange.withValues(alpha: 0.5),
+                    color: (_oneCardTimeLeft <= 2 && _oneCardTimeLeft > 0
+                            ? Colors.red
+                            : Colors.orange)
+                        .withValues(alpha: 0.5),
                     blurRadius: 8,
                     spreadRadius: 1,
                   ),
@@ -1865,7 +1919,7 @@ class _OneCardScreenState extends State<OneCardScreen> with TickerProviderStateM
             ),
             const SizedBox(width: 8),
             Text(
-              alreadyCalled ? '원카드!' : '원카드',
+              buttonText,
               style: const TextStyle(
                 color: Colors.white,
                 fontSize: 16,
