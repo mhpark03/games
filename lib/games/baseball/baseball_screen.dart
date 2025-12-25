@@ -197,20 +197,13 @@ class _BaseballScreenState extends State<BaseballScreen> {
       appBar: AppBar(
         backgroundColor: Colors.deepOrange.shade800,
         foregroundColor: Colors.white,
-        title: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const Icon(Icons.sports_baseball, color: Colors.white),
-            const SizedBox(width: 8),
-            Text(
-              'NUMBER BASEBALL',
-              style: TextStyle(
-                fontWeight: FontWeight.bold,
-                letterSpacing: 2,
-                color: Colors.orange.shade100,
-              ),
-            ),
-          ],
+        title: Text(
+          '숫자야구',
+          style: TextStyle(
+            fontWeight: FontWeight.bold,
+            fontSize: 18,
+            color: Colors.orange.shade100,
+          ),
         ),
         centerTitle: true,
         actions: [
@@ -261,20 +254,18 @@ class _BaseballScreenState extends State<BaseballScreen> {
                     const Icon(Icons.sports_baseball, color: Colors.deepOrange, size: 28),
                     const SizedBox(height: 4),
                     Text(
-                      'NUMBER',
+                      '숫자',
                       style: TextStyle(
                         fontWeight: FontWeight.bold,
-                        fontSize: 14,
-                        letterSpacing: 2,
+                        fontSize: 18,
                         color: Colors.orange.shade100,
                       ),
                     ),
                     Text(
-                      'BASEBALL',
+                      '야구',
                       style: TextStyle(
                         fontWeight: FontWeight.bold,
-                        fontSize: 14,
-                        letterSpacing: 2,
+                        fontSize: 18,
                         color: Colors.orange.shade100,
                       ),
                     ),

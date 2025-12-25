@@ -410,10 +410,10 @@ class _MinesweeperScreenState extends State<MinesweeperScreen> {
             const Icon(Icons.terrain, color: Colors.blueGrey),
             const SizedBox(width: 8),
             Text(
-              'MINESWEEPER',
+              '지뢰찾기',
               style: TextStyle(
                 fontWeight: FontWeight.bold,
-                letterSpacing: 2,
+                fontSize: 18,
                 color: Colors.blueGrey.shade100,
               ),
             ),
@@ -495,20 +495,18 @@ class _MinesweeperScreenState extends State<MinesweeperScreen> {
                     const Icon(Icons.terrain, color: Colors.blueGrey, size: 32),
                     const SizedBox(height: 8),
                     Text(
-                      'MINE',
+                      '지뢰',
                       style: TextStyle(
                         fontWeight: FontWeight.bold,
-                        fontSize: 18,
-                        letterSpacing: 2,
+                        fontSize: 20,
                         color: Colors.blueGrey.shade100,
                       ),
                     ),
                     Text(
-                      'SWEEPER',
+                      '찾기',
                       style: TextStyle(
                         fontWeight: FontWeight.bold,
-                        fontSize: 18,
-                        letterSpacing: 2,
+                        fontSize: 20,
                         color: Colors.blueGrey.shade100,
                       ),
                     ),
