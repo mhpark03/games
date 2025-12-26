@@ -914,8 +914,71 @@ class _HulaScreenState extends State<HulaScreen> with TickerProviderStateMixin {
     return probability;
   }
 
-  // 멜드 등록 여부 결정 (훌라 가능성 고려)
-  bool _shouldRegisterMelds(List<PlayingCard> hand, List<Meld> melds) {
+  // 다른 플레이어의 스톱 위험도 계산
+  // 반환: 0.0 ~ 100.0 (높을수록 스톱 가능성 높음)
+  double _estimateStopRisk(int myIndex) {
+    double maxRisk = 0.0;
+
+    // 플레이어(0) 체크
+    if (myIndex != 0) {
+      final playerRisk = _calculatePlayerStopRisk(playerHand, playerMelds);
+      maxRisk = maxRisk > playerRisk ? maxRisk : playerRisk;
+    }
+
+    // 다른 컴퓨터들 체크
+    for (int i = 0; i < computerHands.length; i++) {
+      if (i + 1 == myIndex) continue; // 자신 제외
+
+      final risk = _calculatePlayerStopRisk(computerHands[i], computerMelds[i]);
+      maxRisk = maxRisk > risk ? maxRisk : risk;
+    }
+
+    return maxRisk;
+  }
+
+  // 특정 플레이어의 스톱 가능성 계산
+  double _calculatePlayerStopRisk(List<PlayingCard> hand, List<Meld> melds) {
+    double risk = 0.0;
+
+    // 1. 손패 수에 따른 위험도 (적을수록 위험)
+    // 3장 이하: 매우 위험, 5장 이하: 위험, 7장 이하: 주의
+    if (hand.length <= 2) {
+      risk += 80.0;
+    } else if (hand.length <= 3) {
+      risk += 60.0;
+    } else if (hand.length <= 4) {
+      risk += 40.0;
+    } else if (hand.length <= 5) {
+      risk += 25.0;
+    } else if (hand.length <= 7) {
+      risk += 10.0;
+    }
+
+    // 2. 등록된 멜드 수에 따른 위험도
+    // 멜드가 많을수록 카드 정리가 잘 되어 있음
+    if (melds.length >= 4) {
+      risk += 30.0;
+    } else if (melds.length >= 3) {
+      risk += 20.0;
+    } else if (melds.length >= 2) {
+      risk += 10.0;
+    }
+
+    // 3. 손패 점수 추정 (낮을수록 스톱 가능성 높음)
+    final handScore = _calculateHandScore(hand);
+    if (handScore <= 5) {
+      risk += 25.0;
+    } else if (handScore <= 10) {
+      risk += 15.0;
+    } else if (handScore <= 20) {
+      risk += 5.0;
+    }
+
+    return risk.clamp(0.0, 100.0);
+  }
+
+  // 멜드 등록 여부 결정 (훌라 가능성 + 스톱 위험도 고려)
+  bool _shouldRegisterMelds(List<PlayingCard> hand, List<Meld> melds, {int? computerIndex}) {
     // 이미 멜드가 있으면 훌라 불가능 → 등록해도 됨
     if (melds.isNotEmpty) return true;
 
@@ -927,9 +990,39 @@ class _HulaScreenState extends State<HulaScreen> with TickerProviderStateMixin {
     final probability = analysis['probability'] as double;
     final remainingCount = analysis['remainingCount'] as int;
 
+    // 스톱 위험도 계산
+    final myIndex = computerIndex ?? 0;
+    final stopRisk = _estimateStopRisk(myIndex);
+    final myHandScore = _calculateHandScore(hand);
+
+    // 스톱 위험도가 높으면 등록하여 벌점 최소화
+    // 위험도 70% 이상이고 내 손패 점수가 높으면 즉시 등록
+    if (stopRisk >= 70.0 && myHandScore >= 15) {
+      return true; // 방어적 등록
+    }
+
+    // 위험도 50% 이상이고 내 손패 점수가 매우 높으면 등록
+    if (stopRisk >= 50.0 && myHandScore >= 25) {
+      return true;
+    }
+
+    // 훌라 확률 vs 스톱 위험도 비교
+    // 스톱 위험도가 훌라 확률보다 높으면 등록 고려
+    if (stopRisk > probability && stopRisk >= 40.0) {
+      // 단, 훌라가 거의 완성 상태면 (남은 카드 1장) 계속 시도
+      if (remainingCount <= 1 && probability >= 50.0) {
+        return false; // 훌라 시도 계속
+      }
+      return true; // 방어적 등록
+    }
+
     // 훌라 확률이 높으면 대기
     // 60% 이상이고 남은 카드가 3장 이하면 훌라 시도
     if (probability >= 60.0 && remainingCount <= 3) {
+      // 단, 스톱 위험도가 매우 높으면 등록
+      if (stopRisk >= 60.0) {
+        return true;
+      }
       return false; // 등록 대기
     }
 
@@ -938,6 +1031,10 @@ class _HulaScreenState extends State<HulaScreen> with TickerProviderStateMixin {
 
     // 확률이 40% 이상이고 남은 카드가 2장 이하면 대기
     if (probability >= 40.0 && remainingCount <= 2) {
+      // 단, 스톱 위험도가 높으면 등록
+      if (stopRisk >= 50.0) {
+        return true;
+      }
       return false;
     }
 
@@ -1226,8 +1323,8 @@ class _HulaScreenState extends State<HulaScreen> with TickerProviderStateMixin {
     hand.add(drawnCard);
     _sortHand(hand);
 
-    // 2. 훌라 가능성 확인 후 등록 여부 결정
-    final shouldRegister = _shouldRegisterMelds(hand, melds);
+    // 2. 훌라 가능성 확인 후 등록 여부 결정 (스톱 위험도 포함)
+    final shouldRegister = _shouldRegisterMelds(hand, melds, computerIndex: computerIndex + 1);
 
     if (shouldRegister) {
       // 2-1. 가능한 멜드 등록
@@ -1414,8 +1511,8 @@ class _HulaScreenState extends State<HulaScreen> with TickerProviderStateMixin {
     _sortHand(hand);
     _showMessage('컴퓨터${computerIndex + 1}: 땡큐! ${card.suitSymbol}${card.rankString}');
 
-    // 훌라 가능성 확인 후 등록 여부 결정
-    final shouldRegister = _shouldRegisterMelds(hand, melds);
+    // 훌라 가능성 확인 후 등록 여부 결정 (스톱 위험도 포함)
+    final shouldRegister = _shouldRegisterMelds(hand, melds, computerIndex: computerIndex + 1);
 
     if (shouldRegister) {
       // 멜드 등록
