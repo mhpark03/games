@@ -229,6 +229,7 @@ class _HulaScreenState extends State<HulaScreen> with TickerProviderStateMixin {
     selectedCardIndices = [];
 
     setState(() {});
+    _saveGame();
   }
 
   void _sortHand(List<PlayingCard> hand) {
@@ -240,8 +241,133 @@ class _HulaScreenState extends State<HulaScreen> with TickerProviderStateMixin {
     });
   }
 
+  // 카드를 Map으로 변환
+  Map<String, dynamic> _cardToMap(PlayingCard card) {
+    return {
+      'suit': card.suit.index,
+      'rank': card.rank,
+    };
+  }
+
+  // Map에서 카드 복원
+  PlayingCard _mapToCard(Map<String, dynamic> map) {
+    return PlayingCard(
+      suit: Suit.values[map['suit'] as int],
+      rank: map['rank'] as int,
+    );
+  }
+
+  // 멜드를 Map으로 변환
+  Map<String, dynamic> _meldToMap(Meld meld) {
+    return {
+      'cards': meld.cards.map(_cardToMap).toList(),
+      'isRun': meld.isRun,
+    };
+  }
+
+  // Map에서 멜드 복원
+  Meld _mapToMeld(Map<String, dynamic> map) {
+    final cardsList = (map['cards'] as List)
+        .map((c) => _mapToCard(c as Map<String, dynamic>))
+        .toList();
+    return Meld(
+      cards: cardsList,
+      isRun: map['isRun'] as bool,
+    );
+  }
+
+  // 게임 상태 저장
+  Future<void> _saveGame() async {
+    if (gameOver) {
+      await HulaScreen.clearSavedGame();
+      return;
+    }
+
+    final gameState = {
+      'playerCount': playerCount,
+      'deck': deck.map(_cardToMap).toList(),
+      'discardPile': discardPile.map(_cardToMap).toList(),
+      'playerHand': playerHand.map(_cardToMap).toList(),
+      'computerHands': computerHands
+          .map((hand) => hand.map(_cardToMap).toList())
+          .toList(),
+      'playerMelds': playerMelds.map(_meldToMap).toList(),
+      'computerMelds': computerMelds
+          .map((melds) => melds.map(_meldToMap).toList())
+          .toList(),
+      'currentTurn': currentTurn,
+      'hasDrawn': hasDrawn,
+      'scores': scores,
+    };
+
+    await GameSaveService.saveGame('hula', gameState);
+  }
+
+  // 저장된 게임 불러오기
   Future<void> _loadSavedGame() async {
-    _initGame();
+    final gameState = await GameSaveService.loadGame('hula');
+
+    if (gameState == null) {
+      _initGame();
+      return;
+    }
+
+    setState(() {
+      playerCount = gameState['playerCount'] as int;
+
+      // 덱 복원
+      deck = (gameState['deck'] as List)
+          .map((c) => _mapToCard(c as Map<String, dynamic>))
+          .toList();
+
+      // 버린 더미 복원
+      discardPile = (gameState['discardPile'] as List)
+          .map((c) => _mapToCard(c as Map<String, dynamic>))
+          .toList();
+
+      // 플레이어 손패 복원
+      playerHand = (gameState['playerHand'] as List)
+          .map((c) => _mapToCard(c as Map<String, dynamic>))
+          .toList();
+
+      // 컴퓨터 손패 복원
+      computerHands = (gameState['computerHands'] as List)
+          .map((hand) => (hand as List)
+              .map((c) => _mapToCard(c as Map<String, dynamic>))
+              .toList())
+          .toList();
+
+      // 플레이어 멜드 복원
+      playerMelds = (gameState['playerMelds'] as List)
+          .map((m) => _mapToMeld(m as Map<String, dynamic>))
+          .toList();
+
+      // 컴퓨터 멜드 복원
+      computerMelds = (gameState['computerMelds'] as List)
+          .map((melds) => (melds as List)
+              .map((m) => _mapToMeld(m as Map<String, dynamic>))
+              .toList())
+          .toList();
+
+      currentTurn = gameState['currentTurn'] as int;
+      hasDrawn = gameState['hasDrawn'] as bool;
+      scores = List<int>.from(gameState['scores'] as List);
+
+      gameOver = false;
+      winner = null;
+      winnerIndex = null;
+      isHula = false;
+      selectedCardIndices = [];
+    });
+
+    // 컴퓨터 턴이면 자동 진행
+    if (currentTurn != 0) {
+      Timer(const Duration(milliseconds: 500), () {
+        if (mounted && !gameOver) {
+          _computerTurn();
+        }
+      });
+    }
   }
 
   void _showMessage(String message, {int seconds = 2}) {
@@ -282,6 +408,7 @@ class _HulaScreenState extends State<HulaScreen> with TickerProviderStateMixin {
       selectedCardIndices = [];
     });
     _showMessage('덱에서 ${card.suitSymbol}${card.rankString} 드로우');
+    _saveGame();
   }
 
   // 버린 더미에서 카드 가져오기 (땡큐)
@@ -298,6 +425,7 @@ class _HulaScreenState extends State<HulaScreen> with TickerProviderStateMixin {
       selectedCardIndices = [];
     });
     _showMessage('땡큐! ${card.suitSymbol}${card.rankString} 획득');
+    _saveGame();
   }
 
   // 카드 선택/해제
@@ -432,6 +560,7 @@ class _HulaScreenState extends State<HulaScreen> with TickerProviderStateMixin {
         selectedCardIndices = [];
       });
       _showMessage('7 단독 등록!');
+      _saveGame();
 
       if (playerHand.isEmpty) {
         _playerWins();
@@ -457,6 +586,7 @@ class _HulaScreenState extends State<HulaScreen> with TickerProviderStateMixin {
           selectedCardIndices = [];
         });
         _showMessage('멜드에 카드 추가!');
+        _saveGame();
 
         if (playerHand.isEmpty) {
           _playerWins();
@@ -488,6 +618,7 @@ class _HulaScreenState extends State<HulaScreen> with TickerProviderStateMixin {
     });
 
     _showMessage(isRun ? 'Run 등록!' : 'Group 등록!');
+    _saveGame();
 
     // 손패가 비었으면 승리
     if (playerHand.isEmpty) {
@@ -516,6 +647,7 @@ class _HulaScreenState extends State<HulaScreen> with TickerProviderStateMixin {
     });
 
     _showMessage('${card.suitSymbol}${card.rankString} 버림');
+    _saveGame();
 
     // 손패가 비었으면 승리
     if (playerHand.isEmpty) {
@@ -613,6 +745,7 @@ class _HulaScreenState extends State<HulaScreen> with TickerProviderStateMixin {
     _sortHand(hand);
 
     setState(() {});
+    _saveGame();
 
     if (hand.isEmpty) {
       _endGame(currentTurn);
