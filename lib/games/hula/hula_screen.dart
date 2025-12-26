@@ -993,23 +993,22 @@ class _HulaScreenState extends State<HulaScreen> with TickerProviderStateMixin {
             final isLandscape = constraints.maxWidth > constraints.maxHeight;
             return Column(
               children: [
-                // 상단 컴퓨터: 2인은 COM1, 3-4인은 COM2
+                // 상단 컴퓨터: 2인은 COM1, 3인은 COM2, 4인은 COM2
                 if (computerHands.isNotEmpty)
-                  _buildTopComputerHand(playerCount == 2 ? 0 : 1, isLandscape),
+                  _buildTopComputerHand(computerHands.length == 1 ? 0 : 1, isLandscape),
 
                 // 중앙 영역 (좌우 컴퓨터 + 덱/버린더미)
                 Expanded(
-                  child: playerCount > 2
+                  child: computerHands.length >= 2
                       ? Row(
                           children: [
-                            // 왼쪽 컴퓨터 (COM3)
+                            // 왼쪽 컴퓨터 (COM3) - 4인 게임만
                             if (computerHands.length >= 3)
                               _buildSideComputerHand(2, isLandscape),
                             // 중앙 카드 영역
                             Expanded(child: _buildCenterArea(isLandscape)),
-                            // 오른쪽 컴퓨터 (COM1)
-                            if (computerHands.isNotEmpty)
-                              _buildSideComputerHand(0, isLandscape),
+                            // 오른쪽 컴퓨터 (COM1) - 3인 이상
+                            _buildSideComputerHand(0, isLandscape),
                           ],
                         )
                       : _buildCenterArea(isLandscape),
