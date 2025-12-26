@@ -782,6 +782,81 @@ class _HulaScreenState extends State<HulaScreen> with TickerProviderStateMixin {
     return sortedCards.first;
   }
 
+  // 7 카드 3장 이상일 때 Group vs Run 전략 결정
+  String _decideSevensStrategy(List<PlayingCard> sevens, List<PlayingCard> hand) {
+    // Run 가능성 점수 계산
+    double runPotential = 0;
+    // Group 점수 (기본값: 3장 즉시 제거)
+    double groupScore = 30;
+
+    for (final seven in sevens) {
+      final suit = seven.suit;
+
+      // 손에 있는 6, 8 확인
+      final hasSix = hand.any((c) => c.suit == suit && c.rank == 6);
+      final hasEight = hand.any((c) => c.suit == suit && c.rank == 8);
+
+      // 손에 있는 5, 9 확인 (더 긴 Run 가능성)
+      final hasFive = hand.any((c) => c.suit == suit && c.rank == 5);
+      final hasNine = hand.any((c) => c.suit == suit && c.rank == 9);
+
+      // 버린 더미에서 6, 8 확인
+      final discardedSix = discardPile.where((c) => c.suit == suit && c.rank == 6).length;
+      final discardedEight = discardPile.where((c) => c.suit == suit && c.rank == 8).length;
+
+      // Run 가능성 계산
+      double sevenRunScore = 0;
+
+      // 이미 6 또는 8을 가지고 있으면 Run 유리
+      if (hasSix) sevenRunScore += 25;
+      if (hasEight) sevenRunScore += 25;
+
+      // 5 또는 9도 있으면 긴 Run 가능
+      if (hasSix && hasFive) sevenRunScore += 15;
+      if (hasEight && hasNine) sevenRunScore += 15;
+
+      // 6, 8이 버려졌으면 Run 확률 낮음
+      // 같은 숫자는 4장뿐이므로 2장 이상 버려지면 확률 낮음
+      if (discardedSix >= 2) sevenRunScore -= 20;
+      if (discardedEight >= 2) sevenRunScore -= 20;
+      if (discardedSix == 1) sevenRunScore -= 5;
+      if (discardedEight == 1) sevenRunScore -= 5;
+
+      // 6, 8 모두 없고 버려진 것도 많으면 Run 불가능에 가까움
+      if (!hasSix && !hasEight && discardedSix + discardedEight >= 2) {
+        sevenRunScore -= 30;
+      }
+
+      runPotential += sevenRunScore;
+    }
+
+    // 평균 Run 가능성
+    runPotential /= sevens.length;
+
+    // Group 점수 조정
+    // 4번째 7이 손에 있으면 Group 유리
+    if (sevens.length >= 4) {
+      groupScore += 20;
+    }
+
+    // 방어적 관점: 손패가 많으면 빨리 줄이는 Group 선호
+    if (hand.length > 10) {
+      groupScore += 15;
+    }
+
+    // 공격적 관점: 손패가 적으면 Run으로 더 많이 붙이기 선호
+    if (hand.length <= 5) {
+      runPotential += 10;
+    }
+
+    // 결정
+    if (runPotential > groupScore) {
+      return 'run';
+    } else {
+      return 'group';
+    }
+  }
+
   // 멜드 등록
   void _registerMeld() {
     final selectedCards =
@@ -1004,16 +1079,58 @@ class _HulaScreenState extends State<HulaScreen> with TickerProviderStateMixin {
       }
     }
 
-    // 2-1. 7 카드 단독 등록 (훌라 특별 규칙)
+    // 2-1. 7 카드 스마트 등록 (Group vs Run 결정)
     final sevens = hand.where((c) => _isSeven(c)).toList();
-    for (final seven in sevens) {
-      hand.remove(seven);
-      melds.add(Meld(cards: [seven], isRun: false));
-      _showMessage('컴퓨터${computerIndex + 1}: 7 등록!');
+    if (sevens.length >= 3) {
+      // 3장 이상: Group vs 개별 Run 결정
+      final decision = _decideSevensStrategy(sevens, hand);
+      if (decision == 'group') {
+        // Group으로 등록
+        for (final seven in sevens.take(3)) {
+          hand.remove(seven);
+        }
+        melds.add(Meld(cards: sevens.take(3).toList(), isRun: false));
+        _showMessage('컴퓨터${computerIndex + 1}: 7 Group 등록!');
 
-      if (hand.isEmpty) {
-        _endGame(currentTurn);
-        return;
+        if (hand.isEmpty) {
+          _endGame(currentTurn);
+          return;
+        }
+
+        // 남은 7이 있으면 단독 등록
+        final remaining = hand.where((c) => _isSeven(c)).toList();
+        for (final seven in remaining) {
+          hand.remove(seven);
+          melds.add(Meld(cards: [seven], isRun: false));
+          if (hand.isEmpty) {
+            _endGame(currentTurn);
+            return;
+          }
+        }
+      } else {
+        // 개별 등록 (Run 가능성 높음)
+        for (final seven in sevens) {
+          hand.remove(seven);
+          melds.add(Meld(cards: [seven], isRun: false));
+          _showMessage('컴퓨터${computerIndex + 1}: 7 등록!');
+
+          if (hand.isEmpty) {
+            _endGame(currentTurn);
+            return;
+          }
+        }
+      }
+    } else {
+      // 2장 이하: 개별 등록
+      for (final seven in sevens) {
+        hand.remove(seven);
+        melds.add(Meld(cards: [seven], isRun: false));
+        _showMessage('컴퓨터${computerIndex + 1}: 7 등록!');
+
+        if (hand.isEmpty) {
+          _endGame(currentTurn);
+          return;
+        }
       }
     }
 
@@ -1144,15 +1261,48 @@ class _HulaScreenState extends State<HulaScreen> with TickerProviderStateMixin {
       }
     }
 
-    // 7 카드 단독 등록
+    // 7 카드 스마트 등록
     final sevens = hand.where((c) => _isSeven(c)).toList();
-    for (final seven in sevens) {
-      hand.remove(seven);
-      melds.add(Meld(cards: [seven], isRun: false));
+    if (sevens.length >= 3) {
+      final decision = _decideSevensStrategy(sevens, hand);
+      if (decision == 'group') {
+        for (final seven in sevens.take(3)) {
+          hand.remove(seven);
+        }
+        melds.add(Meld(cards: sevens.take(3).toList(), isRun: false));
 
-      if (hand.isEmpty) {
-        _endGame(computerIndex + 1);
-        return;
+        if (hand.isEmpty) {
+          _endGame(computerIndex + 1);
+          return;
+        }
+
+        final remaining = hand.where((c) => _isSeven(c)).toList();
+        for (final seven in remaining) {
+          hand.remove(seven);
+          melds.add(Meld(cards: [seven], isRun: false));
+          if (hand.isEmpty) {
+            _endGame(computerIndex + 1);
+            return;
+          }
+        }
+      } else {
+        for (final seven in sevens) {
+          hand.remove(seven);
+          melds.add(Meld(cards: [seven], isRun: false));
+          if (hand.isEmpty) {
+            _endGame(computerIndex + 1);
+            return;
+          }
+        }
+      }
+    } else {
+      for (final seven in sevens) {
+        hand.remove(seven);
+        melds.add(Meld(cards: [seven], isRun: false));
+        if (hand.isEmpty) {
+          _endGame(computerIndex + 1);
+          return;
+        }
       }
     }
 
