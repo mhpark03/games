@@ -977,6 +977,80 @@ class _HulaScreenState extends State<HulaScreen> with TickerProviderStateMixin {
     return risk.clamp(0.0, 100.0);
   }
 
+  // 컴퓨터가 스톱을 외칠지 결정
+  bool _shouldComputerCallStop(int computerIndex) {
+    final myHand = computerHands[computerIndex];
+    final myScore = _calculateHandScore(myHand);
+
+    // 1. 손패가 너무 많으면 스톱 안 함 (불리할 가능성)
+    if (myHand.length > 5) return false;
+
+    // 2. 내 점수가 너무 높으면 스톱 안 함
+    if (myScore > 15) return false;
+
+    // 3. 다른 플레이어 점수 추정 및 비교
+    int betterCount = 0; // 나보다 점수가 낮을 것 같은 플레이어 수
+    int totalPlayers = playerCount - 1; // 자신 제외
+    bool someoneAboutToWin = false;
+
+    // 플레이어 확인
+    final playerScore = _calculateHandScore(playerHand);
+    if (playerScore < myScore) {
+      betterCount++;
+    }
+    if (playerHand.length <= 2) {
+      someoneAboutToWin = true;
+    }
+
+    // 다른 컴퓨터 확인
+    for (int i = 0; i < computerHands.length; i++) {
+      if (i == computerIndex) continue;
+
+      final otherHand = computerHands[i];
+      final otherScore = _calculateHandScore(otherHand);
+
+      if (otherScore < myScore) {
+        betterCount++;
+      }
+      if (otherHand.length <= 2) {
+        someoneAboutToWin = true;
+      }
+    }
+
+    // 4. 스톱 결정 조건
+
+    // 4-1. 내 점수가 0이면 무조건 스톱 (완벽)
+    if (myScore == 0) return true;
+
+    // 4-2. 상대가 곧 이길 것 같고 내 점수가 낮으면 선제 스톱
+    if (someoneAboutToWin && myScore <= 5 && betterCount == 0) {
+      return true;
+    }
+
+    // 4-3. 손패 2장 이하 & 점수 5점 이하 & 모든 상대보다 유리
+    if (myHand.length <= 2 && myScore <= 5 && betterCount == 0) {
+      return true;
+    }
+
+    // 4-4. 손패 3장 이하 & 점수 3점 이하 & 절반 이상 상대보다 유리
+    if (myHand.length <= 3 && myScore <= 3 && betterCount <= totalPlayers / 2) {
+      return true;
+    }
+
+    // 4-5. 손패 1장 & 점수 10점 이하 (거의 확실히 유리)
+    if (myHand.length == 1 && myScore <= 10 && betterCount == 0) {
+      return true;
+    }
+
+    return false;
+  }
+
+  // 컴퓨터가 스톱 선언
+  void _computerCallStop(int computerIndex) {
+    _showMessage('컴퓨터${computerIndex + 1}: 스톱!');
+    _calculateScoresAndEnd();
+  }
+
   // 멜드 등록 여부 결정 (훌라 가능성 + 스톱 위험도 고려)
   bool _shouldRegisterMelds(List<PlayingCard> hand, List<Meld> melds, {int? computerIndex}) {
     // 이미 멜드가 있으면 훌라 불가능 → 등록해도 됨
@@ -1435,6 +1509,12 @@ class _HulaScreenState extends State<HulaScreen> with TickerProviderStateMixin {
       return;
     }
 
+    // 스톱 호출 여부 확인
+    if (_shouldComputerCallStop(computerIndex)) {
+      _computerCallStop(computerIndex);
+      return;
+    }
+
     // 땡큐 확인: 플레이어 전 순서 컴퓨터는 즉시, 후 순서는 5초 후
     _lastDiscardTurn = currentTurn;
     Timer(const Duration(milliseconds: 500), () {
@@ -1624,6 +1704,12 @@ class _HulaScreenState extends State<HulaScreen> with TickerProviderStateMixin {
 
     if (hand.isEmpty) {
       _endGame(computerIndex + 1);
+      return;
+    }
+
+    // 스톱 호출 여부 확인
+    if (_shouldComputerCallStop(computerIndex)) {
+      _computerCallStop(computerIndex);
       return;
     }
 
