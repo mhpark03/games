@@ -1031,11 +1031,34 @@ class _HulaScreenState extends State<HulaScreen> with TickerProviderStateMixin {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFF0D5C2E), // 녹색 테이블
+      body: OrientationBuilder(
+        builder: (context, orientation) {
+          if (orientation == Orientation.landscape) {
+            SystemChrome.setEnabledSystemUIMode(
+              SystemUiMode.immersiveSticky,
+              overlays: [],
+            );
+            return _buildLandscapeLayout();
+          } else {
+            SystemChrome.setEnabledSystemUIMode(
+              SystemUiMode.edgeToEdge,
+              overlays: SystemUiOverlay.values,
+            );
+            return _buildPortraitLayout();
+          }
+        },
+      ),
+    );
+  }
+
+  Widget _buildPortraitLayout() {
+    return Scaffold(
+      backgroundColor: const Color(0xFF0D5C2E),
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
-        title: Text('훌라 (${playerCount}인)', style: const TextStyle(color: Colors.white)),
+        title: Text('훌라 (${playerCount}인)',
+            style: const TextStyle(color: Colors.white)),
         leading: IconButton(
           icon: const Icon(Icons.arrow_back, color: Colors.white),
           onPressed: () => Navigator.pop(context),
@@ -1052,60 +1075,141 @@ class _HulaScreenState extends State<HulaScreen> with TickerProviderStateMixin {
         ],
       ),
       body: SafeArea(
-        child: LayoutBuilder(
-          builder: (context, constraints) {
-            final isLandscape = constraints.maxWidth > constraints.maxHeight;
-            return Column(
-              children: [
-                // 상단 컴퓨터: 2인은 COM1, 3인은 COM2, 4인은 COM2
-                if (computerHands.isNotEmpty)
-                  _buildTopComputerHand(computerHands.length == 1 ? 0 : 1, isLandscape),
+        child: _buildGameContent(false),
+      ),
+    );
+  }
 
-                // 중앙 영역 (좌우 컴퓨터 + 덱/버린더미)
-                Expanded(
-                  child: computerHands.length >= 2
-                      ? Row(
-                          children: [
-                            // 왼쪽 컴퓨터 (COM3) - 4인 게임만
-                            if (computerHands.length >= 3)
-                              _buildSideComputerHand(2, isLandscape),
-                            // 중앙 카드 영역
-                            Expanded(child: _buildCenterArea(isLandscape)),
-                            // 오른쪽 컴퓨터 (COM1) - 3인 이상
-                            _buildSideComputerHand(0, isLandscape),
-                          ],
-                        )
-                      : _buildCenterArea(isLandscape),
-                ),
-
-                // 메시지
-                if (gameMessage != null)
+  Widget _buildLandscapeLayout() {
+    return Container(
+      color: const Color(0xFF0D5C2E),
+      child: SafeArea(
+        child: Stack(
+          children: [
+            _buildGameContent(true),
+            // 왼쪽 상단: 뒤로가기 버튼 + 제목
+            Positioned(
+              top: 4,
+              left: 8,
+              child: Row(
+                children: [
+                  _buildCircleButton(
+                    icon: Icons.arrow_back,
+                    onPressed: () => Navigator.pop(context),
+                  ),
+                  const SizedBox(width: 8),
                   Container(
-                    padding: EdgeInsets.symmetric(horizontal: 12, vertical: isLandscape ? 4 : 8),
-                    margin: EdgeInsets.only(bottom: isLandscape ? 4 : 8),
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                     decoration: BoxDecoration(
-                      color: Colors.black54,
-                      borderRadius: BorderRadius.circular(8),
+                      color: Colors.black.withValues(alpha: 0.5),
+                      borderRadius: BorderRadius.circular(12),
                     ),
                     child: Text(
-                      gameMessage!,
-                      style: TextStyle(color: Colors.white, fontSize: isLandscape ? 12 : 14),
+                      '훌라 (${playerCount}인)',
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 12,
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
                   ),
-
-                // 등록된 멜드
-                if (playerMelds.isNotEmpty) _buildPlayerMelds(isLandscape),
-
-                // 플레이어 손패
-                _buildPlayerHand(isLandscape),
-
-                // 액션 버튼
-                _buildActionButtons(isLandscape),
-              ],
-            );
-          },
+                ],
+              ),
+            ),
+            // 오른쪽 상단: 새 게임 + 도움말 버튼
+            Positioned(
+              top: 4,
+              right: 8,
+              child: Row(
+                children: [
+                  _buildCircleButton(
+                    icon: Icons.refresh,
+                    onPressed: _initGame,
+                  ),
+                  const SizedBox(width: 8),
+                  _buildCircleButton(
+                    icon: Icons.help_outline,
+                    onPressed: _showRulesDialog,
+                  ),
+                ],
+              ),
+            ),
+          ],
         ),
       ),
+    );
+  }
+
+  Widget _buildCircleButton({
+    required IconData icon,
+    required VoidCallback onPressed,
+  }) {
+    return GestureDetector(
+      onTap: onPressed,
+      child: Container(
+        width: 32,
+        height: 32,
+        decoration: BoxDecoration(
+          color: Colors.black.withValues(alpha: 0.5),
+          shape: BoxShape.circle,
+        ),
+        child: Icon(icon, color: Colors.white, size: 18),
+      ),
+    );
+  }
+
+  Widget _buildGameContent(bool isLandscape) {
+    return Column(
+      children: [
+        // 상단 컴퓨터: 2인은 COM1, 3인은 COM2, 4인은 COM2
+        if (computerHands.isNotEmpty)
+          _buildTopComputerHand(
+              computerHands.length == 1 ? 0 : 1, isLandscape),
+
+        // 중앙 영역 (좌우 컴퓨터 + 덱/버린더미)
+        Expanded(
+          child: computerHands.length >= 2
+              ? Row(
+                  children: [
+                    // 왼쪽 컴퓨터 (COM3) - 4인 게임만
+                    if (computerHands.length >= 3)
+                      _buildSideComputerHand(2, isLandscape),
+                    // 중앙 카드 영역
+                    Expanded(child: _buildCenterArea(isLandscape)),
+                    // 오른쪽 컴퓨터 (COM1) - 3인 이상
+                    _buildSideComputerHand(0, isLandscape),
+                  ],
+                )
+              : _buildCenterArea(isLandscape),
+        ),
+
+        // 메시지
+        if (gameMessage != null)
+          Container(
+            padding: EdgeInsets.symmetric(
+                horizontal: 12, vertical: isLandscape ? 2 : 8),
+            margin: EdgeInsets.only(bottom: isLandscape ? 2 : 8),
+            decoration: BoxDecoration(
+              color: Colors.black54,
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Text(
+              gameMessage!,
+              style: TextStyle(
+                  color: Colors.white, fontSize: isLandscape ? 11 : 14),
+            ),
+          ),
+
+        // 등록된 멜드
+        if (playerMelds.isNotEmpty) _buildPlayerMelds(isLandscape),
+
+        // 플레이어 손패
+        _buildPlayerHand(isLandscape),
+
+        // 액션 버튼
+        _buildActionButtons(isLandscape),
+      ],
     );
   }
 
