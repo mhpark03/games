@@ -369,16 +369,86 @@ class _HulaScreenState extends State<HulaScreen> with TickerProviderStateMixin {
     return false;
   }
 
-  // 멜드 등록
-  void _registerMeld() {
-    if (selectedCardIndices.length < 3) {
-      _showMessage('3장 이상 선택하세요');
-      return;
+  // 기존 멜드에 카드 붙이기 가능 여부 확인
+  int _canAttachToMeld(PlayingCard card) {
+    for (int i = 0; i < playerMelds.length; i++) {
+      final meld = playerMelds[i];
+      if (meld.isRun) {
+        // Run: 같은 무늬이고 앞이나 뒤에 연속되는 카드
+        if (card.suit == meld.cards.first.suit) {
+          final ranks = meld.cards.map((c) => c.rank).toList()..sort();
+          final minRank = ranks.first;
+          final maxRank = ranks.last;
+
+          // 앞에 붙이기 (A-2-3에 K 붙이기는 제외, 단 A가 14로 사용된 경우 제외)
+          if (card.rank == minRank - 1) return i;
+          // 뒤에 붙이기
+          if (card.rank == maxRank + 1) return i;
+          // A를 14로 취급 (Q-K-A 케이스)
+          if (maxRank == 13 && card.rank == 1) return i;
+          // A-2-3에서 A 앞에 K는 안됨 (A가 1로 사용된 경우)
+        }
+      } else {
+        // Group: 같은 숫자 (최대 4장까지)
+        if (meld.cards.length < 4 && card.rank == meld.cards.first.rank) {
+          // 이미 같은 무늬가 있는지 확인
+          if (!meld.cards.any((c) => c.suit == card.suit)) {
+            return i;
+          }
+        }
+      }
+    }
+    return -1;
+  }
+
+  // 멜드에 카드 붙이기
+  void _attachToMeld(int meldIndex, PlayingCard card) {
+    final meld = playerMelds[meldIndex];
+    final newCards = [...meld.cards, card];
+
+    if (meld.isRun) {
+      // Run은 정렬
+      newCards.sort((a, b) => a.rank.compareTo(b.rank));
     }
 
+    playerMelds[meldIndex] = Meld(cards: newCards, isRun: meld.isRun);
+  }
+
+  // 멜드 등록
+  void _registerMeld() {
     final selectedCards =
         selectedCardIndices.map((i) => playerHand[i]).toList();
 
+    // 1~2장 선택: 기존 멜드에 붙이기 시도
+    if (selectedCardIndices.length < 3) {
+      // 각 카드에 대해 붙이기 가능 여부 확인
+      bool attached = false;
+      for (final card in selectedCards) {
+        final meldIndex = _canAttachToMeld(card);
+        if (meldIndex >= 0) {
+          _attachToMeld(meldIndex, card);
+          playerHand.remove(card);
+          attached = true;
+        }
+      }
+
+      if (attached) {
+        setState(() {
+          selectedCardIndices = [];
+        });
+        _showMessage('멜드에 카드 추가!');
+
+        if (playerHand.isEmpty) {
+          _playerWins();
+        }
+        return;
+      }
+
+      _showMessage('붙일 수 있는 멜드가 없습니다');
+      return;
+    }
+
+    // 3장 이상: 새 멜드 등록
     if (!_isValidMeld(selectedCards)) {
       _showMessage('유효하지 않은 조합입니다');
       return;
@@ -1177,7 +1247,20 @@ class _HulaScreenState extends State<HulaScreen> with TickerProviderStateMixin {
   }
 
   Widget _buildActionButtons(bool isLandscape) {
-    final canMeld = selectedCardIndices.length >= 3;
+    // 1~2장: 붙이기 가능 여부, 3장+: 새 멜드 가능 여부
+    bool canMeld = false;
+    if (selectedCardIndices.length >= 3) {
+      final cards = selectedCardIndices.map((i) => playerHand[i]).toList();
+      canMeld = _isValidMeld(cards);
+    } else if (selectedCardIndices.isNotEmpty && playerMelds.isNotEmpty) {
+      // 1~2장 선택 시 붙이기 가능 여부 확인
+      for (final idx in selectedCardIndices) {
+        if (_canAttachToMeld(playerHand[idx]) >= 0) {
+          canMeld = true;
+          break;
+        }
+      }
+    }
     final canDiscard = hasDrawn && selectedCardIndices.length == 1;
     final iconSize = isLandscape ? 14.0 : 18.0;
     final buttonPadding = isLandscape
