@@ -788,9 +788,14 @@ class _HulaScreenState extends State<HulaScreen> with TickerProviderStateMixin {
     // 버린 카드가 멜드에 도움이 되면 가져오기
     bool takeDiscard = false;
     if (topDiscard != null) {
-      final testHand = [...hand, topDiscard];
-      if (_findBestMeld(testHand) != null) {
+      // 7 카드는 단독 등록 가능하므로 항상 가져오기
+      if (_isSeven(topDiscard)) {
         takeDiscard = true;
+      } else {
+        final testHand = [...hand, topDiscard];
+        if (_findBestMeld(testHand) != null) {
+          takeDiscard = true;
+        }
       }
     }
 
@@ -825,6 +830,19 @@ class _HulaScreenState extends State<HulaScreen> with TickerProviderStateMixin {
 
       if (hand.isEmpty) {
         // 컴퓨터 승리
+        _endGame(currentTurn);
+        return;
+      }
+    }
+
+    // 2-1. 7 카드 단독 등록 (훌라 특별 규칙)
+    final sevens = hand.where((c) => _isSeven(c)).toList();
+    for (final seven in sevens) {
+      hand.remove(seven);
+      melds.add(Meld(cards: [seven], isRun: false));
+      _showMessage('컴퓨터${computerIndex + 1}: 7 등록!');
+
+      if (hand.isEmpty) {
         _endGame(currentTurn);
         return;
       }
