@@ -652,6 +652,65 @@ class _HulaScreenState extends State<HulaScreen> with TickerProviderStateMixin {
   // 7 카드인지 확인
   bool _isSeven(PlayingCard card) => card.rank == 7;
 
+  // 범용: 특정 멜드 목록에 카드를 붙일 수 있는지 확인
+  int _canAttachToMeldList(PlayingCard card, List<Meld> melds) {
+    for (int i = 0; i < melds.length; i++) {
+      final meld = melds[i];
+
+      // 단독 7 카드 특별 처리
+      if (meld.cards.length == 1 && meld.cards.first.rank == 7) {
+        final seven = meld.cards.first;
+        if (card.suit == seven.suit && (card.rank == 6 || card.rank == 8)) {
+          return i;
+        }
+        if (card.rank == 7 && card.suit != seven.suit) {
+          return i;
+        }
+        continue;
+      }
+
+      if (meld.isRun) {
+        if (card.suit == meld.cards.first.suit) {
+          final ranks = meld.cards.map((c) => c.rank).toList()..sort();
+          final minRank = ranks.first;
+          final maxRank = ranks.last;
+          if (card.rank == minRank - 1) return i;
+          if (card.rank == maxRank + 1) return i;
+          if (maxRank == 13 && card.rank == 1) return i;
+        }
+      } else {
+        if (meld.cards.length < 4 && card.rank == meld.cards.first.rank) {
+          if (!meld.cards.any((c) => c.suit == card.suit)) {
+            return i;
+          }
+        }
+      }
+    }
+    return -1;
+  }
+
+  // 범용: 특정 멜드 목록에 카드 붙이기
+  void _attachToMeldList(int meldIndex, PlayingCard card, List<Meld> melds) {
+    final meld = melds[meldIndex];
+    final newCards = [...meld.cards, card];
+    bool newIsRun = meld.isRun;
+
+    if (meld.cards.length == 1 && meld.cards.first.rank == 7) {
+      final seven = meld.cards.first;
+      if (card.suit == seven.suit && (card.rank == 6 || card.rank == 8)) {
+        newIsRun = true;
+      } else {
+        newIsRun = false;
+      }
+    }
+
+    if (newIsRun) {
+      newCards.sort((a, b) => a.rank.compareTo(b.rank));
+    }
+
+    melds[meldIndex] = Meld(cards: newCards, isRun: newIsRun);
+  }
+
   // 멜드 등록
   void _registerMeld() {
     final selectedCards =
@@ -887,6 +946,28 @@ class _HulaScreenState extends State<HulaScreen> with TickerProviderStateMixin {
       }
     }
 
+    // 2-2. 기존 멜드에 붙여놓기
+    if (melds.isNotEmpty) {
+      bool attached = true;
+      while (attached) {
+        attached = false;
+        for (int i = hand.length - 1; i >= 0; i--) {
+          final card = hand[i];
+          final meldIndex = _canAttachToMeldList(card, melds);
+          if (meldIndex >= 0) {
+            _attachToMeldList(meldIndex, card, melds);
+            hand.removeAt(i);
+            attached = true;
+
+            if (hand.isEmpty) {
+              _endGame(currentTurn);
+              return;
+            }
+          }
+        }
+      }
+    }
+
     // 3. 가장 높은 점수 카드 버리기
     hand.sort((a, b) => b.point.compareTo(a.point));
     final discardCard = hand.removeAt(0);
@@ -1001,6 +1082,28 @@ class _HulaScreenState extends State<HulaScreen> with TickerProviderStateMixin {
       if (hand.isEmpty) {
         _endGame(computerIndex + 1);
         return;
+      }
+    }
+
+    // 기존 멜드에 붙여놓기
+    if (melds.isNotEmpty) {
+      bool attached = true;
+      while (attached) {
+        attached = false;
+        for (int i = hand.length - 1; i >= 0; i--) {
+          final c = hand[i];
+          final meldIndex = _canAttachToMeldList(c, melds);
+          if (meldIndex >= 0) {
+            _attachToMeldList(meldIndex, c, melds);
+            hand.removeAt(i);
+            attached = true;
+
+            if (hand.isEmpty) {
+              _endGame(computerIndex + 1);
+              return;
+            }
+          }
+        }
       }
     }
 
