@@ -160,7 +160,7 @@ class _YutnoriScreenState extends State<YutnoriScreen>
   // 25-28: 좌상단 대각선 (10→중앙)
   // 22, 27: 중앙
   static const int boardSize = 29;
-  static const int lastBoardPosition = 33; // 마지막 보드 위치
+  static const int lastBoardPosition = 34; // 마지막 보드 위치 (시작점)
   static const int finishPosition = 100; // 골인 표시 (보드 위치가 아님)
 
   // 특수 위치
