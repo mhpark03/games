@@ -2036,11 +2036,10 @@ class _YutnoriScreenState extends State<YutnoriScreen>
     }
 
     // 이동 가능한 말 전체 확인
-    bool hasMovablePiece = false;
+    List<int> movablePieces = [];
     for (int i = 0; i < 4; i++) {
       if (_canMovePiece(i, move)) {
-        hasMovablePiece = true;
-        break;
+        movablePieces.add(i);
       }
     }
 
@@ -2058,8 +2057,25 @@ class _YutnoriScreenState extends State<YutnoriScreen>
       return;
     }
 
+    // 이동 가능한 말이 하나뿐인 경우 - 자동 선택
+    if (movablePieces.length == 1) {
+      setState(() {
+        isAutoActionPending = true;
+        gameMessage = '말을 이동합니다...';
+      });
+      Future.delayed(const Duration(milliseconds: 800), () {
+        if (mounted && isAutoActionPending && currentPlayer == 0) {
+          setState(() {
+            isAutoActionPending = false;
+          });
+          _selectPiece(movablePieces.first);
+        }
+      });
+      return;
+    }
+
     // 이동 가능한 말이 없는 경우 - 자동 건너뛰기
-    if (!hasMovablePiece) {
+    if (movablePieces.isEmpty) {
       setState(() {
         isAutoActionPending = true;
         gameMessage = '이동할 수 없어 건너뜁니다...';
