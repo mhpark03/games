@@ -170,10 +170,11 @@ class _YutnoriScreenState extends State<YutnoriScreen>
       curve: Curves.bounceOut,
     );
 
+    // 항상 먼저 초기화 (async 로드 전에 playerPieces가 필요함)
+    _initGame();
+
     if (widget.resumeGame) {
       _loadGame();
-    } else {
-      _initGame();
     }
   }
 
@@ -1321,43 +1322,87 @@ class _YutnoriScreenState extends State<YutnoriScreen>
   List<Widget> _buildPiecesOnBoard(double boardSize) {
     List<Widget> pieces = [];
 
+    // 각 위치에 있는 말들을 수집
+    Map<int, List<Map<String, int>>> piecesAtPosition = {};
     for (int playerIndex = 0; playerIndex < playerCount; playerIndex++) {
       for (int pieceIndex = 0;
           pieceIndex < playerPieces[playerIndex].length;
           pieceIndex++) {
         final piece = playerPieces[playerIndex][pieceIndex];
-
         if (piece.isOnBoard) {
-          final pos = _getBoardPosition(piece.position, boardSize);
-          final offset = _getPieceOffset(playerIndex, pieceIndex);
-
-          pieces.add(
-            Positioned(
-              left: pos.dx + offset.dx - 12,
-              top: pos.dy + offset.dy - 12,
-              child: GestureDetector(
-                onTap: currentPlayer == 0 &&
-                        playerIndex == 0 &&
-                        pendingMoves.isNotEmpty
-                    ? () => _selectPiece(pieceIndex)
-                    : null,
-                child: _buildPieceWidget(
-                  playerIndex,
-                  pieceIndex,
-                  piece.stackedPieces.length,
-                  isSelectable: currentPlayer == 0 &&
-                      playerIndex == 0 &&
-                      pendingMoves.isNotEmpty &&
-                      _canMovePiece(pieceIndex, pendingMoves.first),
-                ),
-              ),
-            ),
-          );
+          piecesAtPosition.putIfAbsent(piece.position, () => []);
+          piecesAtPosition[piece.position]!.add({
+            'player': playerIndex,
+            'piece': pieceIndex,
+          });
         }
       }
     }
 
+    // 위치별로 말 위젯 생성
+    for (var entry in piecesAtPosition.entries) {
+      final position = entry.key;
+      final piecesHere = entry.value;
+      final pos = _getBoardPosition(position, boardSize);
+
+      for (int i = 0; i < piecesHere.length; i++) {
+        final playerIndex = piecesHere[i]['player']!;
+        final pieceIndex = piecesHere[i]['piece']!;
+        final piece = playerPieces[playerIndex][pieceIndex];
+
+        // 같은 위치에 여러 말이 있을 때만 오프셋 적용
+        final offset = piecesHere.length > 1
+            ? _getPieceOffsetForMultiple(i, piecesHere.length)
+            : Offset.zero;
+
+        // 말 크기의 절반만큼 빼서 중앙 정렬 (기본 크기 28px)
+        final pieceSize = 28.0 + piece.stackedPieces.length * 4;
+        final halfSize = pieceSize / 2;
+
+        pieces.add(
+          Positioned(
+            left: pos.dx + offset.dx - halfSize,
+            top: pos.dy + offset.dy - halfSize,
+            child: GestureDetector(
+              onTap: currentPlayer == 0 &&
+                      playerIndex == 0 &&
+                      pendingMoves.isNotEmpty
+                  ? () => _selectPiece(pieceIndex)
+                  : null,
+              child: _buildPieceWidget(
+                playerIndex,
+                pieceIndex,
+                piece.stackedPieces.length,
+                isSelectable: currentPlayer == 0 &&
+                    playerIndex == 0 &&
+                    pendingMoves.isNotEmpty &&
+                    _canMovePiece(pieceIndex, pendingMoves.first),
+              ),
+            ),
+          ),
+        );
+      }
+    }
+
     return pieces;
+  }
+
+  // 여러 말이 같은 위치에 있을 때 오프셋 계산
+  Offset _getPieceOffsetForMultiple(int index, int total) {
+    if (total == 2) {
+      return index == 0 ? const Offset(-10, 0) : const Offset(10, 0);
+    } else if (total == 3) {
+      const offsets = [Offset(-10, -6), Offset(10, -6), Offset(0, 10)];
+      return offsets[index];
+    } else {
+      const offsets = [
+        Offset(-10, -10),
+        Offset(10, -10),
+        Offset(-10, 10),
+        Offset(10, 10),
+      ];
+      return offsets[index % 4];
+    }
   }
 
   Offset _getBoardPosition(int position, double size) {
@@ -1450,17 +1495,6 @@ class _YutnoriScreenState extends State<YutnoriScreen>
     }
 
     return Offset(center, center);
-  }
-
-  Offset _getPieceOffset(int playerIndex, int pieceIndex) {
-    // 같은 위치에 여러 말이 있을 때 겹치지 않게
-    final offsets = [
-      const Offset(-8, -8),
-      const Offset(8, -8),
-      const Offset(-8, 8),
-      const Offset(8, 8),
-    ];
-    return offsets[playerIndex % 4];
   }
 
   String _getPlayerLabel(int playerIndex) {
