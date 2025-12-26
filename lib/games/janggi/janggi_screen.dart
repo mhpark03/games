@@ -102,6 +102,10 @@ class _JanggiScreenState extends State<JanggiScreen> {
   int? lastMoveToRow;
   int? lastMoveToCol;
 
+  // 보드 상태 히스토리 (반복 검출용)
+  List<String> _boardHistory = [];
+  int _consecutiveCheckCount = 0; // 연속 장군 횟수
+
   // Gemini AI 설정
   String? geminiApiKey;
   GeminiService? geminiService;
@@ -191,6 +195,8 @@ class _JanggiScreenState extends State<JanggiScreen> {
       'lastMoveFromCol': lastMoveFromCol,
       'lastMoveToRow': lastMoveToRow,
       'lastMoveToCol': lastMoveToCol,
+      'boardHistory': _boardHistory,
+      'consecutiveCheckCount': _consecutiveCheckCount,
     };
 
     await GameSaveService.saveGame('janggi', gameState);
@@ -225,6 +231,15 @@ class _JanggiScreenState extends State<JanggiScreen> {
     lastMoveFromCol = gameState['lastMoveFromCol'] as int?;
     lastMoveToRow = gameState['lastMoveToRow'] as int?;
     lastMoveToCol = gameState['lastMoveToCol'] as int?;
+
+    // 보드 히스토리 복원
+    final savedHistory = gameState['boardHistory'];
+    if (savedHistory != null && savedHistory is List) {
+      _boardHistory = savedHistory.map((e) => e.toString()).toList();
+    } else {
+      _boardHistory = [];
+    }
+    _consecutiveCheckCount = gameState['consecutiveCheckCount'] as int? ?? 0;
 
     setState(() {
       isSetupPhase = false;
@@ -1558,6 +1573,10 @@ class _JanggiScreenState extends State<JanggiScreen> {
     if (capturedPiece?.type == JanggiPieceType.gung) {
       isGameOver = true;
       winner = currentTurn == JanggiColor.cho ? '초' : '한';
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) _showGameOverDialog();
+      });
+      return;
     }
 
     currentTurn =
@@ -1566,10 +1585,22 @@ class _JanggiScreenState extends State<JanggiScreen> {
     // 장군 상태 업데이트
     isInCheck = _checkIsInCheck(currentTurn);
 
+    // 보드 상태 히스토리 저장 및 연속 장군 카운트
+    _boardHistory.add(_getBoardStateString());
+    if (isInCheck) {
+      _consecutiveCheckCount++;
+    } else {
+      _consecutiveCheckCount = 0;
+    }
+
     // 외통수(체크메이트) 확인
     if (!isGameOver && _isCheckmate(currentTurn)) {
       isGameOver = true;
       winner = currentTurn == JanggiColor.cho ? '한' : '초';
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) _showGameOverDialog();
+      });
+      return;
     }
 
     // 컴퓨터 턴
@@ -1658,6 +1689,9 @@ class _JanggiScreenState extends State<JanggiScreen> {
         isThinking = false;
         isGameOver = true;
         winner = computerColor == JanggiColor.cho ? '한' : '초';
+      });
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) _showGameOverDialog();
       });
       return;
     }
@@ -2185,6 +2219,415 @@ class _JanggiScreenState extends State<JanggiScreen> {
     return score;
   }
 
+  // 보드 상태를 문자열로 변환 (반복 검출용)
+  String _getBoardStateString() {
+    final buffer = StringBuffer();
+    buffer.write(currentTurn == JanggiColor.cho ? 'C' : 'H');
+    for (int r = 0; r < 10; r++) {
+      for (int c = 0; c < 9; c++) {
+        final piece = board[r][c];
+        if (piece == null) {
+          buffer.write('.');
+        } else {
+          String code;
+          switch (piece.type) {
+            case JanggiPieceType.gung:
+              code = 'K';
+              break;
+            case JanggiPieceType.cha:
+              code = 'R';
+              break;
+            case JanggiPieceType.po:
+              code = 'C';
+              break;
+            case JanggiPieceType.ma:
+              code = 'N';
+              break;
+            case JanggiPieceType.sang:
+              code = 'E';
+              break;
+            case JanggiPieceType.sa:
+              code = 'A';
+              break;
+            case JanggiPieceType.byung:
+              code = 'P';
+              break;
+          }
+          buffer.write(piece.color == JanggiColor.cho ? code.toLowerCase() : code);
+        }
+      }
+    }
+    return buffer.toString();
+  }
+
+  // 무승부 선언 가능 여부 확인
+  bool _canDeclareDraw() {
+    if (isGameOver || isSetupPhase) return false;
+
+    // 1. 동일 보드 상태가 3회 이상 반복된 경우 (3회 반복 규칙)
+    final currentState = _getBoardStateString();
+    int repeatCount = 0;
+    for (final state in _boardHistory) {
+      if (state == currentState) {
+        repeatCount++;
+      }
+    }
+    if (repeatCount >= 2) {
+      // 현재 상태 포함 3회 이상
+      return true;
+    }
+
+    // 2. 현재 장군 상태이고 연속 장군이 4회 이상인 경우
+    if (_consecutiveCheckCount >= 4) {
+      return true;
+    }
+
+    // 3. 장군 상태에서 피할 수 있는 수가 1개뿐인 경우
+    if (isInCheck) {
+      int legalMoveCount = 0;
+      for (int r = 0; r < 10; r++) {
+        for (int c = 0; c < 9; c++) {
+          final piece = board[r][c];
+          if (piece != null && piece.color == currentTurn) {
+            final moves = _getValidMoves(r, c);
+            // 장군을 피하는 수만 계산
+            for (final move in moves) {
+              final targetRow = move[0];
+              final targetCol = move[1];
+
+              // 임시 이동
+              final capturedPiece = board[targetRow][targetCol];
+              board[targetRow][targetCol] = piece;
+              board[r][c] = null;
+
+              // 이동 후에도 장군인지 확인
+              final stillInCheck = _checkIsInCheck(currentTurn);
+
+              // 원상복구
+              board[r][c] = piece;
+              board[targetRow][targetCol] = capturedPiece;
+
+              if (!stillInCheck) {
+                legalMoveCount++;
+                if (legalMoveCount > 1) break; // 2개 이상이면 더 이상 체크 불필요
+              }
+            }
+            if (legalMoveCount > 1) break;
+          }
+        }
+        if (legalMoveCount > 1) break;
+      }
+
+      // 장군을 피할 수 있는 수가 1개뿐이면 무승부 선언 가능
+      if (legalMoveCount == 1) {
+        return true;
+      }
+    }
+
+    return false;
+  }
+
+  void _showDrawDialog() {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          backgroundColor: const Color(0xFFF5DEB3),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+            side: const BorderSide(color: Color(0xFF8B4513), width: 3),
+          ),
+          title: const Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(Icons.handshake, color: Color(0xFF8B4513), size: 28),
+              SizedBox(width: 8),
+              Text(
+                '무승부 선언',
+                style: TextStyle(
+                  color: Color(0xFF8B4513),
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ],
+          ),
+          content: const Text(
+            '무승부로 게임을 종료하시겠습니까?\n\n반복되는 장군 등의 상황에서\n무승부를 선언할 수 있습니다.',
+            style: TextStyle(color: Color(0xFF5D4037)),
+            textAlign: TextAlign.center,
+          ),
+          actionsAlignment: MainAxisAlignment.center,
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text(
+                '계속하기',
+                style: TextStyle(color: Color(0xFF8B4513)),
+              ),
+            ),
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFF8B4513),
+                foregroundColor: Colors.white,
+              ),
+              onPressed: () {
+                Navigator.pop(context);
+                _declareDraw();
+              },
+              child: const Text('무승부'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  void _declareDraw() {
+    JanggiScreen.clearSavedGame();
+
+    setState(() {
+      isGameOver = true;
+      winner = null;
+    });
+
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          backgroundColor: const Color(0xFFF5DEB3),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20),
+            side: const BorderSide(color: Color(0xFF8B4513), width: 4),
+          ),
+          title: const Column(
+            children: [
+              Icon(
+                Icons.balance,
+                size: 60,
+                color: Color(0xFF8B4513),
+              ),
+              SizedBox(height: 12),
+              Text(
+                '무승부',
+                style: TextStyle(
+                  fontSize: 28,
+                  fontWeight: FontWeight.bold,
+                  color: Color(0xFF8B4513),
+                ),
+                textAlign: TextAlign.center,
+              ),
+            ],
+          ),
+          content: const Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                '게임이 무승부로 종료되었습니다.',
+                style: TextStyle(
+                  fontSize: 16,
+                  color: Color(0xFF5D4037),
+                ),
+                textAlign: TextAlign.center,
+              ),
+              SizedBox(height: 20),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  // 초 기물
+                  CircleAvatar(
+                    radius: 30,
+                    backgroundColor: Color(0xFF90EE90),
+                    child: Text(
+                      '초',
+                      style: TextStyle(
+                        fontSize: 24,
+                        fontWeight: FontWeight.bold,
+                        color: Color(0xFF006400),
+                      ),
+                    ),
+                  ),
+                  SizedBox(width: 16),
+                  Icon(Icons.handshake, size: 40, color: Color(0xFF8B4513)),
+                  SizedBox(width: 16),
+                  // 한 기물
+                  CircleAvatar(
+                    radius: 30,
+                    backgroundColor: Color(0xFFFFB6C1),
+                    child: Text(
+                      '한',
+                      style: TextStyle(
+                        fontSize: 24,
+                        fontWeight: FontWeight.bold,
+                        color: Color(0xFFB22222),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+          actionsAlignment: MainAxisAlignment.center,
+          actions: [
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFF8B4513),
+                foregroundColor: Colors.white,
+                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+              ),
+              onPressed: () {
+                Navigator.pop(context);
+                _resetGame();
+              },
+              child: const Text(
+                '새 게임',
+                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+              ),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  void _showGameOverDialog() {
+    // 저장된 게임 삭제
+    JanggiScreen.clearSavedGame();
+
+    final isPlayerWin = widget.gameMode == JanggiGameMode.vsHuman ||
+        (widget.gameMode == JanggiGameMode.vsHan && winner == '초') ||
+        (widget.gameMode == JanggiGameMode.vsCho && winner == '한');
+
+    final winnerColor = winner == '초' ? JanggiColor.cho : JanggiColor.han;
+    final Color winnerDisplayColor = winnerColor == JanggiColor.cho
+        ? const Color(0xFF006400)
+        : const Color(0xFFB22222);
+
+    String title;
+    String message;
+    IconData icon;
+
+    if (widget.gameMode == JanggiGameMode.vsHuman) {
+      title = '$winner 승리!';
+      message = '$winner가 승리하였습니다!';
+      icon = Icons.emoji_events;
+    } else if (isPlayerWin) {
+      title = '축하합니다!';
+      message = '플레이어($winner)가 컴퓨터를 이겼습니다!';
+      icon = Icons.celebration;
+    } else {
+      title = '패배...';
+      message = '컴퓨터($winner)에게 졌습니다.\n다시 도전해보세요!';
+      icon = Icons.sentiment_dissatisfied;
+    }
+
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          backgroundColor: const Color(0xFFF5DEB3),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20),
+            side: BorderSide(color: winnerDisplayColor, width: 4),
+          ),
+          title: Column(
+            children: [
+              Icon(
+                icon,
+                size: 60,
+                color: winnerDisplayColor,
+              ),
+              const SizedBox(height: 12),
+              Text(
+                title,
+                style: TextStyle(
+                  fontSize: 28,
+                  fontWeight: FontWeight.bold,
+                  color: winnerDisplayColor,
+                ),
+                textAlign: TextAlign.center,
+              ),
+            ],
+          ),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                message,
+                style: const TextStyle(
+                  fontSize: 16,
+                  color: Color(0xFF8B4513),
+                ),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 20),
+              // 승리 기물 표시
+              Container(
+                width: 80,
+                height: 80,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: winnerColor == JanggiColor.cho
+                      ? const Color(0xFF90EE90)
+                      : const Color(0xFFFFB6C1),
+                  border: Border.all(color: winnerDisplayColor, width: 4),
+                  boxShadow: [
+                    BoxShadow(
+                      color: winnerDisplayColor.withAlpha(100),
+                      blurRadius: 10,
+                      spreadRadius: 2,
+                    ),
+                  ],
+                ),
+                child: Center(
+                  child: Text(
+                    winner ?? '',
+                    style: TextStyle(
+                      fontSize: 36,
+                      fontWeight: FontWeight.bold,
+                      color: winnerDisplayColor,
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+          actionsAlignment: MainAxisAlignment.center,
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.pop(context);
+              },
+              child: const Text(
+                '결과 확인',
+                style: TextStyle(
+                  color: Color(0xFF8B4513),
+                  fontSize: 16,
+                ),
+              ),
+            ),
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: winnerDisplayColor,
+                foregroundColor: Colors.white,
+                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+              ),
+              onPressed: () {
+                Navigator.pop(context);
+                _resetGame();
+              },
+              child: const Text(
+                '새 게임',
+                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+              ),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
   void _resetGame() {
     JanggiScreen.clearSavedGame();
 
@@ -2203,6 +2646,8 @@ class _JanggiScreenState extends State<JanggiScreen> {
       lastMoveFromCol = null;
       lastMoveToRow = null;
       lastMoveToCol = null;
+      _boardHistory = [];
+      _consecutiveCheckCount = 0;
     });
 
     // 마상 배치 선택 다이얼로그 다시 표시
@@ -2243,6 +2688,13 @@ class _JanggiScreenState extends State<JanggiScreen> {
         backgroundColor: const Color(0xFFD2691E),
         foregroundColor: Colors.white,
         actions: [
+          // 무승부 선언 버튼 (반복 장군/장군 불가 상황에서만 표시)
+          if (_canDeclareDraw())
+            IconButton(
+              icon: const Icon(Icons.handshake),
+              onPressed: _showDrawDialog,
+              tooltip: '무승부 선언',
+            ),
           // Gemini AI 상태 표시
           if (widget.gameMode != JanggiGameMode.vsHuman)
             IconButton(
@@ -2373,12 +2825,20 @@ class _JanggiScreenState extends State<JanggiScreen> {
                   ],
                 ),
               ),
-              // 오른쪽 상단: AI설정 + 새 게임 버튼
+              // 오른쪽 상단: 무승부 + AI설정 + 새 게임 버튼
               Positioned(
                 top: 4,
                 right: 4,
                 child: Row(
                   children: [
+                    if (_canDeclareDraw())
+                      _buildCircleButton(
+                        icon: Icons.handshake,
+                        onPressed: _showDrawDialog,
+                        tooltip: '무승부 선언',
+                      ),
+                    if (_canDeclareDraw())
+                      const SizedBox(width: 8),
                     if (widget.gameMode != JanggiGameMode.vsHuman)
                       _buildCircleButton(
                         icon: geminiService != null ? Icons.smart_toy : Icons.smart_toy_outlined,
