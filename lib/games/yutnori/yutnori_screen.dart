@@ -402,8 +402,8 @@ class _YutnoriScreenState extends State<YutnoriScreen>
   // 이동 후 위치 계산
   int _calculateNewPosition(int currentPos, int moveCount) {
     if (currentPos == -1) {
-      // 대기 중인 말: 시작점으로
-      return moveCount > 0 ? moveCount - 1 : -1;
+      // 대기 중인 말: 출발점(0)에서 이동칸수만큼 진행
+      return moveCount > 0 ? moveCount : -1;
     }
 
     int newPos = currentPos;
