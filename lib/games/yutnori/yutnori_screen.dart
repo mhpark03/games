@@ -2514,20 +2514,110 @@ class _YutnoriScreenState extends State<YutnoriScreen>
             }),
           ),
           const SizedBox(height: 12),
-          // 던지기 버튼 또는 결과
-          if (canThrowYut && currentPlayer == 0)
-            ElevatedButton(
-              onPressed: isThrowingYut ? null : _throwYut,
-              style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFF8B4513),
-                foregroundColor: Colors.white,
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 32, vertical: 12),
+          // 버튼 영역 (윷 던지기 / 결과 표시 / 던지는 중)
+          if (canThrowYut && currentPlayer == 0 && !isThrowingYut)
+            GestureDetector(
+              onTap: _throwYut,
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                decoration: BoxDecoration(
+                  gradient: const LinearGradient(
+                    begin: Alignment.topCenter,
+                    end: Alignment.bottomCenter,
+                    colors: [Color(0xFF4CAF50), Color(0xFF388E3C)],
+                  ),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: const Color(0xFF2E7D32), width: 2),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.3),
+                      offset: const Offset(0, 3),
+                      blurRadius: 4,
+                    ),
+                  ],
+                ),
+                child: const Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(Icons.casino, color: Colors.white, size: 20),
+                    SizedBox(width: 8),
+                    Text(
+                      '던지기',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            )
+          else if (isThrowingYut)
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+              decoration: BoxDecoration(
+                color: Colors.grey,
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: Colors.grey.shade600, width: 2),
+              ),
+              child: const Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  SizedBox(
+                    width: 18,
+                    height: 18,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      color: Colors.white,
+                    ),
+                  ),
+                  SizedBox(width: 8),
+                  Text(
+                    '던지는 중',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ],
+              ),
+            )
+          else if (currentYutResult != null)
+            // 던지기 결과 표시
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+              decoration: BoxDecoration(
+                gradient: const LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors: [Color(0xFFFFD700), Color(0xFFFF8C00)],
+                ),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: const Color(0xFFB8860B), width: 2),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.orange.withValues(alpha: 0.5),
+                    offset: const Offset(0, 2),
+                    blurRadius: 6,
+                  ),
+                ],
               ),
               child: Text(
-                isThrowingYut ? '던지는 중...' : '윷 던지기',
-                style:
-                    const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                currentYutResult!.name,
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 22,
+                  fontWeight: FontWeight.bold,
+                  shadows: [
+                    Shadow(
+                      color: Colors.black54,
+                      offset: Offset(1, 1),
+                      blurRadius: 2,
+                    ),
+                  ],
+                ),
               ),
             )
           else if (pendingMoves.isNotEmpty)
