@@ -1221,8 +1221,6 @@ class _YutnoriScreenState extends State<YutnoriScreen>
 
   // 가로모드: 좌측 컨트롤 (턴 정보 + 다음 버튼 + 결과)
   Widget _buildLandscapeLeftControls() {
-    final showNextButton = waitingForNextTurn && currentPlayer > 0;
-
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 4),
       child: Column(
@@ -1255,12 +1253,6 @@ class _YutnoriScreenState extends State<YutnoriScreen>
               ],
             ),
           ),
-          // 다음 버튼 (아래에 배치)
-          if (showNextButton)
-            Padding(
-              padding: const EdgeInsets.only(top: 8),
-              child: _buildPlayButton(compact: true),
-            ),
           const SizedBox(height: 10),
           // 남은 이동 표시 (결과 포함)
           if (pendingMoves.isNotEmpty)
@@ -1354,7 +1346,7 @@ class _YutnoriScreenState extends State<YutnoriScreen>
           }),
         ),
         const SizedBox(height: 10),
-        // 윷 던지기 버튼 (하단)
+        // 버튼 영역 (윷 던지기 / 다음 버튼 / 던지는 중)
         if (isPlayerTurn && canThrowYut && !isThrowingYut)
           GestureDetector(
             onTap: _throwYut,
@@ -1389,7 +1381,9 @@ class _YutnoriScreenState extends State<YutnoriScreen>
                 fontWeight: FontWeight.bold,
               ),
             ),
-          ),
+          )
+        else if (waitingForNextTurn && currentPlayer > 0)
+          _buildPlayButton(compact: true),
       ],
     );
   }
