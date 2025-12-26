@@ -479,13 +479,18 @@ class _YutnoriScreenState extends State<YutnoriScreen>
 
     // 지름길 처리
     if (currentPos == cornerTopRight) {
-      // 우상단 코너에서 대각선으로 (5 → 20, 21, 22 중앙 → 28, 29 → 골인)
+      // 우상단 코너에서 대각선으로 (5 → 20, 21, 22 중앙 → 30, 31 좌하단 → 15로 합류)
       newPos = 19 + moveCount; // 도(1)면 20, 개(2)면 21...
       if (newPos > 22) {
-        // 중앙 지나면 28번으로 연결
-        newPos = 28 + (newPos - 23);
+        // 중앙 지나면 30번(좌하단 대각선)으로 연결
+        newPos = 30 + (newPos - 23);
       }
-      if (newPos > lastBoardPosition) {
+      if (newPos > 31) {
+        // 좌하단 코너(15) 방향으로 외곽 합류
+        newPos = 15 + (newPos - 32);
+      }
+      if (newPos > 19) {
+        // 시작점 지나면 골인
         return finishPosition;
       }
     } else if (currentPos == cornerTopLeft) {
@@ -499,13 +504,18 @@ class _YutnoriScreenState extends State<YutnoriScreen>
         return finishPosition;
       }
     } else if (currentPos >= 20 && currentPos <= 22) {
-      // 우상단 대각선에서 (20, 21 → 22 중앙 → 28, 29 → 골인)
+      // 우상단 대각선에서 (20, 21 → 22 중앙 → 30, 31 좌하단 → 15로 합류)
       newPos = currentPos + moveCount;
       if (newPos > 22) {
-        // 중앙 지나면 28번으로 연결
-        newPos = 28 + (newPos - 23);
+        // 중앙 지나면 30번(좌하단 대각선)으로 연결
+        newPos = 30 + (newPos - 23);
       }
-      if (newPos > lastBoardPosition) {
+      if (newPos > 31) {
+        // 좌하단 코너(15) 방향으로 외곽 합류
+        newPos = 15 + (newPos - 32);
+      }
+      if (newPos > 19) {
+        // 시작점 지나면 골인
         return finishPosition;
       }
     } else if (currentPos >= 25 && currentPos <= 27) {
@@ -519,9 +529,20 @@ class _YutnoriScreenState extends State<YutnoriScreen>
         return finishPosition;
       }
     } else if (currentPos >= 28 && currentPos <= lastBoardPosition) {
-      // 중앙 → 골인 대각선에서
+      // 중앙 → 우하단(골인 방향) 대각선에서
       newPos = currentPos + moveCount;
       if (newPos > lastBoardPosition) {
+        return finishPosition;
+      }
+    } else if (currentPos >= 30 && currentPos <= 31) {
+      // 중앙 → 좌하단 대각선에서 (30, 31 → 15로 합류)
+      newPos = currentPos + moveCount;
+      if (newPos > 31) {
+        // 좌하단 코너(15) 방향으로 외곽 합류
+        newPos = 15 + (newPos - 32);
+      }
+      if (newPos > 19) {
+        // 시작점 지나면 골인
         return finishPosition;
       }
     } else {
