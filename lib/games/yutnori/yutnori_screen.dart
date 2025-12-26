@@ -1471,6 +1471,9 @@ class _YutnoriScreenState extends State<YutnoriScreen>
               ],
             ),
           )
+        else if (waitingForNextTurn && currentPlayer > 0)
+          // 컴퓨터 차례일 때 다음 버튼 (결과 표시보다 우선)
+          _buildPlayButton(compact: true)
         else if (currentYutResult != null && !isThrowingYut)
           // 던지기 결과 표시 (버튼 위치에)
           Container(
@@ -1509,9 +1512,7 @@ class _YutnoriScreenState extends State<YutnoriScreen>
                 ],
               ),
             ),
-          )
-        else if (waitingForNextTurn && currentPlayer > 0)
-          _buildPlayButton(compact: true),
+          ),
       ],
     );
   }
@@ -2673,6 +2674,9 @@ class _YutnoriScreenState extends State<YutnoriScreen>
           ],
         ),
       );
+    } else if (waitingForNextTurn && currentPlayer > 0) {
+      // 컴퓨터 차례일 때 다음 버튼 (결과 표시보다 우선)
+      return _buildPlayButton(compact: false);
     } else if (currentYutResult != null) {
       return Container(
         padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
