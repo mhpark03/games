@@ -1479,70 +1479,104 @@ class _HulaScreenState extends State<HulaScreen> with TickerProviderStateMixin {
   }
 
   Widget _buildPlayerHand(bool isLandscape) {
-    final cardWidth = isLandscape ? 40.0 : 55.0;
-    final cardHeight = isLandscape ? 58.0 : 80.0;
-    final containerHeight = isLandscape ? 75.0 : 120.0;
-    final symbolSize = isLandscape ? 16.0 : 22.0;
-    final rankSize = isLandscape ? 14.0 : 18.0;
+    final cardWidth = isLandscape ? 40.0 : 50.0;
+    final cardHeight = isLandscape ? 58.0 : 72.0;
+    final symbolSize = isLandscape ? 16.0 : 20.0;
+    final rankSize = isLandscape ? 14.0 : 16.0;
+
+    // 세로 모드: 2줄, 가로 모드: 1줄
+    final int cardsPerRow = isLandscape
+        ? playerHand.length
+        : (playerHand.length / 2).ceil();
+
+    final List<int> row1 = List.generate(
+      cardsPerRow > playerHand.length ? playerHand.length : cardsPerRow,
+      (i) => i,
+    );
+    final List<int> row2 = isLandscape
+        ? []
+        : List.generate(
+            playerHand.length - cardsPerRow > 0
+                ? playerHand.length - cardsPerRow
+                : 0,
+            (i) => cardsPerRow + i,
+          );
+
+    Widget buildCard(int index) {
+      final card = playerHand[index];
+      final isSelected = selectedCardIndices.contains(index);
+
+      return GestureDetector(
+        onTap: () => _toggleCardSelection(index),
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 150),
+          transform: Matrix4.translationValues(
+              0, isSelected ? (isLandscape ? -8 : -10) : 0, 0),
+          margin: EdgeInsets.symmetric(horizontal: isLandscape ? 2 : 2),
+          width: cardWidth,
+          height: cardHeight,
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(isLandscape ? 6 : 6),
+            border: Border.all(
+              color: isSelected ? Colors.amber : Colors.grey.shade400,
+              width: isSelected ? 3 : 1,
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: isSelected
+                    ? Colors.amber.withValues(alpha: 0.5)
+                    : Colors.black.withValues(alpha: 0.2),
+                blurRadius: isSelected ? 8 : 4,
+                offset: const Offset(1, 2),
+              ),
+            ],
+          ),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Text(
+                card.suitSymbol,
+                style: TextStyle(
+                  fontSize: symbolSize,
+                  color: card.suitColor,
+                ),
+              ),
+              Text(
+                card.rankString,
+                style: TextStyle(
+                  fontSize: rankSize,
+                  fontWeight: FontWeight.bold,
+                  color: card.suitColor,
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
+    Widget buildCardRow(List<int> indices) {
+      return Row(
+        mainAxisSize: MainAxisSize.min,
+        children: indices.map((index) => buildCard(index)).toList(),
+      );
+    }
 
     return Container(
-      height: containerHeight,
-      padding: EdgeInsets.symmetric(horizontal: 8, vertical: isLandscape ? 4 : 8),
-      child: ListView.builder(
+      padding: EdgeInsets.symmetric(horizontal: 8, vertical: isLandscape ? 4 : 4),
+      child: SingleChildScrollView(
         scrollDirection: Axis.horizontal,
-        itemCount: playerHand.length,
-        itemBuilder: (context, index) {
-          final card = playerHand[index];
-          final isSelected = selectedCardIndices.contains(index);
-
-          return GestureDetector(
-            onTap: () => _toggleCardSelection(index),
-            child: AnimatedContainer(
-              duration: const Duration(milliseconds: 150),
-              transform: Matrix4.translationValues(0, isSelected ? (isLandscape ? -8 : -15) : 0, 0),
-              margin: EdgeInsets.symmetric(horizontal: isLandscape ? 2 : 3),
-              width: cardWidth,
-              height: cardHeight,
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(isLandscape ? 6 : 8),
-                border: Border.all(
-                  color: isSelected ? Colors.amber : Colors.grey.shade400,
-                  width: isSelected ? 3 : 1,
-                ),
-                boxShadow: [
-                  BoxShadow(
-                    color: isSelected
-                        ? Colors.amber.withValues(alpha: 0.5)
-                        : Colors.black.withValues(alpha: 0.2),
-                    blurRadius: isSelected ? 8 : 4,
-                    offset: const Offset(1, 2),
-                  ),
-                ],
-              ),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Text(
-                    card.suitSymbol,
-                    style: TextStyle(
-                      fontSize: symbolSize,
-                      color: card.suitColor,
-                    ),
-                  ),
-                  Text(
-                    card.rankString,
-                    style: TextStyle(
-                      fontSize: rankSize,
-                      fontWeight: FontWeight.bold,
-                      color: card.suitColor,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          );
-        },
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            buildCardRow(row1),
+            if (row2.isNotEmpty) ...[
+              const SizedBox(height: 4),
+              buildCardRow(row2),
+            ],
+          ],
+        ),
       ),
     );
   }
