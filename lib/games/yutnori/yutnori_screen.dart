@@ -1533,52 +1533,58 @@ class _YutnoriScreenState extends State<YutnoriScreen>
         center + radius * 0.85,
       );
     } else if (position == 20) {
-      // 우상단 코너 (position 5와 동일)
-      return Offset(center + radius * 0.85, center - radius * 0.85);
-    } else if (position == 21) {
-      // 우상단 대각선 첫 번째 점 (코너 → 중앙 방향)
+      // 우상단 대각선 첫 번째 점 (코너 → 중앙, 1/3 지점)
       return Offset(
-        center + radius * 0.85 - radius * 0.85 * (1 / 2.5),
-        center - radius * 0.85 + radius * 0.85 * (1 / 2.5),
+        center + radius * 0.85 - radius * 0.85 * (1 / 3),
+        center - radius * 0.85 + radius * 0.85 * (1 / 3),
+      );
+    } else if (position == 21) {
+      // 우상단 대각선 두 번째 점 (코너 → 중앙, 2/3 지점)
+      return Offset(
+        center + radius * 0.85 - radius * 0.85 * (2 / 3),
+        center - radius * 0.85 + radius * 0.85 * (2 / 3),
       );
     } else if (position == 22) {
       // 중앙 (정확한 중앙점)
       return Offset(center, center);
     } else if (position == 23) {
-      // 중앙 → 좌하단 첫 번째 점
+      // 중앙 → 좌하단 첫 번째 점 (1/3 지점)
       return Offset(
-        center - radius * 0.85 * (1 / 2.5),
-        center + radius * 0.85 * (1 / 2.5),
+        center - radius * 0.85 * (1 / 3),
+        center + radius * 0.85 * (1 / 3),
       );
     } else if (position == 24) {
-      // 중앙 → 좌하단 두 번째 점
+      // 중앙 → 좌하단 두 번째 점 (2/3 지점)
       return Offset(
-        center - radius * 0.85 * (2 / 2.5),
-        center + radius * 0.85 * (2 / 2.5),
+        center - radius * 0.85 * (2 / 3),
+        center + radius * 0.85 * (2 / 3),
       );
     } else if (position == 25) {
-      // 좌상단 코너 (position 10과 동일)
-      return Offset(center - radius * 0.85, center - radius * 0.85);
-    } else if (position == 26) {
-      // 좌상단 대각선 첫 번째 점 (코너 → 중앙 방향)
+      // 좌상단 대각선 첫 번째 점 (코너 → 중앙, 1/3 지점)
       return Offset(
-        center - radius * 0.85 + radius * 0.85 * (1 / 2.5),
-        center - radius * 0.85 + radius * 0.85 * (1 / 2.5),
+        center - radius * 0.85 + radius * 0.85 * (1 / 3),
+        center - radius * 0.85 + radius * 0.85 * (1 / 3),
+      );
+    } else if (position == 26) {
+      // 좌상단 대각선 두 번째 점 (코너 → 중앙, 2/3 지점)
+      return Offset(
+        center - radius * 0.85 + radius * 0.85 * (2 / 3),
+        center - radius * 0.85 + radius * 0.85 * (2 / 3),
       );
     } else if (position == 27) {
       // 중앙 (정확한 중앙점, position 22와 동일)
       return Offset(center, center);
     } else if (position == 28) {
-      // 중앙 → 우하단 첫 번째 점
+      // 중앙 → 우하단 첫 번째 점 (1/3 지점)
       return Offset(
-        center + radius * 0.85 * (1 / 2.5),
-        center + radius * 0.85 * (1 / 2.5),
+        center + radius * 0.85 * (1 / 3),
+        center + radius * 0.85 * (1 / 3),
       );
     } else if (position == 29) {
-      // 중앙 → 우하단 두 번째 점
+      // 중앙 → 우하단 두 번째 점 (2/3 지점)
       return Offset(
-        center + radius * 0.85 * (2 / 2.5),
-        center + radius * 0.85 * (2 / 2.5),
+        center + radius * 0.85 * (2 / 3),
+        center + radius * 0.85 * (2 / 3),
       );
     }
 
@@ -2191,26 +2197,33 @@ class YutBoardPainter extends CustomPainter {
       ));
     }
 
-    // 대각선 점들 - 게임 위치와 일치하도록
+    // 대각선 점들 - 게임 위치와 일치하도록 (간격 균일하게 1/3, 2/3)
     // 우상단(5) → 중앙: 2개 점 (positions 20, 21)
     for (int i = 1; i <= 2; i++) {
       positions.add(Offset(
-        center.dx + radius * 0.85 - radius * 0.85 * (i / 2.5),
-        center.dy - radius * 0.85 + radius * 0.85 * (i / 2.5),
+        center.dx + radius * 0.85 - radius * 0.85 * (i / 3),
+        center.dy - radius * 0.85 + radius * 0.85 * (i / 3),
       ));
     }
     // 좌상단(10) → 중앙: 2개 점 (positions 25, 26)
     for (int i = 1; i <= 2; i++) {
       positions.add(Offset(
-        center.dx - radius * 0.85 + radius * 0.85 * (i / 2.5),
-        center.dy - radius * 0.85 + radius * 0.85 * (i / 2.5),
+        center.dx - radius * 0.85 + radius * 0.85 * (i / 3),
+        center.dy - radius * 0.85 + radius * 0.85 * (i / 3),
       ));
     }
     // 중앙 → 우하단 (출발/골인 방향): 2개 점 (positions 28, 29)
     for (int i = 1; i <= 2; i++) {
       positions.add(Offset(
-        center.dx + radius * 0.85 * (i / 2.5),
-        center.dy + radius * 0.85 * (i / 2.5),
+        center.dx + radius * 0.85 * (i / 3),
+        center.dy + radius * 0.85 * (i / 3),
+      ));
+    }
+    // 중앙 → 좌하단: 2개 점 (positions 30, 31)
+    for (int i = 1; i <= 2; i++) {
+      positions.add(Offset(
+        center.dx - radius * 0.85 * (i / 3),
+        center.dy + radius * 0.85 * (i / 3),
       ));
     }
 
