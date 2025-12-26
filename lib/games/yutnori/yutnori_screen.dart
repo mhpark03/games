@@ -1034,8 +1034,6 @@ class _YutnoriScreenState extends State<YutnoriScreen>
 
   // 현재 턴 표시
   Widget _buildTurnInfo() {
-    final showNextButton = waitingForNextTurn && currentPlayer > 0;
-
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
       child: Row(
@@ -1092,12 +1090,6 @@ class _YutnoriScreenState extends State<YutnoriScreen>
                   );
                 }).toList(),
               ),
-            ),
-          // 다음 버튼 (컴퓨터 턴 대기 시)
-          if (showNextButton)
-            Padding(
-              padding: const EdgeInsets.only(left: 10),
-              child: _buildPlayButton(compact: true),
             ),
         ],
       ),
