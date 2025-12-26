@@ -1356,22 +1356,69 @@ class _YutnoriScreenState extends State<YutnoriScreen>
                 final index = entry.key;
                 final move = entry.value;
                 final isSelected = selectedMoveIndex == index;
+                final canSelect = currentPlayer == 0 && pendingMoves.length > 1;
                 return GestureDetector(
                   onTap: currentPlayer == 0 ? () => _selectMove(index) : null,
                   child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
                     decoration: BoxDecoration(
-                      color: isSelected ? const Color(0xFFFF8C00) : const Color(0xFF8B4513),
-                      borderRadius: BorderRadius.circular(6),
-                      border: isSelected ? Border.all(color: Colors.white, width: 2) : null,
-                    ),
-                    child: Text(
-                      move.name,
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: isSelected ? 14 : 12,
-                        fontWeight: FontWeight.bold,
+                      gradient: isSelected
+                          ? const LinearGradient(
+                              begin: Alignment.topCenter,
+                              end: Alignment.bottomCenter,
+                              colors: [Color(0xFFFF8C00), Color(0xFFE65100)],
+                            )
+                          : canSelect
+                              ? const LinearGradient(
+                                  begin: Alignment.topCenter,
+                                  end: Alignment.bottomCenter,
+                                  colors: [Color(0xFF6D4C41), Color(0xFF5D4037)],
+                                )
+                              : null,
+                      color: (!isSelected && !canSelect) ? const Color(0xFF8B4513) : null,
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(
+                        color: isSelected
+                            ? Colors.white
+                            : canSelect
+                                ? const Color(0xFFFFCC80)
+                                : const Color(0xFF5D4037),
+                        width: isSelected ? 2 : 1.5,
                       ),
+                      boxShadow: canSelect || isSelected
+                          ? [
+                              BoxShadow(
+                                color: isSelected
+                                    ? Colors.orange.withValues(alpha: 0.5)
+                                    : Colors.black.withValues(alpha: 0.3),
+                                offset: const Offset(0, 2),
+                                blurRadius: 3,
+                              ),
+                            ]
+                          : null,
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        if (canSelect && !isSelected)
+                          const Padding(
+                            padding: EdgeInsets.only(right: 3),
+                            child: Icon(Icons.touch_app, color: Colors.white70, size: 12),
+                          ),
+                        Text(
+                          move.name,
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: isSelected ? 14 : 12,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        if (isSelected)
+                          const Padding(
+                            padding: EdgeInsets.only(left: 3),
+                            child: Icon(Icons.check, color: Colors.white, size: 12),
+                          ),
+                      ],
                     ),
                   ),
                 );
