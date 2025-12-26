@@ -188,6 +188,9 @@ class _YutnoriScreenState extends State<YutnoriScreen>
 
     if (widget.resumeGame) {
       _loadGame();
+    } else {
+      // 새 게임 시작 (컴퓨터 선공 시 턴 시작)
+      _startGame();
     }
   }
 
@@ -203,7 +206,8 @@ class _YutnoriScreenState extends State<YutnoriScreen>
       playerCount,
       (_) => List.generate(4, (_) => Piece()),
     );
-    currentPlayer = 0;
+    // 랜덤하게 시작 플레이어 선택
+    currentPlayer = Random().nextInt(playerCount);
     gameOver = false;
     winner = null;
     rankings = []; // 등수 초기화
@@ -217,7 +221,20 @@ class _YutnoriScreenState extends State<YutnoriScreen>
     lastMovedPieceIndex = null;
     selectedPieceIndex = null;
     selectedMoveIndex = null;
-    gameMessage = '윷을 던지세요!';
+    if (currentPlayer == 0) {
+      gameMessage = '플레이어 선공! 윷을 던지세요!';
+    } else {
+      gameMessage = '${_getPlayerName(currentPlayer)} 선공!';
+    }
+  }
+
+  // 게임 시작 (컴퓨터 선공 시 턴 시작)
+  void _startGame() {
+    if (currentPlayer > 0 && !gameOver) {
+      Future.delayed(const Duration(milliseconds: 1000), () {
+        if (mounted && !gameOver) _computerTurn();
+      });
+    }
   }
 
   // 플레이어 턴인지 확인
@@ -971,6 +988,8 @@ class _YutnoriScreenState extends State<YutnoriScreen>
       _initGame();
     });
     HapticFeedback.mediumImpact();
+    // 컴퓨터 선공 시 턴 시작
+    _startGame();
   }
 
   @override
