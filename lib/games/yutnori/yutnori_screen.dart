@@ -346,7 +346,15 @@ class _YutnoriScreenState extends State<YutnoriScreen>
 
     // 컴퓨터 턴이면 계속 진행
     if (currentPlayer > 0 && !gameOver) {
-      _computerTurn();
+      if (result.isBonus) {
+        // 윷/모가 나오면 다음 버튼 대기
+        setState(() {
+          waitingForNextTurn = true;
+        });
+      } else {
+        // 일반 결과면 바로 말 이동
+        _computerTurn();
+      }
     }
   }
 
@@ -487,6 +495,7 @@ class _YutnoriScreenState extends State<YutnoriScreen>
     final piece = playerPieces[currentPlayer][pieceIndex];
     final oldPos = piece.position;
     final newPos = _calculateNewPosition(oldPos, move.moveCount);
+    bool captured = false;
 
     setState(() {
       // 이동
@@ -506,7 +515,7 @@ class _YutnoriScreenState extends State<YutnoriScreen>
         piece.stackedPieces.clear();
       } else if (newPos >= 0) {
         // 잡기 확인
-        bool captured = _checkCapture(newPos);
+        captured = _checkCapture(newPos);
         if (captured) {
           gameMessage = '${_getPlayerName(currentPlayer)} 잡았다! 한 번 더!';
           canThrowYut = true;
@@ -543,9 +552,17 @@ class _YutnoriScreenState extends State<YutnoriScreen>
 
     // 컴퓨터 턴
     if (!gameOver && currentPlayer > 0) {
-      Future.delayed(const Duration(milliseconds: 800), () {
-        if (mounted) _computerTurn();
-      });
+      if (captured) {
+        // 잡기 발생 시 다음 버튼 대기
+        setState(() {
+          waitingForNextTurn = true;
+        });
+      } else if (pendingMoves.isNotEmpty || canThrowYut) {
+        // 남은 이동이 있거나 더 던질 수 있으면 계속 진행
+        Future.delayed(const Duration(milliseconds: 800), () {
+          if (mounted) _computerTurn();
+        });
+      }
     }
   }
 
