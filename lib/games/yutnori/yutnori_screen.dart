@@ -158,7 +158,8 @@ class _YutnoriScreenState extends State<YutnoriScreen>
   // 25-28: 좌상단 대각선 (10→중앙)
   // 22, 27: 중앙
   static const int boardSize = 29;
-  static const int finishPosition = 29;
+  static const int lastBoardPosition = 29; // 마지막 보드 위치
+  static const int finishPosition = 100; // 골인 표시 (보드 위치가 아님)
 
   // 특수 위치
   static const int cornerTopRight = 5;
@@ -472,7 +473,7 @@ class _YutnoriScreenState extends State<YutnoriScreen>
         // 중앙 지나면 28번으로 연결
         newPos = 28 + (newPos - 23);
       }
-      if (newPos > 29) {
+      if (newPos > lastBoardPosition) {
         return finishPosition;
       }
     } else if (currentPos == cornerTopLeft) {
@@ -482,7 +483,7 @@ class _YutnoriScreenState extends State<YutnoriScreen>
         // 중앙 지나면 28번으로 연결
         newPos = 28 + (newPos - 28);
       }
-      if (newPos > 29) {
+      if (newPos > lastBoardPosition) {
         return finishPosition;
       }
     } else if (currentPos >= 20 && currentPos <= 22) {
@@ -492,7 +493,7 @@ class _YutnoriScreenState extends State<YutnoriScreen>
         // 중앙 지나면 28번으로 연결
         newPos = 28 + (newPos - 23);
       }
-      if (newPos > 29) {
+      if (newPos > lastBoardPosition) {
         return finishPosition;
       }
     } else if (currentPos >= 25 && currentPos <= 27) {
@@ -502,13 +503,13 @@ class _YutnoriScreenState extends State<YutnoriScreen>
         // 중앙 지나면 28번으로 연결
         newPos = 28 + (newPos - 28);
       }
-      if (newPos > 29) {
+      if (newPos > lastBoardPosition) {
         return finishPosition;
       }
-    } else if (currentPos >= 28 && currentPos <= 29) {
+    } else if (currentPos >= 28 && currentPos <= lastBoardPosition) {
       // 중앙 → 골인 대각선에서
       newPos = currentPos + moveCount;
-      if (newPos > 29) {
+      if (newPos > lastBoardPosition) {
         return finishPosition;
       }
     } else {
@@ -520,8 +521,8 @@ class _YutnoriScreenState extends State<YutnoriScreen>
         return -1; // 대기로 돌아감 (또는 0으로 유지)
       }
 
-      // 20을 넘으면 골인
-      if (newPos >= 20) {
+      // 20을 초과하면 골인 (정확히 20에 도착은 골인 아님)
+      if (newPos > 20) {
         return finishPosition;
       }
     }
