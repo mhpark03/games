@@ -74,7 +74,7 @@ class Piece {
         'stackedPieces': stackedPieces,
       };
 
-  bool get isOnBoard => position >= 0 && position < 29;
+  bool get isOnBoard => position >= 0 && (position <= 29 || position == 31);
   bool get isWaiting => position == -1;
 }
 
@@ -545,6 +545,13 @@ class _YutnoriScreenState extends State<YutnoriScreen>
       if (newPos > lastBoardPosition) {
         return finishPosition;
       }
+    } else if (currentPos == 31) {
+      // 한 바퀴 완료 후 시작점에서 이동 → 골인
+      if (moveCount > 0) {
+        return finishPosition;
+      }
+      // 빽도면 19로
+      return 19;
     } else {
       // 일반 외곽 경로
       newPos = currentPos + moveCount;
@@ -554,7 +561,12 @@ class _YutnoriScreenState extends State<YutnoriScreen>
         return -1; // 대기로 돌아감 (또는 0으로 유지)
       }
 
-      // 20을 초과하면 골인 (정확히 20에 도착은 골인 아님)
+      // 정확히 20이면 한 바퀴 완료 (시작점 도착)
+      if (newPos == 20) {
+        return 31; // 한 바퀴 완료 위치
+      }
+
+      // 20을 초과하면 골인
       if (newPos > 20) {
         return finishPosition;
       }
@@ -2622,6 +2634,9 @@ class _YutnoriScreenState extends State<YutnoriScreen>
         center + radius * 0.85 * (2 / 3),
         center + radius * 0.85 * (2 / 3),
       );
+    } else if (position == 31) {
+      // 한 바퀴 완료 후 시작점 (position 0과 동일)
+      return Offset(center + radius * 0.85, center + radius * 0.85);
     }
 
     return Offset(center, center);
