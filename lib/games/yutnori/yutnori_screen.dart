@@ -1262,25 +1262,7 @@ class _YutnoriScreenState extends State<YutnoriScreen>
               child: _buildPlayButton(compact: true),
             ),
           const SizedBox(height: 10),
-          // 윷 결과 표시 (좌측에 표시)
-          if (currentYutResult != null)
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
-              decoration: BoxDecoration(
-                color: const Color(0xFF8B4513),
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: Text(
-                currentYutResult!.name,
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-            ),
-          const SizedBox(height: 8),
-          // 남은 이동 표시
+          // 남은 이동 표시 (결과 포함)
           if (pendingMoves.isNotEmpty)
             Wrap(
               spacing: 4,
