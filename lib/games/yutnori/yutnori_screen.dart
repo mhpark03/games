@@ -807,6 +807,32 @@ class _YutnoriScreenState extends State<YutnoriScreen>
     return '컴퓨터 $player';
   }
 
+  // 다른 플레이어가 다음 턴에 도달 가능한 위치 계산
+  Set<int> _getDangerPositions() {
+    Set<int> dangerPositions = {};
+
+    // 가능한 윷 결과: 빽도(-1), 도(1), 개(2), 걸(3), 윷(4), 모(5)
+    const possibleMoves = [-1, 1, 2, 3, 4, 5];
+
+    for (int p = 0; p < playerCount; p++) {
+      if (p == currentPlayer) continue; // 자신은 제외
+
+      for (var piece in playerPieces[p]) {
+        if (piece.isFinished || piece.position < 0) continue;
+
+        // 이 말이 각 윷 결과로 도달할 수 있는 위치 계산
+        for (var moveCount in possibleMoves) {
+          final targetPos = _calculateNewPosition(piece.position, moveCount);
+          if (targetPos >= 0 && targetPos != finishPosition) {
+            dangerPositions.add(targetPos);
+          }
+        }
+      }
+    }
+
+    return dangerPositions;
+  }
+
   // 컴퓨터 AI - 현재 상태에 따라 다음 액션 실행
   void _computerTurn() {
     if (gameOver || currentPlayer == 0) return;
@@ -850,15 +876,35 @@ class _YutnoriScreenState extends State<YutnoriScreen>
       return;
     }
 
-    // 전략적 선택: 잡을 수 있는 말 > 골인 가능한 말 > 가장 앞선 말
+    // 위험에 처한 말 확인 (다른 플레이어가 잡을 수 있는 위치)
+    Set<int> dangerPositions = _getDangerPositions();
+
+    // 전략적 선택: 위험 회피 > 잡기 > 골인 > 진행
     int bestPiece = movablePieces.first;
-    int bestScore = -100;
+    int bestScore = -1000;
 
     for (var pieceIndex in movablePieces) {
       final piece = playerPieces[currentPlayer][pieceIndex];
-      final newPos = _calculateNewPosition(piece.position, move.moveCount);
+      final currentPos = piece.position;
+      final newPos = _calculateNewPosition(currentPos, move.moveCount);
 
       int score = 0;
+
+      // 안전 지역 확인
+      bool isCurrentSafe = (currentPos == 21 || currentPos == 28 || currentPos == 15 || currentPos == 34 || currentPos == -1);
+      bool isNewSafe = (newPos == 21 || newPos == 28 || newPos == 15 || newPos == 34 || newPos == finishPosition);
+
+      // 위험에 처한 말이 이동하여 탈출하면 높은 점수
+      bool isInDanger = !isCurrentSafe && currentPos >= 0 && dangerPositions.contains(currentPos);
+      bool willBeSafe = isNewSafe || !dangerPositions.contains(newPos);
+
+      if (isInDanger && willBeSafe) {
+        // 위험 탈출 보너스 (업힌 말이 많을수록 더 높은 점수)
+        score += 80 + piece.stackedPieces.length * 40;
+      } else if (isInDanger && !willBeSafe) {
+        // 위험에서 위험으로 이동 (그래도 현재보다는 나음)
+        score += 20 + piece.stackedPieces.length * 10;
+      }
 
       // 골인 가능하면 높은 점수
       if (newPos == finishPosition) {
@@ -876,17 +922,20 @@ class _YutnoriScreenState extends State<YutnoriScreen>
       }
 
       // 업을 수 있으면 점수 (안전 지역에서만)
-      // 안전 지역: 코너 (5/21, 10/28, 15, 0/34)
-      bool isSafePosition = (newPos == 21 || newPos == 28 || newPos == 15 || newPos == 34);
       for (int i = 0; i < 4; i++) {
         if (i == pieceIndex) continue;
         if (playerPieces[currentPlayer][i].position == newPos) {
-          if (isSafePosition) {
+          if (isNewSafe) {
             score += 10; // 안전 지역에서 업기
           } else {
             score -= 5; // 위험 지역에서 업기는 오히려 감점
           }
         }
+      }
+
+      // 새로 출발하는 말이 위험 지역으로 가면 감점
+      if (currentPos == -1 && !isNewSafe && dangerPositions.contains(newPos)) {
+        score -= 15;
       }
 
       // 진행도
