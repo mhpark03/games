@@ -325,16 +325,29 @@ class _YutnoriScreenState extends State<YutnoriScreen>
       isThrowingYut = false;
 
       if (result.isBonus) {
-        gameMessage = '${result.name}! 한 번 더 던지세요!';
+        if (isPlayerTurn) {
+          gameMessage = '${result.name}! 한 번 더 던지세요!';
+        } else {
+          gameMessage = '${_getPlayerName(currentPlayer)}: ${result.name}! 한 번 더!';
+        }
         canThrowYut = true;
       } else {
-        gameMessage = '${result.name}! 말을 선택하세요';
+        if (isPlayerTurn) {
+          gameMessage = '${result.name}! 말을 선택하세요';
+        } else {
+          gameMessage = '${_getPlayerName(currentPlayer)}: ${result.name}!';
+        }
         canThrowYut = false;
       }
     });
 
     HapticFeedback.mediumImpact();
     _saveGame();
+
+    // 컴퓨터 턴이면 계속 진행
+    if (currentPlayer > 0 && !gameOver) {
+      _computerTurn();
+    }
   }
 
   YutResult _generateYutResult() {
@@ -515,7 +528,11 @@ class _YutnoriScreenState extends State<YutnoriScreen>
         // 턴 종료
         _nextTurn();
       } else if (pendingMoves.isNotEmpty) {
-        gameMessage = '${pendingMoves.first.name} - 말을 선택하세요';
+        if (isPlayerTurn) {
+          gameMessage = '${pendingMoves.first.name} - 말을 선택하세요';
+        } else {
+          gameMessage = '${_getPlayerName(currentPlayer)}: ${pendingMoves.first.name} 이동 중...';
+        }
       }
 
       selectedPieceIndex = null;
@@ -917,6 +934,8 @@ class _YutnoriScreenState extends State<YutnoriScreen>
 
   // 현재 턴 표시
   Widget _buildTurnInfo() {
+    final showNextButton = waitingForNextTurn && currentPlayer > 0;
+
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
       child: Row(
@@ -973,6 +992,12 @@ class _YutnoriScreenState extends State<YutnoriScreen>
                   );
                 }).toList(),
               ),
+            ),
+          // 다음 버튼 (컴퓨터 턴 대기 시)
+          if (showNextButton)
+            Padding(
+              padding: const EdgeInsets.only(left: 10),
+              child: _buildPlayButton(compact: true),
             ),
         ],
       ),
