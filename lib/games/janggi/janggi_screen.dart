@@ -1,3 +1,5 @@
+import 'dart:math';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -396,16 +398,16 @@ class _JanggiScreenState extends State<JanggiScreen> {
   }
 
   void _showSetupDialog() {
-    // 컴퓨터의 마상 배치는 랜덤으로 설정
-    final random = DateTime.now().millisecondsSinceEpoch;
+    // 컴퓨터의 마상 배치는 랜덤으로 설정 (4가지 조합 중 하나)
+    final random = Random();
     if (widget.gameMode == JanggiGameMode.vsCho) {
       // 컴퓨터가 초일 때, 초의 배치는 랜덤
-      choLeftPosition = random % 2 == 0 ? MaSangPosition.maSang : MaSangPosition.sangMa;
-      choRightPosition = (random ~/ 2) % 2 == 0 ? MaSangPosition.maSang : MaSangPosition.sangMa;
+      choLeftPosition = random.nextBool() ? MaSangPosition.maSang : MaSangPosition.sangMa;
+      choRightPosition = random.nextBool() ? MaSangPosition.maSang : MaSangPosition.sangMa;
     } else if (widget.gameMode == JanggiGameMode.vsHan) {
       // 컴퓨터가 한일 때, 한의 배치는 랜덤
-      hanLeftPosition = random % 2 == 0 ? MaSangPosition.maSang : MaSangPosition.sangMa;
-      hanRightPosition = (random ~/ 2) % 2 == 0 ? MaSangPosition.maSang : MaSangPosition.sangMa;
+      hanLeftPosition = random.nextBool() ? MaSangPosition.maSang : MaSangPosition.sangMa;
+      hanRightPosition = random.nextBool() ? MaSangPosition.maSang : MaSangPosition.sangMa;
     }
 
     showDialog(
