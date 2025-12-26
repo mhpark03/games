@@ -997,10 +997,11 @@ class HomeScreen extends StatelessWidget {
   // 장기 게임 이어하기 확인 다이얼로그
   Future<void> _showJanggiContinueDialog(BuildContext context) async {
     final hasSaved = await JanggiScreen.hasSavedGame();
+    final savedGameMode = hasSaved ? await JanggiScreen.getSavedGameMode() : null;
 
     if (!context.mounted) return;
 
-    if (hasSaved) {
+    if (hasSaved && savedGameMode != null) {
       showDialog(
         context: context,
         builder: (BuildContext context) {
@@ -1028,12 +1029,7 @@ class HomeScreen extends StatelessWidget {
                 onPressed: () {
                   Navigator.pop(context);
                   JanggiScreen.clearSavedGame();
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => const JanggiScreen(gameMode: JanggiGameMode.vsHuman),
-                    ),
-                  );
+                  _showJanggiModeDialog(context);
                 },
                 child: const Text(
                   '새 게임',
@@ -1050,8 +1046,8 @@ class HomeScreen extends StatelessWidget {
                   Navigator.push(
                     context,
                     MaterialPageRoute(
-                      builder: (context) => const JanggiScreen(
-                        gameMode: JanggiGameMode.vsHuman,
+                      builder: (context) => JanggiScreen(
+                        gameMode: savedGameMode,
                         resumeGame: true,
                       ),
                     ),
@@ -1064,13 +1060,8 @@ class HomeScreen extends StatelessWidget {
         },
       );
     } else {
-      // 저장된 게임이 없으면 바로 새 게임 시작
-      Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (context) => const JanggiScreen(gameMode: JanggiGameMode.vsHuman),
-        ),
-      );
+      // 저장된 게임이 없으면 게임 모드 선택 다이얼로그 표시
+      _showJanggiModeDialog(context);
     }
   }
 
