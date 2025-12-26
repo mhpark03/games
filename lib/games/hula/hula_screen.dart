@@ -157,6 +157,9 @@ class _HulaScreenState extends State<HulaScreen> with TickerProviderStateMixin {
   // 턴 단계
   bool hasDrawn = false; // 이번 턴에 드로우했는지
   List<int> selectedCardIndices = []; // 선택된 카드 인덱스들
+  bool waitingForNextTurn = false; // 다음 턴 대기 중
+  Timer? _nextTurnTimer; // 자동 진행 타이머
+  int _autoPlayCountdown = 5; // 자동 진행 카운트다운
 
   // 점수
   List<int> scores = [];
@@ -188,6 +191,7 @@ class _HulaScreenState extends State<HulaScreen> with TickerProviderStateMixin {
   @override
   void dispose() {
     _messageTimer?.cancel();
+    _nextTurnTimer?.cancel();
     _animController.dispose();
     super.dispose();
   }
@@ -227,9 +231,55 @@ class _HulaScreenState extends State<HulaScreen> with TickerProviderStateMixin {
     isHula = false;
     hasDrawn = false;
     selectedCardIndices = [];
+    waitingForNextTurn = false;
+    _cancelNextTurnTimer();
 
     setState(() {});
     _saveGame();
+  }
+
+  // 다음 턴 자동 진행 타이머 시작
+  void _startNextTurnTimer() {
+    _cancelNextTurnTimer();
+    _autoPlayCountdown = 5;
+
+    _nextTurnTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
+      if (!mounted || gameOver) {
+        timer.cancel();
+        return;
+      }
+
+      setState(() {
+        _autoPlayCountdown--;
+      });
+
+      if (_autoPlayCountdown <= 0) {
+        timer.cancel();
+        _onNextTurn();
+      }
+    });
+  }
+
+  // 다음 턴 타이머 취소
+  void _cancelNextTurnTimer() {
+    _nextTurnTimer?.cancel();
+    _nextTurnTimer = null;
+  }
+
+  // 다음 턴 버튼 클릭
+  void _onNextTurn() {
+    _cancelNextTurnTimer();
+    setState(() {
+      waitingForNextTurn = false;
+    });
+
+    if (currentTurn != 0 && !gameOver) {
+      Timer(const Duration(milliseconds: 300), () {
+        if (mounted && !gameOver) {
+          _computerTurn();
+        }
+      });
+    }
   }
 
   void _sortHand(List<PlayingCard> hand) {
@@ -358,15 +408,16 @@ class _HulaScreenState extends State<HulaScreen> with TickerProviderStateMixin {
       winnerIndex = null;
       isHula = false;
       selectedCardIndices = [];
+      waitingForNextTurn = false;
     });
+    _cancelNextTurnTimer();
 
-    // 컴퓨터 턴이면 자동 진행
+    // 컴퓨터 턴이면 대기 상태로 시작
     if (currentTurn != 0) {
-      Timer(const Duration(milliseconds: 500), () {
-        if (mounted && !gameOver) {
-          _computerTurn();
-        }
+      setState(() {
+        waitingForNextTurn = true;
       });
+      _startNextTurnTimer();
     }
   }
 
@@ -413,8 +464,21 @@ class _HulaScreenState extends State<HulaScreen> with TickerProviderStateMixin {
 
   // 버린 더미에서 카드 가져오기 (땡큐)
   void _drawFromDiscard() {
-    if (hasDrawn || gameOver || currentTurn != 0) return;
+    if (gameOver) return;
     if (discardPile.isEmpty) return;
+
+    // 플레이어 턴이거나, 대기 중일 때 (땡큐)
+    if (currentTurn == 0 && hasDrawn) return;
+    if (currentTurn != 0 && !waitingForNextTurn) return;
+
+    // 땡큐 상황: 대기 중에 가져가기
+    if (waitingForNextTurn) {
+      _cancelNextTurnTimer();
+      setState(() {
+        currentTurn = 0;
+        waitingForNextTurn = false;
+      });
+    }
 
     final card = discardPile.removeLast();
     playerHand.add(card);
@@ -702,11 +766,11 @@ class _HulaScreenState extends State<HulaScreen> with TickerProviderStateMixin {
     });
 
     if (currentTurn != 0) {
-      Timer(const Duration(milliseconds: 800), () {
-        if (mounted && !gameOver) {
-          _computerTurn();
-        }
+      // 컴퓨터 턴: 대기 상태로 전환하고 타이머 시작
+      setState(() {
+        waitingForNextTurn = true;
       });
+      _startNextTurnTimer();
     }
   }
 
@@ -1215,84 +1279,125 @@ class _HulaScreenState extends State<HulaScreen> with TickerProviderStateMixin {
     final cardWidth = isLandscape ? 50.0 : 70.0;
     final cardHeight = isLandscape ? 70.0 : 100.0;
     return Center(
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.center,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
         children: [
-          // 덱
-          GestureDetector(
-            onTap: currentTurn == 0 && !hasDrawn ? _drawFromDeck : null,
-            child: Container(
-              width: cardWidth,
-              height: cardHeight,
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  colors: [Colors.blue.shade700, Colors.blue.shade900],
-                ),
-                borderRadius: BorderRadius.circular(8),
-                border: Border.all(
-                  color: currentTurn == 0 && !hasDrawn
-                      ? Colors.yellow
-                      : Colors.white24,
-                  width: currentTurn == 0 && !hasDrawn ? 3 : 1,
-                ),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.3),
-                    blurRadius: 8,
-                    offset: const Offset(2, 2),
-                  ),
-                ],
-              ),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  const Text('🂠', style: TextStyle(fontSize: 28)),
-                  Text(
-                    '${deck.length}',
-                    style: const TextStyle(color: Colors.white, fontSize: 12),
-                  ),
-                ],
-              ),
-            ),
-          ),
-          SizedBox(width: isLandscape ? 12 : 20),
-          // 버린 더미
-          GestureDetector(
-            onTap: currentTurn == 0 && !hasDrawn && discardPile.isNotEmpty
-                ? _drawFromDiscard
-                : null,
-            child: Container(
-              width: cardWidth,
-              height: cardHeight,
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(8),
-                border: Border.all(
-                  color: currentTurn == 0 && !hasDrawn && discardPile.isNotEmpty
-                      ? Colors.green
-                      : Colors.grey,
-                  width: currentTurn == 0 && !hasDrawn && discardPile.isNotEmpty
-                      ? 3
-                      : 1,
-                ),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.3),
-                    blurRadius: 8,
-                    offset: const Offset(2, 2),
-                  ),
-                ],
-              ),
-              child: discardPile.isEmpty
-                  ? const Center(
-                      child: Text(
-                        '버림',
-                        style: TextStyle(color: Colors.grey),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              // 덱
+              GestureDetector(
+                onTap: currentTurn == 0 && !hasDrawn && !waitingForNextTurn
+                    ? _drawFromDeck
+                    : null,
+                child: Container(
+                  width: cardWidth,
+                  height: cardHeight,
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      colors: [Colors.blue.shade700, Colors.blue.shade900],
+                    ),
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(
+                      color: currentTurn == 0 && !hasDrawn && !waitingForNextTurn
+                          ? Colors.yellow
+                          : Colors.white24,
+                      width: currentTurn == 0 && !hasDrawn && !waitingForNextTurn
+                          ? 3
+                          : 1,
+                    ),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withValues(alpha: 0.3),
+                        blurRadius: 8,
+                        offset: const Offset(2, 2),
                       ),
-                    )
-                  : _buildCardFace(discardPile.last, small: true),
-            ),
+                    ],
+                  ),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      const Text('🂠', style: TextStyle(fontSize: 28)),
+                      Text(
+                        '${deck.length}',
+                        style:
+                            const TextStyle(color: Colors.white, fontSize: 12),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              SizedBox(width: isLandscape ? 12 : 20),
+              // 버린 더미
+              Builder(
+                builder: (context) {
+                  // 땡큐 가능: 대기 중일 때 또는 플레이어 턴에서 아직 드로우 안했을 때
+                  final canDraw = discardPile.isNotEmpty &&
+                      ((currentTurn == 0 && !hasDrawn) || waitingForNextTurn);
+                  // 땡큐 상태면 주황색, 일반 드로우면 녹색
+                  final borderColor =
+                      waitingForNextTurn && discardPile.isNotEmpty
+                          ? Colors.orange
+                          : (canDraw ? Colors.green : Colors.grey);
+
+                  return GestureDetector(
+                    onTap: canDraw ? _drawFromDiscard : null,
+                    child: Container(
+                      width: cardWidth,
+                      height: cardHeight,
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(
+                          color: borderColor,
+                          width: canDraw ? 3 : 1,
+                        ),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withValues(alpha: 0.3),
+                            blurRadius: 8,
+                            offset: const Offset(2, 2),
+                          ),
+                        ],
+                      ),
+                      child: discardPile.isEmpty
+                          ? const Center(
+                              child: Text(
+                                '버림',
+                                style: TextStyle(color: Colors.grey),
+                              ),
+                            )
+                          : _buildCardFace(discardPile.last, small: true),
+                    ),
+                  );
+                },
+              ),
+            ],
           ),
+          // 다음 순서 버튼
+          if (waitingForNextTurn)
+            Padding(
+              padding: const EdgeInsets.only(top: 12),
+              child: ElevatedButton(
+                onPressed: _onNextTurn,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.orange,
+                  foregroundColor: Colors.white,
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                ),
+                child: Text(
+                  '다음 순서 ($_autoPlayCountdown)',
+                  style: const TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+            ),
         ],
       ),
     );
