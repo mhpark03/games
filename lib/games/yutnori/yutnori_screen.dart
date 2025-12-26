@@ -130,6 +130,9 @@ class _YutnoriScreenState extends State<YutnoriScreen>
   int? lastMovedPlayerIndex;
   int? lastMovedPieceIndex;
 
+  // 자동 액션 대기 중
+  bool isAutoActionPending = false;
+
   // 말 선택
   int? selectedPieceIndex;
 
@@ -295,7 +298,12 @@ class _YutnoriScreenState extends State<YutnoriScreen>
 
     setState(() {});
 
-    // 컴퓨터 턴이어도 자동 시작하지 않음 - 사용자가 "다음" 버튼을 눌러야 함
+    // 플레이어 턴이고 이동 대기 중이면 자동 액션 체크
+    if (currentPlayer == 0 && pendingMoves.isNotEmpty) {
+      Future.delayed(const Duration(milliseconds: 500), () {
+        if (mounted) _checkAutoAction();
+      });
+    }
   }
 
   // 윷 던지기
@@ -367,6 +375,9 @@ class _YutnoriScreenState extends State<YutnoriScreen>
         // 일반 결과면 바로 말 이동
         _computerTurn();
       }
+    } else if (currentPlayer == 0 && !canThrowYut && !gameOver) {
+      // 플레이어 턴이고 더 던질 수 없으면 자동 액션 체크
+      _checkAutoAction();
     }
   }
 
@@ -1300,11 +1311,19 @@ class _YutnoriScreenState extends State<YutnoriScreen>
 
   // 가로모드: 우측 컨트롤 (메시지 + 윷 던지기)
   Widget _buildLandscapeRightControls() {
+    // 결과가 있으면 결과 이름 제외한 메시지만 표시
+    String? displayMessage = gameMessage;
+    if (displayMessage != null && currentYutResult != null) {
+      // "빽도! 말을 선택하세요" -> "말을 선택하세요"
+      displayMessage = displayMessage.replaceFirst('${currentYutResult!.name}! ', '');
+      displayMessage = displayMessage.replaceFirst('${currentYutResult!.name}!', '');
+    }
+
     return Column(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
-        // 메시지 (상단)
-        if (gameMessage != null)
+        // 메시지 (상단) - 결과 이름 제외
+        if (displayMessage != null && displayMessage.isNotEmpty)
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
             margin: const EdgeInsets.only(bottom: 10),
@@ -1313,7 +1332,7 @@ class _YutnoriScreenState extends State<YutnoriScreen>
               borderRadius: BorderRadius.circular(8),
             ),
             child: Text(
-              gameMessage!,
+              displayMessage,
               textAlign: TextAlign.center,
               style: const TextStyle(
                 color: Colors.white,
@@ -1452,10 +1471,27 @@ class _YutnoriScreenState extends State<YutnoriScreen>
   Widget _buildLandscapeCompactPlayer() {
     final isCurrentTurn = currentPlayer == 0;
     final finishedCount = playerPieces[0].where((p) => p.isFinished).length;
-    final waitingPieces = <int>[];
-    for (int i = 0; i < 4; i++) {
-      if (playerPieces[0][i].isWaiting) {
-        waitingPieces.add(i);
+    final waitingCount = playerPieces[0].where((p) => p.isWaiting).length;
+
+    // 이동 가능한 대기 말이 있는지 확인
+    bool canStartNewPiece = false;
+    if (pendingMoves.isNotEmpty) {
+      for (int i = 0; i < 4; i++) {
+        if (playerPieces[0][i].isWaiting && _canMovePiece(i, pendingMoves.first)) {
+          canStartNewPiece = true;
+          break;
+        }
+      }
+    }
+
+    // 이동 가능한 말이 있는지 확인 (전체)
+    bool hasMovablePiece = false;
+    if (pendingMoves.isNotEmpty) {
+      for (int i = 0; i < 4; i++) {
+        if (_canMovePiece(i, pendingMoves.first)) {
+          hasMovablePiece = true;
+          break;
+        }
       }
     }
 
@@ -1496,61 +1532,170 @@ class _YutnoriScreenState extends State<YutnoriScreen>
             ),
           ),
           const SizedBox(height: 6),
+          // 새로 달기 버튼 (대기 말이 있고 이동 가능할 때, 자동 실행 대기 중 아닐 때)
+          if (isCurrentTurn && pendingMoves.isNotEmpty && waitingCount > 0 && canStartNewPiece && !isAutoActionPending)
+            Padding(
+              padding: const EdgeInsets.only(bottom: 4),
+              child: GestureDetector(
+                onTap: _startNewPiece,
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                  decoration: BoxDecoration(
+                    color: Colors.green.shade600,
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Text(
+                    '새로 달기 ($waitingCount)',
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 11,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          // 건너뛰기 버튼 (이동 불가시, 자동 실행 대기 중 아닐 때)
+          if (isCurrentTurn && pendingMoves.isNotEmpty && !hasMovablePiece && !isAutoActionPending)
+            Padding(
+              padding: const EdgeInsets.only(bottom: 4),
+              child: GestureDetector(
+                onTap: _skipMove,
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                  decoration: BoxDecoration(
+                    color: Colors.red.shade700,
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: const Text(
+                    '건너뛰기',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 11,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+              ),
+            ),
           // 말 상태
           Row(
             mainAxisSize: MainAxisSize.min,
             children: List.generate(4, (i) {
               final pieceFinished = i < finishedCount;
+              final pieceWaiting = playerPieces[0][i].isWaiting;
               return Container(
                 margin: const EdgeInsets.symmetric(horizontal: 2),
-                width: 14,
-                height: 14,
+                width: 12,
+                height: 12,
                 decoration: BoxDecoration(
-                  color: pieceFinished ? Colors.amber : _getPlayerColor(0),
+                  color: pieceFinished
+                      ? Colors.amber
+                      : pieceWaiting
+                          ? _getPlayerColor(0).withValues(alpha: 0.5)
+                          : _getPlayerColor(0),
                   shape: BoxShape.circle,
                   border: Border.all(color: Colors.white, width: 1),
                 ),
               );
             }),
           ),
-          // 대기 중인 말 (선택 가능)
-          if (waitingPieces.isNotEmpty && isCurrentTurn && pendingMoves.isNotEmpty)
-            Padding(
-              padding: const EdgeInsets.only(top: 6),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: waitingPieces.take(4).map((pieceIndex) {
-                  final canMove = _canMovePiece(pieceIndex, pendingMoves.first);
-                  return GestureDetector(
-                    onTap: canMove ? () => _selectPiece(pieceIndex) : null,
-                    child: Container(
-                      margin: const EdgeInsets.symmetric(horizontal: 2),
-                      width: 20,
-                      height: 20,
-                      decoration: BoxDecoration(
-                        color: _getPlayerColor(0),
-                        shape: BoxShape.circle,
-                        border: Border.all(
-                          color: canMove ? Colors.yellow : Colors.white,
-                          width: canMove ? 2 : 1,
-                        ),
-                        boxShadow: canMove
-                            ? [
-                                BoxShadow(
-                                  color: Colors.yellow.withValues(alpha: 0.5),
-                                  blurRadius: 4,
-                                ),
-                              ]
-                            : null,
-                      ),
-                    ),
-                  );
-                }).toList(),
-              ),
-            ),
         ],
       ),
     );
+  }
+
+  // 새로 달기 (대기 중인 말 중 첫 번째 이동 가능한 말 선택)
+  void _startNewPiece() {
+    if (pendingMoves.isEmpty) return;
+    setState(() {
+      isAutoActionPending = false;
+    });
+    for (int i = 0; i < 4; i++) {
+      if (playerPieces[currentPlayer][i].isWaiting &&
+          _canMovePiece(i, pendingMoves.first)) {
+        _selectPiece(i);
+        return;
+      }
+    }
+  }
+
+  // 이동 불가시 건너뛰기
+  void _skipMove() {
+    if (pendingMoves.isEmpty) return;
+
+    setState(() {
+      isAutoActionPending = false;
+      pendingMoves.removeAt(0);
+      if (pendingMoves.isEmpty && !canThrowYut) {
+        _nextTurn();
+      } else if (pendingMoves.isNotEmpty) {
+        gameMessage = '${pendingMoves.first.name}! 말을 선택하세요';
+        // 새로운 결과에 대해 자동 액션 체크
+        _checkAutoAction();
+      }
+    });
+    _saveGame();
+  }
+
+  // 자동 액션 체크 및 실행 (말판에 말이 없을 때 새로 달기, 이동 불가시 건너뛰기)
+  void _checkAutoAction() {
+    if (currentPlayer != 0 || pendingMoves.isEmpty || isAutoActionPending) return;
+
+    // 말판 위에 있는 플레이어 말이 있는지 확인
+    bool hasPieceOnBoard = false;
+    for (int i = 0; i < 4; i++) {
+      if (!playerPieces[0][i].isWaiting && !playerPieces[0][i].isFinished) {
+        hasPieceOnBoard = true;
+        break;
+      }
+    }
+
+    // 이동 가능한 대기 말 확인
+    bool canStartNewPiece = false;
+    for (int i = 0; i < 4; i++) {
+      if (playerPieces[0][i].isWaiting && _canMovePiece(i, pendingMoves.first)) {
+        canStartNewPiece = true;
+        break;
+      }
+    }
+
+    // 이동 가능한 말 전체 확인
+    bool hasMovablePiece = false;
+    for (int i = 0; i < 4; i++) {
+      if (_canMovePiece(i, pendingMoves.first)) {
+        hasMovablePiece = true;
+        break;
+      }
+    }
+
+    // 말판에 말이 없고 새로 달기 가능한 경우 - 자동 새로 달기
+    if (!hasPieceOnBoard && canStartNewPiece) {
+      setState(() {
+        isAutoActionPending = true;
+        gameMessage = '새로 달기합니다...';
+      });
+      Future.delayed(const Duration(milliseconds: 1200), () {
+        if (mounted && isAutoActionPending && currentPlayer == 0) {
+          _startNewPiece();
+        }
+      });
+      return;
+    }
+
+    // 이동 가능한 말이 없는 경우 - 자동 건너뛰기
+    if (!hasMovablePiece) {
+      setState(() {
+        isAutoActionPending = true;
+        gameMessage = '이동할 수 없어 건너뜁니다...';
+      });
+      Future.delayed(const Duration(milliseconds: 1200), () {
+        if (mounted && isAutoActionPending && currentPlayer == 0) {
+          _skipMove();
+        }
+      });
+      return;
+    }
   }
 
   // 가로모드: 컴퓨터 위젯
@@ -2427,11 +2572,30 @@ class _YutnoriScreenState extends State<YutnoriScreen>
     final isCurrentTurn = currentPlayer == 0;
     final finishedCount =
         playerPieces[0].where((p) => p.isFinished).length;
-    final waitingPieces = playerPieces[0]
-        .asMap()
-        .entries
-        .where((e) => e.value.isWaiting)
-        .toList();
+    final waitingCount =
+        playerPieces[0].where((p) => p.isWaiting).length;
+
+    // 이동 가능한 대기 말이 있는지 확인
+    bool canStartNewPiece = false;
+    if (pendingMoves.isNotEmpty) {
+      for (int i = 0; i < 4; i++) {
+        if (playerPieces[0][i].isWaiting && _canMovePiece(i, pendingMoves.first)) {
+          canStartNewPiece = true;
+          break;
+        }
+      }
+    }
+
+    // 이동 가능한 말이 있는지 확인 (전체)
+    bool hasMovablePiece = false;
+    if (pendingMoves.isNotEmpty) {
+      for (int i = 0; i < 4; i++) {
+        if (_canMovePiece(i, pendingMoves.first)) {
+          hasMovablePiece = true;
+          break;
+        }
+      }
+    }
 
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
@@ -2464,15 +2628,20 @@ class _YutnoriScreenState extends State<YutnoriScreen>
                   ),
                 ),
                 const SizedBox(width: 12),
-                // 말 상태: 골인/대기
+                // 말 상태: 골인/대기/진행중
                 ...List.generate(4, (i) {
                   final pieceFinished = i < finishedCount;
+                  final pieceWaiting = playerPieces[0][i].isWaiting;
                   return Container(
                     margin: const EdgeInsets.only(left: 3),
                     width: 18,
                     height: 18,
                     decoration: BoxDecoration(
-                      color: pieceFinished ? Colors.amber : _getPlayerColor(0).withValues(alpha: 0.5),
+                      color: pieceFinished
+                          ? Colors.amber
+                          : pieceWaiting
+                              ? _getPlayerColor(0).withValues(alpha: 0.5)
+                              : _getPlayerColor(0),
                       shape: BoxShape.circle,
                       border: Border.all(color: Colors.white, width: 1),
                     ),
@@ -2485,55 +2654,48 @@ class _YutnoriScreenState extends State<YutnoriScreen>
             ),
           ),
           const SizedBox(height: 8),
-          // 대기 중인 말들 (선택 가능)
-          if (waitingPieces.isNotEmpty)
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Text(
-                  '대기: ',
-                  style: TextStyle(fontSize: 12, color: Colors.grey.shade700),
+          // 새로 달기 버튼 (대기 말이 있고 이동 가능할 때, 자동 실행 대기 중 아닐 때)
+          if (isCurrentTurn && pendingMoves.isNotEmpty && waitingCount > 0 && canStartNewPiece && !isAutoActionPending)
+            GestureDetector(
+              onTap: _startNewPiece,
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                decoration: BoxDecoration(
+                  color: Colors.green.shade600,
+                  borderRadius: BorderRadius.circular(16),
                 ),
-                ...waitingPieces.map((entry) {
-                  final canMove = pendingMoves.isNotEmpty &&
-                      currentPlayer == 0 &&
-                      _canMovePiece(entry.key, pendingMoves.first);
-                  return GestureDetector(
-                    onTap: canMove ? () => _selectPiece(entry.key) : null,
-                    child: Container(
-                      margin: const EdgeInsets.symmetric(horizontal: 4),
-                      width: 32,
-                      height: 32,
-                      decoration: BoxDecoration(
-                        color: _getPlayerColor(0),
-                        shape: BoxShape.circle,
-                        border: Border.all(
-                          color: canMove ? Colors.yellow : Colors.white,
-                          width: canMove ? 3 : 2,
-                        ),
-                        boxShadow: canMove
-                            ? [
-                                BoxShadow(
-                                  color: Colors.yellow.withValues(alpha: 0.5),
-                                  blurRadius: 8,
-                                ),
-                              ]
-                            : null,
-                      ),
-                      child: Center(
-                        child: Text(
-                          'P',
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontSize: 12,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ),
+                child: Text(
+                  '새로 달기 ($waitingCount)',
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 14,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+            ),
+          // 건너뛰기 버튼 (이동 불가시, 자동 실행 대기 중 아닐 때)
+          if (isCurrentTurn && pendingMoves.isNotEmpty && !hasMovablePiece && !isAutoActionPending)
+            Padding(
+              padding: const EdgeInsets.only(top: 8),
+              child: GestureDetector(
+                onTap: _skipMove,
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                  decoration: BoxDecoration(
+                    color: Colors.red.shade700,
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                  child: const Text(
+                    '건너뛰기',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 14,
+                      fontWeight: FontWeight.bold,
                     ),
-                  );
-                }),
-              ],
+                  ),
+                ),
+              ),
             ),
         ],
       ),
