@@ -1208,7 +1208,7 @@ class _YutnoriScreenState extends State<YutnoriScreen>
     );
   }
 
-  // 가로모드: 좌측 컨트롤 (턴 정보 + 다음 버튼)
+  // 가로모드: 좌측 컨트롤 (턴 정보 + 다음 버튼 + 결과)
   Widget _buildLandscapeLeftControls() {
     final showNextButton = waitingForNextTurn && currentPlayer > 0;
 
@@ -1217,44 +1217,58 @@ class _YutnoriScreenState extends State<YutnoriScreen>
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          // 현재 턴 표시 + 다음 버튼 (나란히)
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
-                decoration: BoxDecoration(
-                  color: _getPlayerColor(currentPlayer),
-                  borderRadius: BorderRadius.circular(8),
+          // 현재 턴 표시
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+            decoration: BoxDecoration(
+              color: _getPlayerColor(currentPlayer),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(
+                  isPlayerTurn ? Icons.person : Icons.computer,
+                  color: Colors.white,
+                  size: 14,
                 ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(
-                      isPlayerTurn ? Icons.person : Icons.computer,
-                      color: Colors.white,
-                      size: 14,
-                    ),
-                    const SizedBox(width: 3),
-                    Text(
-                      '${_getPlayerName(currentPlayer)} 차례',
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 10,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ],
+                const SizedBox(width: 3),
+                Text(
+                  '${_getPlayerName(currentPlayer)} 차례',
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 10,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          // 다음 버튼 (아래에 배치)
+          if (showNextButton)
+            Padding(
+              padding: const EdgeInsets.only(top: 8),
+              child: _buildPlayButton(compact: true),
+            ),
+          const SizedBox(height: 10),
+          // 윷 결과 표시 (좌측에 표시)
+          if (currentYutResult != null)
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+              decoration: BoxDecoration(
+                color: const Color(0xFF8B4513),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Text(
+                currentYutResult!.name,
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
                 ),
               ),
-              if (showNextButton) ...[
-                const SizedBox(width: 6),
-                _buildPlayButton(compact: true),
-              ],
-            ],
-          ),
-          const SizedBox(height: 10),
+            ),
+          const SizedBox(height: 8),
           // 남은 이동 표시
           if (pendingMoves.isNotEmpty)
             Wrap(
@@ -1284,7 +1298,7 @@ class _YutnoriScreenState extends State<YutnoriScreen>
     );
   }
 
-  // 가로모드: 우측 컨트롤 (윷 던지기 + 결과)
+  // 가로모드: 우측 컨트롤 (메시지 + 윷 던지기)
   Widget _buildLandscapeRightControls() {
     return Column(
       mainAxisAlignment: MainAxisAlignment.center,
@@ -1327,7 +1341,7 @@ class _YutnoriScreenState extends State<YutnoriScreen>
           }),
         ),
         const SizedBox(height: 10),
-        // 윷 던지기 버튼 또는 결과 (하단)
+        // 윷 던지기 버튼 (하단)
         if (isPlayerTurn && canThrowYut && !isThrowingYut)
           GestureDetector(
             onTap: _throwYut,
@@ -1359,22 +1373,6 @@ class _YutnoriScreenState extends State<YutnoriScreen>
               style: TextStyle(
                 color: Colors.white,
                 fontSize: 12,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-          )
-        else if (currentYutResult != null)
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
-            decoration: BoxDecoration(
-              color: const Color(0xFF8B4513),
-              borderRadius: BorderRadius.circular(8),
-            ),
-            child: Text(
-              currentYutResult!.name,
-              style: const TextStyle(
-                color: Colors.white,
-                fontSize: 16,
                 fontWeight: FontWeight.bold,
               ),
             ),
