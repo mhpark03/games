@@ -1396,29 +1396,60 @@ class _JanggiScreenState extends State<JanggiScreen> {
             ? JanggiColor.cho
             : JanggiColor.han;
 
-    List<Map<String, dynamic>> allMoves = [];
+    // 별도 isolate에서 계산하지 않으므로 UI 블로킹 방지를 위해 약간의 지연
+    await Future.delayed(const Duration(milliseconds: 100));
 
-    // 모든 합법적인 수 수집 (장군 회피 포함)
-    for (int r = 0; r < 10; r++) {
-      for (int c = 0; c < 9; c++) {
-        final piece = board[r][c];
-        if (piece != null && piece.color == computerColor) {
-          final moves = _getLegalMoves(r, c); // 합법적인 수만 사용
-          for (var move in moves) {
-            int score = _evaluateMove(r, c, move[0], move[1], piece, computerColor);
-            allMoves.add({
-              'fromRow': r,
-              'fromCol': c,
-              'toRow': move[0],
-              'toCol': move[1],
-              'score': score,
-            });
+    Map<String, dynamic>? bestMove;
+
+    // Gemini AI 사용 시도
+    if (useGeminiAI && geminiService != null) {
+      try {
+        // Gemini용 합법적인 수 수집
+        List<Map<String, dynamic>> allMoves = [];
+        for (int r = 0; r < 10; r++) {
+          for (int c = 0; c < 9; c++) {
+            final piece = board[r][c];
+            if (piece != null && piece.color == computerColor) {
+              final moves = _getLegalMoves(r, c);
+              for (var move in moves) {
+                int score = _evaluateMove(r, c, move[0], move[1], piece, computerColor);
+                allMoves.add({
+                  'fromRow': r,
+                  'fromCol': c,
+                  'toRow': move[0],
+                  'toCol': move[1],
+                  'score': score,
+                });
+              }
+            }
           }
         }
+
+        if (allMoves.isNotEmpty) {
+          final geminiMove = await geminiService!.getBestMove(
+            board: board,
+            currentPlayer: computerColor == JanggiColor.cho ? 'cho' : 'han',
+            legalMoves: allMoves,
+          );
+
+          if (geminiMove != null) {
+            bestMove = geminiMove;
+          }
+        }
+      } catch (e) {
+        // Gemini 실패 시 로컬 AI 사용
       }
     }
 
-    if (allMoves.isEmpty) {
+    // Gemini가 실패하거나 비활성화된 경우 Minimax AI 사용
+    if (bestMove == null) {
+      bestMove = _findBestMove(computerColor);
+    }
+
+    if (!mounted) return;
+
+    if (bestMove == null) {
+      // 합법적인 수가 없음 (패배)
       setState(() {
         isThinking = false;
         isGameOver = true;
@@ -1427,43 +1458,467 @@ class _JanggiScreenState extends State<JanggiScreen> {
       return;
     }
 
-    Map<String, dynamic>? bestMove;
-
-    // Gemini AI 사용 시도
-    if (useGeminiAI && geminiService != null) {
-      try {
-        final geminiMove = await geminiService!.getBestMove(
-          board: board,
-          currentPlayer: computerColor == JanggiColor.cho ? 'cho' : 'han',
-          legalMoves: allMoves,
-        );
-
-        if (geminiMove != null) {
-          bestMove = geminiMove;
-        }
-      } catch (e) {
-        // Gemini 실패 시 로컬 AI 사용
-      }
-    }
-
-    // Gemini가 실패하거나 비활성화된 경우 로컬 AI 사용
-    if (bestMove == null) {
-      // 최고 점수 수 선택
-      allMoves.sort((a, b) => b['score'].compareTo(a['score']));
-
-      // 상위 수 중에서 랜덤 선택 (같은 점수인 경우)
-      int topScore = allMoves[0]['score'];
-      var topMoves = allMoves.where((m) => m['score'] == topScore).toList();
-      bestMove = topMoves[(topMoves.length * (DateTime.now().millisecond / 1000)).floor() % topMoves.length];
-    }
-
-    if (!mounted) return;
-
     setState(() {
       isThinking = false;
       _movePiece(
           bestMove!['fromRow'], bestMove['fromCol'], bestMove['toRow'], bestMove['toCol']);
     });
+  }
+
+  // AI 난이도 설정 (탐색 깊이)
+  static const int _aiSearchDepth = 3;
+
+  // 기물 가치 (정적 평가용)
+  int _getPieceValue(JanggiPieceType type) {
+    switch (type) {
+      case JanggiPieceType.gung:
+        return 0; // 궁은 잡히면 게임 종료이므로 별도 처리
+      case JanggiPieceType.cha:
+        return 1300;
+      case JanggiPieceType.po:
+        return 700;
+      case JanggiPieceType.ma:
+        return 500;
+      case JanggiPieceType.sang:
+        return 500;
+      case JanggiPieceType.sa:
+        return 200;
+      case JanggiPieceType.byung:
+        return 200;
+    }
+  }
+
+  // 위치 가치 테이블 (초 기준, 한은 반전)
+  static const List<List<int>> _byungPositionValue = [
+    [0, 0, 0, 0, 0, 0, 0, 0, 0],
+    [0, 0, 0, 0, 0, 0, 0, 0, 0],
+    [0, 0, 0, 0, 0, 0, 0, 0, 0],
+    [5, 10, 15, 20, 25, 20, 15, 10, 5],
+    [10, 15, 20, 30, 35, 30, 20, 15, 10],
+    [15, 20, 30, 40, 50, 40, 30, 20, 15],
+    [25, 35, 45, 55, 65, 55, 45, 35, 25],
+    [35, 50, 60, 70, 80, 70, 60, 50, 35],
+    [50, 70, 80, 90, 100, 90, 80, 70, 50],
+    [70, 90, 100, 110, 120, 110, 100, 90, 70],
+  ];
+
+  static const List<List<int>> _chaPositionValue = [
+    [10, 10, 10, 15, 15, 15, 10, 10, 10],
+    [10, 15, 15, 20, 25, 20, 15, 15, 10],
+    [10, 15, 20, 25, 30, 25, 20, 15, 10],
+    [15, 20, 25, 30, 35, 30, 25, 20, 15],
+    [20, 25, 30, 35, 40, 35, 30, 25, 20],
+    [20, 25, 30, 35, 40, 35, 30, 25, 20],
+    [15, 20, 25, 30, 35, 30, 25, 20, 15],
+    [10, 15, 20, 25, 30, 25, 20, 15, 10],
+    [10, 15, 15, 20, 25, 20, 15, 15, 10],
+    [10, 10, 10, 15, 15, 15, 10, 10, 10],
+  ];
+
+  static const List<List<int>> _poPositionValue = [
+    [5, 5, 5, 10, 15, 10, 5, 5, 5],
+    [5, 10, 15, 20, 25, 20, 15, 10, 5],
+    [10, 15, 20, 25, 30, 25, 20, 15, 10],
+    [15, 20, 25, 30, 35, 30, 25, 20, 15],
+    [20, 25, 30, 40, 45, 40, 30, 25, 20],
+    [20, 25, 30, 40, 45, 40, 30, 25, 20],
+    [15, 20, 25, 30, 35, 30, 25, 20, 15],
+    [10, 15, 20, 25, 30, 25, 20, 15, 10],
+    [5, 10, 15, 20, 25, 20, 15, 10, 5],
+    [5, 5, 5, 10, 15, 10, 5, 5, 5],
+  ];
+
+  static const List<List<int>> _maSangPositionValue = [
+    [0, 5, 10, 10, 10, 10, 10, 5, 0],
+    [5, 10, 15, 20, 20, 20, 15, 10, 5],
+    [10, 15, 25, 30, 30, 30, 25, 15, 10],
+    [10, 20, 30, 35, 40, 35, 30, 20, 10],
+    [15, 25, 35, 45, 50, 45, 35, 25, 15],
+    [15, 25, 35, 45, 50, 45, 35, 25, 15],
+    [10, 20, 30, 35, 40, 35, 30, 20, 10],
+    [10, 15, 25, 30, 30, 30, 25, 15, 10],
+    [5, 10, 15, 20, 20, 20, 15, 10, 5],
+    [0, 5, 10, 10, 10, 10, 10, 5, 0],
+  ];
+
+  // 위치 가치 가져오기
+  int _getPositionValue(JanggiPiece piece, int row, int col) {
+    int r = piece.color == JanggiColor.cho ? row : 9 - row;
+
+    switch (piece.type) {
+      case JanggiPieceType.byung:
+        return _byungPositionValue[r][col];
+      case JanggiPieceType.cha:
+        return _chaPositionValue[r][col];
+      case JanggiPieceType.po:
+        return _poPositionValue[r][col];
+      case JanggiPieceType.ma:
+      case JanggiPieceType.sang:
+        return _maSangPositionValue[r][col];
+      case JanggiPieceType.gung:
+      case JanggiPieceType.sa:
+        // 궁과 사는 궁성에 있을 때 보너스
+        if (_isInPalace(row, col, piece.color)) {
+          return col == 4 ? 20 : 10; // 중앙 선호
+        }
+        return 0;
+    }
+  }
+
+  // 기물이 위협받는지 확인
+  bool _isPieceUnderAttack(int row, int col, JanggiColor pieceColor) {
+    final enemyColor = pieceColor == JanggiColor.cho ? JanggiColor.han : JanggiColor.cho;
+
+    for (int r = 0; r < 10; r++) {
+      for (int c = 0; c < 9; c++) {
+        final piece = board[r][c];
+        if (piece != null && piece.color == enemyColor) {
+          final moves = _getValidMoves(r, c);
+          if (moves.any((m) => m[0] == row && m[1] == col)) {
+            return true;
+          }
+        }
+      }
+    }
+    return false;
+  }
+
+  // 기물이 보호받는지 확인
+  bool _isPieceProtected(int row, int col, JanggiColor pieceColor) {
+    // 임시로 기물을 제거하고 아군이 그 위치를 공격할 수 있는지 확인
+    final piece = board[row][col];
+    board[row][col] = null;
+
+    for (int r = 0; r < 10; r++) {
+      for (int c = 0; c < 9; c++) {
+        final allyPiece = board[r][c];
+        if (allyPiece != null && allyPiece.color == pieceColor) {
+          final moves = _getValidMoves(r, c);
+          if (moves.any((m) => m[0] == row && m[1] == col)) {
+            board[row][col] = piece;
+            return true;
+          }
+        }
+      }
+    }
+
+    board[row][col] = piece;
+    return false;
+  }
+
+  // 이동성(mobility) 계산
+  int _getMobility(JanggiColor color) {
+    int mobility = 0;
+    for (int r = 0; r < 10; r++) {
+      for (int c = 0; c < 9; c++) {
+        final piece = board[r][c];
+        if (piece != null && piece.color == color) {
+          mobility += _getLegalMoves(r, c).length;
+        }
+      }
+    }
+    return mobility;
+  }
+
+  // 궁성 안전도 평가
+  int _evaluateKingSafety(JanggiColor color) {
+    final gungPos = _findGung(color);
+    if (gungPos == null) return -10000;
+
+    int safety = 0;
+
+    // 사가 궁 주변에 있으면 보너스
+    final directions = [
+      [-1, 0], [1, 0], [0, -1], [0, 1]
+    ];
+
+    for (var dir in directions) {
+      int r = gungPos[0] + dir[0];
+      int c = gungPos[1] + dir[1];
+      if (r >= 0 && r < 10 && c >= 0 && c < 9) {
+        final piece = board[r][c];
+        if (piece != null && piece.color == color && piece.type == JanggiPieceType.sa) {
+          safety += 50;
+        }
+      }
+    }
+
+    // 장군 상태이면 감점
+    if (_checkIsInCheck(color)) {
+      safety -= 200;
+    }
+
+    return safety;
+  }
+
+  // 빠른 보드 평가 함수 (Minimax 탐색용 - 성능 최적화)
+  int _evaluateBoardFast(JanggiColor aiColor) {
+    int score = 0;
+    final enemyColor = aiColor == JanggiColor.cho ? JanggiColor.han : JanggiColor.cho;
+
+    // 궁 존재 확인
+    if (_findGung(enemyColor) == null) return 100000;
+    if (_findGung(aiColor) == null) return -100000;
+
+    // 기물 가치 및 위치 합산 (빠른 평가)
+    for (int r = 0; r < 10; r++) {
+      for (int c = 0; c < 9; c++) {
+        final piece = board[r][c];
+        if (piece != null) {
+          int pieceValue = _getPieceValue(piece.type);
+          int positionValue = _getPositionValue(piece, r, c);
+          int totalValue = pieceValue + positionValue;
+
+          if (piece.color == aiColor) {
+            score += totalValue;
+          } else {
+            score -= totalValue;
+          }
+        }
+      }
+    }
+
+    // 장군 상태 보너스/패널티
+    if (_checkIsInCheck(enemyColor)) {
+      score += 150;
+    }
+    if (_checkIsInCheck(aiColor)) {
+      score -= 150;
+    }
+
+    return score;
+  }
+
+  // 정적 보드 평가 함수 (현재 보드 상태 점수 - 루트 레벨용)
+  int _evaluateBoard(JanggiColor aiColor) {
+    int score = 0;
+    final enemyColor = aiColor == JanggiColor.cho ? JanggiColor.han : JanggiColor.cho;
+
+    // 외통수 확인
+    if (_isCheckmate(enemyColor)) {
+      return 100000;
+    }
+    if (_isCheckmate(aiColor)) {
+      return -100000;
+    }
+
+    // 궁 존재 확인
+    if (_findGung(enemyColor) == null) return 100000;
+    if (_findGung(aiColor) == null) return -100000;
+
+    // 기물 가치 합산
+    for (int r = 0; r < 10; r++) {
+      for (int c = 0; c < 9; c++) {
+        final piece = board[r][c];
+        if (piece != null) {
+          int pieceValue = _getPieceValue(piece.type);
+          int positionValue = _getPositionValue(piece, r, c);
+
+          // 위협받는 기물은 가치 감소
+          if (_isPieceUnderAttack(r, c, piece.color)) {
+            if (_isPieceProtected(r, c, piece.color)) {
+              pieceValue -= pieceValue ~/ 4; // 보호되면 25% 감소
+            } else {
+              pieceValue -= pieceValue ~/ 2; // 보호 안 되면 50% 감소
+            }
+          }
+
+          int totalValue = pieceValue + positionValue;
+
+          if (piece.color == aiColor) {
+            score += totalValue;
+          } else {
+            score -= totalValue;
+          }
+        }
+      }
+    }
+
+    // 이동성 평가
+    int aiMobility = _getMobility(aiColor);
+    int enemyMobility = _getMobility(enemyColor);
+    score += (aiMobility - enemyMobility) * 5;
+
+    // 궁성 안전도 평가
+    score += _evaluateKingSafety(aiColor);
+    score -= _evaluateKingSafety(enemyColor);
+
+    // 장군 보너스
+    if (_checkIsInCheck(enemyColor)) {
+      score += 100;
+    }
+
+    return score;
+  }
+
+  // Minimax + Alpha-Beta Pruning
+  int _minimax(int depth, int alpha, int beta, bool isMaximizing, JanggiColor aiColor) {
+    final enemyColor = aiColor == JanggiColor.cho ? JanggiColor.han : JanggiColor.cho;
+
+    // 깊이 0이거나 게임 종료 시 정적 평가 (빠른 평가 함수 사용)
+    if (depth == 0) {
+      return _evaluateBoardFast(aiColor);
+    }
+
+    // 게임 종료 조건 확인
+    if (_findGung(aiColor) == null) return -100000 + ((_aiSearchDepth - depth) * 1000);
+    if (_findGung(enemyColor) == null) return 100000 - ((_aiSearchDepth - depth) * 1000);
+
+    JanggiColor currentColor = isMaximizing ? aiColor : enemyColor;
+
+    // 모든 합법적인 수 수집
+    List<Map<String, dynamic>> allMoves = [];
+    for (int r = 0; r < 10; r++) {
+      for (int c = 0; c < 9; c++) {
+        final piece = board[r][c];
+        if (piece != null && piece.color == currentColor) {
+          final moves = _getLegalMoves(r, c);
+          for (var move in moves) {
+            // 수 우선순위 계산 (이동 순서 최적화)
+            int priority = 0;
+            final target = board[move[0]][move[1]];
+            if (target != null) {
+              priority = _getPieceValue(target.type) * 10;
+            }
+            allMoves.add({
+              'fromRow': r,
+              'fromCol': c,
+              'toRow': move[0],
+              'toCol': move[1],
+              'priority': priority,
+            });
+          }
+        }
+      }
+    }
+
+    // 합법적인 수가 없으면 패배/승리
+    if (allMoves.isEmpty) {
+      if (_checkIsInCheck(currentColor)) {
+        return isMaximizing ? -100000 + ((_aiSearchDepth - depth) * 1000) : 100000 - ((_aiSearchDepth - depth) * 1000);
+      }
+      return 0; // 스테일메이트 (무승부)
+    }
+
+    // 수 정렬 (캡처 수 우선)
+    allMoves.sort((a, b) => b['priority'].compareTo(a['priority']));
+
+    if (isMaximizing) {
+      int maxEval = -1000000;
+
+      for (var move in allMoves) {
+        // 이동 실행
+        final movingPiece = board[move['fromRow']][move['fromCol']];
+        final capturedPiece = board[move['toRow']][move['toCol']];
+        board[move['toRow']][move['toCol']] = movingPiece;
+        board[move['fromRow']][move['fromCol']] = null;
+
+        int eval = _minimax(depth - 1, alpha, beta, false, aiColor);
+
+        // 원복
+        board[move['fromRow']][move['fromCol']] = movingPiece;
+        board[move['toRow']][move['toCol']] = capturedPiece;
+
+        maxEval = maxEval > eval ? maxEval : eval;
+        alpha = alpha > eval ? alpha : eval;
+
+        // Beta cutoff
+        if (beta <= alpha) {
+          break;
+        }
+      }
+
+      return maxEval;
+    } else {
+      int minEval = 1000000;
+
+      for (var move in allMoves) {
+        // 이동 실행
+        final movingPiece = board[move['fromRow']][move['fromCol']];
+        final capturedPiece = board[move['toRow']][move['toCol']];
+        board[move['toRow']][move['toCol']] = movingPiece;
+        board[move['fromRow']][move['fromCol']] = null;
+
+        int eval = _minimax(depth - 1, alpha, beta, true, aiColor);
+
+        // 원복
+        board[move['fromRow']][move['fromCol']] = movingPiece;
+        board[move['toRow']][move['toCol']] = capturedPiece;
+
+        minEval = minEval < eval ? minEval : eval;
+        beta = beta < eval ? beta : eval;
+
+        // Alpha cutoff
+        if (beta <= alpha) {
+          break;
+        }
+      }
+
+      return minEval;
+    }
+  }
+
+  // 최선의 수 찾기 (루트 레벨 minimax)
+  Map<String, dynamic>? _findBestMove(JanggiColor aiColor) {
+    List<Map<String, dynamic>> allMoves = [];
+
+    // 모든 합법적인 수 수집
+    for (int r = 0; r < 10; r++) {
+      for (int c = 0; c < 9; c++) {
+        final piece = board[r][c];
+        if (piece != null && piece.color == aiColor) {
+          final moves = _getLegalMoves(r, c);
+          for (var move in moves) {
+            int priority = 0;
+            final target = board[move[0]][move[1]];
+            if (target != null) {
+              priority = _getPieceValue(target.type) * 10;
+            }
+            allMoves.add({
+              'fromRow': r,
+              'fromCol': c,
+              'toRow': move[0],
+              'toCol': move[1],
+              'priority': priority,
+            });
+          }
+        }
+      }
+    }
+
+    if (allMoves.isEmpty) return null;
+
+    // 수 정렬 (캡처 수 우선)
+    allMoves.sort((a, b) => b['priority'].compareTo(a['priority']));
+
+    Map<String, dynamic>? bestMove;
+    int bestScore = -1000000;
+    int alpha = -1000000;
+    int beta = 1000000;
+
+    for (var move in allMoves) {
+      // 이동 실행
+      final movingPiece = board[move['fromRow']][move['fromCol']];
+      final capturedPiece = board[move['toRow']][move['toCol']];
+      board[move['toRow']][move['toCol']] = movingPiece;
+      board[move['fromRow']][move['fromCol']] = null;
+
+      int score = _minimax(_aiSearchDepth - 1, alpha, beta, false, aiColor);
+
+      // 원복
+      board[move['fromRow']][move['fromCol']] = movingPiece;
+      board[move['toRow']][move['toCol']] = capturedPiece;
+
+      if (score > bestScore) {
+        bestScore = score;
+        bestMove = Map.from(move);
+        bestMove['score'] = score;
+      }
+
+      alpha = alpha > score ? alpha : score;
+    }
+
+    return bestMove;
   }
 
   int _evaluateMove(int fromRow, int fromCol, int toRow, int toCol, JanggiPiece piece, JanggiColor computerColor) {
@@ -1473,29 +1928,7 @@ class _JanggiScreenState extends State<JanggiScreen> {
 
     // 상대 말 잡기
     if (target != null) {
-      switch (target.type) {
-        case JanggiPieceType.gung:
-          score += 10000;
-          break;
-        case JanggiPieceType.cha:
-          score += 1300;
-          break;
-        case JanggiPieceType.po:
-          score += 700;
-          break;
-        case JanggiPieceType.ma:
-          score += 500;
-          break;
-        case JanggiPieceType.sang:
-          score += 500;
-          break;
-        case JanggiPieceType.sa:
-          score += 300;
-          break;
-        case JanggiPieceType.byung:
-          score += 200;
-          break;
-      }
+      score += _getPieceValue(target.type) * 10;
     }
 
     // 이동 후 상대에게 장군을 걸 수 있는지 확인
@@ -1517,28 +1950,33 @@ class _JanggiScreenState extends State<JanggiScreen> {
     board[fromRow][fromCol] = movingPiece;
     board[toRow][toCol] = capturedPiece;
 
-    // 중앙으로 이동 선호
-    int centerCol = 4;
-    score += (4 - (toCol - centerCol).abs()) * 5;
+    // 위치 가치 변화
+    int fromPositionValue = _getPositionValue(piece, fromRow, fromCol);
+    int toPositionValue = _getPositionValue(piece, toRow, toCol);
+    score += (toPositionValue - fromPositionValue);
 
-    // 졸/병: 전진 선호
-    if (piece.type == JanggiPieceType.byung) {
-      if (piece.color == JanggiColor.cho) {
-        score += (9 - toRow) * 10;
-      } else {
-        score += toRow * 10;
+    // 위협받는 위치에서 이동 보너스
+    if (_isPieceUnderAttack(fromRow, fromCol, computerColor)) {
+      if (!_isPieceProtected(fromRow, fromCol, computerColor)) {
+        score += _getPieceValue(piece.type) ~/ 2; // 위협 회피 보너스
       }
     }
 
-    // 궁/사: 궁성 중앙 선호
-    if (piece.type == JanggiPieceType.gung || piece.type == JanggiPieceType.sa) {
-      if (toCol == 4) score += 20;
-    }
-
-    // 차/포: 열린 줄 선호
-    if (piece.type == JanggiPieceType.cha || piece.type == JanggiPieceType.po) {
+    // 보호받는 위치로 이동 보너스
+    // 임시로 이동 후 보호 여부 확인
+    board[toRow][toCol] = movingPiece;
+    board[fromRow][fromCol] = null;
+    if (_isPieceProtected(toRow, toCol, computerColor)) {
       score += 30;
     }
+    // 이동 후 위협받으면 감점
+    if (_isPieceUnderAttack(toRow, toCol, computerColor)) {
+      if (!_isPieceProtected(toRow, toCol, computerColor)) {
+        score -= _getPieceValue(piece.type) ~/ 2;
+      }
+    }
+    board[fromRow][fromCol] = movingPiece;
+    board[toRow][toCol] = capturedPiece;
 
     return score;
   }
