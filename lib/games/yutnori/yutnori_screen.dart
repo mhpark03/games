@@ -1313,10 +1313,22 @@ class _YutnoriScreenState extends State<YutnoriScreen>
   Widget _buildLandscapeRightControls() {
     // 결과가 있으면 결과 이름 제외한 메시지만 표시
     String? displayMessage = gameMessage;
-    if (displayMessage != null && currentYutResult != null) {
-      // "빽도! 말을 선택하세요" -> "말을 선택하세요"
-      displayMessage = displayMessage.replaceFirst('${currentYutResult!.name}! ', '');
-      displayMessage = displayMessage.replaceFirst('${currentYutResult!.name}!', '');
+    if (displayMessage != null) {
+      // 모든 윷 결과 이름을 메시지에서 제거
+      for (final result in YutResult.values) {
+        // "컴퓨터 1: 모! 한 번 더!" -> "컴퓨터 1: 한 번 더!"
+        displayMessage = displayMessage!.replaceAll(': ${result.name}! ', ': ');
+        displayMessage = displayMessage.replaceAll(': ${result.name}!', ':');
+        // "빽도! 말을 선택하세요" -> "말을 선택하세요"
+        displayMessage = displayMessage.replaceFirst('${result.name}! ', '');
+        displayMessage = displayMessage.replaceFirst('${result.name}!', '');
+        // "빽도 - 말을 선택하세요" -> "말을 선택하세요"
+        displayMessage = displayMessage.replaceFirst('${result.name} - ', '');
+      }
+      // 빈 콜론 정리 ("컴퓨터 1:" -> "")
+      if (displayMessage != null && displayMessage.trim().endsWith(':')) {
+        displayMessage = '';
+      }
     }
 
     return Column(
