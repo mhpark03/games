@@ -10,6 +10,7 @@ import 'games/minesweeper/minesweeper_screen.dart';
 import 'games/baseball/baseball_screen.dart';
 import 'games/onecard/onecard_screen.dart';
 import 'games/yutnori/yutnori_screen.dart';
+import 'games/hula/hula_screen.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
@@ -1860,6 +1861,236 @@ class HomeScreen extends StatelessWidget {
     );
   }
 
+  // 훌라 인원 선택 다이얼로그
+  Future<void> _showHulaModeDialog(BuildContext context) async {
+    final hasSaved = await HulaScreen.hasSavedGame();
+    final savedPlayerCount = hasSaved ? await HulaScreen.getSavedPlayerCount() : null;
+
+    if (!context.mounted) return;
+
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return LayoutBuilder(
+          builder: (context, constraints) {
+            final isLandscape = constraints.maxWidth > constraints.maxHeight;
+            return AlertDialog(
+              backgroundColor: Colors.grey.shade900,
+              insetPadding: EdgeInsets.symmetric(
+                horizontal: isLandscape ? 100 : 20,
+                vertical: isLandscape ? 12 : 24,
+              ),
+              contentPadding: EdgeInsets.fromLTRB(20, isLandscape ? 8 : 16, 20, isLandscape ? 12 : 20),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16),
+                side: BorderSide(color: Colors.orange.withValues(alpha: 0.5), width: 2),
+              ),
+              title: Text(
+                '인원 선택',
+                style: TextStyle(
+                  color: Colors.orange,
+                  fontWeight: FontWeight.bold,
+                  fontSize: isLandscape ? 16 : 20,
+                ),
+                textAlign: TextAlign.center,
+              ),
+              content: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  // 이어하기 버튼 (저장된 게임이 있을 때만)
+                  if (hasSaved && savedPlayerCount != null) ...[
+                    _buildHulaResumeButton(context, savedPlayerCount, compact: isLandscape),
+                    SizedBox(height: isLandscape ? 8 : 16),
+                    Divider(color: Colors.grey.shade700, height: 1),
+                    SizedBox(height: isLandscape ? 6 : 8),
+                    Text(
+                      '새 게임',
+                      style: TextStyle(
+                        color: Colors.grey.shade400,
+                        fontSize: isLandscape ? 10 : 12,
+                      ),
+                    ),
+                    SizedBox(height: isLandscape ? 6 : 8),
+                  ],
+                  // 가로모드: 버튼들을 가로로 배치
+                  if (isLandscape)
+                    Row(
+                      children: [
+                        Expanded(child: _buildHulaPlayerCountButton(context, playerCount: 2, subtitle: '1 vs 1', icon: Icons.people, compact: true)),
+                        const SizedBox(width: 8),
+                        Expanded(child: _buildHulaPlayerCountButton(context, playerCount: 3, subtitle: '1 vs 2', icon: Icons.groups, compact: true)),
+                        const SizedBox(width: 8),
+                        Expanded(child: _buildHulaPlayerCountButton(context, playerCount: 4, subtitle: '1 vs 3', icon: Icons.groups, compact: true)),
+                      ],
+                    )
+                  else ...[
+                    _buildHulaPlayerCountButton(context, playerCount: 2, subtitle: '1 vs 1', icon: Icons.people),
+                    const SizedBox(height: 12),
+                    _buildHulaPlayerCountButton(context, playerCount: 3, subtitle: '1 vs 2', icon: Icons.groups),
+                    const SizedBox(height: 12),
+                    _buildHulaPlayerCountButton(context, playerCount: 4, subtitle: '1 vs 3', icon: Icons.groups),
+                  ],
+                ],
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+
+  Widget _buildHulaResumeButton(BuildContext context, int savedPlayerCount, {bool compact = false}) {
+    return InkWell(
+      onTap: () {
+        Navigator.pop(context);
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => HulaScreen(
+              playerCount: savedPlayerCount,
+              resumeGame: true,
+            ),
+          ),
+        );
+      },
+      borderRadius: BorderRadius.circular(compact ? 8 : 12),
+      child: Container(
+        width: double.infinity,
+        padding: EdgeInsets.symmetric(horizontal: compact ? 12 : 16, vertical: compact ? 8 : 12),
+        decoration: BoxDecoration(
+          color: Colors.green.withValues(alpha: 0.2),
+          borderRadius: BorderRadius.circular(compact ? 8 : 12),
+          border: Border.all(
+            color: Colors.green.withValues(alpha: 0.5),
+            width: 2,
+          ),
+        ),
+        child: Row(
+          children: [
+            Icon(Icons.play_arrow, color: Colors.green, size: compact ? 22 : 28),
+            SizedBox(width: compact ? 8 : 12),
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  '이어하기',
+                  style: TextStyle(
+                    color: Colors.green,
+                    fontSize: compact ? 13 : 16,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                Text(
+                  '${savedPlayerCount}인 게임',
+                  style: TextStyle(
+                    color: Colors.grey.shade400,
+                    fontSize: compact ? 10 : 12,
+                  ),
+                ),
+              ],
+            ),
+            const Spacer(),
+            Icon(
+              Icons.arrow_forward_ios,
+              color: Colors.green.withValues(alpha: 0.7),
+              size: compact ? 12 : 16,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildHulaPlayerCountButton(
+    BuildContext context, {
+    required int playerCount,
+    required String subtitle,
+    required IconData icon,
+    bool compact = false,
+  }) {
+    return InkWell(
+      onTap: () {
+        Navigator.pop(context);
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => HulaScreen(playerCount: playerCount),
+          ),
+        );
+      },
+      borderRadius: BorderRadius.circular(compact ? 8 : 12),
+      child: Container(
+        width: double.infinity,
+        padding: EdgeInsets.symmetric(horizontal: compact ? 10 : 16, vertical: compact ? 8 : 12),
+        decoration: BoxDecoration(
+          color: Colors.orange.withValues(alpha: 0.1),
+          borderRadius: BorderRadius.circular(compact ? 8 : 12),
+          border: Border.all(
+            color: Colors.orange.withValues(alpha: 0.3),
+            width: 1,
+          ),
+        ),
+        child: compact
+            // 컴팩트 모드: 세로 배치
+            ? Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(icon, color: Colors.orange, size: 22),
+                  const SizedBox(height: 4),
+                  Text(
+                    '${playerCount}인',
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 13,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  Text(
+                    subtitle,
+                    style: TextStyle(
+                      color: Colors.grey.shade400,
+                      fontSize: 10,
+                    ),
+                  ),
+                ],
+              )
+            // 일반 모드: 가로 배치
+            : Row(
+                children: [
+                  Icon(icon, color: Colors.orange, size: 28),
+                  const SizedBox(width: 12),
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        '${playerCount}인',
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      Text(
+                        subtitle,
+                        style: TextStyle(
+                          color: Colors.grey.shade400,
+                          fontSize: 12,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const Spacer(),
+                  Icon(
+                    Icons.arrow_forward_ios,
+                    color: Colors.orange.withValues(alpha: 0.7),
+                    size: 16,
+                  ),
+                ],
+              ),
+      ),
+    );
+  }
+
   Widget _buildYutnoriPlayerCountButton(
     BuildContext context, {
     required int playerCount,
@@ -2137,6 +2368,14 @@ class HomeScreen extends StatelessWidget {
                                 icon: Icons.casino,
                                 color: const Color(0xFFDEB887),
                                 onTap: () => _showYutnoriModeDialog(context),
+                              ),
+                              _buildGameTile(
+                                context,
+                                title: '훌라',
+                                subtitle: 'Hula',
+                                icon: Icons.view_carousel,
+                                color: Colors.orange,
+                                onTap: () => _showHulaModeDialog(context),
                               ),
                             ],
                           );
