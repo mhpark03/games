@@ -1,3 +1,5 @@
+import 'dart:math';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -94,6 +96,12 @@ class _JanggiScreenState extends State<JanggiScreen> {
   bool isThinking = false;
   bool isInCheck = false; // 현재 턴 플레이어가 장군 상태인지
 
+  // 마지막 이동 위치 표시
+  int? lastMoveFromRow;
+  int? lastMoveFromCol;
+  int? lastMoveToRow;
+  int? lastMoveToCol;
+
   // Gemini AI 설정
   String? geminiApiKey;
   GeminiService? geminiService;
@@ -179,6 +187,10 @@ class _JanggiScreenState extends State<JanggiScreen> {
       'choRightPosition': choRightPosition.index,
       'hanLeftPosition': hanLeftPosition.index,
       'hanRightPosition': hanRightPosition.index,
+      'lastMoveFromRow': lastMoveFromRow,
+      'lastMoveFromCol': lastMoveFromCol,
+      'lastMoveToRow': lastMoveToRow,
+      'lastMoveToCol': lastMoveToCol,
     };
 
     await GameSaveService.saveGame('janggi', gameState);
@@ -209,6 +221,10 @@ class _JanggiScreenState extends State<JanggiScreen> {
     choRightPosition = MaSangPosition.values[gameState['choRightPosition'] as int? ?? 0];
     hanLeftPosition = MaSangPosition.values[gameState['hanLeftPosition'] as int? ?? 0];
     hanRightPosition = MaSangPosition.values[gameState['hanRightPosition'] as int? ?? 0];
+    lastMoveFromRow = gameState['lastMoveFromRow'] as int?;
+    lastMoveFromCol = gameState['lastMoveFromCol'] as int?;
+    lastMoveToRow = gameState['lastMoveToRow'] as int?;
+    lastMoveToCol = gameState['lastMoveToCol'] as int?;
 
     setState(() {
       isSetupPhase = false;
@@ -382,16 +398,16 @@ class _JanggiScreenState extends State<JanggiScreen> {
   }
 
   void _showSetupDialog() {
-    // 컴퓨터의 마상 배치는 랜덤으로 설정
-    final random = DateTime.now().millisecondsSinceEpoch;
+    // 컴퓨터의 마상 배치는 랜덤으로 설정 (4가지 조합 중 하나)
+    final random = Random();
     if (widget.gameMode == JanggiGameMode.vsCho) {
       // 컴퓨터가 초일 때, 초의 배치는 랜덤
-      choLeftPosition = random % 2 == 0 ? MaSangPosition.maSang : MaSangPosition.sangMa;
-      choRightPosition = (random ~/ 2) % 2 == 0 ? MaSangPosition.maSang : MaSangPosition.sangMa;
+      choLeftPosition = random.nextBool() ? MaSangPosition.maSang : MaSangPosition.sangMa;
+      choRightPosition = random.nextBool() ? MaSangPosition.maSang : MaSangPosition.sangMa;
     } else if (widget.gameMode == JanggiGameMode.vsHan) {
       // 컴퓨터가 한일 때, 한의 배치는 랜덤
-      hanLeftPosition = random % 2 == 0 ? MaSangPosition.maSang : MaSangPosition.sangMa;
-      hanRightPosition = (random ~/ 2) % 2 == 0 ? MaSangPosition.maSang : MaSangPosition.sangMa;
+      hanLeftPosition = random.nextBool() ? MaSangPosition.maSang : MaSangPosition.sangMa;
+      hanRightPosition = random.nextBool() ? MaSangPosition.maSang : MaSangPosition.sangMa;
     }
 
     showDialog(
@@ -435,11 +451,21 @@ class _JanggiScreenState extends State<JanggiScreen> {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
+            // 컴퓨터가 초일 때 (vsCho 모드) - 컴퓨터 초 배치 표시
+            if (widget.gameMode == JanggiGameMode.vsCho) ...[
+              _buildComputerPositionDisplay(
+                '초 (컴퓨터)',
+                JanggiColor.cho,
+                choLeftPosition,
+                choRightPosition,
+              ),
+              const SizedBox(height: 16),
+            ],
             // 플레이어 초의 배치 (한과 대전 또는 2인 플레이)
             if (widget.gameMode == JanggiGameMode.vsHan ||
                 widget.gameMode == JanggiGameMode.vsHuman) ...[
               _buildPositionSelector(
-                '초 (플레이어)',
+                widget.gameMode == JanggiGameMode.vsHuman ? '초' : '초 (플레이어)',
                 JanggiColor.cho,
                 choLeftPosition,
                 choRightPosition,
@@ -466,6 +492,16 @@ class _JanggiScreenState extends State<JanggiScreen> {
                     hanRightPosition = right;
                   });
                 },
+              ),
+            ],
+            // 컴퓨터가 한일 때 (vsHan 모드) - 컴퓨터 한 배치 표시
+            if (widget.gameMode == JanggiGameMode.vsHan) ...[
+              const SizedBox(height: 16),
+              _buildComputerPositionDisplay(
+                '한 (컴퓨터)',
+                JanggiColor.han,
+                hanLeftPosition,
+                hanRightPosition,
               ),
             ],
           ],
@@ -524,12 +560,23 @@ class _JanggiScreenState extends State<JanggiScreen> {
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // 왼쪽: 초 플레이어
+                  // 왼쪽: 초
+                  if (widget.gameMode == JanggiGameMode.vsCho)
+                    // 컴퓨터가 초
+                    Expanded(
+                      child: _buildComputerPositionDisplay(
+                        '초 (컴퓨터)',
+                        JanggiColor.cho,
+                        choLeftPosition,
+                        choRightPosition,
+                      ),
+                    ),
                   if (widget.gameMode == JanggiGameMode.vsHan ||
                       widget.gameMode == JanggiGameMode.vsHuman)
+                    // 플레이어가 초
                     Expanded(
                       child: _buildPositionSelector(
-                        '초 (플레이어)',
+                        widget.gameMode == JanggiGameMode.vsHuman ? '초' : '초 (플레이어)',
                         JanggiColor.cho,
                         choLeftPosition,
                         choRightPosition,
@@ -541,11 +588,11 @@ class _JanggiScreenState extends State<JanggiScreen> {
                         },
                       ),
                     ),
-                  if (widget.gameMode == JanggiGameMode.vsHuman)
-                    const SizedBox(width: 16),
-                  // 오른쪽: 한 플레이어
+                  const SizedBox(width: 16),
+                  // 오른쪽: 한
                   if (widget.gameMode == JanggiGameMode.vsCho ||
                       widget.gameMode == JanggiGameMode.vsHuman)
+                    // 플레이어가 한
                     Expanded(
                       child: _buildPositionSelector(
                         widget.gameMode == JanggiGameMode.vsHuman ? '한' : '한 (플레이어)',
@@ -558,6 +605,16 @@ class _JanggiScreenState extends State<JanggiScreen> {
                             hanRightPosition = right;
                           });
                         },
+                      ),
+                    ),
+                  if (widget.gameMode == JanggiGameMode.vsHan)
+                    // 컴퓨터가 한
+                    Expanded(
+                      child: _buildComputerPositionDisplay(
+                        '한 (컴퓨터)',
+                        JanggiColor.han,
+                        hanLeftPosition,
+                        hanRightPosition,
                       ),
                     ),
                 ],
@@ -730,6 +787,91 @@ class _JanggiScreenState extends State<JanggiScreen> {
     } else {
       return '좌외마 우내마';
     }
+  }
+
+  // 컴퓨터의 마상 배치 표시 (읽기 전용)
+  Widget _buildComputerPositionDisplay(
+    String title,
+    JanggiColor color,
+    MaSangPosition leftPos,
+    MaSangPosition rightPos,
+  ) {
+    final pieceColor = color == JanggiColor.cho
+        ? const Color(0xFF006400)
+        : const Color(0xFFB22222);
+
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: pieceColor.withAlpha(15),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: pieceColor.withAlpha(80)),
+      ),
+      child: Column(
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(Icons.computer, size: 16, color: pieceColor.withAlpha(180)),
+              const SizedBox(width: 4),
+              Text(
+                title,
+                style: TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.bold,
+                  color: pieceColor.withAlpha(180),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              _buildPositionLabel('좌측', leftPos, pieceColor),
+              const SizedBox(width: 16),
+              _buildPositionLabel('우측', rightPos, pieceColor),
+            ],
+          ),
+          const SizedBox(height: 6),
+          Text(
+            '배치: ${_getPositionName(leftPos, rightPos)}',
+            style: TextStyle(
+              fontSize: 11,
+              color: Colors.grey.shade600,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildPositionLabel(String side, MaSangPosition pos, Color color) {
+    final posName = pos == MaSangPosition.maSang ? '마상' : '상마';
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+      decoration: BoxDecoration(
+        color: color.withAlpha(30),
+        borderRadius: BorderRadius.circular(6),
+        border: Border.all(color: color.withAlpha(100)),
+      ),
+      child: Column(
+        children: [
+          Text(
+            side,
+            style: TextStyle(fontSize: 10, color: Colors.grey.shade600),
+          ),
+          Text(
+            posName,
+            style: TextStyle(
+              fontSize: 12,
+              fontWeight: FontWeight.bold,
+              color: color.withAlpha(200),
+            ),
+          ),
+        ],
+      ),
+    );
   }
 
   void _initBoard() {
@@ -1349,6 +1491,12 @@ class _JanggiScreenState extends State<JanggiScreen> {
 
     board[toRow][toCol] = board[fromRow][fromCol];
     board[fromRow][fromCol] = null;
+
+    // 마지막 이동 위치 저장
+    lastMoveFromRow = fromRow;
+    lastMoveFromCol = fromCol;
+    lastMoveToRow = toRow;
+    lastMoveToCol = toCol;
 
     // 궁 잡힘 체크
     if (capturedPiece?.type == JanggiPieceType.gung) {
@@ -1995,6 +2143,10 @@ class _JanggiScreenState extends State<JanggiScreen> {
       isThinking = false;
       isInCheck = false;
       isSetupPhase = true;
+      lastMoveFromRow = null;
+      lastMoveFromCol = null;
+      lastMoveToRow = null;
+      lastMoveToCol = null;
     });
 
     // 마상 배치 선택 다이얼로그 다시 표시
@@ -2443,14 +2595,26 @@ class _JanggiScreenState extends State<JanggiScreen> {
     final isSelected = selectedRow == row && selectedCol == col;
     final isValidMove =
         validMoves?.any((m) => m[0] == row && m[1] == col) ?? false;
+    final isLastMoveFrom = lastMoveFromRow == row && lastMoveFromCol == col;
+    final isLastMoveTo = lastMoveToRow == row && lastMoveToCol == col;
+
+    Color? bgColor;
+    if (isSelected) {
+      bgColor = Colors.yellow.withAlpha(128);
+    } else if (isValidMove) {
+      bgColor = Colors.green.withAlpha(77);
+    } else if (isLastMoveTo) {
+      bgColor = Colors.blue.withAlpha(100);
+    } else if (isLastMoveFrom) {
+      bgColor = Colors.blue.withAlpha(50);
+    }
 
     return Container(
       decoration: BoxDecoration(
-        color: isSelected
-            ? Colors.yellow.withAlpha(128)
-            : isValidMove
-                ? Colors.green.withAlpha(77)
-                : Colors.transparent,
+        color: bgColor ?? Colors.transparent,
+        border: (isLastMoveFrom || isLastMoveTo) && !isSelected && !isValidMove
+            ? Border.all(color: Colors.blue.withAlpha(180), width: 2)
+            : null,
       ),
       child: Center(
         child: piece != null
