@@ -187,6 +187,7 @@ class _OneCardScreenState extends State<OneCardScreen> with TickerProviderStateM
   Timer? _oneCardTimer;
   int _oneCardTimeLeft = 0;
   static const int oneCardTimeLimit = 5;
+  bool _waitingForOneCard = false; // 원카드 대기 중 (컴퓨터 턴 지연)
 
   // 애니메이션
   late AnimationController _cardAnimController;
@@ -257,9 +258,19 @@ class _OneCardScreenState extends State<OneCardScreen> with TickerProviderStateM
         gameMessage = '컴퓨터 $randomComputer: 원카드! (플레이어 벌칙 1장)';
         _drawCards(playerHand, 1);
         playerCalledOneCard = true; // 더 이상 벌칙 없음
+        _waitingForOneCard = false;
       });
       HapticFeedback.heavyImpact();
       _saveGame();
+
+      // 컴퓨터 턴 진행
+      if (currentTurn > 0 && !gameOver) {
+        Future.delayed(const Duration(milliseconds: 500), () {
+          if (!gameOver && currentTurn > 0) {
+            _computerTurn(currentTurn);
+          }
+        });
+      }
     }
   }
 
@@ -310,6 +321,8 @@ class _OneCardScreenState extends State<OneCardScreen> with TickerProviderStateM
     chainSuit = null;
     playerCalledOneCard = false;
     computerCalledOneCard = List.generate(playerCount - 1, (_) => false);
+    _waitingForOneCard = false;
+    _cancelOneCardTimer();
     gameMessage = null;
     selectedCardIndex = null;
   }
@@ -414,6 +427,8 @@ class _OneCardScreenState extends State<OneCardScreen> with TickerProviderStateM
     skipNextTurn = false;
     reverseDirection = false;
     selectedCardIndex = null;
+    _waitingForOneCard = false;
+    _cancelOneCardTimer();
     gameMessage = '게임을 이어서 시작합니다';
 
     setState(() {});
@@ -647,15 +662,17 @@ class _OneCardScreenState extends State<OneCardScreen> with TickerProviderStateM
     HapticFeedback.mediumImpact();
     _saveGame();
 
-    // 플레이어가 카드를 냈고 1장 남았으면 원카드 타이머 시작
+    // 플레이어가 카드를 냈고 1장 남았으면 원카드 타이머 시작 (컴퓨터 턴 대기)
     if (lastPlayerIndex == 0 && playerHand.length == 1 && !playerCalledOneCard && !gameOver) {
+      _waitingForOneCard = true;
       _startOneCardTimer();
+      return; // 원카드 타이머 끝날 때까지 컴퓨터 턴 대기
     }
 
     // 플레이어가 행동했고 다음이 컴퓨터면 자동 진행
-    if (lastPlayerIndex == 0 && currentTurn > 0 && !gameOver) {
+    if (lastPlayerIndex == 0 && currentTurn > 0 && !gameOver && !_waitingForOneCard) {
       Future.delayed(const Duration(milliseconds: 500), () {
-        if (!gameOver && currentTurn > 0) {
+        if (!gameOver && currentTurn > 0 && !_waitingForOneCard) {
           _computerTurn(currentTurn);
         }
       });
@@ -673,15 +690,25 @@ class _OneCardScreenState extends State<OneCardScreen> with TickerProviderStateM
   }
 
   void _callOneCard() {
-    if (!isPlayerTurn || gameOver) return;
+    if (gameOver) return;
     if (playerHand.length != 1) return; // 1장일 때만 가능
 
     _cancelOneCardTimer();
     setState(() {
       playerCalledOneCard = true;
+      _waitingForOneCard = false;
       gameMessage = '원카드!';
     });
     HapticFeedback.heavyImpact();
+
+    // 컴퓨터 턴 진행
+    if (currentTurn > 0 && !gameOver) {
+      Future.delayed(const Duration(milliseconds: 500), () {
+        if (!gameOver && currentTurn > 0) {
+          _computerTurn(currentTurn);
+        }
+      });
+    }
   }
 
   void _playerDrawCards() {
