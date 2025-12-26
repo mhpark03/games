@@ -1270,9 +1270,9 @@ class _YutnoriScreenState extends State<YutnoriScreen>
             painter: YutBoardPainter(),
             child: Stack(
               children: [
-                // 시작점 라벨
+                // 시작점/골인점 라벨
                 Positioned(
-                  left: center + radius * 0.85 - 20,
+                  left: center + radius * 0.85 - 24,
                   top: center + radius * 0.85 + 14,
                   child: Container(
                     padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
@@ -1281,7 +1281,7 @@ class _YutnoriScreenState extends State<YutnoriScreen>
                       borderRadius: BorderRadius.circular(4),
                     ),
                     child: const Text(
-                      '출발',
+                      '출발/골인',
                       style: TextStyle(
                         color: Colors.white,
                         fontSize: 10,
@@ -1290,17 +1290,17 @@ class _YutnoriScreenState extends State<YutnoriScreen>
                     ),
                   ),
                 ),
-                // 골인 방향 화살표 (시작점 왼쪽)
+                // 진행 방향 화살표 (시작점에서 위로)
                 Positioned(
-                  left: center + radius * 0.45,
-                  top: center + radius * 0.85 - 8,
-                  child: Row(
+                  left: center + radius * 0.85 + 6,
+                  top: center + radius * 0.55,
+                  child: Column(
                     children: [
-                      Icon(Icons.arrow_back, color: Colors.green.shade700, size: 16),
+                      Icon(Icons.arrow_upward, color: Colors.blue.shade700, size: 18),
                       Text(
-                        '골인',
+                        '진행',
                         style: TextStyle(
-                          color: Colors.green.shade700,
+                          color: Colors.blue.shade700,
                           fontSize: 9,
                           fontWeight: FontWeight.bold,
                         ),
@@ -1361,15 +1361,15 @@ class _YutnoriScreenState extends State<YutnoriScreen>
   }
 
   Offset _getBoardPosition(int position, double size) {
-    // 윷판 위치 계산
+    // 윷판 위치 계산 - YutBoardPainter의 점 위치와 동일하게 계산
     final center = size / 2;
     final radius = size * 0.4;
 
     if (position == 0) {
-      // 시작점 (우하단)
+      // 시작점 (우하단 코너)
       return Offset(center + radius * 0.85, center + radius * 0.85);
     } else if (position >= 1 && position <= 4) {
-      // 우측 하단 → 우측 상단
+      // 우측 하단 → 우측 상단 (i/5 간격)
       final t = position / 5;
       return Offset(
         center + radius * 0.85,
@@ -1379,7 +1379,7 @@ class _YutnoriScreenState extends State<YutnoriScreen>
       // 우상단 코너
       return Offset(center + radius * 0.85, center - radius * 0.85);
     } else if (position >= 6 && position <= 9) {
-      // 우상단 → 좌상단
+      // 우상단 → 좌상단 (i/5 간격)
       final t = (position - 5) / 5;
       return Offset(
         center + radius * 0.85 - radius * 1.7 * t,
@@ -1389,7 +1389,7 @@ class _YutnoriScreenState extends State<YutnoriScreen>
       // 좌상단 코너
       return Offset(center - radius * 0.85, center - radius * 0.85);
     } else if (position >= 11 && position <= 14) {
-      // 좌상단 → 좌하단
+      // 좌상단 → 좌하단 (i/5 간격)
       final t = (position - 10) / 5;
       return Offset(
         center - radius * 0.85,
@@ -1399,36 +1399,54 @@ class _YutnoriScreenState extends State<YutnoriScreen>
       // 좌하단 코너
       return Offset(center - radius * 0.85, center + radius * 0.85);
     } else if (position >= 16 && position <= 19) {
-      // 좌하단 → 우하단 (시작점 근처)
+      // 좌하단 → 우하단 (i/5 간격)
       final t = (position - 15) / 5;
       return Offset(
         center - radius * 0.85 + radius * 1.7 * t,
         center + radius * 0.85,
       );
-    } else if (position >= 20 && position <= 22) {
-      // 우상단 대각선 (코너 → 중앙)
-      final t = (position - 20) / 2.5;
+    } else if (position == 20) {
+      // 우상단 코너 (position 5와 동일)
+      return Offset(center + radius * 0.85, center - radius * 0.85);
+    } else if (position == 21) {
+      // 우상단 대각선 첫 번째 점 (코너 → 중앙 방향)
       return Offset(
-        center + radius * 0.85 - radius * 0.85 * t,
-        center - radius * 0.85 + radius * 0.85 * t,
+        center + radius * 0.85 - radius * 0.85 * (1 / 2.5),
+        center - radius * 0.85 + radius * 0.85 * (1 / 2.5),
       );
-    } else if (position >= 23 && position <= 24) {
-      // 중앙 → 좌하단
-      final t = (position - 22) / 2.5;
+    } else if (position == 22) {
+      // 중앙 (정확한 중앙점)
+      return Offset(center, center);
+    } else if (position == 23) {
+      // 중앙 → 좌하단 첫 번째 점
       return Offset(
-        center - radius * 0.85 * t,
-        center + radius * 0.85 * t,
+        center - radius * 0.85 * (1 / 2.5),
+        center + radius * 0.85 * (1 / 2.5),
       );
-    } else if (position >= 25 && position <= 27) {
-      // 좌상단 대각선 (코너 → 중앙)
-      final t = (position - 25) / 2.5;
+    } else if (position == 24) {
+      // 중앙 → 좌하단 두 번째 점
       return Offset(
-        center - radius * 0.85 + radius * 0.85 * t,
-        center - radius * 0.85 + radius * 0.85 * t,
+        center - radius * 0.85 * (2 / 2.5),
+        center + radius * 0.85 * (2 / 2.5),
       );
+    } else if (position == 25) {
+      // 좌상단 코너 (position 10과 동일)
+      return Offset(center - radius * 0.85, center - radius * 0.85);
+    } else if (position == 26) {
+      // 좌상단 대각선 첫 번째 점 (코너 → 중앙 방향)
+      return Offset(
+        center - radius * 0.85 + radius * 0.85 * (1 / 2.5),
+        center - radius * 0.85 + radius * 0.85 * (1 / 2.5),
+      );
+    } else if (position == 27) {
+      // 중앙 (정확한 중앙점, position 22와 동일)
+      return Offset(center, center);
     } else if (position == 28) {
-      // 중앙 → 우하단
-      return Offset(center + radius * 0.3, center + radius * 0.3);
+      // 중앙 → 우하단 점
+      return Offset(
+        center + radius * 0.85 * (1 / 2.5),
+        center + radius * 0.85 * (1 / 2.5),
+      );
     }
 
     return Offset(center, center);
@@ -2042,28 +2060,29 @@ class YutBoardPainter extends CustomPainter {
       ));
     }
 
-    // 대각선 점들
+    // 대각선 점들 - 게임 위치와 일치하도록
+    // 우상단(5) → 중앙 (position 21)
+    positions.add(Offset(
+      center.dx + radius * 0.85 - radius * 0.85 * (1 / 2.5),
+      center.dy - radius * 0.85 + radius * 0.85 * (1 / 2.5),
+    ));
+    // 중앙 → 좌하단 (positions 23, 24)
     for (int i = 1; i <= 2; i++) {
-      // 우상→중앙
-      positions.add(Offset(
-        center.dx + radius * 0.85 - radius * 0.85 * (i / 2.5),
-        center.dy - radius * 0.85 + radius * 0.85 * (i / 2.5),
-      ));
-    }
-    for (int i = 1; i <= 2; i++) {
-      // 중앙→좌하
       positions.add(Offset(
         center.dx - radius * 0.85 * (i / 2.5),
         center.dy + radius * 0.85 * (i / 2.5),
       ));
     }
-    for (int i = 1; i <= 2; i++) {
-      // 좌상→중앙
-      positions.add(Offset(
-        center.dx - radius * 0.85 + radius * 0.85 * (i / 2.5),
-        center.dy - radius * 0.85 + radius * 0.85 * (i / 2.5),
-      ));
-    }
+    // 좌상단(10) → 중앙 (position 26)
+    positions.add(Offset(
+      center.dx - radius * 0.85 + radius * 0.85 * (1 / 2.5),
+      center.dy - radius * 0.85 + radius * 0.85 * (1 / 2.5),
+    ));
+    // 중앙 → 우하단 (position 28)
+    positions.add(Offset(
+      center.dx + radius * 0.85 * (1 / 2.5),
+      center.dy + radius * 0.85 * (1 / 2.5),
+    ));
 
     return positions;
   }
