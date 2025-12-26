@@ -160,6 +160,7 @@ class _HulaScreenState extends State<HulaScreen> with TickerProviderStateMixin {
   bool waitingForNextTurn = false; // 다음 턴 대기 중
   Timer? _nextTurnTimer; // 자동 진행 타이머
   int _autoPlayCountdown = 5; // 자동 진행 카운트다운
+  int _lastDiscardTurn = 0; // 마지막으로 카드를 버린 플레이어 턴
 
   // 점수
   List<int> scores = [];
@@ -273,7 +274,21 @@ class _HulaScreenState extends State<HulaScreen> with TickerProviderStateMixin {
       waitingForNextTurn = false;
     });
 
-    if (currentTurn != 0 && !gameOver) {
+    if (gameOver) return;
+
+    // 플레이어 후 순서 컴퓨터 땡큐 확인
+    final afterResult = _checkComputerThankYouAfterPlayer(_lastDiscardTurn);
+    if (afterResult != null) {
+      Timer(const Duration(milliseconds: 300), () {
+        if (mounted && !gameOver) {
+          _executeComputerThankYou(afterResult);
+        }
+      });
+      return;
+    }
+
+    // 땡큐 없으면 다음 턴 진행
+    if (currentTurn != 0) {
       Timer(const Duration(milliseconds: 300), () {
         if (mounted && !gameOver) {
           _computerTurn();
@@ -747,17 +762,31 @@ class _HulaScreenState extends State<HulaScreen> with TickerProviderStateMixin {
       return;
     }
 
-    // 컴퓨터가 땡큐할 수 있는지 확인
+    // 땡큐 확인: 플레이어 전 순서 컴퓨터는 즉시, 후 순서는 5초 후
+    _lastDiscardTurn = 0;
     Timer(const Duration(milliseconds: 300), () {
       if (mounted && !gameOver) {
-        final thankYouResult = _checkComputerThankYou(0); // 플레이어(0) 다음부터 확인
-        if (thankYouResult != null) {
-          _executeComputerThankYou(thankYouResult);
+        // 1. 플레이어 전 순서 컴퓨터 땡큐 확인 (즉시)
+        final beforeResult = _checkComputerThankYouBeforePlayer(0);
+        if (beforeResult != null) {
+          _executeComputerThankYou(beforeResult);
         } else {
-          _endTurn();
+          // 2. 플레이어 후 순서 컴퓨터가 있으면 5초 대기
+          _startThankYouWait();
         }
       }
     });
+  }
+
+  // 땡큐 대기 시작 (플레이어에게 5초 기회 부여)
+  void _startThankYouWait() {
+    setState(() {
+      currentTurn = (currentTurn + 1) % playerCount;
+      hasDrawn = false;
+      selectedCardIndices = [];
+      waitingForNextTurn = true;
+    });
+    _startNextTurnTimer();
   }
 
   void _playerWins() {
@@ -872,32 +901,44 @@ class _HulaScreenState extends State<HulaScreen> with TickerProviderStateMixin {
       return;
     }
 
+    // 땡큐 확인: 플레이어 전 순서 컴퓨터는 즉시, 후 순서는 5초 후
+    _lastDiscardTurn = currentTurn;
     Timer(const Duration(milliseconds: 500), () {
       if (mounted && !gameOver) {
-        // 다른 컴퓨터가 땡큐할 수 있는지 확인
-        final thankYouResult = _checkComputerThankYou(currentTurn);
-        if (thankYouResult != null) {
-          // 땡큐한 컴퓨터의 턴으로 변경
-          _executeComputerThankYou(thankYouResult);
+        // 1. 플레이어 전 순서 컴퓨터 땡큐 확인 (즉시)
+        final beforeResult = _checkComputerThankYouBeforePlayer(currentTurn);
+        if (beforeResult != null) {
+          _executeComputerThankYou(beforeResult);
         } else {
-          _endTurn();
+          // 2. 플레이어에게 5초 기회 부여 후 플레이어 후 순서 컴퓨터 확인
+          _startThankYouWait();
         }
       }
     });
   }
 
-  // 컴퓨터가 땡큐할 수 있는지 확인 (버린 사람 다음 순서부터)
-  // 반환: 땡큐 가능한 컴퓨터 인덱스 (0-based), 없으면 null
-  int? _checkComputerThankYou(int fromTurn) {
+  // 컴퓨터가 땡큐할 수 있는지 확인
+  // beforePlayer: true면 플레이어 전 순서만, false면 플레이어 후 순서만
+  int? _checkComputerThankYou(int fromTurn, {bool? beforePlayer}) {
     if (discardPile.isEmpty) return null;
     final topCard = discardPile.last;
 
-    // fromTurn 다음 순서부터 확인 (플레이어 제외)
+    // fromTurn 다음 순서부터 확인
+    bool passedPlayer = false;
     for (int i = 1; i < playerCount; i++) {
       final checkTurn = (fromTurn + i) % playerCount;
-      if (checkTurn == 0) continue; // 플레이어는 건너뜀 (플레이어는 버튼으로 땡큐)
+
+      if (checkTurn == 0) {
+        passedPlayer = true;
+        continue; // 플레이어는 건너뜀 (플레이어는 버튼으로 땡큐)
+      }
+
+      // beforePlayer 필터링
+      if (beforePlayer == true && passedPlayer) continue; // 플레이어 전만 확인
+      if (beforePlayer == false && !passedPlayer) continue; // 플레이어 후만 확인
 
       final computerIndex = checkTurn - 1;
+      if (computerIndex < 0 || computerIndex >= computerHands.length) continue;
       final hand = computerHands[computerIndex];
 
       // 7 카드는 항상 땡큐
@@ -912,6 +953,16 @@ class _HulaScreenState extends State<HulaScreen> with TickerProviderStateMixin {
       }
     }
     return null;
+  }
+
+  // 플레이어 전 순서 컴퓨터만 땡큐 확인 (즉시 실행)
+  int? _checkComputerThankYouBeforePlayer(int fromTurn) {
+    return _checkComputerThankYou(fromTurn, beforePlayer: true);
+  }
+
+  // 플레이어 후 순서 컴퓨터만 땡큐 확인 (5초 후 실행)
+  int? _checkComputerThankYouAfterPlayer(int fromTurn) {
+    return _checkComputerThankYou(fromTurn, beforePlayer: false);
   }
 
   // 컴퓨터 땡큐 실행
@@ -982,26 +1033,18 @@ class _HulaScreenState extends State<HulaScreen> with TickerProviderStateMixin {
       return;
     }
 
-    // 다음 땡큐 확인 후 턴 종료
+    // 땡큐 확인: 플레이어 전 순서 컴퓨터는 즉시, 후 순서는 5초 후
+    final discardTurn = computerIndex + 1;
+    _lastDiscardTurn = discardTurn;
     Timer(const Duration(milliseconds: 500), () {
       if (mounted && !gameOver) {
-        final thankYouResult = _checkComputerThankYou(computerIndex + 1);
-        if (thankYouResult != null) {
-          _executeComputerThankYou(thankYouResult);
+        // 1. 플레이어 전 순서 컴퓨터 땡큐 확인 (즉시)
+        final beforeResult = _checkComputerThankYouBeforePlayer(discardTurn);
+        if (beforeResult != null) {
+          _executeComputerThankYou(beforeResult);
         } else {
-          // 땡큐한 컴퓨터 다음 턴으로
-          setState(() {
-            currentTurn = (computerIndex + 2) % playerCount;
-            hasDrawn = false;
-            selectedCardIndices = [];
-          });
-
-          if (currentTurn != 0) {
-            setState(() {
-              waitingForNextTurn = true;
-            });
-            _startNextTurnTimer();
-          }
+          // 2. 플레이어에게 5초 기회 부여 후 플레이어 후 순서 컴퓨터 확인
+          _startThankYouWait();
         }
       }
     });
