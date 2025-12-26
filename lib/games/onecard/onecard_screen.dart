@@ -196,6 +196,9 @@ class _OneCardScreenState extends State<OneCardScreen> with TickerProviderStateM
 
   // 메시지 표시
   String? gameMessage;
+  Timer? _messageTimer;
+  int _messageTimeLeft = 0;
+  static const int messageDisplayTime = 5;
 
   @override
   void initState() {
@@ -220,7 +223,30 @@ class _OneCardScreenState extends State<OneCardScreen> with TickerProviderStateM
   void dispose() {
     _cardAnimController.dispose();
     _oneCardTimer?.cancel();
+    _messageTimer?.cancel();
     super.dispose();
+  }
+
+  // 메시지 표시 (5초 타이머와 함께)
+  void _showMessage(String message) {
+    _messageTimer?.cancel();
+    setState(() {
+      gameMessage = message;
+      _messageTimeLeft = messageDisplayTime;
+    });
+    _messageTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
+      if (!mounted) {
+        timer.cancel();
+        return;
+      }
+      setState(() {
+        _messageTimeLeft--;
+        if (_messageTimeLeft <= 0) {
+          gameMessage = null;
+          timer.cancel();
+        }
+      });
+    });
   }
 
   // 원카드 타이머 시작
@@ -252,14 +278,14 @@ class _OneCardScreenState extends State<OneCardScreen> with TickerProviderStateM
   // 원카드 타이머 만료 - 벌칙
   void _onOneCardTimeout() {
     if (playerHand.length == 1 && !playerCalledOneCard && !gameOver) {
+      // 랜덤 컴퓨터가 원카드 외침
+      final randomComputer = Random().nextInt(playerCount - 1) + 1;
       setState(() {
-        // 랜덤 컴퓨터가 원카드 외침
-        final randomComputer = Random().nextInt(playerCount - 1) + 1;
-        gameMessage = '컴퓨터 $randomComputer: 원카드! (플레이어 벌칙 1장)';
         _drawCards(playerHand, 1);
         playerCalledOneCard = true; // 더 이상 벌칙 없음
         _waitingForOneCard = false;
       });
+      _showMessage('컴퓨터 $randomComputer: 원카드! (플레이어 벌칙 1장)');
       HapticFeedback.heavyImpact();
       _saveGame();
 
@@ -323,7 +349,9 @@ class _OneCardScreenState extends State<OneCardScreen> with TickerProviderStateM
     computerCalledOneCard = List.generate(playerCount - 1, (_) => false);
     _waitingForOneCard = false;
     _cancelOneCardTimer();
+    _messageTimer?.cancel();
     gameMessage = null;
+    _messageTimeLeft = 0;
     selectedCardIndex = null;
   }
 
@@ -429,9 +457,9 @@ class _OneCardScreenState extends State<OneCardScreen> with TickerProviderStateM
     selectedCardIndex = null;
     _waitingForOneCard = false;
     _cancelOneCardTimer();
-    gameMessage = '게임을 이어서 시작합니다';
 
     setState(() {});
+    _showMessage('게임을 이어서 시작합니다');
 
     // 컴퓨터 턴인 경우 컴퓨터가 진행
     if (currentTurn > 0) {
@@ -557,6 +585,9 @@ class _OneCardScreenState extends State<OneCardScreen> with TickerProviderStateM
   }
 
   void _playCard(PlayingCard card, {Suit? newSuit}) {
+    String? pendingMessage;
+    final playerName = _getPlayerName(currentTurn);
+
     setState(() {
       // 현재 턴 플레이어의 핸드에서 카드 제거
       final currentHand = _getHandForTurn(currentTurn);
@@ -578,25 +609,25 @@ class _OneCardScreenState extends State<OneCardScreen> with TickerProviderStateM
       // 카드 효과 처리
       if (card.isAttack) {
         attackStack += card.attackPower;
-        gameMessage = '${_getPlayerName(currentTurn)}: 공격! +${card.attackPower}장 (총 $attackStack장)';
+        pendingMessage = '$playerName: 공격! +${card.attackPower}장 (총 $attackStack장)';
       } else if (card.isJump) {
         skipNextTurn = true;
-        gameMessage = '${_getPlayerName(currentTurn)}: J! 다음 턴 건너뛰기';
+        pendingMessage = '$playerName: J! 다음 턴 건너뛰기';
       } else if (card.isReverse) {
         // Q: 방향 반대 (2인용에서는 의미 없음)
         turnDirection *= -1;
-        gameMessage = '${_getPlayerName(currentTurn)}: Q! 방향 반대';
+        pendingMessage = '$playerName: Q! 방향 반대';
       } else if (card.isChain) {
         // K: 2턴 건너뛰기
         skipNextTurn = true; // 첫 번째 건너뛰기 (아래서 한 번 더 건너뜀)
-        gameMessage = '${_getPlayerName(currentTurn)}: K! 2턴 건너뛰기';
+        pendingMessage = '$playerName: K! 2턴 건너뛰기';
       } else if (card.isChange) {
         if (newSuit != null) {
           declaredSuit = newSuit;
-          gameMessage = '${_getPlayerName(currentTurn)}: 7! 무늬 변경: ${_getSuitName(newSuit)}';
+          pendingMessage = '$playerName: 7! 무늬 변경: ${_getSuitName(newSuit)}';
         }
       } else {
-        gameMessage = '${_getPlayerName(currentTurn)}이(가) 카드를 냈습니다';
+        pendingMessage = '$playerName이(가) 카드를 냈습니다';
       }
 
       // 승리 체크
@@ -617,7 +648,7 @@ class _OneCardScreenState extends State<OneCardScreen> with TickerProviderStateM
       if (currentTurn > 0 && computerHands[currentTurn - 1].length == 1) {
         // 컴퓨터는 자동으로 원카드 외침
         computerCalledOneCard[currentTurn - 1] = true;
-        gameMessage = '${_getPlayerName(currentTurn)}: 원카드!';
+        pendingMessage = '$playerName: 원카드!';
       }
 
       // 카드가 2장 이상이면 원카드 상태 리셋
@@ -659,6 +690,11 @@ class _OneCardScreenState extends State<OneCardScreen> with TickerProviderStateM
       }
     });
 
+    // 메시지 표시
+    if (pendingMessage != null) {
+      _showMessage(pendingMessage!);
+    }
+
     HapticFeedback.mediumImpact();
     _saveGame();
 
@@ -697,8 +733,8 @@ class _OneCardScreenState extends State<OneCardScreen> with TickerProviderStateM
     setState(() {
       playerCalledOneCard = true;
       _waitingForOneCard = false;
-      gameMessage = '원카드!';
     });
+    _showMessage('원카드!');
     HapticFeedback.heavyImpact();
 
     // 컴퓨터 턴 진행
@@ -714,23 +750,25 @@ class _OneCardScreenState extends State<OneCardScreen> with TickerProviderStateM
   void _playerDrawCards() {
     if (!isPlayerTurn || gameOver || waitingForNextTurn) return;
 
+    String? pendingMessage;
+
     setState(() {
       if (attackStack > 0) {
         // 공격 받기
         _drawCards(playerHand, attackStack);
-        gameMessage = '$attackStack장을 받았습니다';
+        pendingMessage = '$attackStack장을 받았습니다';
         attackStack = 0;
       } else {
         // 일반 드로우
         _drawCards(playerHand, 1);
-        gameMessage = '카드를 1장 뽑았습니다';
+        pendingMessage = '카드를 1장 뽑았습니다';
       }
 
       // 파산 체크
       if (playerHand.length >= bankruptcyLimit) {
         gameOver = true;
         winner = _getBankruptcyWinner();
-        gameMessage = '파산! 카드가 ${playerHand.length}장이 되었습니다';
+        pendingMessage = '파산! 카드가 ${playerHand.length}장이 되었습니다';
         return;
       }
 
@@ -740,6 +778,10 @@ class _OneCardScreenState extends State<OneCardScreen> with TickerProviderStateM
       // 플레이어가 행동했으므로 버튼 대기 없이 자동 진행
       waitingForNextTurn = false;
     });
+
+    if (pendingMessage != null) {
+      _showMessage(pendingMessage!);
+    }
 
     HapticFeedback.lightImpact();
     _saveGame();
@@ -769,14 +811,16 @@ class _OneCardScreenState extends State<OneCardScreen> with TickerProviderStateM
 
     if (playable.isEmpty) {
       // 낼 카드 없음
+      String? pendingMessage;
+
       setState(() {
         if (attackStack > 0) {
           _drawCards(computerHand, attackStack);
-          gameMessage = '$computerName: $attackStack장을 받았습니다';
+          pendingMessage = '$computerName: $attackStack장을 받았습니다';
           attackStack = 0;
         } else {
           _drawCards(computerHand, 1);
-          gameMessage = '$computerName: 1장을 뽑았습니다';
+          pendingMessage = '$computerName: 1장을 뽑았습니다';
         }
 
         lastPlayedCard = null;
@@ -787,7 +831,7 @@ class _OneCardScreenState extends State<OneCardScreen> with TickerProviderStateM
         if (computerHand.length >= bankruptcyLimit) {
           gameOver = true;
           winner = '플레이어';
-          gameMessage = '$computerName 파산! 카드가 ${computerHand.length}장이 되었습니다';
+          pendingMessage = '$computerName 파산! 카드가 ${computerHand.length}장이 되었습니다';
           return;
         }
 
@@ -801,6 +845,10 @@ class _OneCardScreenState extends State<OneCardScreen> with TickerProviderStateM
           waitingForNextTurn = true;
         }
       });
+
+      if (pendingMessage != null) {
+        _showMessage(pendingMessage!);
+      }
     } else {
       // 카드 선택 (우선순위: 공격 > 점프 > 무늬변경 > 일반)
       PlayingCard cardToPlay;
@@ -877,9 +925,7 @@ class _OneCardScreenState extends State<OneCardScreen> with TickerProviderStateM
     final playable = _getPlayableCards(playerHand);
 
     if (!playable.contains(card)) {
-      setState(() {
-        gameMessage = '이 카드는 낼 수 없습니다';
-      });
+      _showMessage('이 카드는 낼 수 없습니다');
       HapticFeedback.lightImpact();
       return;
     }
@@ -2129,14 +2175,46 @@ class _OneCardScreenState extends State<OneCardScreen> with TickerProviderStateM
   Widget _buildMessage() {
     return Container(
       margin: const EdgeInsets.symmetric(vertical: 8),
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
       decoration: BoxDecoration(
-        color: Colors.black54,
-        borderRadius: BorderRadius.circular(8),
+        color: Colors.black87,
+        borderRadius: BorderRadius.circular(12),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.3),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
       ),
-      child: Text(
-        gameMessage!,
-        style: const TextStyle(color: Colors.white, fontSize: 14),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Flexible(
+            child: Text(
+              gameMessage!,
+              style: const TextStyle(color: Colors.white, fontSize: 14, fontWeight: FontWeight.w500),
+            ),
+          ),
+          if (_messageTimeLeft > 0) ...[
+            const SizedBox(width: 12),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+              decoration: BoxDecoration(
+                color: _messageTimeLeft <= 2 ? Colors.red : Colors.blue,
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: Text(
+                '$_messageTimeLeft',
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 12,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
+          ],
+        ],
       ),
     );
   }
