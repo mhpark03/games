@@ -1120,7 +1120,18 @@ class _YutnoriScreenState extends State<YutnoriScreen>
                   Expanded(
                     child: Column(
                       children: [
-                        if (gameMessage != null) _buildMessage(),
+                        // 메시지 + 다음 버튼
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            if (gameMessage != null) _buildMessage(),
+                            if (waitingForNextTurn && currentPlayer > 0)
+                              Padding(
+                                padding: const EdgeInsets.only(left: 12),
+                                child: _buildPlayButton(compact: true),
+                              ),
+                          ],
+                        ),
                         Expanded(
                           child: Center(
                             child: _buildYutBoard(),
