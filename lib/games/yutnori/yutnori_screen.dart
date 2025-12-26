@@ -1300,11 +1300,19 @@ class _YutnoriScreenState extends State<YutnoriScreen>
 
   // 가로모드: 우측 컨트롤 (메시지 + 윷 던지기)
   Widget _buildLandscapeRightControls() {
+    // 결과가 있으면 결과 이름 제외한 메시지만 표시
+    String? displayMessage = gameMessage;
+    if (displayMessage != null && currentYutResult != null) {
+      // "빽도! 말을 선택하세요" -> "말을 선택하세요"
+      displayMessage = displayMessage.replaceFirst('${currentYutResult!.name}! ', '');
+      displayMessage = displayMessage.replaceFirst('${currentYutResult!.name}!', '');
+    }
+
     return Column(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
-        // 메시지 (상단)
-        if (gameMessage != null)
+        // 메시지 (상단) - 결과 이름 제외
+        if (displayMessage != null && displayMessage.isNotEmpty)
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
             margin: const EdgeInsets.only(bottom: 10),
@@ -1313,7 +1321,7 @@ class _YutnoriScreenState extends State<YutnoriScreen>
               borderRadius: BorderRadius.circular(8),
             ),
             child: Text(
-              gameMessage!,
+              displayMessage,
               textAlign: TextAlign.center,
               style: const TextStyle(
                 color: Colors.white,
