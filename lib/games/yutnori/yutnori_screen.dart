@@ -126,6 +126,10 @@ class _YutnoriScreenState extends State<YutnoriScreen>
   bool waitingForNextTurn = false;
   int? lastPlayerIndex;
 
+  // 최근 이동한 말 표시
+  int? lastMovedPlayerIndex;
+  int? lastMovedPieceIndex;
+
   // 말 선택
   int? selectedPieceIndex;
 
@@ -198,6 +202,8 @@ class _YutnoriScreenState extends State<YutnoriScreen>
     canThrowYut = true;
     waitingForNextTurn = false;
     lastPlayerIndex = null;
+    lastMovedPlayerIndex = null;
+    lastMovedPieceIndex = null;
     selectedPieceIndex = null;
     gameMessage = '윷을 던지세요!';
   }
@@ -498,6 +504,10 @@ class _YutnoriScreenState extends State<YutnoriScreen>
     bool captured = false;
 
     setState(() {
+      // 최근 이동한 말 기록
+      lastMovedPlayerIndex = currentPlayer;
+      lastMovedPieceIndex = pieceIndex;
+
       // 이동
       piece.position = newPos;
 
@@ -1409,6 +1419,10 @@ class _YutnoriScreenState extends State<YutnoriScreen>
         final pieceIndex = piecesHere[i]['piece']!;
         final piece = playerPieces[playerIndex][pieceIndex];
 
+        // 최근 이동한 말인지 확인
+        final isLastMoved = lastMovedPlayerIndex == playerIndex &&
+            lastMovedPieceIndex == pieceIndex;
+
         // 같은 위치에 여러 말이 있을 때만 오프셋 적용
         final offset = piecesHere.length > 1
             ? _getPieceOffsetForMultiple(i, piecesHere.length)
@@ -1436,6 +1450,7 @@ class _YutnoriScreenState extends State<YutnoriScreen>
                     playerIndex == 0 &&
                     pendingMoves.isNotEmpty &&
                     _canMovePiece(pieceIndex, pendingMoves.first),
+                isLastMoved: isLastMoved,
               ),
             ),
           ),
@@ -1566,9 +1581,24 @@ class _YutnoriScreenState extends State<YutnoriScreen>
     int pieceIndex,
     int stackCount, {
     bool isSelectable = false,
+    bool isLastMoved = false,
   }) {
     final color = _getPlayerColor(playerIndex);
     final size = 28.0 + stackCount * 4;
+
+    // 테두리 색상 결정: 선택 가능 > 최근 이동 > 기본
+    Color borderColor;
+    double borderWidth;
+    if (isSelectable) {
+      borderColor = Colors.yellow;
+      borderWidth = 3;
+    } else if (isLastMoved) {
+      borderColor = Colors.orange;
+      borderWidth = 3;
+    } else {
+      borderColor = Colors.white;
+      borderWidth = 2;
+    }
 
     return Container(
       width: size,
@@ -1577,15 +1607,17 @@ class _YutnoriScreenState extends State<YutnoriScreen>
         color: color,
         shape: BoxShape.circle,
         border: Border.all(
-          color: isSelectable ? Colors.yellow : Colors.white,
-          width: isSelectable ? 3 : 2,
+          color: borderColor,
+          width: borderWidth,
         ),
         boxShadow: [
           BoxShadow(
             color: isSelectable
                 ? Colors.yellow.withValues(alpha: 0.5)
-                : Colors.black.withValues(alpha: 0.3),
-            blurRadius: isSelectable ? 8 : 4,
+                : isLastMoved
+                    ? Colors.orange.withValues(alpha: 0.6)
+                    : Colors.black.withValues(alpha: 0.3),
+            blurRadius: isSelectable || isLastMoved ? 8 : 4,
           ),
         ],
       ),
