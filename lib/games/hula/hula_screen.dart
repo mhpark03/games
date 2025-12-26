@@ -818,7 +818,7 @@ class _HulaScreenState extends State<HulaScreen> with TickerProviderStateMixin {
       playableCount++;
     }
 
-    // 3. 기존 멜드에 붙일 수 있는 카드
+    // 3. 자신의 멜드에 붙일 수 있는 카드
     bool attached = true;
     while (attached && testMelds.isNotEmpty) {
       attached = false;
@@ -830,6 +830,41 @@ class _HulaScreenState extends State<HulaScreen> with TickerProviderStateMixin {
           testHand.removeAt(i);
           playableCount++;
           attached = true;
+        }
+      }
+    }
+
+    // 4. 다른 플레이어 멜드에 붙일 수 있는 카드 (자신의 멜드가 생긴 후에만)
+    if (testMelds.isNotEmpty) {
+      attached = true;
+      while (attached && testHand.isNotEmpty) {
+        attached = false;
+        for (int i = testHand.length - 1; i >= 0; i--) {
+          final card = testHand[i];
+
+          // 플레이어 멜드에 붙이기
+          if (playerMelds.isNotEmpty) {
+            final idx = _canAttachToMeldList(card, playerMelds);
+            if (idx >= 0) {
+              testHand.removeAt(i);
+              playableCount++;
+              attached = true;
+              continue;
+            }
+          }
+
+          // 컴퓨터 멜드에 붙이기
+          for (int c = 0; c < computerMelds.length; c++) {
+            if (computerMelds[c].isNotEmpty) {
+              final idx = _canAttachToMeldList(card, computerMelds[c]);
+              if (idx >= 0) {
+                testHand.removeAt(i);
+                playableCount++;
+                attached = true;
+                break;
+              }
+            }
+          }
         }
       }
     }
@@ -863,6 +898,30 @@ class _HulaScreenState extends State<HulaScreen> with TickerProviderStateMixin {
     double probability = 0.0;
     final checked = <PlayingCard>{};
 
+    // 1. 기존 멜드에 붙일 수 있는 카드 확인 (확률 높음)
+    int attachableCount = 0;
+    for (final card in remaining) {
+      bool canAttach = false;
+      // 플레이어 멜드
+      if (playerMelds.isNotEmpty && _canAttachToMeldList(card, playerMelds) >= 0) {
+        canAttach = true;
+      }
+      // 컴퓨터 멜드
+      if (!canAttach) {
+        for (final cMelds in computerMelds) {
+          if (cMelds.isNotEmpty && _canAttachToMeldList(card, cMelds) >= 0) {
+            canAttach = true;
+            break;
+          }
+        }
+      }
+      if (canAttach) {
+        attachableCount++;
+        probability += 25.0; // 붙일 수 있는 카드는 확률 높음
+      }
+    }
+
+    // 2. 붙일 수 없는 카드들의 Group/Run 가능성
     for (final card in remaining) {
       if (checked.contains(card)) continue;
       checked.add(card);
@@ -907,8 +966,9 @@ class _HulaScreenState extends State<HulaScreen> with TickerProviderStateMixin {
       }
     }
 
-    // 남은 카드 수에 따른 페널티
-    final remainingPenalty = remaining.length * 10.0;
+    // 남은 카드 수에 따른 페널티 (붙일 수 있는 카드 제외)
+    final nonAttachable = remaining.length - attachableCount;
+    final remainingPenalty = nonAttachable * 10.0;
     probability = (probability - remainingPenalty).clamp(0.0, 100.0);
 
     return probability;
@@ -972,6 +1032,38 @@ class _HulaScreenState extends State<HulaScreen> with TickerProviderStateMixin {
       risk += 15.0;
     } else if (handScore <= 20) {
       risk += 5.0;
+    }
+
+    // 4. 기존 멜드에 붙일 수 있는 카드 수 (멜드가 있을 때만)
+    if (melds.isNotEmpty) {
+      int attachableCount = 0;
+      for (final card in hand) {
+        // 자신의 멜드에 붙이기
+        if (_canAttachToMeldList(card, melds) >= 0) {
+          attachableCount++;
+          continue;
+        }
+        // 플레이어 멜드에 붙이기
+        if (playerMelds.isNotEmpty && _canAttachToMeldList(card, playerMelds) >= 0) {
+          attachableCount++;
+          continue;
+        }
+        // 컴퓨터 멜드에 붙이기
+        for (final cMelds in computerMelds) {
+          if (cMelds.isNotEmpty && _canAttachToMeldList(card, cMelds) >= 0) {
+            attachableCount++;
+            break;
+          }
+        }
+      }
+      // 붙일 수 있는 카드가 많을수록 위험도 증가
+      if (attachableCount >= 3) {
+        risk += 20.0;
+      } else if (attachableCount >= 2) {
+        risk += 12.0;
+      } else if (attachableCount >= 1) {
+        risk += 5.0;
+      }
     }
 
     return risk.clamp(0.0, 100.0);
