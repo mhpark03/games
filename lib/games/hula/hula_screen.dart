@@ -2580,8 +2580,6 @@ class _HulaScreenState extends State<HulaScreen> with TickerProviderStateMixin {
     // 플레이어 멜드
     for (int i = 0; i < playerMelds.length; i++) {
       allMelds.add({
-        'owner': '나',
-        'ownerIndex': 0,
         'meldIndex': i,
         'meld': playerMelds[i],
         'melds': playerMelds,
@@ -2592,8 +2590,6 @@ class _HulaScreenState extends State<HulaScreen> with TickerProviderStateMixin {
     for (int c = 0; c < computerMelds.length; c++) {
       for (int i = 0; i < computerMelds[c].length; i++) {
         allMelds.add({
-          'owner': 'COM${c + 1}',
-          'ownerIndex': c + 1,
           'meldIndex': i,
           'meld': computerMelds[c][i],
           'melds': computerMelds[c],
@@ -2601,107 +2597,116 @@ class _HulaScreenState extends State<HulaScreen> with TickerProviderStateMixin {
       }
     }
 
-    if (allMelds.isEmpty) return const SizedBox();
+    // 고정 높이 영역 (멜드가 없어도 공간 유지)
+    final fixedHeight = isLandscape ? 50.0 : 70.0;
+    final cardHeight = isLandscape ? 22.0 : 28.0;
+    final cardWidth = isLandscape ? 16.0 : 20.0;
+    final overlap = isLandscape ? 10.0 : 12.0;
 
     return Container(
-      margin: EdgeInsets.only(top: isLandscape ? 4 : 12),
-      padding: const EdgeInsets.symmetric(horizontal: 8),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Text(
-            '등록된 멜드 (탭하여 붙이기)',
-            style: TextStyle(
-              color: Colors.white70,
-              fontSize: isLandscape ? 9 : 11,
-            ),
-          ),
-          SizedBox(height: isLandscape ? 2 : 4),
-          SizedBox(
-            height: isLandscape ? 24 : 40,
-            child: ListView.builder(
-              scrollDirection: Axis.horizontal,
-              itemCount: allMelds.length,
-              itemBuilder: (context, index) {
-                final meldInfo = allMelds[index];
-                final meld = meldInfo['meld'] as Meld;
-                final owner = meldInfo['owner'] as String;
-                final melds = meldInfo['melds'] as List<Meld>;
-                final meldIndex = meldInfo['meldIndex'] as int;
+      height: fixedHeight,
+      margin: EdgeInsets.only(top: isLandscape ? 4 : 8),
+      child: allMelds.isEmpty
+          ? const SizedBox()
+          : SingleChildScrollView(
+              child: Wrap(
+                spacing: isLandscape ? 8 : 12,
+                runSpacing: isLandscape ? 4 : 6,
+                alignment: WrapAlignment.center,
+                children: allMelds.map((meldInfo) {
+                  final meld = meldInfo['meld'] as Meld;
+                  final melds = meldInfo['melds'] as List<Meld>;
+                  final meldIndex = meldInfo['meldIndex'] as int;
 
-                // 선택된 카드가 이 멜드에 붙일 수 있는지 확인
-                // 조건: 자신의 멜드가 1개 이상 있어야 붙여놓기 가능
-                bool canAttach = false;
-                if (selectedCardIndices.length == 1 &&
-                    currentTurn == 0 &&
-                    hasDrawn &&
-                    playerMelds.isNotEmpty) {
-                  final card = playerHand[selectedCardIndices.first];
-                  canAttach = _canAttachToMeldList(card, melds) == meldIndex;
-                }
+                  // 선택된 카드가 이 멜드에 붙일 수 있는지 확인
+                  bool canAttach = false;
+                  if (selectedCardIndices.length == 1 &&
+                      currentTurn == 0 &&
+                      hasDrawn &&
+                      playerMelds.isNotEmpty) {
+                    final card = playerHand[selectedCardIndices.first];
+                    canAttach = _canAttachToMeldList(card, melds) == meldIndex;
+                  }
 
-                return GestureDetector(
-                  onTap: canAttach
-                      ? () {
-                          final card = playerHand[selectedCardIndices.first];
-                          // 멜드에 붙이기
-                          _attachToMeldList(meldIndex, card, melds);
-                          playerHand.remove(card);
-                          selectedCardIndices.clear();
+                  // 겹치는 카드 스택 너비 계산
+                  final stackWidth = cardWidth + (meld.cards.length - 1) * overlap;
 
-                          if (playerHand.isEmpty) {
-                            _endGame(0);
-                          } else {
-                            setState(() {});
-                            _saveGame();
+                  return GestureDetector(
+                    onTap: canAttach
+                        ? () {
+                            final card = playerHand[selectedCardIndices.first];
+                            _attachToMeldList(meldIndex, card, melds);
+                            playerHand.remove(card);
+                            selectedCardIndices.clear();
+
+                            if (playerHand.isEmpty) {
+                              _endGame(0);
+                            } else {
+                              setState(() {});
+                              _saveGame();
+                            }
                           }
-                        }
-                      : null,
-                  child: Container(
-                    margin: const EdgeInsets.only(right: 6),
-                    padding: EdgeInsets.symmetric(
-                      horizontal: isLandscape ? 4 : 6,
-                      vertical: isLandscape ? 2 : 4,
-                    ),
-                    decoration: BoxDecoration(
-                      color: canAttach
-                          ? Colors.yellow.withValues(alpha: 0.3)
-                          : Colors.black.withValues(alpha: 0.3),
-                      borderRadius: BorderRadius.circular(6),
-                      border: Border.all(
-                        color: canAttach ? Colors.yellow : Colors.white30,
-                        width: canAttach ? 2 : 1,
+                        : null,
+                    child: Container(
+                      width: stackWidth,
+                      height: cardHeight,
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(3),
+                        border: canAttach
+                            ? Border.all(color: Colors.yellow, width: 2)
+                            : null,
+                      ),
+                      child: Stack(
+                        children: List.generate(meld.cards.length, (i) {
+                          final card = meld.cards[i];
+                          return Positioned(
+                            left: i * overlap,
+                            child: Container(
+                              width: cardWidth,
+                              height: cardHeight,
+                              decoration: BoxDecoration(
+                                color: Colors.white,
+                                borderRadius: BorderRadius.circular(2),
+                                border: Border.all(color: Colors.grey.shade400, width: 0.5),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: Colors.black.withValues(alpha: 0.2),
+                                    blurRadius: 1,
+                                    offset: const Offset(0.5, 0.5),
+                                  ),
+                                ],
+                              ),
+                              child: Column(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Text(
+                                    card.suitSymbol,
+                                    style: TextStyle(
+                                      fontSize: isLandscape ? 8 : 10,
+                                      color: card.suitColor,
+                                      height: 1,
+                                    ),
+                                  ),
+                                  Text(
+                                    card.rankString,
+                                    style: TextStyle(
+                                      fontSize: isLandscape ? 7 : 9,
+                                      fontWeight: FontWeight.bold,
+                                      color: card.suitColor,
+                                      height: 1,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          );
+                        }),
                       ),
                     ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Text(
-                          '$owner: ',
-                          style: TextStyle(
-                            color: Colors.white60,
-                            fontSize: isLandscape ? 8 : 9,
-                          ),
-                        ),
-                        ...meld.cards.map((card) => Text(
-                              '${card.suitSymbol}${card.rankString}',
-                              style: TextStyle(
-                                color: card.suitColor == Colors.red
-                                    ? Colors.red.shade300
-                                    : Colors.white,
-                                fontSize: isLandscape ? 9 : 11,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            )),
-                      ],
-                    ),
-                  ),
-                );
-              },
+                  );
+                }).toList(),
+              ),
             ),
-          ),
-        ],
-      ),
     );
   }
 
