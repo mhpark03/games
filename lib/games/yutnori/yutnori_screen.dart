@@ -125,6 +125,7 @@ class _YutnoriScreenState extends State<YutnoriScreen>
   // 턴 대기 (다음 순서 버튼)
   bool waitingForNextTurn = false;
   int? lastPlayerIndex;
+  Timer? _autoExecuteTimer; // 자동 실행 타이머
 
   // 최근 이동한 말 표시
   int? lastMovedPlayerIndex;
@@ -191,6 +192,7 @@ class _YutnoriScreenState extends State<YutnoriScreen>
 
   @override
   void dispose() {
+    _autoExecuteTimer?.cancel();
     _yutAnimController.dispose();
     super.dispose();
   }
@@ -313,6 +315,16 @@ class _YutnoriScreenState extends State<YutnoriScreen>
         if (mounted) _checkAutoAction();
       });
     }
+
+    // 컴퓨터 턴이면 5초 후 자동 실행 타이머 시작
+    if (currentPlayer > 0 && waitingForNextTurn) {
+      _autoExecuteTimer?.cancel();
+      _autoExecuteTimer = Timer(const Duration(seconds: 5), () {
+        if (mounted && waitingForNextTurn && !gameOver) {
+          _onNextTurn();
+        }
+      });
+    }
   }
 
   // 윷 던지기
@@ -377,17 +389,9 @@ class _YutnoriScreenState extends State<YutnoriScreen>
     HapticFeedback.mediumImpact();
     _saveGame();
 
-    // 컴퓨터 턴이면 계속 진행
+    // 컴퓨터 턴이면 다음 버튼 대기 (5초 후 자동 실행)
     if (currentPlayer > 0 && !gameOver) {
-      if (result.isBonus) {
-        // 윷/모가 나오면 다음 버튼 대기
-        setState(() {
-          waitingForNextTurn = true;
-        });
-      } else {
-        // 일반 결과면 바로 말 이동
-        _computerTurn();
-      }
+      _waitForNextTurn();
     } else if (currentPlayer == 0 && !canThrowYut && !gameOver) {
       // 플레이어 턴이고 더 던질 수 없으면 자동 액션 체크
       _checkAutoAction();
@@ -647,19 +651,9 @@ class _YutnoriScreenState extends State<YutnoriScreen>
     HapticFeedback.lightImpact();
     _saveGame();
 
-    // 컴퓨터 턴
-    if (!gameOver && currentPlayer > 0) {
-      if (captured) {
-        // 잡기 발생 시 다음 버튼 대기
-        setState(() {
-          waitingForNextTurn = true;
-        });
-      } else if (pendingMoves.isNotEmpty || canThrowYut) {
-        // 남은 이동이 있거나 더 던질 수 있으면 계속 진행
-        Future.delayed(const Duration(milliseconds: 800), () {
-          if (mounted) _computerTurn();
-        });
-      }
+    // 컴퓨터 턴 - 다음 버튼 대기 (5초 후 자동 실행)
+    if (!gameOver && currentPlayer > 0 && (pendingMoves.isNotEmpty || canThrowYut)) {
+      _waitForNextTurn();
     }
   }
 
@@ -716,14 +710,14 @@ class _YutnoriScreenState extends State<YutnoriScreen>
       pendingMoves.clear();
       selectedMoveIndex = null;
       gameMessage = '${_getPlayerName(currentPlayer)} 차례';
-
-      // 컴퓨터 턴이면 다음 순서 버튼 대기
-      if (currentPlayer > 0 && !gameOver) {
-        waitingForNextTurn = true;
-      }
     });
 
     _saveGame();
+
+    // 컴퓨터 턴이면 다음 순서 버튼 대기 (5초 후 자동 실행)
+    if (currentPlayer > 0 && !gameOver) {
+      _waitForNextTurn();
+    }
   }
 
   String _getPlayerName(int player) {
@@ -1189,8 +1183,23 @@ class _YutnoriScreenState extends State<YutnoriScreen>
     );
   }
 
+  // 컴퓨터 턴 대기 설정 (5초 후 자동 실행)
+  void _waitForNextTurn() {
+    _autoExecuteTimer?.cancel();
+    setState(() {
+      waitingForNextTurn = true;
+    });
+    // 5초 후 자동 실행
+    _autoExecuteTimer = Timer(const Duration(seconds: 5), () {
+      if (mounted && waitingForNextTurn && !gameOver) {
+        _onNextTurn();
+      }
+    });
+  }
+
   // 다음 순서 버튼 눌렀을 때
   void _onNextTurn() {
+    _autoExecuteTimer?.cancel();
     setState(() {
       waitingForNextTurn = false;
     });
