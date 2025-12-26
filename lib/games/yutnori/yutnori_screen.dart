@@ -1071,20 +1071,72 @@ class _YutnoriScreenState extends State<YutnoriScreen>
             Padding(
               padding: const EdgeInsets.only(left: 10),
               child: Row(
-                children: pendingMoves.map((move) {
-                  return Container(
-                    margin: const EdgeInsets.only(left: 4),
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFF8B4513),
-                      borderRadius: BorderRadius.circular(6),
-                    ),
-                    child: Text(
-                      move.name,
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 11,
-                        fontWeight: FontWeight.bold,
+                children: pendingMoves.asMap().entries.map((entry) {
+                  final index = entry.key;
+                  final move = entry.value;
+                  final isSelected = selectedMoveIndex == index;
+                  final canSelect = currentPlayer == 0 && pendingMoves.length > 1;
+                  return GestureDetector(
+                    onTap: canSelect ? () => _selectMove(index) : null,
+                    child: Container(
+                      margin: const EdgeInsets.only(left: 4),
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                      decoration: BoxDecoration(
+                        gradient: isSelected
+                            ? const LinearGradient(
+                                begin: Alignment.topCenter,
+                                end: Alignment.bottomCenter,
+                                colors: [Color(0xFFFF8C00), Color(0xFFE65100)],
+                              )
+                            : canSelect
+                                ? const LinearGradient(
+                                    begin: Alignment.topCenter,
+                                    end: Alignment.bottomCenter,
+                                    colors: [Color(0xFF6D4C41), Color(0xFF5D4037)],
+                                  )
+                                : null,
+                        color: (!isSelected && !canSelect) ? const Color(0xFF8B4513) : null,
+                        borderRadius: BorderRadius.circular(6),
+                        border: canSelect || isSelected
+                            ? Border.all(
+                                color: isSelected ? Colors.white : const Color(0xFFFFCC80),
+                                width: isSelected ? 1.5 : 1,
+                              )
+                            : null,
+                        boxShadow: canSelect || isSelected
+                            ? [
+                                BoxShadow(
+                                  color: isSelected
+                                      ? Colors.orange.withValues(alpha: 0.4)
+                                      : Colors.black.withValues(alpha: 0.2),
+                                  offset: const Offset(0, 1),
+                                  blurRadius: 2,
+                                ),
+                              ]
+                            : null,
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          if (canSelect && !isSelected)
+                            const Padding(
+                              padding: EdgeInsets.only(right: 2),
+                              child: Icon(Icons.touch_app, color: Colors.white70, size: 10),
+                            ),
+                          Text(
+                            move.name,
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: isSelected ? 12 : 11,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          if (isSelected)
+                            const Padding(
+                              padding: EdgeInsets.only(left: 2),
+                              child: Icon(Icons.check, color: Colors.white, size: 10),
+                            ),
+                        ],
                       ),
                     ),
                   );
@@ -1304,22 +1356,69 @@ class _YutnoriScreenState extends State<YutnoriScreen>
                 final index = entry.key;
                 final move = entry.value;
                 final isSelected = selectedMoveIndex == index;
+                final canSelect = currentPlayer == 0 && pendingMoves.length > 1;
                 return GestureDetector(
                   onTap: currentPlayer == 0 ? () => _selectMove(index) : null,
                   child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
                     decoration: BoxDecoration(
-                      color: isSelected ? const Color(0xFFFF8C00) : const Color(0xFF8B4513),
-                      borderRadius: BorderRadius.circular(6),
-                      border: isSelected ? Border.all(color: Colors.white, width: 2) : null,
-                    ),
-                    child: Text(
-                      move.name,
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: isSelected ? 14 : 12,
-                        fontWeight: FontWeight.bold,
+                      gradient: isSelected
+                          ? const LinearGradient(
+                              begin: Alignment.topCenter,
+                              end: Alignment.bottomCenter,
+                              colors: [Color(0xFFFF8C00), Color(0xFFE65100)],
+                            )
+                          : canSelect
+                              ? const LinearGradient(
+                                  begin: Alignment.topCenter,
+                                  end: Alignment.bottomCenter,
+                                  colors: [Color(0xFF6D4C41), Color(0xFF5D4037)],
+                                )
+                              : null,
+                      color: (!isSelected && !canSelect) ? const Color(0xFF8B4513) : null,
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(
+                        color: isSelected
+                            ? Colors.white
+                            : canSelect
+                                ? const Color(0xFFFFCC80)
+                                : const Color(0xFF5D4037),
+                        width: isSelected ? 2 : 1.5,
                       ),
+                      boxShadow: canSelect || isSelected
+                          ? [
+                              BoxShadow(
+                                color: isSelected
+                                    ? Colors.orange.withValues(alpha: 0.5)
+                                    : Colors.black.withValues(alpha: 0.3),
+                                offset: const Offset(0, 2),
+                                blurRadius: 3,
+                              ),
+                            ]
+                          : null,
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        if (canSelect && !isSelected)
+                          const Padding(
+                            padding: EdgeInsets.only(right: 3),
+                            child: Icon(Icons.touch_app, color: Colors.white70, size: 12),
+                          ),
+                        Text(
+                          move.name,
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: isSelected ? 14 : 12,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        if (isSelected)
+                          const Padding(
+                            padding: EdgeInsets.only(left: 3),
+                            child: Icon(Icons.check, color: Colors.white, size: 12),
+                          ),
+                      ],
                     ),
                   ),
                 );
@@ -2705,6 +2804,7 @@ class _YutnoriScreenState extends State<YutnoriScreen>
         ),
       );
     } else if (pendingMoves.isNotEmpty) {
+      final canSelect = currentPlayer == 0 && pendingMoves.length > 1;
       return Wrap(
         spacing: 8,
         alignment: WrapAlignment.center,
@@ -2712,22 +2812,69 @@ class _YutnoriScreenState extends State<YutnoriScreen>
           final index = entry.key;
           final move = entry.value;
           final isSelected = selectedMoveIndex == index;
+          final isClickable = currentPlayer == 0;
           return GestureDetector(
-            onTap: currentPlayer == 0 ? () => _selectMove(index) : null,
+            onTap: isClickable ? () => _selectMove(index) : null,
             child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
               decoration: BoxDecoration(
-                color: isSelected ? const Color(0xFFFF8C00) : const Color(0xFF8B4513),
-                borderRadius: BorderRadius.circular(8),
-                border: isSelected ? Border.all(color: Colors.white, width: 2) : null,
-              ),
-              child: Text(
-                move.name,
-                style: TextStyle(
-                  color: Colors.white,
-                  fontWeight: FontWeight.bold,
-                  fontSize: isSelected ? 16 : 14,
+                gradient: isSelected
+                    ? const LinearGradient(
+                        begin: Alignment.topCenter,
+                        end: Alignment.bottomCenter,
+                        colors: [Color(0xFFFF8C00), Color(0xFFE65100)],
+                      )
+                    : canSelect
+                        ? const LinearGradient(
+                            begin: Alignment.topCenter,
+                            end: Alignment.bottomCenter,
+                            colors: [Color(0xFF6D4C41), Color(0xFF5D4037)],
+                          )
+                        : null,
+                color: (!isSelected && !canSelect) ? const Color(0xFF8B4513) : null,
+                borderRadius: BorderRadius.circular(10),
+                border: Border.all(
+                  color: isSelected
+                      ? Colors.white
+                      : canSelect
+                          ? const Color(0xFFFFCC80)
+                          : const Color(0xFF5D4037),
+                  width: isSelected ? 2 : 1.5,
                 ),
+                boxShadow: canSelect || isSelected
+                    ? [
+                        BoxShadow(
+                          color: isSelected
+                              ? Colors.orange.withValues(alpha: 0.5)
+                              : Colors.black.withValues(alpha: 0.3),
+                          offset: const Offset(0, 2),
+                          blurRadius: 4,
+                        ),
+                      ]
+                    : null,
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  if (canSelect && !isSelected)
+                    const Padding(
+                      padding: EdgeInsets.only(right: 4),
+                      child: Icon(Icons.touch_app, color: Colors.white70, size: 14),
+                    ),
+                  Text(
+                    move.name,
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
+                      fontSize: isSelected ? 16 : 14,
+                    ),
+                  ),
+                  if (isSelected)
+                    const Padding(
+                      padding: EdgeInsets.only(left: 4),
+                      child: Icon(Icons.check, color: Colors.white, size: 14),
+                    ),
+                ],
               ),
             ),
           );
