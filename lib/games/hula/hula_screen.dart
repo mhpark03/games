@@ -873,6 +873,9 @@ class _HulaScreenState extends State<HulaScreen> with TickerProviderStateMixin {
       }
     });
 
+    // 게임 종료 시 저장된 게임 삭제
+    _saveGame();
+
     _showGameOverDialog();
   }
 
