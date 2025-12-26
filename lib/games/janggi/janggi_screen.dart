@@ -102,6 +102,10 @@ class _JanggiScreenState extends State<JanggiScreen> {
   int? lastMoveToRow;
   int? lastMoveToCol;
 
+  // 보드 상태 히스토리 (반복 검출용)
+  List<String> _boardHistory = [];
+  int _consecutiveCheckCount = 0; // 연속 장군 횟수
+
   // Gemini AI 설정
   String? geminiApiKey;
   GeminiService? geminiService;
@@ -191,6 +195,8 @@ class _JanggiScreenState extends State<JanggiScreen> {
       'lastMoveFromCol': lastMoveFromCol,
       'lastMoveToRow': lastMoveToRow,
       'lastMoveToCol': lastMoveToCol,
+      'boardHistory': _boardHistory,
+      'consecutiveCheckCount': _consecutiveCheckCount,
     };
 
     await GameSaveService.saveGame('janggi', gameState);
@@ -225,6 +231,15 @@ class _JanggiScreenState extends State<JanggiScreen> {
     lastMoveFromCol = gameState['lastMoveFromCol'] as int?;
     lastMoveToRow = gameState['lastMoveToRow'] as int?;
     lastMoveToCol = gameState['lastMoveToCol'] as int?;
+
+    // 보드 히스토리 복원
+    final savedHistory = gameState['boardHistory'];
+    if (savedHistory != null && savedHistory is List) {
+      _boardHistory = savedHistory.map((e) => e.toString()).toList();
+    } else {
+      _boardHistory = [];
+    }
+    _consecutiveCheckCount = gameState['consecutiveCheckCount'] as int? ?? 0;
 
     setState(() {
       isSetupPhase = false;
@@ -1570,6 +1585,14 @@ class _JanggiScreenState extends State<JanggiScreen> {
     // 장군 상태 업데이트
     isInCheck = _checkIsInCheck(currentTurn);
 
+    // 보드 상태 히스토리 저장 및 연속 장군 카운트
+    _boardHistory.add(_getBoardStateString());
+    if (isInCheck) {
+      _consecutiveCheckCount++;
+    } else {
+      _consecutiveCheckCount = 0;
+    }
+
     // 외통수(체크메이트) 확인
     if (!isGameOver && _isCheckmate(currentTurn)) {
       isGameOver = true;
@@ -2196,6 +2219,114 @@ class _JanggiScreenState extends State<JanggiScreen> {
     return score;
   }
 
+  // 보드 상태를 문자열로 변환 (반복 검출용)
+  String _getBoardStateString() {
+    final buffer = StringBuffer();
+    buffer.write(currentTurn == JanggiColor.cho ? 'C' : 'H');
+    for (int r = 0; r < 10; r++) {
+      for (int c = 0; c < 9; c++) {
+        final piece = board[r][c];
+        if (piece == null) {
+          buffer.write('.');
+        } else {
+          String code;
+          switch (piece.type) {
+            case JanggiPieceType.gung:
+              code = 'K';
+              break;
+            case JanggiPieceType.cha:
+              code = 'R';
+              break;
+            case JanggiPieceType.po:
+              code = 'C';
+              break;
+            case JanggiPieceType.ma:
+              code = 'N';
+              break;
+            case JanggiPieceType.sang:
+              code = 'E';
+              break;
+            case JanggiPieceType.sa:
+              code = 'A';
+              break;
+            case JanggiPieceType.byung:
+              code = 'P';
+              break;
+          }
+          buffer.write(piece.color == JanggiColor.cho ? code.toLowerCase() : code);
+        }
+      }
+    }
+    return buffer.toString();
+  }
+
+  // 무승부 선언 가능 여부 확인
+  bool _canDeclareDraw() {
+    if (isGameOver || isSetupPhase) return false;
+
+    // 1. 동일 보드 상태가 3회 이상 반복된 경우 (3회 반복 규칙)
+    final currentState = _getBoardStateString();
+    int repeatCount = 0;
+    for (final state in _boardHistory) {
+      if (state == currentState) {
+        repeatCount++;
+      }
+    }
+    if (repeatCount >= 2) {
+      // 현재 상태 포함 3회 이상
+      return true;
+    }
+
+    // 2. 현재 장군 상태이고 연속 장군이 4회 이상인 경우
+    if (_consecutiveCheckCount >= 4) {
+      return true;
+    }
+
+    // 3. 장군 상태에서 피할 수 있는 수가 1개뿐인 경우
+    if (isInCheck) {
+      int legalMoveCount = 0;
+      for (int r = 0; r < 10; r++) {
+        for (int c = 0; c < 9; c++) {
+          final piece = board[r][c];
+          if (piece != null && piece.color == currentTurn) {
+            final moves = _getValidMoves(r, c);
+            // 장군을 피하는 수만 계산
+            for (final move in moves) {
+              final targetRow = move[0];
+              final targetCol = move[1];
+
+              // 임시 이동
+              final capturedPiece = board[targetRow][targetCol];
+              board[targetRow][targetCol] = piece;
+              board[r][c] = null;
+
+              // 이동 후에도 장군인지 확인
+              final stillInCheck = _checkIsInCheck(currentTurn);
+
+              // 원상복구
+              board[r][c] = piece;
+              board[targetRow][targetCol] = capturedPiece;
+
+              if (!stillInCheck) {
+                legalMoveCount++;
+                if (legalMoveCount > 1) break; // 2개 이상이면 더 이상 체크 불필요
+              }
+            }
+            if (legalMoveCount > 1) break;
+          }
+        }
+        if (legalMoveCount > 1) break;
+      }
+
+      // 장군을 피할 수 있는 수가 1개뿐이면 무승부 선언 가능
+      if (legalMoveCount == 1) {
+        return true;
+      }
+    }
+
+    return false;
+  }
+
   void _showDrawDialog() {
     showDialog(
       context: context,
@@ -2515,6 +2646,8 @@ class _JanggiScreenState extends State<JanggiScreen> {
       lastMoveFromCol = null;
       lastMoveToRow = null;
       lastMoveToCol = null;
+      _boardHistory = [];
+      _consecutiveCheckCount = 0;
     });
 
     // 마상 배치 선택 다이얼로그 다시 표시
@@ -2555,8 +2688,8 @@ class _JanggiScreenState extends State<JanggiScreen> {
         backgroundColor: const Color(0xFFD2691E),
         foregroundColor: Colors.white,
         actions: [
-          // 무승부 선언 버튼
-          if (!isGameOver && !isSetupPhase)
+          // 무승부 선언 버튼 (반복 장군/장군 불가 상황에서만 표시)
+          if (_canDeclareDraw())
             IconButton(
               icon: const Icon(Icons.handshake),
               onPressed: _showDrawDialog,
@@ -2698,13 +2831,13 @@ class _JanggiScreenState extends State<JanggiScreen> {
                 right: 4,
                 child: Row(
                   children: [
-                    if (!isGameOver && !isSetupPhase)
+                    if (_canDeclareDraw())
                       _buildCircleButton(
                         icon: Icons.handshake,
                         onPressed: _showDrawDialog,
                         tooltip: '무승부 선언',
                       ),
-                    if (!isGameOver && !isSetupPhase)
+                    if (_canDeclareDraw())
                       const SizedBox(width: 8),
                     if (widget.gameMode != JanggiGameMode.vsHuman)
                       _buildCircleButton(
