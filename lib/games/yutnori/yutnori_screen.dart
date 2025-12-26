@@ -389,9 +389,17 @@ class _YutnoriScreenState extends State<YutnoriScreen>
     HapticFeedback.mediumImpact();
     _saveGame();
 
-    // 컴퓨터 턴이면 다음 버튼 대기 (5초 후 자동 실행)
+    // 컴퓨터 턴 처리
     if (currentPlayer > 0 && !gameOver) {
-      _waitForNextTurn();
+      if (canThrowYut) {
+        // 윷/모가 나와서 한 번 더 던질 수 있으면 대기
+        _waitForNextTurn();
+      } else if (pendingMoves.isNotEmpty) {
+        // 이동할 말이 있으면 바로 이동 (대기 없이)
+        Future.delayed(const Duration(milliseconds: 800), () {
+          if (mounted && !gameOver) _computerMovePiece();
+        });
+      }
     } else if (currentPlayer == 0 && !canThrowYut && !gameOver) {
       // 플레이어 턴이고 더 던질 수 없으면 자동 액션 체크
       _checkAutoAction();
@@ -725,18 +733,18 @@ class _YutnoriScreenState extends State<YutnoriScreen>
     return '컴퓨터 $player';
   }
 
-  // 컴퓨터 AI
+  // 컴퓨터 AI - 현재 상태에 따라 다음 액션 실행
   void _computerTurn() {
     if (gameOver || currentPlayer == 0) return;
 
     if (canThrowYut) {
-      // 윷 던지기
+      // 윷 던지기 (짧은 딜레이 후 실행)
       Future.delayed(const Duration(milliseconds: 500), () {
         if (mounted && !gameOver) _throwYut();
       });
     } else if (pendingMoves.isNotEmpty) {
-      // 말 이동
-      Future.delayed(const Duration(milliseconds: 800), () {
+      // 말 이동 (짧은 딜레이 후 실행)
+      Future.delayed(const Duration(milliseconds: 500), () {
         if (mounted && !gameOver) _computerMovePiece();
       });
     }
