@@ -470,12 +470,15 @@ class _YutnoriScreenState extends State<YutnoriScreen>
 
   // 이동 후 위치 계산
   // 위치 정규화 (같은 위치를 특정 번호로 통일)
+  // 멈춘 경우에만 적용됨 (지나가는 경우는 최종 위치가 다르므로 변환 안됨)
   int _normalizePosition(int pos) {
     switch (pos) {
       case 5:
         return 21; // 우상단 코너 → 대각선 진입
       case 10:
         return 28; // 좌상단 코너 → 대각선 진입
+      case 24:
+        return 31; // 중앙 (우상단 경로) → 우하단 방향으로 변경
       case 0:
         return 34; // 시작점
       case 20:
@@ -564,8 +567,13 @@ class _YutnoriScreenState extends State<YutnoriScreen>
         return -1; // 대기로 돌아감
       }
 
-      // 20 이상이면 골인 처리
-      if (newPos >= 20) {
+      // 정확히 20이면 한 바퀴 완료 (시작점 도착) → 34로 변환
+      if (newPos == 20) {
+        return 34;
+      }
+
+      // 20 초과하면 골인 처리
+      if (newPos > 20) {
         return finishPosition;
       }
     }
