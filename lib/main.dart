@@ -1816,8 +1816,8 @@ class HomeScreen extends StatelessWidget {
                       child: LayoutBuilder(
                         builder: (context, constraints) {
                           final isLandscapeGrid = constraints.maxWidth > constraints.maxHeight;
-                          final crossAxisCount = isLandscapeGrid ? 4 : 2;
-                          final aspectRatio = isLandscapeGrid ? 1.4 : 1.0;
+                          final crossAxisCount = isLandscapeGrid ? 5 : 3;
+                          final aspectRatio = isLandscapeGrid ? 1.2 : 0.9;
                           return GridView.count(
                             crossAxisCount: crossAxisCount,
                             mainAxisSpacing: 12,
