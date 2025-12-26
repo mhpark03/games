@@ -54,6 +54,13 @@ class JanggiPiece {
 
 enum JanggiGameMode { vsCho, vsHan, vsHuman }
 
+// AI 난이도 설정
+enum JanggiDifficulty {
+  easy,   // 쉬움: 탐색 깊이 1, 랜덤 수 확률 30%
+  normal, // 보통: 탐색 깊이 2, 랜덤 수 확률 15%
+  hard,   // 어려움: 탐색 깊이 3, 랜덤 수 확률 0%
+}
+
 class JanggiScreen extends StatefulWidget {
   final JanggiGameMode gameMode;
   final bool resumeGame;
@@ -105,6 +112,9 @@ class _JanggiScreenState extends State<JanggiScreen> {
   // 보드 상태 히스토리 (반복 검출용)
   List<String> _boardHistory = [];
   int _consecutiveCheckCount = 0; // 연속 장군 횟수
+
+  // AI 난이도 설정
+  JanggiDifficulty _difficulty = JanggiDifficulty.normal;
 
   // Gemini AI 설정
   String? geminiApiKey;
@@ -197,6 +207,7 @@ class _JanggiScreenState extends State<JanggiScreen> {
       'lastMoveToCol': lastMoveToCol,
       'boardHistory': _boardHistory,
       'consecutiveCheckCount': _consecutiveCheckCount,
+      'difficulty': _difficulty.index,
     };
 
     await GameSaveService.saveGame('janggi', gameState);
@@ -240,6 +251,14 @@ class _JanggiScreenState extends State<JanggiScreen> {
       _boardHistory = [];
     }
     _consecutiveCheckCount = gameState['consecutiveCheckCount'] as int? ?? 0;
+
+    // 난이도 복원
+    final savedDifficulty = gameState['difficulty'] as int?;
+    if (savedDifficulty != null && savedDifficulty < JanggiDifficulty.values.length) {
+      _difficulty = JanggiDifficulty.values[savedDifficulty];
+    } else {
+      _difficulty = JanggiDifficulty.normal;
+    }
 
     setState(() {
       isSetupPhase = false;
@@ -413,6 +432,11 @@ class _JanggiScreenState extends State<JanggiScreen> {
   }
 
   void _showSetupDialog() {
+    // 컴퓨터 대전 시 난이도 랜덤 설정
+    if (widget.gameMode != JanggiGameMode.vsHuman) {
+      _randomizeDifficulty();
+    }
+
     // 컴퓨터의 마상 배치는 랜덤으로 설정 (4가지 조합 중 하나)
     final random = Random();
     if (widget.gameMode == JanggiGameMode.vsCho) {
@@ -1703,8 +1727,53 @@ class _JanggiScreenState extends State<JanggiScreen> {
     });
   }
 
-  // AI 난이도 설정 (탐색 깊이)
-  static const int _aiSearchDepth = 3;
+  // 난이도별 AI 탐색 깊이
+  int get _aiSearchDepth {
+    switch (_difficulty) {
+      case JanggiDifficulty.easy:
+        return 1;
+      case JanggiDifficulty.normal:
+        return 2;
+      case JanggiDifficulty.hard:
+        return 3;
+    }
+  }
+
+  // 난이도별 랜덤 수 확률 (0.0 ~ 1.0)
+  double get _randomMoveChance {
+    switch (_difficulty) {
+      case JanggiDifficulty.easy:
+        return 0.30; // 30% 확률로 랜덤 수
+      case JanggiDifficulty.normal:
+        return 0.15; // 15% 확률로 랜덤 수
+      case JanggiDifficulty.hard:
+        return 0.0; // 항상 최선의 수
+    }
+  }
+
+  // 난이도 이름 반환
+  String get _difficultyName {
+    switch (_difficulty) {
+      case JanggiDifficulty.easy:
+        return '쉬움';
+      case JanggiDifficulty.normal:
+        return '보통';
+      case JanggiDifficulty.hard:
+        return '어려움';
+    }
+  }
+
+  // 랜덤 난이도 설정 (쉬움 50%, 보통 35%, 어려움 15%)
+  void _randomizeDifficulty() {
+    final rand = Random().nextDouble();
+    if (rand < 0.50) {
+      _difficulty = JanggiDifficulty.easy;
+    } else if (rand < 0.85) {
+      _difficulty = JanggiDifficulty.normal;
+    } else {
+      _difficulty = JanggiDifficulty.hard;
+    }
+  }
 
   // 기물 가치 (정적 평가용)
   int _getPieceValue(JanggiPieceType type) {
@@ -2125,6 +2194,28 @@ class _JanggiScreenState extends State<JanggiScreen> {
     }
 
     if (allMoves.isEmpty) return null;
+
+    // 난이도에 따라 랜덤 수 선택
+    if (_randomMoveChance > 0 && Random().nextDouble() < _randomMoveChance) {
+      // 랜덤 수 선택 (단, 궁을 잃는 수는 제외)
+      final safeMoves = allMoves.where((move) {
+        final movingPiece = board[move['fromRow']][move['fromCol']];
+        final capturedPiece = board[move['toRow']][move['toCol']];
+        board[move['toRow']][move['toCol']] = movingPiece;
+        board[move['fromRow']][move['fromCol']] = null;
+
+        final isSafe = !_checkIsInCheck(aiColor);
+
+        board[move['fromRow']][move['fromCol']] = movingPiece;
+        board[move['toRow']][move['toCol']] = capturedPiece;
+
+        return isSafe;
+      }).toList();
+
+      if (safeMoves.isNotEmpty) {
+        return safeMoves[Random().nextInt(safeMoves.length)];
+      }
+    }
 
     // 수 정렬 (캡처 수 우선)
     allMoves.sort((a, b) => b['priority'].compareTo(a['priority']));
@@ -3054,9 +3145,40 @@ class _JanggiScreenState extends State<JanggiScreen> {
               fontWeight: FontWeight.bold,
             ),
           ),
+          // 컴퓨터 대전 시 난이도 표시
+          if (widget.gameMode != JanggiGameMode.vsHuman && !isSetupPhase) ...[
+            const SizedBox(width: 12),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+              decoration: BoxDecoration(
+                color: _getDifficultyColor(),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Text(
+                _difficultyName,
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 12,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
+          ],
         ],
       ),
     );
+  }
+
+  // 난이도별 색상
+  Color _getDifficultyColor() {
+    switch (_difficulty) {
+      case JanggiDifficulty.easy:
+        return Colors.green;
+      case JanggiDifficulty.normal:
+        return Colors.orange;
+      case JanggiDifficulty.hard:
+        return Colors.red;
+    }
   }
 
   Widget _buildBoard() {
