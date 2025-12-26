@@ -9,6 +9,7 @@ import 'games/solitaire/solitaire_screen.dart';
 import 'games/minesweeper/minesweeper_screen.dart';
 import 'games/baseball/baseball_screen.dart';
 import 'games/onecard/onecard_screen.dart';
+import 'games/yutnori/yutnori_screen.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
@@ -1728,6 +1729,204 @@ class HomeScreen extends StatelessWidget {
     );
   }
 
+  // 윷놀이 인원 선택 다이얼로그
+  Future<void> _showYutnoriModeDialog(BuildContext context) async {
+    final hasSaved = await YutnoriScreen.hasSavedGame();
+    final savedPlayerCount = hasSaved ? await YutnoriScreen.getSavedPlayerCount() : null;
+
+    if (!context.mounted) return;
+
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          backgroundColor: Colors.grey.shade900,
+          insetPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+            side: BorderSide(color: const Color(0xFFDEB887).withValues(alpha: 0.5), width: 2),
+          ),
+          title: const Text(
+            '인원 선택',
+            style: TextStyle(
+              color: Color(0xFFDEB887),
+              fontWeight: FontWeight.bold,
+            ),
+            textAlign: TextAlign.center,
+          ),
+          content: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                // 이어하기 버튼 (저장된 게임이 있을 때만)
+                if (hasSaved && savedPlayerCount != null) ...[
+                  _buildYutnoriResumeButton(context, savedPlayerCount),
+                  const SizedBox(height: 16),
+                  Divider(color: Colors.grey.shade700),
+                  const SizedBox(height: 8),
+                  Text(
+                    '새 게임',
+                    style: TextStyle(
+                      color: Colors.grey.shade400,
+                      fontSize: 12,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                ],
+                _buildYutnoriPlayerCountButton(
+                  context,
+                  playerCount: 2,
+                  subtitle: '1 vs 1',
+                  icon: Icons.people,
+                ),
+                const SizedBox(height: 12),
+                _buildYutnoriPlayerCountButton(
+                  context,
+                  playerCount: 3,
+                  subtitle: '1 vs 2',
+                  icon: Icons.groups,
+                ),
+                const SizedBox(height: 12),
+                _buildYutnoriPlayerCountButton(
+                  context,
+                  playerCount: 4,
+                  subtitle: '1 vs 3',
+                  icon: Icons.groups,
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildYutnoriResumeButton(BuildContext context, int savedPlayerCount) {
+    return InkWell(
+      onTap: () {
+        Navigator.pop(context);
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => YutnoriScreen(
+              playerCount: savedPlayerCount,
+              resumeGame: true,
+            ),
+          ),
+        );
+      },
+      borderRadius: BorderRadius.circular(12),
+      child: Container(
+        width: double.infinity,
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        decoration: BoxDecoration(
+          color: Colors.green.withValues(alpha: 0.2),
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(
+            color: Colors.green.withValues(alpha: 0.5),
+            width: 2,
+          ),
+        ),
+        child: Row(
+          children: [
+            const Icon(Icons.play_arrow, color: Colors.green, size: 28),
+            const SizedBox(width: 12),
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  '이어하기',
+                  style: TextStyle(
+                    color: Colors.green,
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                Text(
+                  '${savedPlayerCount}인 게임',
+                  style: TextStyle(
+                    color: Colors.grey.shade400,
+                    fontSize: 12,
+                  ),
+                ),
+              ],
+            ),
+            const Spacer(),
+            Icon(
+              Icons.arrow_forward_ios,
+              color: Colors.green.withValues(alpha: 0.7),
+              size: 16,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildYutnoriPlayerCountButton(
+    BuildContext context, {
+    required int playerCount,
+    required String subtitle,
+    required IconData icon,
+  }) {
+    return InkWell(
+      onTap: () {
+        Navigator.pop(context);
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => YutnoriScreen(playerCount: playerCount),
+          ),
+        );
+      },
+      borderRadius: BorderRadius.circular(12),
+      child: Container(
+        width: double.infinity,
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        decoration: BoxDecoration(
+          color: const Color(0xFFDEB887).withValues(alpha: 0.1),
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(
+            color: const Color(0xFFDEB887).withValues(alpha: 0.3),
+            width: 1,
+          ),
+        ),
+        child: Row(
+          children: [
+            Icon(icon, color: const Color(0xFFDEB887), size: 28),
+            const SizedBox(width: 12),
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  '${playerCount}인',
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                Text(
+                  subtitle,
+                  style: TextStyle(
+                    color: Colors.grey.shade400,
+                    fontSize: 12,
+                  ),
+                ),
+              ],
+            ),
+            const Spacer(),
+            Icon(
+              Icons.arrow_forward_ios,
+              color: const Color(0xFFDEB887).withValues(alpha: 0.7),
+              size: 16,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -1907,6 +2106,14 @@ class HomeScreen extends StatelessWidget {
                                 icon: Icons.style,
                                 color: Colors.purple,
                                 onTap: () => _showOneCardModeDialog(context),
+                              ),
+                              _buildGameTile(
+                                context,
+                                title: '윷놀이',
+                                subtitle: 'Yut Nori',
+                                icon: Icons.casino,
+                                color: const Color(0xFFDEB887),
+                                onTap: () => _showYutnoriModeDialog(context),
                               ),
                             ],
                           );
