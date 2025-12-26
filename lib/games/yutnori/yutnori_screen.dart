@@ -170,10 +170,11 @@ class _YutnoriScreenState extends State<YutnoriScreen>
       curve: Curves.bounceOut,
     );
 
+    // 항상 먼저 초기화 (async 로드 전에 playerPieces가 필요함)
+    _initGame();
+
     if (widget.resumeGame) {
       _loadGame();
-    } else {
-      _initGame();
     }
   }
 
