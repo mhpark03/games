@@ -971,7 +971,7 @@ class _HulaScreenState extends State<HulaScreen> with TickerProviderStateMixin {
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
-        title: const Text('훌라', style: TextStyle(color: Colors.white)),
+        title: Text('훌라 (${playerCount}인)', style: const TextStyle(color: Colors.white)),
         leading: IconButton(
           icon: const Icon(Icons.arrow_back, color: Colors.white),
           onPressed: () => Navigator.pop(context),
@@ -993,15 +993,26 @@ class _HulaScreenState extends State<HulaScreen> with TickerProviderStateMixin {
             final isLandscape = constraints.maxWidth > constraints.maxHeight;
             return Column(
               children: [
-                // 상태 표시
-                _buildStatusBar(isLandscape),
+                // 상단 컴퓨터: 2인은 COM1, 3-4인은 COM2
+                if (computerHands.isNotEmpty)
+                  _buildTopComputerHand(playerCount == 2 ? 0 : 1, isLandscape),
 
-                // 컴퓨터 손패
-                _buildComputerHands(isLandscape),
-
-                // 덱과 버린 더미
+                // 중앙 영역 (좌우 컴퓨터 + 덱/버린더미)
                 Expanded(
-                  child: _buildCenterArea(isLandscape),
+                  child: playerCount > 2
+                      ? Row(
+                          children: [
+                            // 왼쪽 컴퓨터 (COM3)
+                            if (computerHands.length >= 3)
+                              _buildSideComputerHand(2, isLandscape),
+                            // 중앙 카드 영역
+                            Expanded(child: _buildCenterArea(isLandscape)),
+                            // 오른쪽 컴퓨터 (COM1)
+                            if (computerHands.isNotEmpty)
+                              _buildSideComputerHand(0, isLandscape),
+                          ],
+                        )
+                      : _buildCenterArea(isLandscape),
                 ),
 
                 // 메시지
@@ -1035,68 +1046,72 @@ class _HulaScreenState extends State<HulaScreen> with TickerProviderStateMixin {
     );
   }
 
-  Widget _buildStatusBar(bool isLandscape) {
+  // 상단 컴퓨터 (가로 배치)
+  Widget _buildTopComputerHand(int computerIndex, bool isLandscape) {
+    if (computerIndex >= computerHands.length) return const SizedBox();
+
+    final hand = computerHands[computerIndex];
+    final melds = computerMelds[computerIndex];
+    final isCurrentTurn = currentTurn == computerIndex + 1;
+
     return Container(
       padding: EdgeInsets.symmetric(horizontal: 16, vertical: isLandscape ? 4 : 8),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceAround,
-        children: [
-          _buildStatusChip(
-            '플레이어',
-            '${playerHand.length}장',
-            currentTurn == 0,
-          ),
-          ...List.generate(
-            computerHands.length,
-            (i) => _buildStatusChip(
-              'COM${i + 1}',
-              '${computerHands[i].length}장',
-              currentTurn == i + 1,
-            ),
-          ),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-            decoration: BoxDecoration(
-              color: Colors.brown.shade700,
-              borderRadius: BorderRadius.circular(8),
-            ),
-            child: Text(
-              '덱: ${deck.length}',
-              style: const TextStyle(color: Colors.white, fontSize: 12),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildStatusChip(String name, String info, bool isActive) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-      decoration: BoxDecoration(
-        color: isActive ? Colors.amber.shade700 : Colors.grey.shade800,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: isActive ? Colors.amber : Colors.transparent,
-          width: 2,
-        ),
-      ),
-      child: Row(
+      child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Text(
-            name,
-            style: TextStyle(
-              color: isActive ? Colors.white : Colors.grey.shade400,
-              fontSize: 12,
-            ),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                decoration: BoxDecoration(
+                  color: isCurrentTurn ? Colors.amber.shade700 : Colors.grey.shade800,
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Icon(Icons.computer, color: Colors.white, size: 14),
+                    const SizedBox(width: 4),
+                    Text(
+                      'COM${computerIndex + 1}',
+                      style: const TextStyle(color: Colors.white, fontSize: 12),
+                    ),
+                    const SizedBox(width: 8),
+                    Text(
+                      '${hand.length}장',
+                      style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+                    ),
+                    if (melds.isNotEmpty) ...[
+                      const SizedBox(width: 8),
+                      Text(
+                        '(${melds.length}멜드)',
+                        style: const TextStyle(color: Colors.green, fontSize: 11),
+                      ),
+                    ],
+                  ],
+                ),
+              ),
+            ],
           ),
-          const SizedBox(width: 8),
-          Text(
-            info,
-            style: TextStyle(
-              color: isActive ? Colors.white : Colors.grey.shade300,
-              fontWeight: FontWeight.bold,
+          const SizedBox(height: 4),
+          // 카드 뒷면 표시
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: List.generate(
+              min(hand.length, isLandscape ? 10 : 8),
+              (j) => Container(
+                width: isLandscape ? 20 : 24,
+                height: isLandscape ? 28 : 34,
+                margin: const EdgeInsets.only(left: 2),
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [Colors.blue.shade800, Colors.blue.shade900],
+                  ),
+                  borderRadius: BorderRadius.circular(3),
+                  border: Border.all(color: Colors.white24),
+                ),
+              ),
             ),
           ),
         ],
@@ -1104,97 +1119,95 @@ class _HulaScreenState extends State<HulaScreen> with TickerProviderStateMixin {
     );
   }
 
-  Widget _buildComputerHands(bool isLandscape) {
+  // 좌/우측 컴퓨터 (세로 배치)
+  Widget _buildSideComputerHand(int computerIndex, bool isLandscape) {
+    if (computerIndex >= computerHands.length) return const SizedBox();
+
+    final hand = computerHands[computerIndex];
+    final melds = computerMelds[computerIndex];
+    final isCurrentTurn = currentTurn == computerIndex + 1;
+
     return Container(
-      height: isLandscape ? 45 : 70,
-      padding: const EdgeInsets.symmetric(horizontal: 16),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-        children: List.generate(computerHands.length, (i) {
-          final hand = computerHands[i];
-          final melds = computerMelds[i];
-          return isLandscape
-              ? Row(
+      width: isLandscape ? 45 : 55,
+      padding: const EdgeInsets.symmetric(vertical: 8),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          // 컴퓨터 이름
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+            decoration: BoxDecoration(
+              color: isCurrentTurn ? Colors.amber.shade700 : Colors.grey.shade800,
+              borderRadius: BorderRadius.circular(4),
+            ),
+            child: Column(
+              children: [
+                Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
+                    const Icon(Icons.computer, color: Colors.white, size: 10),
+                    const SizedBox(width: 2),
                     Text(
-                      'COM${i + 1}',
-                      style: TextStyle(
-                        color: currentTurn == i + 1 ? Colors.amber : Colors.white54,
-                        fontSize: 10,
-                      ),
-                    ),
-                    if (melds.isNotEmpty)
-                      Text(
-                        '(${melds.length})',
-                        style: const TextStyle(color: Colors.green, fontSize: 9),
-                      ),
-                    const SizedBox(width: 4),
-                    ...List.generate(
-                      min(hand.length, 7),
-                      (j) => Container(
-                        width: 16,
-                        height: 24,
-                        margin: const EdgeInsets.only(left: 1),
-                        decoration: BoxDecoration(
-                          gradient: LinearGradient(
-                            colors: [Colors.blue.shade800, Colors.blue.shade900],
-                          ),
-                          borderRadius: BorderRadius.circular(2),
-                          border: Border.all(color: Colors.white24, width: 0.5),
-                        ),
-                        child: const Center(
-                          child: Text('🂠', style: TextStyle(fontSize: 10)),
-                        ),
-                      ),
+                      '${computerIndex + 1}',
+                      style: const TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold),
                     ),
                   ],
-                )
-              : Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Text(
-                          'COM${i + 1}',
-                          style: TextStyle(
-                            color: currentTurn == i + 1 ? Colors.amber : Colors.white54,
-                            fontSize: 11,
-                          ),
-                        ),
-                        if (melds.isNotEmpty)
-                          Text(
-                            ' (${melds.length}멜드)',
-                            style: const TextStyle(color: Colors.green, fontSize: 10),
-                          ),
-                      ],
-                    ),
-                    const SizedBox(height: 4),
-                    Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: List.generate(
-                        min(hand.length, 7),
-                        (j) => Container(
-                          width: 22,
-                          height: 32,
-                          margin: const EdgeInsets.only(left: 2),
-                          decoration: BoxDecoration(
-                            gradient: LinearGradient(
-                              colors: [Colors.blue.shade800, Colors.blue.shade900],
-                            ),
-                            borderRadius: BorderRadius.circular(3),
-                            border: Border.all(color: Colors.white24),
-                          ),
-                          child: const Center(
-                            child: Text('🂠', style: TextStyle(fontSize: 14)),
-                          ),
-                        ),
-                      ),
-                    ),
-                  ],
-                );
-        }),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 4),
+          // 카드 수
+          Text(
+            '${hand.length}장',
+            style: const TextStyle(color: Colors.white, fontSize: 11),
+          ),
+          if (melds.isNotEmpty)
+            Text(
+              '${melds.length}멜드',
+              style: const TextStyle(color: Colors.green, fontSize: 9),
+            ),
+          const SizedBox(height: 8),
+          // 세로 카드 스택
+          Expanded(
+            child: _buildVerticalCardStack(hand.length, isLandscape),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // 세로 카드 스택
+  Widget _buildVerticalCardStack(int cardCount, bool isLandscape) {
+    const overlap = 10.0;
+    final cardHeight = isLandscape ? 28.0 : 32.0;
+    final cardWidth = isLandscape ? 22.0 : 26.0;
+    const maxVisible = 7;
+    final visibleCount = cardCount > maxVisible ? maxVisible : cardCount;
+    final totalHeight = cardHeight + (visibleCount - 1) * overlap;
+
+    return Center(
+      child: SizedBox(
+        width: cardWidth,
+        height: totalHeight,
+        child: Stack(
+          children: List.generate(visibleCount, (index) {
+            return Positioned(
+              top: index * overlap,
+              child: Container(
+                width: cardWidth,
+                height: cardHeight,
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [Colors.blue.shade800, Colors.blue.shade900],
+                  ),
+                  borderRadius: BorderRadius.circular(3),
+                  border: Border.all(color: Colors.white24, width: 0.5),
+                ),
+              ),
+            );
+          }),
+        ),
       ),
     );
   }
