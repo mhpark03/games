@@ -130,6 +130,9 @@ class _YutnoriScreenState extends State<YutnoriScreen>
   int? lastMovedPlayerIndex;
   int? lastMovedPieceIndex;
 
+  // 자동 액션 대기 중
+  bool isAutoActionPending = false;
+
   // 말 선택
   int? selectedPieceIndex;
 
@@ -295,7 +298,12 @@ class _YutnoriScreenState extends State<YutnoriScreen>
 
     setState(() {});
 
-    // 컴퓨터 턴이어도 자동 시작하지 않음 - 사용자가 "다음" 버튼을 눌러야 함
+    // 플레이어 턴이고 이동 대기 중이면 자동 액션 체크
+    if (currentPlayer == 0 && pendingMoves.isNotEmpty) {
+      Future.delayed(const Duration(milliseconds: 500), () {
+        if (mounted) _checkAutoAction();
+      });
+    }
   }
 
   // 윷 던지기
@@ -367,6 +375,9 @@ class _YutnoriScreenState extends State<YutnoriScreen>
         // 일반 결과면 바로 말 이동
         _computerTurn();
       }
+    } else if (currentPlayer == 0 && !canThrowYut && !gameOver) {
+      // 플레이어 턴이고 더 던질 수 없으면 자동 액션 체크
+      _checkAutoAction();
     }
   }
 
@@ -1521,8 +1532,8 @@ class _YutnoriScreenState extends State<YutnoriScreen>
             ),
           ),
           const SizedBox(height: 6),
-          // 새로 달기 버튼 (대기 말이 있고 이동 가능할 때)
-          if (isCurrentTurn && pendingMoves.isNotEmpty && waitingCount > 0 && canStartNewPiece)
+          // 새로 달기 버튼 (대기 말이 있고 이동 가능할 때, 자동 실행 대기 중 아닐 때)
+          if (isCurrentTurn && pendingMoves.isNotEmpty && waitingCount > 0 && canStartNewPiece && !isAutoActionPending)
             Padding(
               padding: const EdgeInsets.only(bottom: 4),
               child: GestureDetector(
@@ -1544,8 +1555,8 @@ class _YutnoriScreenState extends State<YutnoriScreen>
                 ),
               ),
             ),
-          // 건너뛰기 버튼 (이동 불가시)
-          if (isCurrentTurn && pendingMoves.isNotEmpty && !hasMovablePiece)
+          // 건너뛰기 버튼 (이동 불가시, 자동 실행 대기 중 아닐 때)
+          if (isCurrentTurn && pendingMoves.isNotEmpty && !hasMovablePiece && !isAutoActionPending)
             Padding(
               padding: const EdgeInsets.only(bottom: 4),
               child: GestureDetector(
@@ -1597,6 +1608,9 @@ class _YutnoriScreenState extends State<YutnoriScreen>
   // 새로 달기 (대기 중인 말 중 첫 번째 이동 가능한 말 선택)
   void _startNewPiece() {
     if (pendingMoves.isEmpty) return;
+    setState(() {
+      isAutoActionPending = false;
+    });
     for (int i = 0; i < 4; i++) {
       if (playerPieces[currentPlayer][i].isWaiting &&
           _canMovePiece(i, pendingMoves.first)) {
@@ -1611,14 +1625,77 @@ class _YutnoriScreenState extends State<YutnoriScreen>
     if (pendingMoves.isEmpty) return;
 
     setState(() {
+      isAutoActionPending = false;
       pendingMoves.removeAt(0);
       if (pendingMoves.isEmpty && !canThrowYut) {
         _nextTurn();
       } else if (pendingMoves.isNotEmpty) {
         gameMessage = '${pendingMoves.first.name}! 말을 선택하세요';
+        // 새로운 결과에 대해 자동 액션 체크
+        _checkAutoAction();
       }
     });
     _saveGame();
+  }
+
+  // 자동 액션 체크 및 실행 (말판에 말이 없을 때 새로 달기, 이동 불가시 건너뛰기)
+  void _checkAutoAction() {
+    if (currentPlayer != 0 || pendingMoves.isEmpty || isAutoActionPending) return;
+
+    // 말판 위에 있는 플레이어 말이 있는지 확인
+    bool hasPieceOnBoard = false;
+    for (int i = 0; i < 4; i++) {
+      if (!playerPieces[0][i].isWaiting && !playerPieces[0][i].isFinished) {
+        hasPieceOnBoard = true;
+        break;
+      }
+    }
+
+    // 이동 가능한 대기 말 확인
+    bool canStartNewPiece = false;
+    for (int i = 0; i < 4; i++) {
+      if (playerPieces[0][i].isWaiting && _canMovePiece(i, pendingMoves.first)) {
+        canStartNewPiece = true;
+        break;
+      }
+    }
+
+    // 이동 가능한 말 전체 확인
+    bool hasMovablePiece = false;
+    for (int i = 0; i < 4; i++) {
+      if (_canMovePiece(i, pendingMoves.first)) {
+        hasMovablePiece = true;
+        break;
+      }
+    }
+
+    // 말판에 말이 없고 새로 달기 가능한 경우 - 자동 새로 달기
+    if (!hasPieceOnBoard && canStartNewPiece) {
+      setState(() {
+        isAutoActionPending = true;
+        gameMessage = '새로 달기합니다...';
+      });
+      Future.delayed(const Duration(milliseconds: 1200), () {
+        if (mounted && isAutoActionPending && currentPlayer == 0) {
+          _startNewPiece();
+        }
+      });
+      return;
+    }
+
+    // 이동 가능한 말이 없는 경우 - 자동 건너뛰기
+    if (!hasMovablePiece) {
+      setState(() {
+        isAutoActionPending = true;
+        gameMessage = '이동할 수 없어 건너뜁니다...';
+      });
+      Future.delayed(const Duration(milliseconds: 1200), () {
+        if (mounted && isAutoActionPending && currentPlayer == 0) {
+          _skipMove();
+        }
+      });
+      return;
+    }
   }
 
   // 가로모드: 컴퓨터 위젯
@@ -2577,8 +2654,8 @@ class _YutnoriScreenState extends State<YutnoriScreen>
             ),
           ),
           const SizedBox(height: 8),
-          // 새로 달기 버튼 (대기 말이 있고 이동 가능할 때)
-          if (isCurrentTurn && pendingMoves.isNotEmpty && waitingCount > 0 && canStartNewPiece)
+          // 새로 달기 버튼 (대기 말이 있고 이동 가능할 때, 자동 실행 대기 중 아닐 때)
+          if (isCurrentTurn && pendingMoves.isNotEmpty && waitingCount > 0 && canStartNewPiece && !isAutoActionPending)
             GestureDetector(
               onTap: _startNewPiece,
               child: Container(
@@ -2597,8 +2674,8 @@ class _YutnoriScreenState extends State<YutnoriScreen>
                 ),
               ),
             ),
-          // 건너뛰기 버튼 (이동 불가시)
-          if (isCurrentTurn && pendingMoves.isNotEmpty && !hasMovablePiece)
+          // 건너뛰기 버튼 (이동 불가시, 자동 실행 대기 중 아닐 때)
+          if (isCurrentTurn && pendingMoves.isNotEmpty && !hasMovablePiece && !isAutoActionPending)
             Padding(
               padding: const EdgeInsets.only(top: 8),
               child: GestureDetector(
