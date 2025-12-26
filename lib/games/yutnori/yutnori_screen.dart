@@ -136,6 +136,9 @@ class _YutnoriScreenState extends State<YutnoriScreen>
   // 말 선택
   int? selectedPieceIndex;
 
+  // 사용할 결과 선택 (여러 결과가 있을 때)
+  int? selectedMoveIndex;
+
   // 애니메이션
   late AnimationController _yutAnimController;
   late Animation<double> _yutAnimation;
@@ -208,6 +211,7 @@ class _YutnoriScreenState extends State<YutnoriScreen>
     lastMovedPlayerIndex = null;
     lastMovedPieceIndex = null;
     selectedPieceIndex = null;
+    selectedMoveIndex = null;
     gameMessage = '윷을 던지세요!';
   }
 
@@ -286,7 +290,11 @@ class _YutnoriScreenState extends State<YutnoriScreen>
 
     if (currentPlayer == 0) {
       if (pendingMoves.isNotEmpty) {
-        gameMessage = '${pendingMoves.first.name}! 말을 선택하세요';
+        if (pendingMoves.length > 1) {
+          gameMessage = '사용할 결과를 선택하세요';
+        } else {
+          gameMessage = '${pendingMoves.first.name}! 말을 선택하세요';
+        }
       } else if (canThrowYut) {
         gameMessage = '윷을 던지세요!';
       } else {
@@ -353,7 +361,11 @@ class _YutnoriScreenState extends State<YutnoriScreen>
         canThrowYut = true;
       } else {
         if (isPlayerTurn) {
-          gameMessage = '${result.name}! 말을 선택하세요';
+          if (pendingMoves.length > 1) {
+            gameMessage = '${result.name}! 사용할 결과를 선택하세요';
+          } else {
+            gameMessage = '${result.name}! 말을 선택하세요';
+          }
         } else {
           gameMessage = '${_getPlayerName(currentPlayer)}: ${result.name}!';
         }
@@ -517,11 +529,38 @@ class _YutnoriScreenState extends State<YutnoriScreen>
     return newPos;
   }
 
+  // 선택된 이동 결과 가져오기
+  YutResult? get selectedMove {
+    if (pendingMoves.isEmpty) return null;
+    if (selectedMoveIndex != null && selectedMoveIndex! < pendingMoves.length) {
+      return pendingMoves[selectedMoveIndex!];
+    }
+    // 결과가 1개면 자동 선택
+    if (pendingMoves.length == 1) return pendingMoves.first;
+    return null;
+  }
+
+  // 결과 선택
+  void _selectMove(int index) {
+    setState(() {
+      selectedMoveIndex = index;
+      gameMessage = '${pendingMoves[index].name} 선택 - 이동할 말을 선택하세요';
+    });
+  }
+
   // 말 선택 및 이동
   void _selectPiece(int pieceIndex) {
     if (currentPlayer != 0 || pendingMoves.isEmpty || gameOver) return;
 
-    final move = pendingMoves.first;
+    // 결과가 여러 개인데 선택 안 했으면 먼저 선택하라고 안내
+    if (pendingMoves.length > 1 && selectedMoveIndex == null) {
+      setState(() {
+        gameMessage = '먼저 사용할 결과를 선택하세요';
+      });
+      return;
+    }
+
+    final move = selectedMove!;
     if (!_canMovePiece(pieceIndex, move)) {
       setState(() {
         gameMessage = '이 말은 이동할 수 없습니다';
@@ -541,6 +580,9 @@ class _YutnoriScreenState extends State<YutnoriScreen>
     final oldPos = piece.position;
     final newPos = _calculateNewPosition(oldPos, move.moveCount);
     bool captured = false;
+
+    // 사용할 이동의 인덱스 찾기
+    final moveIndex = selectedMoveIndex ?? 0;
 
     setState(() {
       // 최근 이동한 말 기록
@@ -575,7 +617,8 @@ class _YutnoriScreenState extends State<YutnoriScreen>
       }
 
       // 사용한 이동 제거
-      pendingMoves.removeAt(0);
+      pendingMoves.removeAt(moveIndex);
+      selectedMoveIndex = null; // 선택 초기화
 
       // 승리 확인
       if (_checkWin(currentPlayer)) {
@@ -587,7 +630,11 @@ class _YutnoriScreenState extends State<YutnoriScreen>
         _nextTurn();
       } else if (pendingMoves.isNotEmpty) {
         if (isPlayerTurn) {
-          gameMessage = '${pendingMoves.first.name} - 말을 선택하세요';
+          if (pendingMoves.length == 1) {
+            gameMessage = '${pendingMoves.first.name} - 말을 선택하세요';
+          } else {
+            gameMessage = '사용할 결과를 선택하세요';
+          }
         } else {
           gameMessage = '${_getPlayerName(currentPlayer)}: ${pendingMoves.first.name} 이동 중...';
         }
@@ -666,6 +713,7 @@ class _YutnoriScreenState extends State<YutnoriScreen>
       currentPlayer = (currentPlayer + 1) % playerCount;
       canThrowYut = true;
       pendingMoves.clear();
+      selectedMoveIndex = null;
       gameMessage = '${_getPlayerName(currentPlayer)} 차례';
 
       // 컴퓨터 턴이면 다음 순서 버튼 대기
@@ -1254,25 +1302,32 @@ class _YutnoriScreenState extends State<YutnoriScreen>
             ),
           ),
           const SizedBox(height: 10),
-          // 남은 이동 표시 (결과 포함)
+          // 남은 이동 표시 (결과 포함) - 클릭하여 선택
           if (pendingMoves.isNotEmpty)
             Wrap(
               spacing: 4,
               runSpacing: 4,
               alignment: WrapAlignment.center,
-              children: pendingMoves.map((move) {
-                return Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFF8B4513),
-                    borderRadius: BorderRadius.circular(6),
-                  ),
-                  child: Text(
-                    move.name,
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 12,
-                      fontWeight: FontWeight.bold,
+              children: pendingMoves.asMap().entries.map((entry) {
+                final index = entry.key;
+                final move = entry.value;
+                final isSelected = selectedMoveIndex == index;
+                return GestureDetector(
+                  onTap: currentPlayer == 0 ? () => _selectMove(index) : null,
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: isSelected ? const Color(0xFFFF8C00) : const Color(0xFF8B4513),
+                      borderRadius: BorderRadius.circular(6),
+                      border: isSelected ? Border.all(color: Colors.white, width: 2) : null,
+                    ),
+                    child: Text(
+                      move.name,
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: isSelected ? 14 : 12,
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
                   ),
                 );
@@ -1534,11 +1589,12 @@ class _YutnoriScreenState extends State<YutnoriScreen>
     final finishedCount = playerPieces[0].where((p) => p.isFinished).length;
     final waitingCount = playerPieces[0].where((p) => p.isWaiting).length;
 
-    // 이동 가능한 대기 말이 있는지 확인
+    // 이동 가능한 대기 말이 있는지 확인 (선택된 결과 또는 아무 결과로)
     bool canStartNewPiece = false;
-    if (pendingMoves.isNotEmpty) {
+    final moveToCheck = selectedMove ?? (pendingMoves.isNotEmpty ? pendingMoves.first : null);
+    if (moveToCheck != null) {
       for (int i = 0; i < 4; i++) {
-        if (playerPieces[0][i].isWaiting && _canMovePiece(i, pendingMoves.first)) {
+        if (playerPieces[0][i].isWaiting && _canMovePiece(i, moveToCheck)) {
           canStartNewPiece = true;
           break;
         }
@@ -1547,9 +1603,9 @@ class _YutnoriScreenState extends State<YutnoriScreen>
 
     // 이동 가능한 말이 있는지 확인 (전체)
     bool hasMovablePiece = false;
-    if (pendingMoves.isNotEmpty) {
+    if (moveToCheck != null) {
       for (int i = 0; i < 4; i++) {
-        if (_canMovePiece(i, pendingMoves.first)) {
+        if (_canMovePiece(i, moveToCheck)) {
           hasMovablePiece = true;
           break;
         }
@@ -1669,12 +1725,17 @@ class _YutnoriScreenState extends State<YutnoriScreen>
   // 새로 달기 (대기 중인 말 중 첫 번째 이동 가능한 말 선택)
   void _startNewPiece() {
     if (pendingMoves.isEmpty) return;
+    final move = selectedMove ?? pendingMoves.first;
     setState(() {
       isAutoActionPending = false;
+      // 결과가 여러 개인데 선택 안 했으면 첫 번째를 자동 선택
+      if (pendingMoves.length > 1 && selectedMoveIndex == null) {
+        selectedMoveIndex = 0;
+      }
     });
     for (int i = 0; i < 4; i++) {
       if (playerPieces[currentPlayer][i].isWaiting &&
-          _canMovePiece(i, pendingMoves.first)) {
+          _canMovePiece(i, move)) {
         _selectPiece(i);
         return;
       }
@@ -1685,13 +1746,20 @@ class _YutnoriScreenState extends State<YutnoriScreen>
   void _skipMove() {
     if (pendingMoves.isEmpty) return;
 
+    final moveIndex = selectedMoveIndex ?? 0;
+
     setState(() {
       isAutoActionPending = false;
-      pendingMoves.removeAt(0);
+      pendingMoves.removeAt(moveIndex);
+      selectedMoveIndex = null;
       if (pendingMoves.isEmpty && !canThrowYut) {
         _nextTurn();
       } else if (pendingMoves.isNotEmpty) {
-        gameMessage = '${pendingMoves.first.name}! 말을 선택하세요';
+        if (pendingMoves.length == 1) {
+          gameMessage = '${pendingMoves.first.name}! 말을 선택하세요';
+        } else {
+          gameMessage = '사용할 결과를 선택하세요';
+        }
         // 새로운 결과에 대해 자동 액션 체크
         _checkAutoAction();
       }
@@ -1702,6 +1770,11 @@ class _YutnoriScreenState extends State<YutnoriScreen>
   // 자동 액션 체크 및 실행 (말판에 말이 없을 때 새로 달기, 이동 불가시 건너뛰기)
   void _checkAutoAction() {
     if (currentPlayer != 0 || pendingMoves.isEmpty || isAutoActionPending) return;
+
+    // 결과가 1개일 때만 자동 액션 실행 (여러 개면 선택이 필요)
+    if (pendingMoves.length > 1) return;
+
+    final move = pendingMoves.first;
 
     // 말판 위에 있는 플레이어 말이 있는지 확인
     bool hasPieceOnBoard = false;
@@ -1715,7 +1788,7 @@ class _YutnoriScreenState extends State<YutnoriScreen>
     // 이동 가능한 대기 말 확인
     bool canStartNewPiece = false;
     for (int i = 0; i < 4; i++) {
-      if (playerPieces[0][i].isWaiting && _canMovePiece(i, pendingMoves.first)) {
+      if (playerPieces[0][i].isWaiting && _canMovePiece(i, move)) {
         canStartNewPiece = true;
         break;
       }
@@ -1724,7 +1797,7 @@ class _YutnoriScreenState extends State<YutnoriScreen>
     // 이동 가능한 말 전체 확인
     bool hasMovablePiece = false;
     for (int i = 0; i < 4; i++) {
-      if (_canMovePiece(i, pendingMoves.first)) {
+      if (_canMovePiece(i, move)) {
         hasMovablePiece = true;
         break;
       }
@@ -1899,14 +1972,15 @@ class _YutnoriScreenState extends State<YutnoriScreen>
               ),
             ],
           ),
-          // 대기 중인 말 (선택 가능)
+          // 대기 중인 말 (선택 가능 - 결과 선택 후에만 하이라이트)
           if (waitingPieces.isNotEmpty && isCurrentTurn && pendingMoves.isNotEmpty)
             Padding(
               padding: const EdgeInsets.only(top: 4),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: waitingPieces.map((pieceIndex) {
-                  final canMove = _canMovePiece(pieceIndex, pendingMoves.first);
+                  final moveForCheck = selectedMove;
+                  final canMove = moveForCheck != null && _canMovePiece(pieceIndex, moveForCheck);
                   return GestureDetector(
                     onTap: canMove ? () => _selectPiece(pieceIndex) : null,
                     child: Container(
@@ -2269,6 +2343,7 @@ class _YutnoriScreenState extends State<YutnoriScreen>
         final pieceSize = 28.0 + piece.stackedPieces.length * 4;
         final halfSize = pieceSize / 2;
 
+        final moveForHighlight = selectedMove;
         pieces.add(
           Positioned(
             left: pos.dx + offset.dx - halfSize,
@@ -2276,7 +2351,8 @@ class _YutnoriScreenState extends State<YutnoriScreen>
             child: GestureDetector(
               onTap: currentPlayer == 0 &&
                       playerIndex == 0 &&
-                      pendingMoves.isNotEmpty
+                      pendingMoves.isNotEmpty &&
+                      moveForHighlight != null
                   ? () => _selectPiece(pieceIndex)
                   : null,
               child: _buildPieceWidget(
@@ -2285,8 +2361,8 @@ class _YutnoriScreenState extends State<YutnoriScreen>
                 piece.stackedPieces.length,
                 isSelectable: currentPlayer == 0 &&
                     playerIndex == 0 &&
-                    pendingMoves.isNotEmpty &&
-                    _canMovePiece(pieceIndex, pendingMoves.first),
+                    moveForHighlight != null &&
+                    _canMovePiece(pieceIndex, moveForHighlight),
                 isLastMoved: isLastMoved,
               ),
             ),
@@ -2514,136 +2590,155 @@ class _YutnoriScreenState extends State<YutnoriScreen>
             }),
           ),
           const SizedBox(height: 12),
-          // 버튼 영역 (윷 던지기 / 결과 표시 / 던지는 중)
-          if (canThrowYut && currentPlayer == 0 && !isThrowingYut)
-            GestureDetector(
-              onTap: _throwYut,
-              child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-                decoration: BoxDecoration(
-                  gradient: const LinearGradient(
-                    begin: Alignment.topCenter,
-                    end: Alignment.bottomCenter,
-                    colors: [Color(0xFF4CAF50), Color(0xFF388E3C)],
-                  ),
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: const Color(0xFF2E7D32), width: 2),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.3),
-                      offset: const Offset(0, 3),
-                      blurRadius: 4,
-                    ),
-                  ],
-                ),
-                child: const Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(Icons.casino, color: Colors.white, size: 20),
-                    SizedBox(width: 8),
-                    Text(
-                      '던지기',
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            )
-          else if (isThrowingYut)
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-              decoration: BoxDecoration(
-                color: Colors.grey,
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: Colors.grey.shade600, width: 2),
-              ),
-              child: const Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  SizedBox(
-                    width: 18,
-                    height: 18,
-                    child: CircularProgressIndicator(
-                      strokeWidth: 2,
-                      color: Colors.white,
-                    ),
-                  ),
-                  SizedBox(width: 8),
-                  Text(
-                    '던지는 중',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ],
-              ),
-            )
-          else if (currentYutResult != null)
-            // 던지기 결과 표시
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-              decoration: BoxDecoration(
-                gradient: const LinearGradient(
-                  begin: Alignment.topCenter,
-                  end: Alignment.bottomCenter,
-                  colors: [Color(0xFFFFD700), Color(0xFFFF8C00)],
-                ),
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: const Color(0xFFB8860B), width: 2),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.orange.withValues(alpha: 0.5),
-                    offset: const Offset(0, 2),
-                    blurRadius: 6,
-                  ),
-                ],
-              ),
-              child: Text(
-                currentYutResult!.name,
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontSize: 22,
-                  fontWeight: FontWeight.bold,
-                  shadows: [
-                    Shadow(
-                      color: Colors.black54,
-                      offset: Offset(1, 1),
-                      blurRadius: 2,
-                    ),
-                  ],
-                ),
-              ),
-            )
-          else if (pendingMoves.isNotEmpty)
-            Wrap(
-              spacing: 8,
-              children: pendingMoves.map((move) {
-                return Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFF8B4513),
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: Text(
-                    move.name,
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                );
-              }).toList(),
+          // 버튼 영역 (고정 높이로 말판 위치 고정)
+          SizedBox(
+            height: 48,
+            child: Center(
+              child: _buildThrowButtonContent(),
             ),
+          ),
         ],
       ),
     );
+  }
+
+  // 던지기 버튼/결과 내용 위젯
+  Widget _buildThrowButtonContent() {
+    if (canThrowYut && currentPlayer == 0 && !isThrowingYut) {
+      return GestureDetector(
+        onTap: _throwYut,
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+          decoration: BoxDecoration(
+            gradient: const LinearGradient(
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+              colors: [Color(0xFF4CAF50), Color(0xFF388E3C)],
+            ),
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: const Color(0xFF2E7D32), width: 2),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.3),
+                offset: const Offset(0, 3),
+                blurRadius: 4,
+              ),
+            ],
+          ),
+          child: const Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(Icons.casino, color: Colors.white, size: 20),
+              SizedBox(width: 8),
+              Text(
+                '던지기',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
+    } else if (isThrowingYut) {
+      return Container(
+        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+        decoration: BoxDecoration(
+          color: Colors.grey,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: Colors.grey.shade600, width: 2),
+        ),
+        child: const Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            SizedBox(
+              width: 18,
+              height: 18,
+              child: CircularProgressIndicator(
+                strokeWidth: 2,
+                color: Colors.white,
+              ),
+            ),
+            SizedBox(width: 8),
+            Text(
+              '던지는 중',
+              style: TextStyle(
+                color: Colors.white,
+                fontSize: 16,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ],
+        ),
+      );
+    } else if (currentYutResult != null) {
+      return Container(
+        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
+        decoration: BoxDecoration(
+          gradient: const LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [Color(0xFFFFD700), Color(0xFFFF8C00)],
+          ),
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: const Color(0xFFB8860B), width: 2),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.orange.withValues(alpha: 0.5),
+              offset: const Offset(0, 2),
+              blurRadius: 6,
+            ),
+          ],
+        ),
+        child: Text(
+          currentYutResult!.name,
+          style: const TextStyle(
+            color: Colors.white,
+            fontSize: 20,
+            fontWeight: FontWeight.bold,
+            shadows: [
+              Shadow(
+                color: Colors.black54,
+                offset: Offset(1, 1),
+                blurRadius: 2,
+              ),
+            ],
+          ),
+        ),
+      );
+    } else if (pendingMoves.isNotEmpty) {
+      return Wrap(
+        spacing: 8,
+        alignment: WrapAlignment.center,
+        children: pendingMoves.asMap().entries.map((entry) {
+          final index = entry.key;
+          final move = entry.value;
+          final isSelected = selectedMoveIndex == index;
+          return GestureDetector(
+            onTap: currentPlayer == 0 ? () => _selectMove(index) : null,
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+              decoration: BoxDecoration(
+                color: isSelected ? const Color(0xFFFF8C00) : const Color(0xFF8B4513),
+                borderRadius: BorderRadius.circular(8),
+                border: isSelected ? Border.all(color: Colors.white, width: 2) : null,
+              ),
+              child: Text(
+                move.name,
+                style: TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                  fontSize: isSelected ? 16 : 14,
+                ),
+              ),
+            ),
+          );
+        }).toList(),
+      );
+    }
+    return const SizedBox();
   }
 
   Widget _buildYutThrowAreaCompact() {
@@ -2694,21 +2789,28 @@ class _YutnoriScreenState extends State<YutnoriScreen>
             )
           else if (pendingMoves.isNotEmpty)
             Column(
-              children: pendingMoves.map((move) {
-                return Container(
-                  margin: const EdgeInsets.only(top: 4),
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFF8B4513),
-                    borderRadius: BorderRadius.circular(6),
-                  ),
-                  child: Text(
-                    move.name,
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 11,
-                      fontWeight: FontWeight.bold,
+              children: pendingMoves.asMap().entries.map((entry) {
+                final index = entry.key;
+                final move = entry.value;
+                final isSelected = selectedMoveIndex == index;
+                return GestureDetector(
+                  onTap: currentPlayer == 0 ? () => _selectMove(index) : null,
+                  child: Container(
+                    margin: const EdgeInsets.only(top: 4),
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: isSelected ? const Color(0xFFFF8C00) : const Color(0xFF8B4513),
+                      borderRadius: BorderRadius.circular(6),
+                      border: isSelected ? Border.all(color: Colors.white, width: 2) : null,
+                    ),
+                    child: Text(
+                      move.name,
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: isSelected ? 12 : 11,
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
                   ),
                 );
@@ -2726,11 +2828,12 @@ class _YutnoriScreenState extends State<YutnoriScreen>
     final waitingCount =
         playerPieces[0].where((p) => p.isWaiting).length;
 
-    // 이동 가능한 대기 말이 있는지 확인
+    // 이동 가능한 대기 말이 있는지 확인 (선택된 결과 또는 아무 결과로)
     bool canStartNewPiece = false;
-    if (pendingMoves.isNotEmpty) {
+    final moveToCheck = selectedMove ?? (pendingMoves.isNotEmpty ? pendingMoves.first : null);
+    if (moveToCheck != null) {
       for (int i = 0; i < 4; i++) {
-        if (playerPieces[0][i].isWaiting && _canMovePiece(i, pendingMoves.first)) {
+        if (playerPieces[0][i].isWaiting && _canMovePiece(i, moveToCheck)) {
           canStartNewPiece = true;
           break;
         }
@@ -2739,9 +2842,9 @@ class _YutnoriScreenState extends State<YutnoriScreen>
 
     // 이동 가능한 말이 있는지 확인 (전체)
     bool hasMovablePiece = false;
-    if (pendingMoves.isNotEmpty) {
+    if (moveToCheck != null) {
       for (int i = 0; i < 4; i++) {
-        if (_canMovePiece(i, pendingMoves.first)) {
+        if (_canMovePiece(i, moveToCheck)) {
           hasMovablePiece = true;
           break;
         }
@@ -2927,9 +3030,10 @@ class _YutnoriScreenState extends State<YutnoriScreen>
                   spacing: 4,
                   runSpacing: 4,
                   children: waitingPieces.map((entry) {
-                    final canMove = pendingMoves.isNotEmpty &&
+                    final moveForCheck = selectedMove;
+                    final canMove = moveForCheck != null &&
                         currentPlayer == 0 &&
-                        _canMovePiece(entry.key, pendingMoves.first);
+                        _canMovePiece(entry.key, moveForCheck);
                     return GestureDetector(
                       onTap: canMove ? () => _selectPiece(entry.key) : null,
                       child: Container(
