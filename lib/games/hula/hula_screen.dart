@@ -501,6 +501,21 @@ class _HulaScreenState extends State<HulaScreen> with TickerProviderStateMixin {
   int _canAttachToMeld(PlayingCard card) {
     for (int i = 0; i < playerMelds.length; i++) {
       final meld = playerMelds[i];
+
+      // 단독 7 카드 특별 처리: Run 또는 Group으로 확장 가능
+      if (meld.cards.length == 1 && meld.cards.first.rank == 7) {
+        final seven = meld.cards.first;
+        // 같은 무늬의 6 또는 8이면 Run으로 확장
+        if (card.suit == seven.suit && (card.rank == 6 || card.rank == 8)) {
+          return i;
+        }
+        // 다른 무늬의 7이면 Group으로 확장
+        if (card.rank == 7 && card.suit != seven.suit) {
+          return i;
+        }
+        continue;
+      }
+
       if (meld.isRun) {
         // Run: 같은 무늬이고 앞이나 뒤에 연속되는 카드
         if (card.suit == meld.cards.first.suit) {
@@ -533,13 +548,26 @@ class _HulaScreenState extends State<HulaScreen> with TickerProviderStateMixin {
   void _attachToMeld(int meldIndex, PlayingCard card) {
     final meld = playerMelds[meldIndex];
     final newCards = [...meld.cards, card];
+    bool newIsRun = meld.isRun;
 
-    if (meld.isRun) {
+    // 단독 7 카드에 붙이는 경우: Run 또는 Group 결정
+    if (meld.cards.length == 1 && meld.cards.first.rank == 7) {
+      final seven = meld.cards.first;
+      if (card.suit == seven.suit && (card.rank == 6 || card.rank == 8)) {
+        // 같은 무늬의 6 또는 8 → Run으로 변환
+        newIsRun = true;
+      } else {
+        // 다른 7 → Group 유지
+        newIsRun = false;
+      }
+    }
+
+    if (newIsRun) {
       // Run은 정렬
       newCards.sort((a, b) => a.rank.compareTo(b.rank));
     }
 
-    playerMelds[meldIndex] = Meld(cards: newCards, isRun: meld.isRun);
+    playerMelds[meldIndex] = Meld(cards: newCards, isRun: newIsRun);
   }
 
   // 7 카드인지 확인
