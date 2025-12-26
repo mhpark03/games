@@ -2475,8 +2475,12 @@ class _HulaScreenState extends State<HulaScreen> with TickerProviderStateMixin {
                 final meldIndex = meldInfo['meldIndex'] as int;
 
                 // 선택된 카드가 이 멜드에 붙일 수 있는지 확인
+                // 조건: 자신의 멜드가 1개 이상 있어야 붙여놓기 가능
                 bool canAttach = false;
-                if (selectedCards.length == 1 && currentTurn == 0 && hasDrawn) {
+                if (selectedCards.length == 1 &&
+                    currentTurn == 0 &&
+                    hasDrawn &&
+                    playerMelds.isNotEmpty) {
                   final card = selectedCards.first;
                   canAttach = _canAttachToMeldList(card, melds) == meldIndex;
                 }
