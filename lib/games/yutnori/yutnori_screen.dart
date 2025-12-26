@@ -74,7 +74,7 @@ class Piece {
         'stackedPieces': stackedPieces,
       };
 
-  bool get isOnBoard => position >= 0 && (position <= 29 || position == 31);
+  bool get isOnBoard => position >= 0 && position <= 34;
   bool get isWaiting => position == -1;
 }
 
@@ -159,7 +159,7 @@ class _YutnoriScreenState extends State<YutnoriScreen>
   // 25-28: 좌상단 대각선 (10→중앙)
   // 22, 27: 중앙
   static const int boardSize = 29;
-  static const int lastBoardPosition = 29; // 마지막 보드 위치
+  static const int lastBoardPosition = 33; // 마지막 보드 위치
   static const int finishPosition = 100; // 골인 표시 (보드 위치가 아님)
 
   // 특수 위치
@@ -469,83 +469,83 @@ class _YutnoriScreenState extends State<YutnoriScreen>
   }
 
   // 이동 후 위치 계산
+  // 위치 정규화 (같은 위치를 특정 번호로 통일)
+  int _normalizePosition(int pos) {
+    switch (pos) {
+      case 5:
+        return 21; // 우상단 코너 → 대각선 진입
+      case 10:
+        return 28; // 좌상단 코너 → 대각선 진입
+      case 0:
+        return 34; // 시작점
+      case 20:
+        return 34; // 한 바퀴 완료 → 시작점
+      case 27:
+        return 15; // 좌하단 코너 (대각선에서 합류)
+      case 24:
+        return 31; // 중앙 통일
+      default:
+        return pos;
+    }
+  }
+
   int _calculateNewPosition(int currentPos, int moveCount) {
     if (currentPos == -1) {
-      // 대기 중인 말: 출발점(0)에서 이동칸수만큼 진행
-      return moveCount > 0 ? moveCount : -1;
+      // 대기 중인 말: 출발점에서 이동칸수만큼 진행
+      if (moveCount <= 0) return -1;
+      return _normalizePosition(moveCount);
     }
 
     int newPos = currentPos;
 
     // 지름길 처리
-    if (currentPos == cornerTopRight) {
-      // 우상단 코너에서 대각선으로 (5 → 20, 21, 22 중앙 → 23, 24 좌하단 → 15로 합류)
-      newPos = 19 + moveCount; // 도(1)면 20, 개(2)면 21...
-      if (newPos > 22) {
-        // 중앙 지나면 23번(좌하단 대각선)으로 연결
-        newPos = 23 + (newPos - 23);
-        if (newPos > 24) {
-          // 좌하단 코너(15) 방향으로 외곽 합류
-          newPos = 15 + (newPos - 25);
-          if (newPos > 19) {
-            // 외곽 합류 후 시작점 지나면 골인
-            return finishPosition;
-          }
-        }
-      }
-    } else if (currentPos == cornerTopLeft) {
-      // 좌상단 코너에서 대각선으로 (10 → 25, 26, 27 중앙 → 28, 29 → 골인)
-      newPos = 24 + moveCount; // 도(1)면 25, 개(2)면 26...
-      if (newPos > 27) {
-        // 중앙 지나면 28번으로 연결
-        newPos = 28 + (newPos - 28);
+    if (currentPos == 21) {
+      // 우상단 코너(21)에서 대각선으로
+      // 21 → 22 → 23 → 31(중앙) → 32 → 33 → 골인
+      newPos = 21 + moveCount; // 도(1)면 22, 개(2)면 23...
+      if (newPos > 23) {
+        // 중앙(31) 지나면 32번으로 연결
+        newPos = 31 + (newPos - 24); // 24→31, 25→32, 26→33...
       }
       if (newPos > lastBoardPosition) {
         return finishPosition;
       }
-    } else if (currentPos >= 20 && currentPos <= 22) {
-      // 우상단 대각선에서 (20, 21 → 22 중앙 → 23, 24 좌하단 → 15로 합류)
-      newPos = currentPos + moveCount;
-      if (newPos > 22) {
-        // 중앙 지나면 23번(좌하단 대각선)으로 연결 (newPos는 그대로 사용)
-        // 예: 22+1=23, 22+2=24, 22+3=25→15, ...
-        if (newPos > 24) {
-          // 좌하단 코너(15) 방향으로 외곽 합류
-          newPos = 15 + (newPos - 25);
-          if (newPos > 19) {
-            // 외곽 합류 후 시작점 지나면 골인
-            return finishPosition;
-          }
-        }
+    } else if (currentPos == 28) {
+      // 좌상단 코너(28)에서 대각선으로
+      // 28 → 29 → 30 → 31(중앙) → 32 → 33 → 골인
+      newPos = 28 + moveCount; // 도(1)면 29, 개(2)면 30...
+      if (newPos > lastBoardPosition) {
+        return finishPosition;
       }
-    } else if (currentPos == 23 || currentPos == 24) {
-      // 중앙 → 좌하단 대각선에서 (23, 24 → 15로 합류)
+    } else if (currentPos >= 22 && currentPos <= 23) {
+      // 우상단 대각선에서 (22, 23 → 31 중앙 → 32, 33 → 골인)
       newPos = currentPos + moveCount;
-      if (newPos > 24) {
-        // 좌하단 코너(15) 방향으로 외곽 합류
-        newPos = 15 + (newPos - 25);
-        if (newPos > 19) {
-          // 외곽 합류 후 시작점 지나면 골인
-          return finishPosition;
-        }
-      }
-    } else if (currentPos >= 25 && currentPos <= 27) {
-      // 좌상단 대각선에서 (25, 26 → 27 중앙 → 28, 29 → 골인)
-      newPos = currentPos + moveCount;
-      if (newPos > 27) {
-        // 중앙 지나면 28번으로 연결
-        newPos = 28 + (newPos - 28);
+      if (newPos > 23) {
+        // 중앙(31) 지나면 32번으로 연결
+        newPos = 31 + (newPos - 24);
       }
       if (newPos > lastBoardPosition) {
         return finishPosition;
       }
-    } else if (currentPos >= 28 && currentPos <= lastBoardPosition) {
-      // 중앙 → 우하단(골인 방향) 대각선에서
+    } else if (currentPos >= 29 && currentPos <= 30) {
+      // 좌상단 대각선에서 (29, 30 → 31 중앙 → 32, 33 → 골인)
       newPos = currentPos + moveCount;
       if (newPos > lastBoardPosition) {
         return finishPosition;
       }
     } else if (currentPos == 31) {
+      // 중앙에서 (31 → 32 → 33 → 골인)
+      newPos = currentPos + moveCount;
+      if (newPos > lastBoardPosition) {
+        return finishPosition;
+      }
+    } else if (currentPos >= 32 && currentPos <= lastBoardPosition) {
+      // 중앙 → 우하단(골인 방향) 대각선에서
+      newPos = currentPos + moveCount;
+      if (newPos > lastBoardPosition) {
+        return finishPosition;
+      }
+    } else if (currentPos == 34) {
       // 한 바퀴 완료 후 시작점에서 이동 → 골인
       if (moveCount > 0) {
         return finishPosition;
@@ -553,26 +553,21 @@ class _YutnoriScreenState extends State<YutnoriScreen>
       // 빽도면 19로
       return 19;
     } else {
-      // 일반 외곽 경로
+      // 일반 외곽 경로 (1-19)
       newPos = currentPos + moveCount;
 
       // 빽도 처리
       if (newPos < 0) {
-        return -1; // 대기로 돌아감 (또는 0으로 유지)
+        return -1; // 대기로 돌아감
       }
 
-      // 정확히 20이면 한 바퀴 완료 (시작점 도착)
-      if (newPos == 20) {
-        return 31; // 한 바퀴 완료 위치
-      }
-
-      // 20을 초과하면 골인
-      if (newPos > 20) {
+      // 20 이상이면 골인 처리
+      if (newPos >= 20) {
         return finishPosition;
       }
     }
 
-    return newPos;
+    return _normalizePosition(newPos);
   }
 
   // 선택된 이동 결과 가져오기
@@ -2580,62 +2575,53 @@ class _YutnoriScreenState extends State<YutnoriScreen>
         center - radius * 0.85 + radius * 1.7 * t,
         center + radius * 0.85,
       );
-    } else if (position == 20) {
+    } else if (position == 21) {
+      // 우상단 코너 (position 5와 동일)
+      return Offset(center + radius * 0.85, center - radius * 0.85);
+    } else if (position == 22) {
       // 우상단 대각선 첫 번째 점 (코너 → 중앙, 1/3 지점)
       return Offset(
         center + radius * 0.85 - radius * 0.85 * (1 / 3),
         center - radius * 0.85 + radius * 0.85 * (1 / 3),
       );
-    } else if (position == 21) {
+    } else if (position == 23) {
       // 우상단 대각선 두 번째 점 (코너 → 중앙, 2/3 지점)
       return Offset(
         center + radius * 0.85 - radius * 0.85 * (2 / 3),
         center - radius * 0.85 + radius * 0.85 * (2 / 3),
       );
-    } else if (position == 22) {
-      // 중앙 (정확한 중앙점)
-      return Offset(center, center);
-    } else if (position == 23) {
-      // 중앙 → 좌하단 첫 번째 점 (1/3 지점)
-      return Offset(
-        center - radius * 0.85 * (1 / 3),
-        center + radius * 0.85 * (1 / 3),
-      );
-    } else if (position == 24) {
-      // 중앙 → 좌하단 두 번째 점 (2/3 지점)
-      return Offset(
-        center - radius * 0.85 * (2 / 3),
-        center + radius * 0.85 * (2 / 3),
-      );
-    } else if (position == 25) {
+    } else if (position == 28) {
+      // 좌상단 코너 (position 10과 동일)
+      return Offset(center - radius * 0.85, center - radius * 0.85);
+    } else if (position == 29) {
       // 좌상단 대각선 첫 번째 점 (코너 → 중앙, 1/3 지점)
       return Offset(
         center - radius * 0.85 + radius * 0.85 * (1 / 3),
         center - radius * 0.85 + radius * 0.85 * (1 / 3),
       );
-    } else if (position == 26) {
+    } else if (position == 30) {
       // 좌상단 대각선 두 번째 점 (코너 → 중앙, 2/3 지점)
       return Offset(
         center - radius * 0.85 + radius * 0.85 * (2 / 3),
         center - radius * 0.85 + radius * 0.85 * (2 / 3),
       );
-    } else if (position == 27) {
-      // 중앙 (정확한 중앙점, position 22와 동일)
+    } else if (position == 31) {
+      // 중앙 (정확한 중앙점)
       return Offset(center, center);
-    } else if (position == 28) {
+    } else if (position == 32) {
       // 중앙 → 우하단 첫 번째 점 (1/3 지점)
       return Offset(
         center + radius * 0.85 * (1 / 3),
         center + radius * 0.85 * (1 / 3),
       );
-    } else if (position == 29) {
+    } else if (position == 33) {
       // 중앙 → 우하단 두 번째 점 (2/3 지점)
       return Offset(
         center + radius * 0.85 * (2 / 3),
         center + radius * 0.85 * (2 / 3),
       );
-    } else if (position == 31) {
-      // 한 바퀴 완료 후 시작점 (position 0과 동일)
+    } else if (position == 34) {
+      // 시작점 (position 0과 동일)
       return Offset(center + radius * 0.85, center + radius * 0.85);
     }
 
