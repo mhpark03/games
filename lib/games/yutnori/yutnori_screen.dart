@@ -914,9 +914,23 @@ class _YutnoriScreenState extends State<YutnoriScreen>
       // 잡을 수 있으면 높은 점수
       for (int p = 0; p < playerCount; p++) {
         if (p == currentPlayer) continue;
+
+        // 상대방의 말판 위 말 개수 확인
+        int enemyPiecesOnBoard = 0;
+        for (var ep in playerPieces[p]) {
+          if (!ep.isWaiting && !ep.isFinished) {
+            enemyPiecesOnBoard++;
+          }
+        }
+
         for (var enemyPiece in playerPieces[p]) {
           if (enemyPiece.position == newPos && !enemyPiece.isFinished) {
             score += 30 + enemyPiece.stackedPieces.length * 15;
+
+            // 상대방의 마지막 말이면 추가 점수 (잡으면 상대 진행 크게 지연)
+            if (enemyPiecesOnBoard == 1) {
+              score += 60;
+            }
           }
         }
       }
