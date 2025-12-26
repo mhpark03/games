@@ -1472,22 +1472,53 @@ class _HulaScreenState extends State<HulaScreen> with TickerProviderStateMixin {
         }
       }
 
-      // 2-3. 기존 멜드에 붙여놓기
+      // 2-3. 기존 멜드에 붙여놓기 (자신 + 다른 플레이어 멜드)
       if (melds.isNotEmpty) {
         bool attached = true;
         while (attached) {
           attached = false;
           for (int i = hand.length - 1; i >= 0; i--) {
             final card = hand[i];
-            final meldIndex = _canAttachToMeldList(card, melds);
-            if (meldIndex >= 0) {
-              _attachToMeldList(meldIndex, card, melds);
+
+            // 자신의 멜드에 붙이기
+            final ownMeldIndex = _canAttachToMeldList(card, melds);
+            if (ownMeldIndex >= 0) {
+              _attachToMeldList(ownMeldIndex, card, melds);
               hand.removeAt(i);
               attached = true;
-
               if (hand.isEmpty) {
                 _endGame(currentTurn);
                 return;
+              }
+              continue;
+            }
+
+            // 플레이어 멜드에 붙이기
+            final playerMeldIndex = _canAttachToMeldList(card, playerMelds);
+            if (playerMeldIndex >= 0) {
+              _attachToMeldList(playerMeldIndex, card, playerMelds);
+              hand.removeAt(i);
+              attached = true;
+              if (hand.isEmpty) {
+                _endGame(currentTurn);
+                return;
+              }
+              continue;
+            }
+
+            // 다른 컴퓨터 멜드에 붙이기
+            for (int c = 0; c < computerMelds.length; c++) {
+              if (c == computerIndex) continue; // 자신 제외
+              final otherMeldIndex = _canAttachToMeldList(card, computerMelds[c]);
+              if (otherMeldIndex >= 0) {
+                _attachToMeldList(otherMeldIndex, card, computerMelds[c]);
+                hand.removeAt(i);
+                attached = true;
+                if (hand.isEmpty) {
+                  _endGame(currentTurn);
+                  return;
+                }
+                break;
               }
             }
           }
@@ -1655,22 +1686,53 @@ class _HulaScreenState extends State<HulaScreen> with TickerProviderStateMixin {
         }
       }
 
-      // 기존 멜드에 붙여놓기
+      // 기존 멜드에 붙여놓기 (자신 + 다른 플레이어 멜드)
       if (melds.isNotEmpty) {
         bool attached = true;
         while (attached) {
           attached = false;
           for (int i = hand.length - 1; i >= 0; i--) {
-            final c = hand[i];
-            final meldIndex = _canAttachToMeldList(c, melds);
-            if (meldIndex >= 0) {
-              _attachToMeldList(meldIndex, c, melds);
+            final card = hand[i];
+
+            // 자신의 멜드에 붙이기
+            final ownMeldIndex = _canAttachToMeldList(card, melds);
+            if (ownMeldIndex >= 0) {
+              _attachToMeldList(ownMeldIndex, card, melds);
               hand.removeAt(i);
               attached = true;
-
               if (hand.isEmpty) {
                 _endGame(computerIndex + 1);
                 return;
+              }
+              continue;
+            }
+
+            // 플레이어 멜드에 붙이기
+            final playerMeldIndex = _canAttachToMeldList(card, playerMelds);
+            if (playerMeldIndex >= 0) {
+              _attachToMeldList(playerMeldIndex, card, playerMelds);
+              hand.removeAt(i);
+              attached = true;
+              if (hand.isEmpty) {
+                _endGame(computerIndex + 1);
+                return;
+              }
+              continue;
+            }
+
+            // 다른 컴퓨터 멜드에 붙이기
+            for (int c = 0; c < computerMelds.length; c++) {
+              if (c == computerIndex) continue;
+              final otherMeldIndex = _canAttachToMeldList(card, computerMelds[c]);
+              if (otherMeldIndex >= 0) {
+                _attachToMeldList(otherMeldIndex, card, computerMelds[c]);
+                hand.removeAt(i);
+                attached = true;
+                if (hand.isEmpty) {
+                  _endGame(computerIndex + 1);
+                  return;
+                }
+                break;
               }
             }
           }
