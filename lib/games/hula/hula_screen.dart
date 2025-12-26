@@ -747,7 +747,17 @@ class _HulaScreenState extends State<HulaScreen> with TickerProviderStateMixin {
       return;
     }
 
-    _endTurn();
+    // 컴퓨터가 땡큐할 수 있는지 확인
+    Timer(const Duration(milliseconds: 300), () {
+      if (mounted && !gameOver) {
+        final thankYouResult = _checkComputerThankYou(0); // 플레이어(0) 다음부터 확인
+        if (thankYouResult != null) {
+          _executeComputerThankYou(thankYouResult);
+        } else {
+          _endTurn();
+        }
+      }
+    });
   }
 
   void _playerWins() {
@@ -864,7 +874,135 @@ class _HulaScreenState extends State<HulaScreen> with TickerProviderStateMixin {
 
     Timer(const Duration(milliseconds: 500), () {
       if (mounted && !gameOver) {
-        _endTurn();
+        // 다른 컴퓨터가 땡큐할 수 있는지 확인
+        final thankYouResult = _checkComputerThankYou(currentTurn);
+        if (thankYouResult != null) {
+          // 땡큐한 컴퓨터의 턴으로 변경
+          _executeComputerThankYou(thankYouResult);
+        } else {
+          _endTurn();
+        }
+      }
+    });
+  }
+
+  // 컴퓨터가 땡큐할 수 있는지 확인 (버린 사람 다음 순서부터)
+  // 반환: 땡큐 가능한 컴퓨터 인덱스 (0-based), 없으면 null
+  int? _checkComputerThankYou(int fromTurn) {
+    if (discardPile.isEmpty) return null;
+    final topCard = discardPile.last;
+
+    // fromTurn 다음 순서부터 확인 (플레이어 제외)
+    for (int i = 1; i < playerCount; i++) {
+      final checkTurn = (fromTurn + i) % playerCount;
+      if (checkTurn == 0) continue; // 플레이어는 건너뜀 (플레이어는 버튼으로 땡큐)
+
+      final computerIndex = checkTurn - 1;
+      final hand = computerHands[computerIndex];
+
+      // 7 카드는 항상 땡큐
+      if (_isSeven(topCard)) {
+        return computerIndex;
+      }
+
+      // 멜드를 만들 수 있으면 땡큐
+      final testHand = [...hand, topCard];
+      if (_findBestMeld(testHand) != null) {
+        return computerIndex;
+      }
+    }
+    return null;
+  }
+
+  // 컴퓨터 땡큐 실행
+  void _executeComputerThankYou(int computerIndex) {
+    if (discardPile.isEmpty) return;
+
+    final card = discardPile.removeLast();
+    final hand = computerHands[computerIndex];
+    final melds = computerMelds[computerIndex];
+
+    hand.add(card);
+    _sortHand(hand);
+    _showMessage('컴퓨터${computerIndex + 1}: 땡큐! ${card.suitSymbol}${card.rankString}');
+
+    // 멜드 등록
+    List<PlayingCard>? bestMeld;
+    while ((bestMeld = _findBestMeld(hand)) != null) {
+      final isRun = _isValidRun(bestMeld!);
+      for (final c in bestMeld) {
+        hand.remove(c);
+      }
+      melds.add(Meld(cards: bestMeld, isRun: isRun));
+
+      if (hand.isEmpty) {
+        _endGame(computerIndex + 1);
+        return;
+      }
+    }
+
+    // 7 카드 단독 등록
+    final sevens = hand.where((c) => _isSeven(c)).toList();
+    for (final seven in sevens) {
+      hand.remove(seven);
+      melds.add(Meld(cards: [seven], isRun: false));
+
+      if (hand.isEmpty) {
+        _endGame(computerIndex + 1);
+        return;
+      }
+    }
+
+    setState(() {});
+    _saveGame();
+
+    // 땡큐한 컴퓨터가 카드 버리기
+    Timer(const Duration(milliseconds: 500), () {
+      if (mounted && !gameOver) {
+        _computerDiscardAfterThankYou(computerIndex);
+      }
+    });
+  }
+
+  // 땡큐 후 컴퓨터가 카드 버리기
+  void _computerDiscardAfterThankYou(int computerIndex) {
+    final hand = computerHands[computerIndex];
+
+    // 가장 높은 점수 카드 버리기
+    hand.sort((a, b) => b.point.compareTo(a.point));
+    final discardCard = hand.removeAt(0);
+    discardPile.add(discardCard);
+    _sortHand(hand);
+
+    setState(() {});
+    _saveGame();
+
+    if (hand.isEmpty) {
+      _endGame(computerIndex + 1);
+      return;
+    }
+
+    // 다음 땡큐 확인 후 턴 종료
+    Timer(const Duration(milliseconds: 500), () {
+      if (mounted && !gameOver) {
+        final thankYouResult = _checkComputerThankYou(computerIndex + 1);
+        if (thankYouResult != null) {
+          _executeComputerThankYou(thankYouResult);
+        } else {
+          // 땡큐한 컴퓨터 다음 턴으로
+          setState(() {
+            currentTurn = (computerIndex + 2) % playerCount;
+            hasDrawn = false;
+            selectedCardIndices = [];
+          });
+
+          if (currentTurn != 0) {
+            setState(() {
+              waitingForNextTurn = true;
+            });
+            _startNextTurnTimer();
+          }
+        }
       }
     });
   }
