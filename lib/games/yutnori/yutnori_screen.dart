@@ -481,9 +481,7 @@ class _YutnoriScreenState extends State<YutnoriScreen>
       case 20:
         return 34; // 한 바퀴 완료 → 시작점
       case 27:
-        return 15; // 좌하단 코너 (대각선에서 합류)
-      case 24:
-        return 31; // 중앙 통일
+        return 15; // 좌하단 코너 (대각선에서 외곽 합류)
       default:
         return pos;
     }
@@ -501,14 +499,35 @@ class _YutnoriScreenState extends State<YutnoriScreen>
     // 지름길 처리
     if (currentPos == 21) {
       // 우상단 코너(21)에서 대각선으로
-      // 21 → 22 → 23 → 31(중앙) → 32 → 33 → 골인
+      // 21 → 22 → 23 → 24(중앙) → 25 → 26 → 27(→15) → 외곽 합류
       newPos = 21 + moveCount; // 도(1)면 22, 개(2)면 23...
-      if (newPos > 23) {
-        // 중앙(31) 지나면 32번으로 연결
-        newPos = 31 + (newPos - 24); // 24→31, 25→32, 26→33...
+      if (newPos > 26) {
+        // 좌하단 코너(15) 방향으로 외곽 합류
+        // 27→15, 28→16, 29→17, ...
+        newPos = 15 + (newPos - 27);
+        if (newPos >= 20) {
+          return finishPosition;
+        }
       }
-      if (newPos > lastBoardPosition) {
-        return finishPosition;
+    } else if (currentPos >= 22 && currentPos <= 24) {
+      // 우상단 대각선에서 (22, 23, 24 → 25, 26 → 15로 합류)
+      newPos = currentPos + moveCount;
+      if (newPos > 26) {
+        // 좌하단 코너(15) 방향으로 외곽 합류
+        newPos = 15 + (newPos - 27);
+        if (newPos >= 20) {
+          return finishPosition;
+        }
+      }
+    } else if (currentPos >= 25 && currentPos <= 26) {
+      // 중앙→좌하단 대각선에서 (25, 26 → 15로 합류)
+      newPos = currentPos + moveCount;
+      if (newPos > 26) {
+        // 좌하단 코너(15) 방향으로 외곽 합류
+        newPos = 15 + (newPos - 27);
+        if (newPos >= 20) {
+          return finishPosition;
+        }
       }
     } else if (currentPos == 28) {
       // 좌상단 코너(28)에서 대각선으로
@@ -517,24 +536,8 @@ class _YutnoriScreenState extends State<YutnoriScreen>
       if (newPos > lastBoardPosition) {
         return finishPosition;
       }
-    } else if (currentPos >= 22 && currentPos <= 23) {
-      // 우상단 대각선에서 (22, 23 → 31 중앙 → 32, 33 → 골인)
-      newPos = currentPos + moveCount;
-      if (newPos > 23) {
-        // 중앙(31) 지나면 32번으로 연결
-        newPos = 31 + (newPos - 24);
-      }
-      if (newPos > lastBoardPosition) {
-        return finishPosition;
-      }
-    } else if (currentPos >= 29 && currentPos <= 30) {
-      // 좌상단 대각선에서 (29, 30 → 31 중앙 → 32, 33 → 골인)
-      newPos = currentPos + moveCount;
-      if (newPos > lastBoardPosition) {
-        return finishPosition;
-      }
-    } else if (currentPos == 31) {
-      // 중앙에서 (31 → 32 → 33 → 골인)
+    } else if (currentPos >= 29 && currentPos <= 31) {
+      // 좌상단 대각선에서 (29, 30, 31 → 32, 33 → 골인)
       newPos = currentPos + moveCount;
       if (newPos > lastBoardPosition) {
         return finishPosition;
@@ -2590,6 +2593,24 @@ class _YutnoriScreenState extends State<YutnoriScreen>
         center + radius * 0.85 - radius * 0.85 * (2 / 3),
         center - radius * 0.85 + radius * 0.85 * (2 / 3),
       );
+    } else if (position == 24) {
+      // 중앙 (우상단 경로에서 도착, position 31과 동일)
+      return Offset(center, center);
+    } else if (position == 25) {
+      // 중앙 → 좌하단 첫 번째 점 (1/3 지점)
+      return Offset(
+        center - radius * 0.85 * (1 / 3),
+        center + radius * 0.85 * (1 / 3),
+      );
+    } else if (position == 26) {
+      // 중앙 → 좌하단 두 번째 점 (2/3 지점)
+      return Offset(
+        center - radius * 0.85 * (2 / 3),
+        center + radius * 0.85 * (2 / 3),
+      );
+    } else if (position == 27) {
+      // 좌하단 코너 (position 15와 동일, 자동으로 15로 변환됨)
+      return Offset(center - radius * 0.85, center + radius * 0.85);
     } else if (position == 28) {
       // 좌상단 코너 (position 10과 동일)
       return Offset(center - radius * 0.85, center - radius * 0.85);
