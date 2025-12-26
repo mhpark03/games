@@ -1109,7 +1109,63 @@ class _JanggiScreenState extends State<JanggiScreen> {
       }
     }
 
+    // 궁성 내 대각선 이동 (포는 기물을 뛰어넘어야 함)
+    _addPoPalaceDiagonalMoves(moves, row, col, piece);
+
     return moves;
+  }
+
+  // 포의 궁성 내 대각선 이동 (뛰어넘기 규칙 적용)
+  void _addPoPalaceDiagonalMoves(
+      List<List<int>> moves, int row, int col, JanggiPiece piece) {
+    // 궁성 대각선 경로 정의: [시작, 중간(뛰어넘을 위치), 끝]
+    final List<List<List<int>>> diagonalPaths = [
+      // 초 궁성 대각선 1: (9,5) - (8,4) - (7,3)
+      [[9, 5], [8, 4], [7, 3]],
+      // 초 궁성 대각선 2: (9,3) - (8,4) - (7,5)
+      [[9, 3], [8, 4], [7, 5]],
+      // 한 궁성 대각선 1: (2,5) - (1,4) - (0,3)
+      [[2, 5], [1, 4], [0, 3]],
+      // 한 궁성 대각선 2: (2,3) - (1,4) - (0,5)
+      [[2, 3], [1, 4], [0, 5]],
+    ];
+
+    for (var path in diagonalPaths) {
+      // 현재 위치가 대각선 경로의 시작 또는 끝에 있는지 확인
+      int posIndex = -1;
+      if (row == path[0][0] && col == path[0][1]) {
+        posIndex = 0;
+      } else if (row == path[2][0] && col == path[2][1]) {
+        posIndex = 2;
+      } else if (row == path[1][0] && col == path[1][1]) {
+        // 중앙에서 양쪽 끝으로 이동 가능 (뛰어넘을 기물 없음 - 포는 중앙에서 대각선 이동 불가)
+        continue;
+      }
+
+      if (posIndex == -1) continue;
+
+      // 뛰어넘을 기물 확인 (중앙 위치)
+      final midRow = path[1][0];
+      final midCol = path[1][1];
+      final midPiece = board[midRow][midCol];
+
+      // 중앙에 기물이 있고, 포가 아니어야 뛰어넘을 수 있음
+      if (midPiece != null && midPiece.type != JanggiPieceType.po) {
+        // 목표 위치 (반대편 끝)
+        final targetIndex = posIndex == 0 ? 2 : 0;
+        final targetRow = path[targetIndex][0];
+        final targetCol = path[targetIndex][1];
+        final targetPiece = board[targetRow][targetCol];
+
+        // 목표 위치가 비어있거나 적 기물(포 제외)이면 이동 가능
+        if (targetPiece == null) {
+          moves.add([targetRow, targetCol]);
+        } else if (targetPiece.color != piece.color &&
+            targetPiece.type != JanggiPieceType.po) {
+          moves.add([targetRow, targetCol]);
+        }
+      }
+    }
   }
 
   List<List<int>> _getMaMoves(int row, int col, JanggiPiece piece) {
