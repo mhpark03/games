@@ -226,6 +226,8 @@ class _YutnoriScreenState extends State<YutnoriScreen>
       'pendingMoves': pendingMoves.map((m) => m.index).toList(),
       'canThrowYut': canThrowYut,
       'waitingForNextTurn': waitingForNextTurn,
+      'lastMovedPlayerIndex': lastMovedPlayerIndex,
+      'lastMovedPieceIndex': lastMovedPieceIndex,
     };
 
     await GameSaveService.saveGame('yutnori', gameState);
@@ -274,6 +276,10 @@ class _YutnoriScreenState extends State<YutnoriScreen>
     winner = null;
     isThrowingYut = false;
     selectedPieceIndex = null;
+
+    // 최근 이동한 말 정보 복원
+    lastMovedPlayerIndex = gameState['lastMovedPlayerIndex'] as int?;
+    lastMovedPieceIndex = gameState['lastMovedPieceIndex'] as int?;
 
     if (currentPlayer == 0) {
       if (pendingMoves.isNotEmpty) {
@@ -1096,73 +1102,88 @@ class _YutnoriScreenState extends State<YutnoriScreen>
         child: SafeArea(
           child: Stack(
             children: [
-              Row(
+              Column(
                 children: [
-                  // 왼쪽: 상대 정보 + 윷 던지기
+                  // 상단: 컴퓨터2(좌) + 제목 + 컴퓨터1(우)
                   SizedBox(
-                    width: 120,
-                    child: Column(
+                    height: 60,
+                    child: Row(
                       children: [
-                        const SizedBox(height: 40),
-                        Expanded(child: _buildOpponentInfoVertical()),
-                        _buildYutThrowAreaCompact(),
-                        const SizedBox(height: 8),
+                        // 좌상단: 컴퓨터 2
+                        SizedBox(
+                          width: 140,
+                          child: playerCount >= 3
+                              ? _buildLandscapeComputerWidget(2)
+                              : const SizedBox(),
+                        ),
+                        // 중앙: 제목
+                        Expanded(
+                          child: Center(
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 16, vertical: 8),
+                              decoration: BoxDecoration(
+                                color: const Color(0xFF8B4513),
+                                borderRadius: BorderRadius.circular(20),
+                              ),
+                              child: Text(
+                                '윷놀이 (${playerCount}인)',
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                        // 우상단: 컴퓨터 1
+                        SizedBox(
+                          width: 140,
+                          child: _buildLandscapeComputerWidget(1),
+                        ),
                       ],
                     ),
                   ),
                   // 중앙: 윷판
                   Expanded(
-                    child: Column(
-                      children: [
-                        if (gameMessage != null) _buildMessage(),
-                        Expanded(
-                          child: Center(
-                            child: _buildYutBoard(),
-                          ),
-                        ),
-                      ],
+                    child: Center(
+                      child: _buildYutBoard(),
                     ),
                   ),
-                  // 오른쪽: 플레이어 정보
+                  // 하단: 컴퓨터3(좌) + 윷던지기/메시지 + 플레이어(우)
                   SizedBox(
-                    width: 120,
-                    child: Column(
+                    height: 100,
+                    child: Row(
                       children: [
-                        const SizedBox(height: 40),
-                        Expanded(child: _buildPlayerAreaVertical()),
+                        // 좌하단: 컴퓨터 3
+                        SizedBox(
+                          width: 140,
+                          child: playerCount >= 4
+                              ? _buildLandscapeComputerWidget(3)
+                              : const SizedBox(),
+                        ),
+                        // 중앙: 윷 던지기 + 메시지 + 다음 버튼
+                        Expanded(
+                          child: _buildLandscapeCenterControls(),
+                        ),
+                        // 우하단: 플레이어
+                        SizedBox(
+                          width: 140,
+                          child: _buildLandscapePlayerWidget(),
+                        ),
                       ],
                     ),
                   ),
                 ],
               ),
-              // 왼쪽 상단: 뒤로가기 버튼 + 제목
+              // 왼쪽 상단: 뒤로가기 버튼
               Positioned(
                 top: 8,
                 left: 8,
-                child: Row(
-                  children: [
-                    _buildCircleButton(
-                      icon: Icons.arrow_back,
-                      onPressed: () => Navigator.pop(context),
-                    ),
-                    const SizedBox(width: 8),
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 12, vertical: 6),
-                      decoration: BoxDecoration(
-                        color: const Color(0xFF8B4513),
-                        borderRadius: BorderRadius.circular(16),
-                      ),
-                      child: Text(
-                        '윷놀이 (${playerCount}인)',
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 14,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ),
-                  ],
+                child: _buildCircleButton(
+                  icon: Icons.arrow_back,
+                  onPressed: () => Navigator.pop(context),
                 ),
               ),
               // 오른쪽 상단: 새 게임 버튼
@@ -1180,6 +1201,259 @@ class _YutnoriScreenState extends State<YutnoriScreen>
           ),
         ),
       ),
+    );
+  }
+
+  // 가로모드: 컴퓨터 위젯
+  Widget _buildLandscapeComputerWidget(int playerIndex) {
+    final isCurrentTurn = currentPlayer == playerIndex;
+    final finishedCount =
+        playerPieces[playerIndex].where((p) => p.isFinished).length;
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      decoration: BoxDecoration(
+        color: isCurrentTurn
+            ? _getPlayerColor(playerIndex).withValues(alpha: 0.2)
+            : Colors.transparent,
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+            decoration: BoxDecoration(
+              color: isCurrentTurn
+                  ? _getPlayerColor(playerIndex)
+                  : const Color(0xFF8B4513),
+              borderRadius: BorderRadius.circular(6),
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Icon(Icons.computer, color: Colors.white, size: 14),
+                const SizedBox(width: 4),
+                Text(
+                  'C$playerIndex',
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 12,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(width: 6),
+          // 말 상태
+          Row(
+            children: List.generate(4, (i) {
+              final pieceFinished = i < finishedCount;
+              return Container(
+                margin: const EdgeInsets.only(left: 2),
+                width: 12,
+                height: 12,
+                decoration: BoxDecoration(
+                  color: pieceFinished
+                      ? Colors.amber
+                      : _getPlayerColor(playerIndex),
+                  shape: BoxShape.circle,
+                  border: Border.all(color: Colors.white, width: 1),
+                ),
+                child: pieceFinished
+                    ? const Icon(Icons.check, color: Colors.white, size: 8)
+                    : null,
+              );
+            }),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // 가로모드: 플레이어 위젯
+  Widget _buildLandscapePlayerWidget() {
+    final isCurrentTurn = currentPlayer == 0;
+    final finishedCount = playerPieces[0].where((p) => p.isFinished).length;
+    final waitingPieces = <int>[];
+    for (int i = 0; i < 4; i++) {
+      if (playerPieces[0][i].isWaiting) {
+        waitingPieces.add(i);
+      }
+    }
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      decoration: BoxDecoration(
+        color: isCurrentTurn
+            ? _getPlayerColor(0).withValues(alpha: 0.2)
+            : Colors.transparent,
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                decoration: BoxDecoration(
+                  color: isCurrentTurn
+                      ? _getPlayerColor(0)
+                      : const Color(0xFF8B4513),
+                  borderRadius: BorderRadius.circular(6),
+                ),
+                child: const Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(Icons.person, color: Colors.white, size: 14),
+                    SizedBox(width: 4),
+                    Text(
+                      '플레이어',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 11,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(width: 6),
+              // 말 상태
+              Row(
+                children: List.generate(4, (i) {
+                  final pieceFinished = i < finishedCount;
+                  return Container(
+                    margin: const EdgeInsets.only(left: 2),
+                    width: 12,
+                    height: 12,
+                    decoration: BoxDecoration(
+                      color:
+                          pieceFinished ? Colors.amber : _getPlayerColor(0),
+                      shape: BoxShape.circle,
+                      border: Border.all(color: Colors.white, width: 1),
+                    ),
+                    child: pieceFinished
+                        ? const Icon(Icons.check, color: Colors.white, size: 8)
+                        : null,
+                  );
+                }),
+              ),
+            ],
+          ),
+          // 대기 중인 말 (선택 가능)
+          if (waitingPieces.isNotEmpty && isCurrentTurn && pendingMoves.isNotEmpty)
+            Padding(
+              padding: const EdgeInsets.only(top: 4),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: waitingPieces.map((pieceIndex) {
+                  final canMove = _canMovePiece(pieceIndex, pendingMoves.first);
+                  return GestureDetector(
+                    onTap: canMove ? () => _selectPiece(pieceIndex) : null,
+                    child: Container(
+                      margin: const EdgeInsets.symmetric(horizontal: 2),
+                      width: 24,
+                      height: 24,
+                      decoration: BoxDecoration(
+                        color: _getPlayerColor(0),
+                        shape: BoxShape.circle,
+                        border: Border.all(
+                          color: canMove ? Colors.yellow : Colors.white,
+                          width: canMove ? 2 : 1,
+                        ),
+                        boxShadow: canMove
+                            ? [
+                                BoxShadow(
+                                  color: Colors.yellow.withValues(alpha: 0.5),
+                                  blurRadius: 6,
+                                ),
+                              ]
+                            : null,
+                      ),
+                    ),
+                  );
+                }).toList(),
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+
+  // 가로모드: 중앙 컨트롤 (윷 던지기 + 메시지 + 다음 버튼)
+  Widget _buildLandscapeCenterControls() {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        // 윷 스틱 표시
+        Row(
+          children: List.generate(4, (i) {
+            return Container(
+              margin: const EdgeInsets.symmetric(horizontal: 2),
+              width: 20,
+              height: 50,
+              decoration: BoxDecoration(
+                color: yutStickStates[i]
+                    ? const Color(0xFF8B4513)
+                    : const Color(0xFFF5DEB3),
+                borderRadius: BorderRadius.circular(4),
+                border: Border.all(color: const Color(0xFF654321), width: 1),
+              ),
+            );
+          }),
+        ),
+        const SizedBox(width: 16),
+        // 메시지 + 다음 버튼 또는 윷 던지기 버튼
+        Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            if (gameMessage != null)
+              Container(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                decoration: BoxDecoration(
+                  color: const Color(0xFF8B4513),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Text(
+                  gameMessage!,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 12,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+            const SizedBox(height: 8),
+            if (waitingForNextTurn && currentPlayer > 0)
+              _buildPlayButton(compact: true)
+            else if (isPlayerTurn && canThrowYut && !isThrowingYut)
+              GestureDetector(
+                onTap: _throwYut,
+                child: Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF8B4513),
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  child: const Text(
+                    '윷 던지기',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 12,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+              ),
+          ],
+        ),
+      ],
     );
   }
 
@@ -1655,7 +1929,7 @@ class _YutnoriScreenState extends State<YutnoriScreen>
     final colors = [
       Colors.blue, // 플레이어
       Colors.red, // 컴퓨터 1
-      Colors.green, // 컴퓨터 2
+      Colors.purple, // 컴퓨터 2 (초록 → 보라로 변경)
       Colors.orange, // 컴퓨터 3
     ];
     return colors[playerIndex % colors.length];
