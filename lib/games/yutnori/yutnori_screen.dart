@@ -896,6 +896,16 @@ class _YutnoriScreenState extends State<YutnoriScreen>
     // 위험에 처한 말 확인 (다른 플레이어가 잡을 수 있는 위치)
     Set<int> dangerPositions = _getDangerPositions();
 
+    // 시작점 근처(1-7)에 말이 있는지 확인
+    bool hasPieceInDangerousZone = false;
+    for (int i = 0; i < 4; i++) {
+      final pos = playerPieces[currentPlayer][i].position;
+      if (pos >= 1 && pos <= 7) {
+        hasPieceInDangerousZone = true;
+        break;
+      }
+    }
+
     // 전략적 선택: 위험 회피 > 잡기 > 골인 > 진행
     int bestPiece = movablePieces.first;
     int bestScore = -1000;
@@ -910,6 +920,7 @@ class _YutnoriScreenState extends State<YutnoriScreen>
       // 안전 지역 확인
       bool isCurrentSafe = (currentPos == 21 || currentPos == 28 || currentPos == 15 || currentPos == 34 || currentPos == -1);
       bool isNewSafe = (newPos == 21 || newPos == 28 || newPos == 15 || newPos == 34 || newPos == finishPosition);
+      bool isCurrentDangerousZone = (currentPos >= 1 && currentPos <= 7);
 
       // 위험에 처한 말이 이동하여 탈출하면 높은 점수
       bool isInDanger = !isCurrentSafe && currentPos >= 0 && dangerPositions.contains(currentPos);
@@ -921,6 +932,11 @@ class _YutnoriScreenState extends State<YutnoriScreen>
       } else if (isInDanger && !willBeSafe) {
         // 위험에서 위험으로 이동 (그래도 현재보다는 나음)
         score += 20 + piece.stackedPieces.length * 10;
+      }
+
+      // 시작점 근처(1-7)에 있는 말은 우선 이동 (업힌 말 포함)
+      if (isCurrentDangerousZone) {
+        score += 35 + piece.stackedPieces.length * 20;
       }
 
       // 골인 가능하면 높은 점수
@@ -953,20 +969,31 @@ class _YutnoriScreenState extends State<YutnoriScreen>
       }
 
       // 업을 수 있으면 점수 (안전 지역에서만)
+      // 위치 1-7은 시작점 근처라 특히 위험
+      bool isNewDangerousZone = (newPos >= 1 && newPos <= 7);
       for (int i = 0; i < 4; i++) {
         if (i == pieceIndex) continue;
         if (playerPieces[currentPlayer][i].position == newPos) {
           if (isNewSafe) {
             score += 10; // 안전 지역에서 업기
+          } else if (isNewDangerousZone) {
+            score -= 20; // 시작점 근처(1-7)에서 업기는 큰 감점
           } else {
-            score -= 5; // 위험 지역에서 업기는 오히려 감점
+            score -= 5; // 일반 위험 지역에서 업기는 감점
           }
         }
       }
 
-      // 새로 출발하는 말이 위험 지역으로 가면 감점
-      if (currentPos == -1 && !isNewSafe && dangerPositions.contains(newPos)) {
-        score -= 15;
+      // 새로 출발하는 말 감점
+      if (currentPos == -1) {
+        // 1-7에 말이 있으면 새로 달기보다 기존 말 우선
+        if (hasPieceInDangerousZone) {
+          score -= 40;
+        }
+        // 위험 지역으로 가면 추가 감점
+        if (!isNewSafe && dangerPositions.contains(newPos)) {
+          score -= 15;
+        }
       }
 
       // 진행도
