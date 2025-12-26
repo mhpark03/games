@@ -711,6 +711,77 @@ class _HulaScreenState extends State<HulaScreen> with TickerProviderStateMixin {
     melds[meldIndex] = Meld(cards: newCards, isRun: newIsRun);
   }
 
+  // 스마트 카드 버리기: 버릴 카드 선택
+  PlayingCard _selectCardToDiscard(List<PlayingCard> hand) {
+    if (hand.length == 1) return hand.first;
+
+    // 각 카드의 "유지 가치" 점수 계산 (높을수록 유지해야 함)
+    final scores = <PlayingCard, double>{};
+
+    for (final card in hand) {
+      double keepScore = 0;
+
+      // 1. 7 카드는 절대 버리면 안 됨 (단독 등록 가능)
+      if (_isSeven(card)) {
+        keepScore += 1000;
+      }
+
+      // 2. 같은 숫자 카드 개수 (Group 가능성)
+      final sameRankCount = hand.where((c) => c.rank == card.rank).length;
+      if (sameRankCount >= 2) {
+        keepScore += sameRankCount * 30; // 2장: 60, 3장: 90
+      }
+
+      // 3. 같은 무늬 연속 카드 (Run 가능성)
+      final sameSuitCards = hand.where((c) => c.suit == card.suit).toList();
+      if (sameSuitCards.length >= 2) {
+        sameSuitCards.sort((a, b) => a.rank.compareTo(b.rank));
+        int consecutiveCount = 1;
+        for (int i = 0; i < sameSuitCards.length - 1; i++) {
+          // 연속이거나 1칸 건너뛴 경우 (2,4 같은 경우 3이 오면 Run 가능)
+          final diff = sameSuitCards[i + 1].rank - sameSuitCards[i].rank;
+          if (diff == 1 || diff == 2) {
+            if (sameSuitCards[i].rank == card.rank ||
+                sameSuitCards[i + 1].rank == card.rank) {
+              consecutiveCount++;
+            }
+          }
+        }
+        if (consecutiveCount >= 2) {
+          keepScore += consecutiveCount * 25; // 2장 연속: 50, 3장: 75
+        }
+      }
+
+      // 4. 버린 더미에서 같은 카드 확인 (확률 계산)
+      // 같은 숫자가 이미 많이 버려졌으면 Group 확률 낮음
+      final discardedSameRank =
+          discardPile.where((c) => c.rank == card.rank).length;
+      if (discardedSameRank >= 2) {
+        keepScore -= 20; // Group 가능성 낮음
+      }
+
+      // 같은 무늬의 필요한 카드가 버려졌으면 Run 확률 낮음
+      final neededForRun = [card.rank - 1, card.rank + 1];
+      final discardedNeeded = discardPile
+          .where((c) => c.suit == card.suit && neededForRun.contains(c.rank))
+          .length;
+      if (discardedNeeded >= 1) {
+        keepScore -= 15 * discardedNeeded;
+      }
+
+      // 5. 카드 점수 (낮은 점수 카드 유지 선호)
+      keepScore -= card.point * 2;
+
+      scores[card] = keepScore;
+    }
+
+    // 가장 낮은 유지 가치를 가진 카드 버리기
+    final sortedCards = hand.toList()
+      ..sort((a, b) => scores[a]!.compareTo(scores[b]!));
+
+    return sortedCards.first;
+  }
+
   // 멜드 등록
   void _registerMeld() {
     final selectedCards =
@@ -968,9 +1039,9 @@ class _HulaScreenState extends State<HulaScreen> with TickerProviderStateMixin {
       }
     }
 
-    // 3. 가장 높은 점수 카드 버리기
-    hand.sort((a, b) => b.point.compareTo(a.point));
-    final discardCard = hand.removeAt(0);
+    // 3. 스마트 카드 버리기
+    final discardCard = _selectCardToDiscard(hand);
+    hand.remove(discardCard);
     discardPile.add(discardCard);
     _sortHand(hand);
 
@@ -1122,9 +1193,9 @@ class _HulaScreenState extends State<HulaScreen> with TickerProviderStateMixin {
   void _computerDiscardAfterThankYou(int computerIndex) {
     final hand = computerHands[computerIndex];
 
-    // 가장 높은 점수 카드 버리기
-    hand.sort((a, b) => b.point.compareTo(a.point));
-    final discardCard = hand.removeAt(0);
+    // 스마트 카드 버리기
+    final discardCard = _selectCardToDiscard(hand);
+    hand.remove(discardCard);
     discardPile.add(discardCard);
     _sortHand(hand);
 
