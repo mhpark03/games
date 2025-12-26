@@ -2674,6 +2674,9 @@ class _YutnoriScreenState extends State<YutnoriScreen>
           ],
         ),
       );
+    } else if (waitingForNextTurn && currentPlayer > 0) {
+      // 컴퓨터 차례일 때 다음 버튼 (결과 표시보다 우선)
+      return _buildPlayButton(compact: false);
     } else if (currentYutResult != null) {
       return Container(
         padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
