@@ -437,27 +437,49 @@ class _YutnoriScreenState extends State<YutnoriScreen>
 
     // 지름길 처리
     if (currentPos == cornerTopRight) {
-      // 우상단 코너에서 대각선으로
-      newPos = 20 + moveCount;
-      if (newPos > 24) {
-        // 중앙 지나서 계속
-        newPos = 24 + (newPos - 24);
+      // 우상단 코너에서 대각선으로 (5 → 20, 21, 22 중앙 → 28, 29 → 골인)
+      newPos = 19 + moveCount; // 도(1)면 20, 개(2)면 21...
+      if (newPos > 22) {
+        // 중앙 지나면 28번으로 연결
+        newPos = 28 + (newPos - 23);
       }
-    } else if (currentPos == cornerTopLeft) {
-      // 좌상단 코너에서 대각선으로
-      newPos = 24 + moveCount;
-    } else if (currentPos >= 20 && currentPos <= 24) {
-      // 우상단 대각선에서
-      newPos = currentPos + moveCount;
-      if (newPos > 28) {
-        // 골인
+      if (newPos > 29) {
         return finishPosition;
       }
-    } else if (currentPos >= 25 && currentPos <= 28) {
-      // 좌상단 대각선에서
+    } else if (currentPos == cornerTopLeft) {
+      // 좌상단 코너에서 대각선으로 (10 → 25, 26, 27 중앙 → 28, 29 → 골인)
+      newPos = 24 + moveCount; // 도(1)면 25, 개(2)면 26...
+      if (newPos > 27) {
+        // 중앙 지나면 28번으로 연결
+        newPos = 28 + (newPos - 28);
+      }
+      if (newPos > 29) {
+        return finishPosition;
+      }
+    } else if (currentPos >= 20 && currentPos <= 22) {
+      // 우상단 대각선에서 (20, 21 → 22 중앙 → 28, 29 → 골인)
       newPos = currentPos + moveCount;
-      if (newPos > 28) {
-        // 골인
+      if (newPos > 22) {
+        // 중앙 지나면 28번으로 연결
+        newPos = 28 + (newPos - 23);
+      }
+      if (newPos > 29) {
+        return finishPosition;
+      }
+    } else if (currentPos >= 25 && currentPos <= 27) {
+      // 좌상단 대각선에서 (25, 26 → 27 중앙 → 28, 29 → 골인)
+      newPos = currentPos + moveCount;
+      if (newPos > 27) {
+        // 중앙 지나면 28번으로 연결
+        newPos = 28 + (newPos - 28);
+      }
+      if (newPos > 29) {
+        return finishPosition;
+      }
+    } else if (currentPos >= 28 && currentPos <= 29) {
+      // 중앙 → 골인 대각선에서
+      newPos = currentPos + moveCount;
+      if (newPos > 29) {
         return finishPosition;
       }
     } else {
@@ -1547,10 +1569,16 @@ class _YutnoriScreenState extends State<YutnoriScreen>
       // 중앙 (정확한 중앙점, position 22와 동일)
       return Offset(center, center);
     } else if (position == 28) {
-      // 중앙 → 우하단 점
+      // 중앙 → 우하단 첫 번째 점
       return Offset(
         center + radius * 0.85 * (1 / 2.5),
         center + radius * 0.85 * (1 / 2.5),
+      );
+    } else if (position == 29) {
+      // 중앙 → 우하단 두 번째 점
+      return Offset(
+        center + radius * 0.85 * (2 / 2.5),
+        center + radius * 0.85 * (2 / 2.5),
       );
     }
 
@@ -2164,28 +2192,27 @@ class YutBoardPainter extends CustomPainter {
     }
 
     // 대각선 점들 - 게임 위치와 일치하도록
-    // 우상단(5) → 중앙 (position 21)
-    positions.add(Offset(
-      center.dx + radius * 0.85 - radius * 0.85 * (1 / 2.5),
-      center.dy - radius * 0.85 + radius * 0.85 * (1 / 2.5),
-    ));
-    // 중앙 → 좌하단 (positions 23, 24)
+    // 우상단(5) → 중앙: 2개 점 (positions 20, 21)
     for (int i = 1; i <= 2; i++) {
       positions.add(Offset(
-        center.dx - radius * 0.85 * (i / 2.5),
+        center.dx + radius * 0.85 - radius * 0.85 * (i / 2.5),
+        center.dy - radius * 0.85 + radius * 0.85 * (i / 2.5),
+      ));
+    }
+    // 좌상단(10) → 중앙: 2개 점 (positions 25, 26)
+    for (int i = 1; i <= 2; i++) {
+      positions.add(Offset(
+        center.dx - radius * 0.85 + radius * 0.85 * (i / 2.5),
+        center.dy - radius * 0.85 + radius * 0.85 * (i / 2.5),
+      ));
+    }
+    // 중앙 → 우하단 (출발/골인 방향): 2개 점 (positions 28, 29)
+    for (int i = 1; i <= 2; i++) {
+      positions.add(Offset(
+        center.dx + radius * 0.85 * (i / 2.5),
         center.dy + radius * 0.85 * (i / 2.5),
       ));
     }
-    // 좌상단(10) → 중앙 (position 26)
-    positions.add(Offset(
-      center.dx - radius * 0.85 + radius * 0.85 * (1 / 2.5),
-      center.dy - radius * 0.85 + radius * 0.85 * (1 / 2.5),
-    ));
-    // 중앙 → 우하단 (position 28)
-    positions.add(Offset(
-      center.dx + radius * 0.85 * (1 / 2.5),
-      center.dy + radius * 0.85 * (1 / 2.5),
-    ));
 
     return positions;
   }
