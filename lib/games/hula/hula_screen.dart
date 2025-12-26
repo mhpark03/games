@@ -1472,22 +1472,53 @@ class _HulaScreenState extends State<HulaScreen> with TickerProviderStateMixin {
         }
       }
 
-      // 2-3. 기존 멜드에 붙여놓기
+      // 2-3. 기존 멜드에 붙여놓기 (자신 + 다른 플레이어 멜드)
       if (melds.isNotEmpty) {
         bool attached = true;
         while (attached) {
           attached = false;
           for (int i = hand.length - 1; i >= 0; i--) {
             final card = hand[i];
-            final meldIndex = _canAttachToMeldList(card, melds);
-            if (meldIndex >= 0) {
-              _attachToMeldList(meldIndex, card, melds);
+
+            // 자신의 멜드에 붙이기
+            final ownMeldIndex = _canAttachToMeldList(card, melds);
+            if (ownMeldIndex >= 0) {
+              _attachToMeldList(ownMeldIndex, card, melds);
               hand.removeAt(i);
               attached = true;
-
               if (hand.isEmpty) {
                 _endGame(currentTurn);
                 return;
+              }
+              continue;
+            }
+
+            // 플레이어 멜드에 붙이기
+            final playerMeldIndex = _canAttachToMeldList(card, playerMelds);
+            if (playerMeldIndex >= 0) {
+              _attachToMeldList(playerMeldIndex, card, playerMelds);
+              hand.removeAt(i);
+              attached = true;
+              if (hand.isEmpty) {
+                _endGame(currentTurn);
+                return;
+              }
+              continue;
+            }
+
+            // 다른 컴퓨터 멜드에 붙이기
+            for (int c = 0; c < computerMelds.length; c++) {
+              if (c == computerIndex) continue; // 자신 제외
+              final otherMeldIndex = _canAttachToMeldList(card, computerMelds[c]);
+              if (otherMeldIndex >= 0) {
+                _attachToMeldList(otherMeldIndex, card, computerMelds[c]);
+                hand.removeAt(i);
+                attached = true;
+                if (hand.isEmpty) {
+                  _endGame(currentTurn);
+                  return;
+                }
+                break;
               }
             }
           }
@@ -1655,22 +1686,53 @@ class _HulaScreenState extends State<HulaScreen> with TickerProviderStateMixin {
         }
       }
 
-      // 기존 멜드에 붙여놓기
+      // 기존 멜드에 붙여놓기 (자신 + 다른 플레이어 멜드)
       if (melds.isNotEmpty) {
         bool attached = true;
         while (attached) {
           attached = false;
           for (int i = hand.length - 1; i >= 0; i--) {
-            final c = hand[i];
-            final meldIndex = _canAttachToMeldList(c, melds);
-            if (meldIndex >= 0) {
-              _attachToMeldList(meldIndex, c, melds);
+            final card = hand[i];
+
+            // 자신의 멜드에 붙이기
+            final ownMeldIndex = _canAttachToMeldList(card, melds);
+            if (ownMeldIndex >= 0) {
+              _attachToMeldList(ownMeldIndex, card, melds);
               hand.removeAt(i);
               attached = true;
-
               if (hand.isEmpty) {
                 _endGame(computerIndex + 1);
                 return;
+              }
+              continue;
+            }
+
+            // 플레이어 멜드에 붙이기
+            final playerMeldIndex = _canAttachToMeldList(card, playerMelds);
+            if (playerMeldIndex >= 0) {
+              _attachToMeldList(playerMeldIndex, card, playerMelds);
+              hand.removeAt(i);
+              attached = true;
+              if (hand.isEmpty) {
+                _endGame(computerIndex + 1);
+                return;
+              }
+              continue;
+            }
+
+            // 다른 컴퓨터 멜드에 붙이기
+            for (int c = 0; c < computerMelds.length; c++) {
+              if (c == computerIndex) continue;
+              final otherMeldIndex = _canAttachToMeldList(card, computerMelds[c]);
+              if (otherMeldIndex >= 0) {
+                _attachToMeldList(otherMeldIndex, card, computerMelds[c]);
+                hand.removeAt(i);
+                attached = true;
+                if (hand.isEmpty) {
+                  _endGame(computerIndex + 1);
+                  return;
+                }
+                break;
               }
             }
           }
@@ -2381,6 +2443,8 @@ class _HulaScreenState extends State<HulaScreen> with TickerProviderStateMixin {
                 ),
               ),
             ),
+          // 모든 등록된 멜드 표시
+          _buildAllMeldsArea(isLandscape),
         ],
       ),
     );
@@ -2409,6 +2473,138 @@ class _HulaScreenState extends State<HulaScreen> with TickerProviderStateMixin {
               fontSize: fontSize,
               fontWeight: FontWeight.bold,
               color: card.suitColor,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // 모든 플레이어의 멜드를 표시 (붙여놓기 가능)
+  Widget _buildAllMeldsArea(bool isLandscape) {
+    // 모든 멜드 수집
+    final List<Map<String, dynamic>> allMelds = [];
+
+    // 플레이어 멜드
+    for (int i = 0; i < playerMelds.length; i++) {
+      allMelds.add({
+        'owner': '나',
+        'ownerIndex': 0,
+        'meldIndex': i,
+        'meld': playerMelds[i],
+        'melds': playerMelds,
+      });
+    }
+
+    // 컴퓨터 멜드
+    for (int c = 0; c < computerMelds.length; c++) {
+      for (int i = 0; i < computerMelds[c].length; i++) {
+        allMelds.add({
+          'owner': 'COM${c + 1}',
+          'ownerIndex': c + 1,
+          'meldIndex': i,
+          'meld': computerMelds[c][i],
+          'melds': computerMelds[c],
+        });
+      }
+    }
+
+    if (allMelds.isEmpty) return const SizedBox();
+
+    return Container(
+      margin: EdgeInsets.only(top: isLandscape ? 8 : 12),
+      padding: const EdgeInsets.symmetric(horizontal: 8),
+      child: Column(
+        children: [
+          Text(
+            '등록된 멜드 (탭하여 붙이기)',
+            style: TextStyle(
+              color: Colors.white70,
+              fontSize: isLandscape ? 10 : 11,
+            ),
+          ),
+          const SizedBox(height: 4),
+          SizedBox(
+            height: isLandscape ? 32 : 40,
+            child: ListView.builder(
+              scrollDirection: Axis.horizontal,
+              itemCount: allMelds.length,
+              itemBuilder: (context, index) {
+                final meldInfo = allMelds[index];
+                final meld = meldInfo['meld'] as Meld;
+                final owner = meldInfo['owner'] as String;
+                final melds = meldInfo['melds'] as List<Meld>;
+                final meldIndex = meldInfo['meldIndex'] as int;
+
+                // 선택된 카드가 이 멜드에 붙일 수 있는지 확인
+                // 조건: 자신의 멜드가 1개 이상 있어야 붙여놓기 가능
+                bool canAttach = false;
+                if (selectedCards.length == 1 &&
+                    currentTurn == 0 &&
+                    hasDrawn &&
+                    playerMelds.isNotEmpty) {
+                  final card = selectedCards.first;
+                  canAttach = _canAttachToMeldList(card, melds) == meldIndex;
+                }
+
+                return GestureDetector(
+                  onTap: canAttach
+                      ? () {
+                          final card = selectedCards.first;
+                          // 멜드에 붙이기
+                          _attachToMeldList(meldIndex, card, melds);
+                          playerHand.remove(card);
+                          selectedCards.clear();
+
+                          if (playerHand.isEmpty) {
+                            _endGame(0);
+                          } else {
+                            setState(() {});
+                            _saveGame();
+                          }
+                        }
+                      : null,
+                  child: Container(
+                    margin: const EdgeInsets.only(right: 6),
+                    padding: EdgeInsets.symmetric(
+                      horizontal: isLandscape ? 4 : 6,
+                      vertical: isLandscape ? 2 : 4,
+                    ),
+                    decoration: BoxDecoration(
+                      color: canAttach
+                          ? Colors.yellow.withValues(alpha: 0.3)
+                          : Colors.black.withValues(alpha: 0.3),
+                      borderRadius: BorderRadius.circular(6),
+                      border: Border.all(
+                        color: canAttach ? Colors.yellow : Colors.white30,
+                        width: canAttach ? 2 : 1,
+                      ),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(
+                          '$owner: ',
+                          style: TextStyle(
+                            color: Colors.white60,
+                            fontSize: isLandscape ? 8 : 9,
+                          ),
+                        ),
+                        ...meld.cards.map((card) => Text(
+                              '${card.suitSymbol}${card.rankString}',
+                              style: TextStyle(
+                                color: card.suitColor == Colors.red
+                                    ? Colors.red.shade300
+                                    : Colors.white,
+                                fontSize: isLandscape ? 9 : 11,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            )),
+                      ],
+                    ),
+                  ),
+                );
+              },
             ),
           ),
         ],
