@@ -831,7 +831,6 @@ class _YutnoriScreenState extends State<YutnoriScreen>
     final isCurrentTurn = currentPlayer == player;
     final finishedCount = playerPieces[player].where((p) => p.isFinished).length;
     final waitingCount = playerPieces[player].where((p) => p.isWaiting).length;
-    final showPlayButton = waitingForNextTurn && isCurrentTurn;
 
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
@@ -881,12 +880,6 @@ class _YutnoriScreenState extends State<YutnoriScreen>
               ],
             ),
           ),
-          // 다음 순서 버튼
-          if (showPlayButton)
-            Padding(
-              padding: const EdgeInsets.only(top: 8),
-              child: _buildPlayButton(),
-            ),
         ],
       ),
     );
@@ -899,7 +892,6 @@ class _YutnoriScreenState extends State<YutnoriScreen>
     final player = computerIndex + 1;
     final isCurrentTurn = currentPlayer == player;
     final finishedCount = playerPieces[player].where((p) => p.isFinished).length;
-    final showPlayButton = waitingForNextTurn && isCurrentTurn;
 
     return Container(
       width: 55,
@@ -948,12 +940,6 @@ class _YutnoriScreenState extends State<YutnoriScreen>
               );
             }),
           ),
-          // 다음 순서 버튼
-          if (showPlayButton)
-            Padding(
-              padding: const EdgeInsets.only(top: 8),
-              child: _buildPlayButton(compact: true),
-            ),
         ],
       ),
     );
