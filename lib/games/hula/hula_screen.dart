@@ -782,6 +782,169 @@ class _HulaScreenState extends State<HulaScreen> with TickerProviderStateMixin {
     return sortedCards.first;
   }
 
+  // 훌라 가능성 분석 (모든 카드를 한 번에 낼 수 있는지)
+  // 반환: { 'canHula': bool, 'playableCount': int, 'probability': double }
+  Map<String, dynamic> _analyzeHulaPotential(List<PlayingCard> hand, List<Meld> melds) {
+    // 이미 멜드가 등록되어 있으면 훌라 불가능
+    if (melds.isNotEmpty) {
+      return {'canHula': false, 'playableCount': 0, 'probability': 0.0};
+    }
+
+    if (hand.isEmpty) {
+      return {'canHula': true, 'playableCount': 0, 'probability': 100.0};
+    }
+
+    // 시뮬레이션: 모든 카드를 낼 수 있는지 계산
+    final testHand = List<PlayingCard>.from(hand);
+    final testMelds = <Meld>[];
+    int playableCount = 0;
+
+    // 1. 모든 가능한 멜드 찾기 (3장 이상)
+    List<PlayingCard>? meld;
+    while ((meld = _findBestMeld(testHand)) != null) {
+      for (final card in meld!) {
+        testHand.remove(card);
+        playableCount++;
+      }
+      final isRun = _isValidRun(meld);
+      testMelds.add(Meld(cards: meld, isRun: isRun));
+    }
+
+    // 2. 7 카드 단독 등록
+    final sevens = testHand.where((c) => _isSeven(c)).toList();
+    for (final seven in sevens) {
+      testHand.remove(seven);
+      testMelds.add(Meld(cards: [seven], isRun: false));
+      playableCount++;
+    }
+
+    // 3. 기존 멜드에 붙일 수 있는 카드
+    bool attached = true;
+    while (attached && testMelds.isNotEmpty) {
+      attached = false;
+      for (int i = testHand.length - 1; i >= 0; i--) {
+        final card = testHand[i];
+        final meldIndex = _canAttachToMeldList(card, testMelds);
+        if (meldIndex >= 0) {
+          _attachToMeldList(meldIndex, card, testMelds);
+          testHand.removeAt(i);
+          playableCount++;
+          attached = true;
+        }
+      }
+    }
+
+    // 남은 카드 확인
+    final remainingCount = testHand.length;
+    final canHula = remainingCount == 0;
+
+    // 확률 계산
+    double probability = 0.0;
+    if (canHula) {
+      probability = 100.0;
+    } else {
+      // 남은 카드가 적을수록 확률 높음
+      // 남은 카드로 멜드를 만들 수 있는 가능성 계산
+      probability = _calculateRemainingProbability(testHand, hand.length);
+    }
+
+    return {
+      'canHula': canHula,
+      'playableCount': playableCount,
+      'remainingCount': remainingCount,
+      'probability': probability,
+    };
+  }
+
+  // 남은 카드로 멜드를 만들 확률 계산
+  double _calculateRemainingProbability(List<PlayingCard> remaining, int originalHandSize) {
+    if (remaining.isEmpty) return 100.0;
+
+    double probability = 0.0;
+    final checked = <PlayingCard>{};
+
+    for (final card in remaining) {
+      if (checked.contains(card)) continue;
+      checked.add(card);
+
+      // 같은 숫자 카드 확인 (Group 가능성)
+      final sameRank = remaining.where((c) => c.rank == card.rank).length;
+      final discardedSameRank = discardPile.where((c) => c.rank == card.rank).length;
+      final totalSameRank = sameRank + discardedSameRank;
+
+      // 4장 중 남은 장수로 Group 확률 계산
+      if (sameRank >= 2) {
+        final neededForGroup = 3 - sameRank;
+        final availableInDeck = 4 - totalSameRank;
+        if (availableInDeck >= neededForGroup) {
+          probability += 20.0 * (availableInDeck / 4.0);
+        }
+      }
+
+      // 같은 무늬 연속 카드 확인 (Run 가능성)
+      final sameSuit = remaining.where((c) => c.suit == card.suit).toList();
+      if (sameSuit.length >= 2) {
+        sameSuit.sort((a, b) => a.rank.compareTo(b.rank));
+        // 연속 카드 확인
+        bool hasConsecutive = false;
+        for (int i = 0; i < sameSuit.length - 1; i++) {
+          if (sameSuit[i + 1].rank - sameSuit[i].rank <= 2) {
+            hasConsecutive = true;
+            break;
+          }
+        }
+        if (hasConsecutive) {
+          // 필요한 카드가 버려졌는지 확인
+          final neededRanks = <int>[];
+          for (final c in sameSuit) {
+            neededRanks.addAll([c.rank - 1, c.rank + 1]);
+          }
+          final discardedNeeded = discardPile
+              .where((c) => c.suit == card.suit && neededRanks.contains(c.rank))
+              .length;
+          probability += 15.0 * (1 - discardedNeeded / neededRanks.length);
+        }
+      }
+    }
+
+    // 남은 카드 수에 따른 페널티
+    final remainingPenalty = remaining.length * 10.0;
+    probability = (probability - remainingPenalty).clamp(0.0, 100.0);
+
+    return probability;
+  }
+
+  // 멜드 등록 여부 결정 (훌라 가능성 고려)
+  bool _shouldRegisterMelds(List<PlayingCard> hand, List<Meld> melds) {
+    // 이미 멜드가 있으면 훌라 불가능 → 등록해도 됨
+    if (melds.isNotEmpty) return true;
+
+    final analysis = _analyzeHulaPotential(hand, melds);
+
+    // 훌라 가능하면 즉시 등록 (승리)
+    if (analysis['canHula'] == true) return true;
+
+    final probability = analysis['probability'] as double;
+    final remainingCount = analysis['remainingCount'] as int;
+
+    // 훌라 확률이 높으면 대기
+    // 60% 이상이고 남은 카드가 3장 이하면 훌라 시도
+    if (probability >= 60.0 && remainingCount <= 3) {
+      return false; // 등록 대기
+    }
+
+    // 손패가 많으면 일단 등록 (방어적)
+    if (hand.length >= 10) return true;
+
+    // 확률이 40% 이상이고 남은 카드가 2장 이하면 대기
+    if (probability >= 40.0 && remainingCount <= 2) {
+      return false;
+    }
+
+    // 그 외에는 등록
+    return true;
+  }
+
   // 7 카드 3장 이상일 때 Group vs Run 전략 결정
   String _decideSevensStrategy(List<PlayingCard> sevens, List<PlayingCard> hand) {
     // Run 가능성 점수 계산
@@ -1063,52 +1226,69 @@ class _HulaScreenState extends State<HulaScreen> with TickerProviderStateMixin {
     hand.add(drawnCard);
     _sortHand(hand);
 
-    // 2. 가능한 멜드 등록
-    List<PlayingCard>? bestMeld;
-    while ((bestMeld = _findBestMeld(hand)) != null) {
-      final isRun = _isValidRun(bestMeld!);
-      for (final card in bestMeld) {
-        hand.remove(card);
-      }
-      melds.add(Meld(cards: bestMeld, isRun: isRun));
+    // 2. 훌라 가능성 확인 후 등록 여부 결정
+    final shouldRegister = _shouldRegisterMelds(hand, melds);
 
-      if (hand.isEmpty) {
-        // 컴퓨터 승리
-        _endGame(currentTurn);
-        return;
-      }
-    }
-
-    // 2-1. 7 카드 스마트 등록 (Group vs Run 결정)
-    final sevens = hand.where((c) => _isSeven(c)).toList();
-    if (sevens.length >= 3) {
-      // 3장 이상: Group vs 개별 Run 결정
-      final decision = _decideSevensStrategy(sevens, hand);
-      if (decision == 'group') {
-        // Group으로 등록
-        for (final seven in sevens.take(3)) {
-          hand.remove(seven);
+    if (shouldRegister) {
+      // 2-1. 가능한 멜드 등록
+      List<PlayingCard>? bestMeld;
+      while ((bestMeld = _findBestMeld(hand)) != null) {
+        final isRun = _isValidRun(bestMeld!);
+        for (final card in bestMeld) {
+          hand.remove(card);
         }
-        melds.add(Meld(cards: sevens.take(3).toList(), isRun: false));
-        _showMessage('컴퓨터${computerIndex + 1}: 7 Group 등록!');
+        melds.add(Meld(cards: bestMeld, isRun: isRun));
 
         if (hand.isEmpty) {
+          // 컴퓨터 승리
           _endGame(currentTurn);
           return;
         }
+      }
 
-        // 남은 7이 있으면 단독 등록
-        final remaining = hand.where((c) => _isSeven(c)).toList();
-        for (final seven in remaining) {
-          hand.remove(seven);
-          melds.add(Meld(cards: [seven], isRun: false));
+      // 2-2. 7 카드 스마트 등록 (Group vs Run 결정)
+      final sevens = hand.where((c) => _isSeven(c)).toList();
+      if (sevens.length >= 3) {
+        // 3장 이상: Group vs 개별 Run 결정
+        final decision = _decideSevensStrategy(sevens, hand);
+        if (decision == 'group') {
+          // Group으로 등록
+          for (final seven in sevens.take(3)) {
+            hand.remove(seven);
+          }
+          melds.add(Meld(cards: sevens.take(3).toList(), isRun: false));
+          _showMessage('컴퓨터${computerIndex + 1}: 7 Group 등록!');
+
           if (hand.isEmpty) {
             _endGame(currentTurn);
             return;
           }
+
+          // 남은 7이 있으면 단독 등록
+          final remaining = hand.where((c) => _isSeven(c)).toList();
+          for (final seven in remaining) {
+            hand.remove(seven);
+            melds.add(Meld(cards: [seven], isRun: false));
+            if (hand.isEmpty) {
+              _endGame(currentTurn);
+              return;
+            }
+          }
+        } else {
+          // 개별 등록 (Run 가능성 높음)
+          for (final seven in sevens) {
+            hand.remove(seven);
+            melds.add(Meld(cards: [seven], isRun: false));
+            _showMessage('컴퓨터${computerIndex + 1}: 7 등록!');
+
+            if (hand.isEmpty) {
+              _endGame(currentTurn);
+              return;
+            }
+          }
         }
       } else {
-        // 개별 등록 (Run 가능성 높음)
+        // 2장 이하: 개별 등록
         for (final seven in sevens) {
           hand.remove(seven);
           melds.add(Meld(cards: [seven], isRun: false));
@@ -1120,36 +1300,24 @@ class _HulaScreenState extends State<HulaScreen> with TickerProviderStateMixin {
           }
         }
       }
-    } else {
-      // 2장 이하: 개별 등록
-      for (final seven in sevens) {
-        hand.remove(seven);
-        melds.add(Meld(cards: [seven], isRun: false));
-        _showMessage('컴퓨터${computerIndex + 1}: 7 등록!');
 
-        if (hand.isEmpty) {
-          _endGame(currentTurn);
-          return;
-        }
-      }
-    }
+      // 2-3. 기존 멜드에 붙여놓기
+      if (melds.isNotEmpty) {
+        bool attached = true;
+        while (attached) {
+          attached = false;
+          for (int i = hand.length - 1; i >= 0; i--) {
+            final card = hand[i];
+            final meldIndex = _canAttachToMeldList(card, melds);
+            if (meldIndex >= 0) {
+              _attachToMeldList(meldIndex, card, melds);
+              hand.removeAt(i);
+              attached = true;
 
-    // 2-2. 기존 멜드에 붙여놓기
-    if (melds.isNotEmpty) {
-      bool attached = true;
-      while (attached) {
-        attached = false;
-        for (int i = hand.length - 1; i >= 0; i--) {
-          final card = hand[i];
-          final meldIndex = _canAttachToMeldList(card, melds);
-          if (meldIndex >= 0) {
-            _attachToMeldList(meldIndex, card, melds);
-            hand.removeAt(i);
-            attached = true;
-
-            if (hand.isEmpty) {
-              _endGame(currentTurn);
-              return;
+              if (hand.isEmpty) {
+                _endGame(currentTurn);
+                return;
+              }
             }
           }
         }
@@ -1246,43 +1414,57 @@ class _HulaScreenState extends State<HulaScreen> with TickerProviderStateMixin {
     _sortHand(hand);
     _showMessage('컴퓨터${computerIndex + 1}: 땡큐! ${card.suitSymbol}${card.rankString}');
 
-    // 멜드 등록
-    List<PlayingCard>? bestMeld;
-    while ((bestMeld = _findBestMeld(hand)) != null) {
-      final isRun = _isValidRun(bestMeld!);
-      for (final c in bestMeld) {
-        hand.remove(c);
-      }
-      melds.add(Meld(cards: bestMeld, isRun: isRun));
+    // 훌라 가능성 확인 후 등록 여부 결정
+    final shouldRegister = _shouldRegisterMelds(hand, melds);
 
-      if (hand.isEmpty) {
-        _endGame(computerIndex + 1);
-        return;
-      }
-    }
-
-    // 7 카드 스마트 등록
-    final sevens = hand.where((c) => _isSeven(c)).toList();
-    if (sevens.length >= 3) {
-      final decision = _decideSevensStrategy(sevens, hand);
-      if (decision == 'group') {
-        for (final seven in sevens.take(3)) {
-          hand.remove(seven);
+    if (shouldRegister) {
+      // 멜드 등록
+      List<PlayingCard>? bestMeld;
+      while ((bestMeld = _findBestMeld(hand)) != null) {
+        final isRun = _isValidRun(bestMeld!);
+        for (final c in bestMeld) {
+          hand.remove(c);
         }
-        melds.add(Meld(cards: sevens.take(3).toList(), isRun: false));
+        melds.add(Meld(cards: bestMeld, isRun: isRun));
 
         if (hand.isEmpty) {
           _endGame(computerIndex + 1);
           return;
         }
+      }
 
-        final remaining = hand.where((c) => _isSeven(c)).toList();
-        for (final seven in remaining) {
-          hand.remove(seven);
-          melds.add(Meld(cards: [seven], isRun: false));
+      // 7 카드 스마트 등록
+      final sevens = hand.where((c) => _isSeven(c)).toList();
+      if (sevens.length >= 3) {
+        final decision = _decideSevensStrategy(sevens, hand);
+        if (decision == 'group') {
+          for (final seven in sevens.take(3)) {
+            hand.remove(seven);
+          }
+          melds.add(Meld(cards: sevens.take(3).toList(), isRun: false));
+
           if (hand.isEmpty) {
             _endGame(computerIndex + 1);
             return;
+          }
+
+          final remaining = hand.where((c) => _isSeven(c)).toList();
+          for (final seven in remaining) {
+            hand.remove(seven);
+            melds.add(Meld(cards: [seven], isRun: false));
+            if (hand.isEmpty) {
+              _endGame(computerIndex + 1);
+              return;
+            }
+          }
+        } else {
+          for (final seven in sevens) {
+            hand.remove(seven);
+            melds.add(Meld(cards: [seven], isRun: false));
+            if (hand.isEmpty) {
+              _endGame(computerIndex + 1);
+              return;
+            }
           }
         }
       } else {
@@ -1295,33 +1477,24 @@ class _HulaScreenState extends State<HulaScreen> with TickerProviderStateMixin {
           }
         }
       }
-    } else {
-      for (final seven in sevens) {
-        hand.remove(seven);
-        melds.add(Meld(cards: [seven], isRun: false));
-        if (hand.isEmpty) {
-          _endGame(computerIndex + 1);
-          return;
-        }
-      }
-    }
 
-    // 기존 멜드에 붙여놓기
-    if (melds.isNotEmpty) {
-      bool attached = true;
-      while (attached) {
-        attached = false;
-        for (int i = hand.length - 1; i >= 0; i--) {
-          final c = hand[i];
-          final meldIndex = _canAttachToMeldList(c, melds);
-          if (meldIndex >= 0) {
-            _attachToMeldList(meldIndex, c, melds);
-            hand.removeAt(i);
-            attached = true;
+      // 기존 멜드에 붙여놓기
+      if (melds.isNotEmpty) {
+        bool attached = true;
+        while (attached) {
+          attached = false;
+          for (int i = hand.length - 1; i >= 0; i--) {
+            final c = hand[i];
+            final meldIndex = _canAttachToMeldList(c, melds);
+            if (meldIndex >= 0) {
+              _attachToMeldList(meldIndex, c, melds);
+              hand.removeAt(i);
+              attached = true;
 
-            if (hand.isEmpty) {
-              _endGame(computerIndex + 1);
-              return;
+              if (hand.isEmpty) {
+                _endGame(computerIndex + 1);
+                return;
+              }
             }
           }
         }
