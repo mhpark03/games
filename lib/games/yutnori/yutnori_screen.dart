@@ -953,13 +953,17 @@ class _YutnoriScreenState extends State<YutnoriScreen>
       }
 
       // 업을 수 있으면 점수 (안전 지역에서만)
+      // 위치 1-7은 시작점 근처라 특히 위험
+      bool isNewDangerousZone = (newPos >= 1 && newPos <= 7);
       for (int i = 0; i < 4; i++) {
         if (i == pieceIndex) continue;
         if (playerPieces[currentPlayer][i].position == newPos) {
           if (isNewSafe) {
             score += 10; // 안전 지역에서 업기
+          } else if (isNewDangerousZone) {
+            score -= 20; // 시작점 근처(1-7)에서 업기는 큰 감점
           } else {
-            score -= 5; // 위험 지역에서 업기는 오히려 감점
+            score -= 5; // 일반 위험 지역에서 업기는 감점
           }
         }
       }
