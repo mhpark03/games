@@ -226,6 +226,8 @@ class _YutnoriScreenState extends State<YutnoriScreen>
       'pendingMoves': pendingMoves.map((m) => m.index).toList(),
       'canThrowYut': canThrowYut,
       'waitingForNextTurn': waitingForNextTurn,
+      'lastMovedPlayerIndex': lastMovedPlayerIndex,
+      'lastMovedPieceIndex': lastMovedPieceIndex,
     };
 
     await GameSaveService.saveGame('yutnori', gameState);
@@ -274,6 +276,10 @@ class _YutnoriScreenState extends State<YutnoriScreen>
     winner = null;
     isThrowingYut = false;
     selectedPieceIndex = null;
+
+    // 최근 이동한 말 정보 복원
+    lastMovedPlayerIndex = gameState['lastMovedPlayerIndex'] as int?;
+    lastMovedPieceIndex = gameState['lastMovedPieceIndex'] as int?;
 
     if (currentPlayer == 0) {
       if (pendingMoves.isNotEmpty) {
@@ -1655,7 +1661,7 @@ class _YutnoriScreenState extends State<YutnoriScreen>
     final colors = [
       Colors.blue, // 플레이어
       Colors.red, // 컴퓨터 1
-      Colors.green, // 컴퓨터 2
+      Colors.purple, // 컴퓨터 2 (초록 → 보라로 변경)
       Colors.orange, // 컴퓨터 3
     ];
     return colors[playerIndex % colors.length];
