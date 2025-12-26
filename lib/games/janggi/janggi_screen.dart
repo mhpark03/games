@@ -1558,6 +1558,10 @@ class _JanggiScreenState extends State<JanggiScreen> {
     if (capturedPiece?.type == JanggiPieceType.gung) {
       isGameOver = true;
       winner = currentTurn == JanggiColor.cho ? '초' : '한';
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) _showGameOverDialog();
+      });
+      return;
     }
 
     currentTurn =
@@ -1570,6 +1574,10 @@ class _JanggiScreenState extends State<JanggiScreen> {
     if (!isGameOver && _isCheckmate(currentTurn)) {
       isGameOver = true;
       winner = currentTurn == JanggiColor.cho ? '한' : '초';
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) _showGameOverDialog();
+      });
+      return;
     }
 
     // 컴퓨터 턴
@@ -1658,6 +1666,9 @@ class _JanggiScreenState extends State<JanggiScreen> {
         isThinking = false;
         isGameOver = true;
         winner = computerColor == JanggiColor.cho ? '한' : '초';
+      });
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) _showGameOverDialog();
       });
       return;
     }
@@ -2183,6 +2194,144 @@ class _JanggiScreenState extends State<JanggiScreen> {
     board[toRow][toCol] = capturedPiece;
 
     return score;
+  }
+
+  void _showGameOverDialog() {
+    // 저장된 게임 삭제
+    JanggiScreen.clearSavedGame();
+
+    final isPlayerWin = widget.gameMode == JanggiGameMode.vsHuman ||
+        (widget.gameMode == JanggiGameMode.vsHan && winner == '초') ||
+        (widget.gameMode == JanggiGameMode.vsCho && winner == '한');
+
+    final winnerColor = winner == '초' ? JanggiColor.cho : JanggiColor.han;
+    final Color winnerDisplayColor = winnerColor == JanggiColor.cho
+        ? const Color(0xFF006400)
+        : const Color(0xFFB22222);
+
+    String title;
+    String message;
+    IconData icon;
+
+    if (widget.gameMode == JanggiGameMode.vsHuman) {
+      title = '$winner 승리!';
+      message = '$winner가 승리하였습니다!';
+      icon = Icons.emoji_events;
+    } else if (isPlayerWin) {
+      title = '축하합니다!';
+      message = '플레이어($winner)가 컴퓨터를 이겼습니다!';
+      icon = Icons.celebration;
+    } else {
+      title = '패배...';
+      message = '컴퓨터($winner)에게 졌습니다.\n다시 도전해보세요!';
+      icon = Icons.sentiment_dissatisfied;
+    }
+
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          backgroundColor: const Color(0xFFF5DEB3),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20),
+            side: BorderSide(color: winnerDisplayColor, width: 4),
+          ),
+          title: Column(
+            children: [
+              Icon(
+                icon,
+                size: 60,
+                color: winnerDisplayColor,
+              ),
+              const SizedBox(height: 12),
+              Text(
+                title,
+                style: TextStyle(
+                  fontSize: 28,
+                  fontWeight: FontWeight.bold,
+                  color: winnerDisplayColor,
+                ),
+                textAlign: TextAlign.center,
+              ),
+            ],
+          ),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                message,
+                style: const TextStyle(
+                  fontSize: 16,
+                  color: Color(0xFF8B4513),
+                ),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 20),
+              // 승리 기물 표시
+              Container(
+                width: 80,
+                height: 80,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: winnerColor == JanggiColor.cho
+                      ? const Color(0xFF90EE90)
+                      : const Color(0xFFFFB6C1),
+                  border: Border.all(color: winnerDisplayColor, width: 4),
+                  boxShadow: [
+                    BoxShadow(
+                      color: winnerDisplayColor.withAlpha(100),
+                      blurRadius: 10,
+                      spreadRadius: 2,
+                    ),
+                  ],
+                ),
+                child: Center(
+                  child: Text(
+                    winner ?? '',
+                    style: TextStyle(
+                      fontSize: 36,
+                      fontWeight: FontWeight.bold,
+                      color: winnerDisplayColor,
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+          actionsAlignment: MainAxisAlignment.center,
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.pop(context);
+              },
+              child: const Text(
+                '결과 확인',
+                style: TextStyle(
+                  color: Color(0xFF8B4513),
+                  fontSize: 16,
+                ),
+              ),
+            ),
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: winnerDisplayColor,
+                foregroundColor: Colors.white,
+                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+              ),
+              onPressed: () {
+                Navigator.pop(context);
+                _resetGame();
+              },
+              child: const Text(
+                '새 게임',
+                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+              ),
+            ),
+          ],
+        );
+      },
+    );
   }
 
   void _resetGame() {
