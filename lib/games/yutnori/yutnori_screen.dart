@@ -825,6 +825,8 @@ class _YutnoriScreenState extends State<YutnoriScreen>
   }
 
   void _computerMovePiece() {
+    // 컴퓨터 턴이 아니면 무시
+    if (currentPlayer == 0 || gameOver) return;
     if (pendingMoves.isEmpty) return;
 
     final move = pendingMoves.first;
