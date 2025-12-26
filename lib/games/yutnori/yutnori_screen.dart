@@ -484,14 +484,14 @@ class _YutnoriScreenState extends State<YutnoriScreen>
       if (newPos > 22) {
         // 중앙 지나면 30번(좌하단 대각선)으로 연결
         newPos = 30 + (newPos - 23);
-      }
-      if (newPos > 31) {
-        // 좌하단 코너(15) 방향으로 외곽 합류
-        newPos = 15 + (newPos - 32);
-      }
-      if (newPos > 19) {
-        // 시작점 지나면 골인
-        return finishPosition;
+        if (newPos > 31) {
+          // 좌하단 코너(15) 방향으로 외곽 합류
+          newPos = 15 + (newPos - 32);
+          if (newPos > 19) {
+            // 외곽 합류 후 시작점 지나면 골인
+            return finishPosition;
+          }
+        }
       }
     } else if (currentPos == cornerTopLeft) {
       // 좌상단 코너에서 대각선으로 (10 → 25, 26, 27 중앙 → 28, 29 → 골인)
@@ -509,14 +509,14 @@ class _YutnoriScreenState extends State<YutnoriScreen>
       if (newPos > 22) {
         // 중앙 지나면 30번(좌하단 대각선)으로 연결
         newPos = 30 + (newPos - 23);
-      }
-      if (newPos > 31) {
-        // 좌하단 코너(15) 방향으로 외곽 합류
-        newPos = 15 + (newPos - 32);
-      }
-      if (newPos > 19) {
-        // 시작점 지나면 골인
-        return finishPosition;
+        if (newPos > 31) {
+          // 좌하단 코너(15) 방향으로 외곽 합류
+          newPos = 15 + (newPos - 32);
+          if (newPos > 19) {
+            // 외곽 합류 후 시작점 지나면 골인
+            return finishPosition;
+          }
+        }
       }
     } else if (currentPos >= 25 && currentPos <= 27) {
       // 좌상단 대각선에서 (25, 26 → 27 중앙 → 28, 29 → 골인)
@@ -540,10 +540,10 @@ class _YutnoriScreenState extends State<YutnoriScreen>
       if (newPos > 31) {
         // 좌하단 코너(15) 방향으로 외곽 합류
         newPos = 15 + (newPos - 32);
-      }
-      if (newPos > 19) {
-        // 시작점 지나면 골인
-        return finishPosition;
+        if (newPos > 19) {
+          // 외곽 합류 후 시작점 지나면 골인
+          return finishPosition;
+        }
       }
     } else {
       // 일반 외곽 경로
