@@ -126,6 +126,10 @@ class _YutnoriScreenState extends State<YutnoriScreen>
   bool waitingForNextTurn = false;
   int? lastPlayerIndex;
 
+  // 최근 이동한 말 표시
+  int? lastMovedPlayerIndex;
+  int? lastMovedPieceIndex;
+
   // 말 선택
   int? selectedPieceIndex;
 
@@ -198,6 +202,8 @@ class _YutnoriScreenState extends State<YutnoriScreen>
     canThrowYut = true;
     waitingForNextTurn = false;
     lastPlayerIndex = null;
+    lastMovedPlayerIndex = null;
+    lastMovedPieceIndex = null;
     selectedPieceIndex = null;
     gameMessage = '윷을 던지세요!';
   }
@@ -325,16 +331,37 @@ class _YutnoriScreenState extends State<YutnoriScreen>
       isThrowingYut = false;
 
       if (result.isBonus) {
-        gameMessage = '${result.name}! 한 번 더 던지세요!';
+        if (isPlayerTurn) {
+          gameMessage = '${result.name}! 한 번 더 던지세요!';
+        } else {
+          gameMessage = '${_getPlayerName(currentPlayer)}: ${result.name}! 한 번 더!';
+        }
         canThrowYut = true;
       } else {
-        gameMessage = '${result.name}! 말을 선택하세요';
+        if (isPlayerTurn) {
+          gameMessage = '${result.name}! 말을 선택하세요';
+        } else {
+          gameMessage = '${_getPlayerName(currentPlayer)}: ${result.name}!';
+        }
         canThrowYut = false;
       }
     });
 
     HapticFeedback.mediumImpact();
     _saveGame();
+
+    // 컴퓨터 턴이면 계속 진행
+    if (currentPlayer > 0 && !gameOver) {
+      if (result.isBonus) {
+        // 윷/모가 나오면 다음 버튼 대기
+        setState(() {
+          waitingForNextTurn = true;
+        });
+      } else {
+        // 일반 결과면 바로 말 이동
+        _computerTurn();
+      }
+    }
   }
 
   YutResult _generateYutResult() {
@@ -474,8 +501,13 @@ class _YutnoriScreenState extends State<YutnoriScreen>
     final piece = playerPieces[currentPlayer][pieceIndex];
     final oldPos = piece.position;
     final newPos = _calculateNewPosition(oldPos, move.moveCount);
+    bool captured = false;
 
     setState(() {
+      // 최근 이동한 말 기록
+      lastMovedPlayerIndex = currentPlayer;
+      lastMovedPieceIndex = pieceIndex;
+
       // 이동
       piece.position = newPos;
 
@@ -493,7 +525,7 @@ class _YutnoriScreenState extends State<YutnoriScreen>
         piece.stackedPieces.clear();
       } else if (newPos >= 0) {
         // 잡기 확인
-        bool captured = _checkCapture(newPos);
+        captured = _checkCapture(newPos);
         if (captured) {
           gameMessage = '${_getPlayerName(currentPlayer)} 잡았다! 한 번 더!';
           canThrowYut = true;
@@ -515,7 +547,11 @@ class _YutnoriScreenState extends State<YutnoriScreen>
         // 턴 종료
         _nextTurn();
       } else if (pendingMoves.isNotEmpty) {
-        gameMessage = '${pendingMoves.first.name} - 말을 선택하세요';
+        if (isPlayerTurn) {
+          gameMessage = '${pendingMoves.first.name} - 말을 선택하세요';
+        } else {
+          gameMessage = '${_getPlayerName(currentPlayer)}: ${pendingMoves.first.name} 이동 중...';
+        }
       }
 
       selectedPieceIndex = null;
@@ -526,9 +562,17 @@ class _YutnoriScreenState extends State<YutnoriScreen>
 
     // 컴퓨터 턴
     if (!gameOver && currentPlayer > 0) {
-      Future.delayed(const Duration(milliseconds: 800), () {
-        if (mounted) _computerTurn();
-      });
+      if (captured) {
+        // 잡기 발생 시 다음 버튼 대기
+        setState(() {
+          waitingForNextTurn = true;
+        });
+      } else if (pendingMoves.isNotEmpty || canThrowYut) {
+        // 남은 이동이 있거나 더 던질 수 있으면 계속 진행
+        Future.delayed(const Duration(milliseconds: 800), () {
+          if (mounted) _computerTurn();
+        });
+      }
     }
   }
 
@@ -917,6 +961,8 @@ class _YutnoriScreenState extends State<YutnoriScreen>
 
   // 현재 턴 표시
   Widget _buildTurnInfo() {
+    final showNextButton = waitingForNextTurn && currentPlayer > 0;
+
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
       child: Row(
@@ -973,6 +1019,12 @@ class _YutnoriScreenState extends State<YutnoriScreen>
                   );
                 }).toList(),
               ),
+            ),
+          // 다음 버튼 (컴퓨터 턴 대기 시)
+          if (showNextButton)
+            Padding(
+              padding: const EdgeInsets.only(left: 10),
+              child: _buildPlayButton(compact: true),
             ),
         ],
       ),
@@ -1367,6 +1419,10 @@ class _YutnoriScreenState extends State<YutnoriScreen>
         final pieceIndex = piecesHere[i]['piece']!;
         final piece = playerPieces[playerIndex][pieceIndex];
 
+        // 최근 이동한 말인지 확인
+        final isLastMoved = lastMovedPlayerIndex == playerIndex &&
+            lastMovedPieceIndex == pieceIndex;
+
         // 같은 위치에 여러 말이 있을 때만 오프셋 적용
         final offset = piecesHere.length > 1
             ? _getPieceOffsetForMultiple(i, piecesHere.length)
@@ -1394,6 +1450,7 @@ class _YutnoriScreenState extends State<YutnoriScreen>
                     playerIndex == 0 &&
                     pendingMoves.isNotEmpty &&
                     _canMovePiece(pieceIndex, pendingMoves.first),
+                isLastMoved: isLastMoved,
               ),
             ),
           ),
@@ -1514,19 +1571,29 @@ class _YutnoriScreenState extends State<YutnoriScreen>
     return Offset(center, center);
   }
 
-  String _getPlayerLabel(int playerIndex) {
-    if (playerIndex == 0) return 'P';
-    return 'C$playerIndex';
-  }
-
   Widget _buildPieceWidget(
     int playerIndex,
     int pieceIndex,
     int stackCount, {
     bool isSelectable = false,
+    bool isLastMoved = false,
   }) {
     final color = _getPlayerColor(playerIndex);
     final size = 28.0 + stackCount * 4;
+
+    // 테두리 색상 결정: 선택 가능 > 최근 이동 > 기본
+    Color borderColor;
+    double borderWidth;
+    if (isSelectable) {
+      borderColor = Colors.yellow;
+      borderWidth = 3;
+    } else if (isLastMoved) {
+      borderColor = Colors.orange;
+      borderWidth = 3;
+    } else {
+      borderColor = Colors.white;
+      borderWidth = 2;
+    }
 
     return Container(
       width: size,
@@ -1535,28 +1602,32 @@ class _YutnoriScreenState extends State<YutnoriScreen>
         color: color,
         shape: BoxShape.circle,
         border: Border.all(
-          color: isSelectable ? Colors.yellow : Colors.white,
-          width: isSelectable ? 3 : 2,
+          color: borderColor,
+          width: borderWidth,
         ),
         boxShadow: [
           BoxShadow(
             color: isSelectable
                 ? Colors.yellow.withValues(alpha: 0.5)
-                : Colors.black.withValues(alpha: 0.3),
-            blurRadius: isSelectable ? 8 : 4,
+                : isLastMoved
+                    ? Colors.orange.withValues(alpha: 0.6)
+                    : Colors.black.withValues(alpha: 0.3),
+            blurRadius: isSelectable || isLastMoved ? 8 : 4,
           ),
         ],
       ),
-      child: Center(
-        child: Text(
-          stackCount > 0 ? '${stackCount + 1}' : _getPlayerLabel(playerIndex),
-          style: const TextStyle(
-            color: Colors.white,
-            fontSize: 10,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-      ),
+      child: stackCount > 0
+          ? Center(
+              child: Text(
+                '${stackCount + 1}',
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 12,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            )
+          : null,
     );
   }
 
