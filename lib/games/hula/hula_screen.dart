@@ -2631,22 +2631,22 @@ class _HulaScreenState extends State<HulaScreen> with TickerProviderStateMixin {
                 // 선택된 카드가 이 멜드에 붙일 수 있는지 확인
                 // 조건: 자신의 멜드가 1개 이상 있어야 붙여놓기 가능
                 bool canAttach = false;
-                if (selectedCards.length == 1 &&
+                if (selectedCardIndices.length == 1 &&
                     currentTurn == 0 &&
                     hasDrawn &&
                     playerMelds.isNotEmpty) {
-                  final card = selectedCards.first;
+                  final card = playerHand[selectedCardIndices.first];
                   canAttach = _canAttachToMeldList(card, melds) == meldIndex;
                 }
 
                 return GestureDetector(
                   onTap: canAttach
                       ? () {
-                          final card = selectedCards.first;
+                          final card = playerHand[selectedCardIndices.first];
                           // 멜드에 붙이기
                           _attachToMeldList(meldIndex, card, melds);
                           playerHand.remove(card);
-                          selectedCards.clear();
+                          selectedCardIndices.clear();
 
                           if (playerHand.isEmpty) {
                             _endGame(0);
