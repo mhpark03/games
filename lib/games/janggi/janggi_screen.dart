@@ -449,11 +449,21 @@ class _JanggiScreenState extends State<JanggiScreen> {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
+            // 컴퓨터가 초일 때 (vsCho 모드) - 컴퓨터 초 배치 표시
+            if (widget.gameMode == JanggiGameMode.vsCho) ...[
+              _buildComputerPositionDisplay(
+                '초 (컴퓨터)',
+                JanggiColor.cho,
+                choLeftPosition,
+                choRightPosition,
+              ),
+              const SizedBox(height: 16),
+            ],
             // 플레이어 초의 배치 (한과 대전 또는 2인 플레이)
             if (widget.gameMode == JanggiGameMode.vsHan ||
                 widget.gameMode == JanggiGameMode.vsHuman) ...[
               _buildPositionSelector(
-                '초 (플레이어)',
+                widget.gameMode == JanggiGameMode.vsHuman ? '초' : '초 (플레이어)',
                 JanggiColor.cho,
                 choLeftPosition,
                 choRightPosition,
@@ -480,6 +490,16 @@ class _JanggiScreenState extends State<JanggiScreen> {
                     hanRightPosition = right;
                   });
                 },
+              ),
+            ],
+            // 컴퓨터가 한일 때 (vsHan 모드) - 컴퓨터 한 배치 표시
+            if (widget.gameMode == JanggiGameMode.vsHan) ...[
+              const SizedBox(height: 16),
+              _buildComputerPositionDisplay(
+                '한 (컴퓨터)',
+                JanggiColor.han,
+                hanLeftPosition,
+                hanRightPosition,
               ),
             ],
           ],
@@ -538,12 +558,23 @@ class _JanggiScreenState extends State<JanggiScreen> {
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // 왼쪽: 초 플레이어
+                  // 왼쪽: 초
+                  if (widget.gameMode == JanggiGameMode.vsCho)
+                    // 컴퓨터가 초
+                    Expanded(
+                      child: _buildComputerPositionDisplay(
+                        '초 (컴퓨터)',
+                        JanggiColor.cho,
+                        choLeftPosition,
+                        choRightPosition,
+                      ),
+                    ),
                   if (widget.gameMode == JanggiGameMode.vsHan ||
                       widget.gameMode == JanggiGameMode.vsHuman)
+                    // 플레이어가 초
                     Expanded(
                       child: _buildPositionSelector(
-                        '초 (플레이어)',
+                        widget.gameMode == JanggiGameMode.vsHuman ? '초' : '초 (플레이어)',
                         JanggiColor.cho,
                         choLeftPosition,
                         choRightPosition,
@@ -555,11 +586,11 @@ class _JanggiScreenState extends State<JanggiScreen> {
                         },
                       ),
                     ),
-                  if (widget.gameMode == JanggiGameMode.vsHuman)
-                    const SizedBox(width: 16),
-                  // 오른쪽: 한 플레이어
+                  const SizedBox(width: 16),
+                  // 오른쪽: 한
                   if (widget.gameMode == JanggiGameMode.vsCho ||
                       widget.gameMode == JanggiGameMode.vsHuman)
+                    // 플레이어가 한
                     Expanded(
                       child: _buildPositionSelector(
                         widget.gameMode == JanggiGameMode.vsHuman ? '한' : '한 (플레이어)',
@@ -572,6 +603,16 @@ class _JanggiScreenState extends State<JanggiScreen> {
                             hanRightPosition = right;
                           });
                         },
+                      ),
+                    ),
+                  if (widget.gameMode == JanggiGameMode.vsHan)
+                    // 컴퓨터가 한
+                    Expanded(
+                      child: _buildComputerPositionDisplay(
+                        '한 (컴퓨터)',
+                        JanggiColor.han,
+                        hanLeftPosition,
+                        hanRightPosition,
                       ),
                     ),
                 ],
@@ -744,6 +785,91 @@ class _JanggiScreenState extends State<JanggiScreen> {
     } else {
       return '좌외마 우내마';
     }
+  }
+
+  // 컴퓨터의 마상 배치 표시 (읽기 전용)
+  Widget _buildComputerPositionDisplay(
+    String title,
+    JanggiColor color,
+    MaSangPosition leftPos,
+    MaSangPosition rightPos,
+  ) {
+    final pieceColor = color == JanggiColor.cho
+        ? const Color(0xFF006400)
+        : const Color(0xFFB22222);
+
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: pieceColor.withAlpha(15),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: pieceColor.withAlpha(80)),
+      ),
+      child: Column(
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(Icons.computer, size: 16, color: pieceColor.withAlpha(180)),
+              const SizedBox(width: 4),
+              Text(
+                title,
+                style: TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.bold,
+                  color: pieceColor.withAlpha(180),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              _buildPositionLabel('좌측', leftPos, pieceColor),
+              const SizedBox(width: 16),
+              _buildPositionLabel('우측', rightPos, pieceColor),
+            ],
+          ),
+          const SizedBox(height: 6),
+          Text(
+            '배치: ${_getPositionName(leftPos, rightPos)}',
+            style: TextStyle(
+              fontSize: 11,
+              color: Colors.grey.shade600,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildPositionLabel(String side, MaSangPosition pos, Color color) {
+    final posName = pos == MaSangPosition.maSang ? '마상' : '상마';
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+      decoration: BoxDecoration(
+        color: color.withAlpha(30),
+        borderRadius: BorderRadius.circular(6),
+        border: Border.all(color: color.withAlpha(100)),
+      ),
+      child: Column(
+        children: [
+          Text(
+            side,
+            style: TextStyle(fontSize: 10, color: Colors.grey.shade600),
+          ),
+          Text(
+            posName,
+            style: TextStyle(
+              fontSize: 12,
+              fontWeight: FontWeight.bold,
+              color: color.withAlpha(200),
+            ),
+          ),
+        ],
+      ),
+    );
   }
 
   void _initBoard() {
