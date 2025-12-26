@@ -1739,69 +1739,75 @@ class HomeScreen extends StatelessWidget {
     showDialog(
       context: context,
       builder: (BuildContext context) {
-        return AlertDialog(
-          backgroundColor: Colors.grey.shade900,
-          insetPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16),
-            side: BorderSide(color: const Color(0xFFDEB887).withValues(alpha: 0.5), width: 2),
-          ),
-          title: const Text(
-            '인원 선택',
-            style: TextStyle(
-              color: Color(0xFFDEB887),
-              fontWeight: FontWeight.bold,
-            ),
-            textAlign: TextAlign.center,
-          ),
-          content: SingleChildScrollView(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                // 이어하기 버튼 (저장된 게임이 있을 때만)
-                if (hasSaved && savedPlayerCount != null) ...[
-                  _buildYutnoriResumeButton(context, savedPlayerCount),
-                  const SizedBox(height: 16),
-                  Divider(color: Colors.grey.shade700),
-                  const SizedBox(height: 8),
-                  Text(
-                    '새 게임',
-                    style: TextStyle(
-                      color: Colors.grey.shade400,
-                      fontSize: 12,
+        return LayoutBuilder(
+          builder: (context, constraints) {
+            final isLandscape = constraints.maxWidth > constraints.maxHeight;
+            return AlertDialog(
+              backgroundColor: Colors.grey.shade900,
+              insetPadding: EdgeInsets.symmetric(
+                horizontal: isLandscape ? 100 : 20,
+                vertical: isLandscape ? 12 : 24,
+              ),
+              contentPadding: EdgeInsets.fromLTRB(20, isLandscape ? 8 : 16, 20, isLandscape ? 12 : 20),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16),
+                side: BorderSide(color: const Color(0xFFDEB887).withValues(alpha: 0.5), width: 2),
+              ),
+              title: Text(
+                '인원 선택',
+                style: TextStyle(
+                  color: const Color(0xFFDEB887),
+                  fontWeight: FontWeight.bold,
+                  fontSize: isLandscape ? 16 : 20,
+                ),
+                textAlign: TextAlign.center,
+              ),
+              content: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  // 이어하기 버튼 (저장된 게임이 있을 때만)
+                  if (hasSaved && savedPlayerCount != null) ...[
+                    _buildYutnoriResumeButton(context, savedPlayerCount, compact: isLandscape),
+                    SizedBox(height: isLandscape ? 8 : 16),
+                    Divider(color: Colors.grey.shade700, height: 1),
+                    SizedBox(height: isLandscape ? 6 : 8),
+                    Text(
+                      '새 게임',
+                      style: TextStyle(
+                        color: Colors.grey.shade400,
+                        fontSize: isLandscape ? 10 : 12,
+                      ),
                     ),
-                  ),
-                  const SizedBox(height: 8),
+                    SizedBox(height: isLandscape ? 6 : 8),
+                  ],
+                  // 가로모드: 버튼들을 가로로 배치
+                  if (isLandscape)
+                    Row(
+                      children: [
+                        Expanded(child: _buildYutnoriPlayerCountButton(context, playerCount: 2, subtitle: '1 vs 1', icon: Icons.people, compact: true)),
+                        const SizedBox(width: 8),
+                        Expanded(child: _buildYutnoriPlayerCountButton(context, playerCount: 3, subtitle: '1 vs 2', icon: Icons.groups, compact: true)),
+                        const SizedBox(width: 8),
+                        Expanded(child: _buildYutnoriPlayerCountButton(context, playerCount: 4, subtitle: '1 vs 3', icon: Icons.groups, compact: true)),
+                      ],
+                    )
+                  else ...[
+                    _buildYutnoriPlayerCountButton(context, playerCount: 2, subtitle: '1 vs 1', icon: Icons.people),
+                    const SizedBox(height: 12),
+                    _buildYutnoriPlayerCountButton(context, playerCount: 3, subtitle: '1 vs 2', icon: Icons.groups),
+                    const SizedBox(height: 12),
+                    _buildYutnoriPlayerCountButton(context, playerCount: 4, subtitle: '1 vs 3', icon: Icons.groups),
+                  ],
                 ],
-                _buildYutnoriPlayerCountButton(
-                  context,
-                  playerCount: 2,
-                  subtitle: '1 vs 1',
-                  icon: Icons.people,
-                ),
-                const SizedBox(height: 12),
-                _buildYutnoriPlayerCountButton(
-                  context,
-                  playerCount: 3,
-                  subtitle: '1 vs 2',
-                  icon: Icons.groups,
-                ),
-                const SizedBox(height: 12),
-                _buildYutnoriPlayerCountButton(
-                  context,
-                  playerCount: 4,
-                  subtitle: '1 vs 3',
-                  icon: Icons.groups,
-                ),
-              ],
-            ),
-          ),
+              ),
+            );
+          },
         );
       },
     );
   }
 
-  Widget _buildYutnoriResumeButton(BuildContext context, int savedPlayerCount) {
+  Widget _buildYutnoriResumeButton(BuildContext context, int savedPlayerCount, {bool compact = false}) {
     return InkWell(
       onTap: () {
         Navigator.pop(context);
@@ -1815,13 +1821,13 @@ class HomeScreen extends StatelessWidget {
           ),
         );
       },
-      borderRadius: BorderRadius.circular(12),
+      borderRadius: BorderRadius.circular(compact ? 8 : 12),
       child: Container(
         width: double.infinity,
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        padding: EdgeInsets.symmetric(horizontal: compact ? 12 : 16, vertical: compact ? 8 : 12),
         decoration: BoxDecoration(
           color: Colors.green.withValues(alpha: 0.2),
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(compact ? 8 : 12),
           border: Border.all(
             color: Colors.green.withValues(alpha: 0.5),
             width: 2,
@@ -1829,16 +1835,16 @@ class HomeScreen extends StatelessWidget {
         ),
         child: Row(
           children: [
-            const Icon(Icons.play_arrow, color: Colors.green, size: 28),
-            const SizedBox(width: 12),
+            Icon(Icons.play_arrow, color: Colors.green, size: compact ? 22 : 28),
+            SizedBox(width: compact ? 8 : 12),
             Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text(
+                Text(
                   '이어하기',
                   style: TextStyle(
                     color: Colors.green,
-                    fontSize: 16,
+                    fontSize: compact ? 13 : 16,
                     fontWeight: FontWeight.bold,
                   ),
                 ),
@@ -1846,7 +1852,7 @@ class HomeScreen extends StatelessWidget {
                   '${savedPlayerCount}인 게임',
                   style: TextStyle(
                     color: Colors.grey.shade400,
-                    fontSize: 12,
+                    fontSize: compact ? 10 : 12,
                   ),
                 ),
               ],
@@ -1855,7 +1861,7 @@ class HomeScreen extends StatelessWidget {
             Icon(
               Icons.arrow_forward_ios,
               color: Colors.green.withValues(alpha: 0.7),
-              size: 16,
+              size: compact ? 12 : 16,
             ),
           ],
         ),
@@ -1868,6 +1874,7 @@ class HomeScreen extends StatelessWidget {
     required int playerCount,
     required String subtitle,
     required IconData icon,
+    bool compact = false,
   }) {
     return InkWell(
       onTap: () {
@@ -1879,50 +1886,75 @@ class HomeScreen extends StatelessWidget {
           ),
         );
       },
-      borderRadius: BorderRadius.circular(12),
+      borderRadius: BorderRadius.circular(compact ? 8 : 12),
       child: Container(
         width: double.infinity,
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        padding: EdgeInsets.symmetric(horizontal: compact ? 10 : 16, vertical: compact ? 8 : 12),
         decoration: BoxDecoration(
           color: const Color(0xFFDEB887).withValues(alpha: 0.1),
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(compact ? 8 : 12),
           border: Border.all(
             color: const Color(0xFFDEB887).withValues(alpha: 0.3),
             width: 1,
           ),
         ),
-        child: Row(
-          children: [
-            Icon(icon, color: const Color(0xFFDEB887), size: 28),
-            const SizedBox(width: 12),
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  '${playerCount}인',
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
+        child: compact
+            // 컴팩트 모드: 세로 배치
+            ? Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(icon, color: const Color(0xFFDEB887), size: 22),
+                  const SizedBox(height: 4),
+                  Text(
+                    '${playerCount}인',
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 13,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
-                ),
-                Text(
-                  subtitle,
-                  style: TextStyle(
-                    color: Colors.grey.shade400,
-                    fontSize: 12,
+                  Text(
+                    subtitle,
+                    style: TextStyle(
+                      color: Colors.grey.shade400,
+                      fontSize: 10,
+                    ),
                   ),
-                ),
-              ],
-            ),
-            const Spacer(),
-            Icon(
-              Icons.arrow_forward_ios,
-              color: const Color(0xFFDEB887).withValues(alpha: 0.7),
-              size: 16,
-            ),
-          ],
-        ),
+                ],
+              )
+            // 일반 모드: 가로 배치
+            : Row(
+                children: [
+                  Icon(icon, color: const Color(0xFFDEB887), size: 28),
+                  const SizedBox(width: 12),
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        '${playerCount}인',
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      Text(
+                        subtitle,
+                        style: TextStyle(
+                          color: Colors.grey.shade400,
+                          fontSize: 12,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const Spacer(),
+                  Icon(
+                    Icons.arrow_forward_ios,
+                    color: const Color(0xFFDEB887).withValues(alpha: 0.7),
+                    size: 16,
+                  ),
+                ],
+              ),
       ),
     );
   }
@@ -2147,64 +2179,116 @@ class HomeScreen extends StatelessWidget {
   }) {
     return GestureDetector(
       onTap: onTap,
-      child: Container(
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [
-              color.withValues(alpha: 0.3),
-              color.withValues(alpha: 0.1),
-            ],
-          ),
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(
-            color: color.withValues(alpha: 0.5),
-            width: 2,
-          ),
-          boxShadow: [
-            BoxShadow(
-              color: color.withValues(alpha: 0.3),
-              blurRadius: 10,
-              spreadRadius: 1,
-            ),
-          ],
-        ),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Container(
-              padding: const EdgeInsets.all(10),
-              decoration: BoxDecoration(
-                color: color.withValues(alpha: 0.2),
-                shape: BoxShape.circle,
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          final isCompact = constraints.maxHeight < 120;
+          return Container(
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [
+                  color.withValues(alpha: 0.3),
+                  color.withValues(alpha: 0.1),
+                ],
               ),
-              child: Icon(
-                icon,
-                size: 28,
-                color: color,
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(
+                color: color.withValues(alpha: 0.5),
+                width: 2,
               ),
+              boxShadow: [
+                BoxShadow(
+                  color: color.withValues(alpha: 0.3),
+                  blurRadius: 10,
+                  spreadRadius: 1,
+                ),
+              ],
             ),
-            const SizedBox(height: 12),
-            Text(
-              title,
-              style: TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.bold,
-                color: color,
-                letterSpacing: 2,
-              ),
-            ),
-            const SizedBox(height: 4),
-            Text(
-              subtitle,
-              style: TextStyle(
-                fontSize: 12,
-                color: Colors.grey.shade400,
-              ),
-            ),
-          ],
-        ),
+            child: isCompact
+                // 가로모드: 아이콘과 텍스트를 가로로 배치
+                ? Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(8),
+                        decoration: BoxDecoration(
+                          color: color.withValues(alpha: 0.2),
+                          shape: BoxShape.circle,
+                        ),
+                        child: Icon(
+                          icon,
+                          size: 24,
+                          color: color,
+                        ),
+                      ),
+                      const SizedBox(width: 10),
+                      Flexible(
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              title,
+                              style: TextStyle(
+                                fontSize: 13,
+                                fontWeight: FontWeight.bold,
+                                color: color,
+                                letterSpacing: 1,
+                              ),
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                            Text(
+                              subtitle,
+                              style: TextStyle(
+                                fontSize: 10,
+                                color: Colors.grey.shade400,
+                              ),
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  )
+                // 세로모드: 기존 세로 배치
+                : Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(10),
+                        decoration: BoxDecoration(
+                          color: color.withValues(alpha: 0.2),
+                          shape: BoxShape.circle,
+                        ),
+                        child: Icon(
+                          icon,
+                          size: 28,
+                          color: color,
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                      Text(
+                        title,
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                          color: color,
+                          letterSpacing: 2,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        subtitle,
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: Colors.grey.shade400,
+                        ),
+                      ),
+                    ],
+                  ),
+          );
+        },
       ),
     );
   }
