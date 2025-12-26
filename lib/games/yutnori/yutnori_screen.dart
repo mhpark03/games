@@ -1467,6 +1467,17 @@ class _YutnoriScreenState extends State<YutnoriScreen>
       }
     }
 
+    // 이동 가능한 말이 있는지 확인
+    bool hasMovablePiece = false;
+    if (pendingMoves.isNotEmpty) {
+      for (int i = 0; i < 4; i++) {
+        if (_canMovePiece(i, pendingMoves.first)) {
+          hasMovablePiece = true;
+          break;
+        }
+      }
+    }
+
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
       margin: const EdgeInsets.symmetric(horizontal: 6),
@@ -1504,27 +1515,10 @@ class _YutnoriScreenState extends State<YutnoriScreen>
             ),
           ),
           const SizedBox(height: 6),
-          // 말 상태
-          Row(
-            mainAxisSize: MainAxisSize.min,
-            children: List.generate(4, (i) {
-              final pieceFinished = i < finishedCount;
-              return Container(
-                margin: const EdgeInsets.symmetric(horizontal: 2),
-                width: 14,
-                height: 14,
-                decoration: BoxDecoration(
-                  color: pieceFinished ? Colors.amber : _getPlayerColor(0),
-                  shape: BoxShape.circle,
-                  border: Border.all(color: Colors.white, width: 1),
-                ),
-              );
-            }),
-          ),
-          // 대기 중인 말 (선택 가능)
+          // 대기 중인 말 (선택 가능) - 더 크게 표시
           if (waitingPieces.isNotEmpty && isCurrentTurn && pendingMoves.isNotEmpty)
             Padding(
-              padding: const EdgeInsets.only(top: 6),
+              padding: const EdgeInsets.only(bottom: 4),
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: waitingPieces.take(4).map((pieceIndex) {
@@ -1532,21 +1526,22 @@ class _YutnoriScreenState extends State<YutnoriScreen>
                   return GestureDetector(
                     onTap: canMove ? () => _selectPiece(pieceIndex) : null,
                     child: Container(
-                      margin: const EdgeInsets.symmetric(horizontal: 2),
-                      width: 20,
-                      height: 20,
+                      margin: const EdgeInsets.symmetric(horizontal: 3),
+                      width: 28,
+                      height: 28,
                       decoration: BoxDecoration(
                         color: _getPlayerColor(0),
                         shape: BoxShape.circle,
                         border: Border.all(
-                          color: canMove ? Colors.yellow : Colors.white,
-                          width: canMove ? 2 : 1,
+                          color: canMove ? Colors.yellow : Colors.grey,
+                          width: canMove ? 3 : 1,
                         ),
                         boxShadow: canMove
                             ? [
                                 BoxShadow(
-                                  color: Colors.yellow.withValues(alpha: 0.5),
-                                  blurRadius: 4,
+                                  color: Colors.yellow.withValues(alpha: 0.6),
+                                  blurRadius: 6,
+                                  spreadRadius: 1,
                                 ),
                               ]
                             : null,
@@ -1556,9 +1551,61 @@ class _YutnoriScreenState extends State<YutnoriScreen>
                 }).toList(),
               ),
             ),
+          // 이동 불가시 건너뛰기 버튼
+          if (isCurrentTurn && pendingMoves.isNotEmpty && !hasMovablePiece)
+            GestureDetector(
+              onTap: _skipMove,
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                decoration: BoxDecoration(
+                  color: Colors.red.shade700,
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: const Text(
+                  '건너뛰기',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 11,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+            ),
+          // 말 상태
+          Row(
+            mainAxisSize: MainAxisSize.min,
+            children: List.generate(4, (i) {
+              final pieceFinished = i < finishedCount;
+              return Container(
+                margin: const EdgeInsets.symmetric(horizontal: 2),
+                width: 12,
+                height: 12,
+                decoration: BoxDecoration(
+                  color: pieceFinished ? Colors.amber : _getPlayerColor(0).withValues(alpha: 0.5),
+                  shape: BoxShape.circle,
+                  border: Border.all(color: Colors.white, width: 1),
+                ),
+              );
+            }),
+          ),
         ],
       ),
     );
+  }
+
+  // 이동 불가시 건너뛰기
+  void _skipMove() {
+    if (pendingMoves.isEmpty) return;
+
+    setState(() {
+      pendingMoves.removeAt(0);
+      if (pendingMoves.isEmpty && !canThrowYut) {
+        _nextTurn();
+      } else if (pendingMoves.isNotEmpty) {
+        gameMessage = '${pendingMoves.first.name}! 말을 선택하세요';
+      }
+    });
+    _saveGame();
   }
 
   // 가로모드: 컴퓨터 위젯
@@ -2441,6 +2488,17 @@ class _YutnoriScreenState extends State<YutnoriScreen>
         .where((e) => e.value.isWaiting)
         .toList();
 
+    // 이동 가능한 말이 있는지 확인
+    bool hasMovablePiece = false;
+    if (pendingMoves.isNotEmpty) {
+      for (int i = 0; i < 4; i++) {
+        if (_canMovePiece(i, pendingMoves.first)) {
+          hasMovablePiece = true;
+          break;
+        }
+      }
+    }
+
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       decoration: BoxDecoration(
@@ -2494,7 +2552,7 @@ class _YutnoriScreenState extends State<YutnoriScreen>
           ),
           const SizedBox(height: 8),
           // 대기 중인 말들 (선택 가능)
-          if (waitingPieces.isNotEmpty)
+          if (waitingPieces.isNotEmpty && isCurrentTurn && pendingMoves.isNotEmpty)
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
@@ -2503,9 +2561,7 @@ class _YutnoriScreenState extends State<YutnoriScreen>
                   style: TextStyle(fontSize: 12, color: Colors.grey.shade700),
                 ),
                 ...waitingPieces.map((entry) {
-                  final canMove = pendingMoves.isNotEmpty &&
-                      currentPlayer == 0 &&
-                      _canMovePiece(entry.key, pendingMoves.first);
+                  final canMove = _canMovePiece(entry.key, pendingMoves.first);
                   return GestureDetector(
                     onTap: canMove ? () => _selectPiece(entry.key) : null,
                     child: Container(
@@ -2516,7 +2572,7 @@ class _YutnoriScreenState extends State<YutnoriScreen>
                         color: _getPlayerColor(0),
                         shape: BoxShape.circle,
                         border: Border.all(
-                          color: canMove ? Colors.yellow : Colors.white,
+                          color: canMove ? Colors.yellow : Colors.grey,
                           width: canMove ? 3 : 2,
                         ),
                         boxShadow: canMove
@@ -2528,20 +2584,33 @@ class _YutnoriScreenState extends State<YutnoriScreen>
                               ]
                             : null,
                       ),
-                      child: Center(
-                        child: Text(
-                          'P',
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontSize: 12,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ),
                     ),
                   );
                 }),
               ],
+            ),
+          // 이동 불가시 건너뛰기 버튼
+          if (isCurrentTurn && pendingMoves.isNotEmpty && !hasMovablePiece)
+            Padding(
+              padding: const EdgeInsets.only(top: 8),
+              child: GestureDetector(
+                onTap: _skipMove,
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                  decoration: BoxDecoration(
+                    color: Colors.red.shade700,
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                  child: const Text(
+                    '건너뛰기',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 14,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+              ),
             ),
         ],
       ),
