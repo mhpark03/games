@@ -734,51 +734,56 @@ class _HulaScreenState extends State<HulaScreen> with TickerProviderStateMixin {
         ],
       ),
       body: SafeArea(
-        child: Column(
-          children: [
-            // 상태 표시
-            _buildStatusBar(),
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            final isLandscape = constraints.maxWidth > constraints.maxHeight;
+            return Column(
+              children: [
+                // 상태 표시
+                _buildStatusBar(isLandscape),
 
-            // 컴퓨터 손패
-            _buildComputerHands(),
+                // 컴퓨터 손패
+                _buildComputerHands(isLandscape),
 
-            // 덱과 버린 더미
-            Expanded(
-              child: _buildCenterArea(),
-            ),
-
-            // 메시지
-            if (gameMessage != null)
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                margin: const EdgeInsets.only(bottom: 8),
-                decoration: BoxDecoration(
-                  color: Colors.black54,
-                  borderRadius: BorderRadius.circular(8),
+                // 덱과 버린 더미
+                Expanded(
+                  child: _buildCenterArea(isLandscape),
                 ),
-                child: Text(
-                  gameMessage!,
-                  style: const TextStyle(color: Colors.white),
-                ),
-              ),
 
-            // 등록된 멜드
-            if (playerMelds.isNotEmpty) _buildPlayerMelds(),
+                // 메시지
+                if (gameMessage != null)
+                  Container(
+                    padding: EdgeInsets.symmetric(horizontal: 12, vertical: isLandscape ? 4 : 8),
+                    margin: EdgeInsets.only(bottom: isLandscape ? 4 : 8),
+                    decoration: BoxDecoration(
+                      color: Colors.black54,
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Text(
+                      gameMessage!,
+                      style: TextStyle(color: Colors.white, fontSize: isLandscape ? 12 : 14),
+                    ),
+                  ),
 
-            // 플레이어 손패
-            _buildPlayerHand(),
+                // 등록된 멜드
+                if (playerMelds.isNotEmpty) _buildPlayerMelds(isLandscape),
 
-            // 액션 버튼
-            _buildActionButtons(),
-          ],
+                // 플레이어 손패
+                _buildPlayerHand(isLandscape),
+
+                // 액션 버튼
+                _buildActionButtons(isLandscape),
+              ],
+            );
+          },
         ),
       ),
     );
   }
 
-  Widget _buildStatusBar() {
+  Widget _buildStatusBar(bool isLandscape) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      padding: EdgeInsets.symmetric(horizontal: 16, vertical: isLandscape ? 4 : 8),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceAround,
         children: [
@@ -845,65 +850,104 @@ class _HulaScreenState extends State<HulaScreen> with TickerProviderStateMixin {
     );
   }
 
-  Widget _buildComputerHands() {
+  Widget _buildComputerHands(bool isLandscape) {
     return Container(
-      height: 70,
+      height: isLandscape ? 45 : 70,
       padding: const EdgeInsets.symmetric(horizontal: 16),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
         children: List.generate(computerHands.length, (i) {
           final hand = computerHands[i];
           final melds = computerMelds[i];
-          return Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(
-                    'COM${i + 1}',
-                    style: TextStyle(
-                      color: currentTurn == i + 1 ? Colors.amber : Colors.white54,
-                      fontSize: 11,
-                    ),
-                  ),
-                  if (melds.isNotEmpty)
+          return isLandscape
+              ? Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
                     Text(
-                      ' (${melds.length}멜드)',
-                      style: const TextStyle(color: Colors.green, fontSize: 10),
-                    ),
-                ],
-              ),
-              const SizedBox(height: 4),
-              Row(
-                mainAxisSize: MainAxisSize.min,
-                children: List.generate(
-                  min(hand.length, 7),
-                  (j) => Container(
-                    width: 22,
-                    height: 32,
-                    margin: const EdgeInsets.only(left: 2),
-                    decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        colors: [Colors.blue.shade800, Colors.blue.shade900],
+                      'COM${i + 1}',
+                      style: TextStyle(
+                        color: currentTurn == i + 1 ? Colors.amber : Colors.white54,
+                        fontSize: 10,
                       ),
-                      borderRadius: BorderRadius.circular(3),
-                      border: Border.all(color: Colors.white24),
                     ),
-                    child: const Center(
-                      child: Text('🂠', style: TextStyle(fontSize: 14)),
+                    if (melds.isNotEmpty)
+                      Text(
+                        '(${melds.length})',
+                        style: const TextStyle(color: Colors.green, fontSize: 9),
+                      ),
+                    const SizedBox(width: 4),
+                    ...List.generate(
+                      min(hand.length, 7),
+                      (j) => Container(
+                        width: 16,
+                        height: 24,
+                        margin: const EdgeInsets.only(left: 1),
+                        decoration: BoxDecoration(
+                          gradient: LinearGradient(
+                            colors: [Colors.blue.shade800, Colors.blue.shade900],
+                          ),
+                          borderRadius: BorderRadius.circular(2),
+                          border: Border.all(color: Colors.white24, width: 0.5),
+                        ),
+                        child: const Center(
+                          child: Text('🂠', style: TextStyle(fontSize: 10)),
+                        ),
+                      ),
                     ),
-                  ),
-                ),
-              ),
-            ],
-          );
+                  ],
+                )
+              : Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(
+                          'COM${i + 1}',
+                          style: TextStyle(
+                            color: currentTurn == i + 1 ? Colors.amber : Colors.white54,
+                            fontSize: 11,
+                          ),
+                        ),
+                        if (melds.isNotEmpty)
+                          Text(
+                            ' (${melds.length}멜드)',
+                            style: const TextStyle(color: Colors.green, fontSize: 10),
+                          ),
+                      ],
+                    ),
+                    const SizedBox(height: 4),
+                    Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: List.generate(
+                        min(hand.length, 7),
+                        (j) => Container(
+                          width: 22,
+                          height: 32,
+                          margin: const EdgeInsets.only(left: 2),
+                          decoration: BoxDecoration(
+                            gradient: LinearGradient(
+                              colors: [Colors.blue.shade800, Colors.blue.shade900],
+                            ),
+                            borderRadius: BorderRadius.circular(3),
+                            border: Border.all(color: Colors.white24),
+                          ),
+                          child: const Center(
+                            child: Text('🂠', style: TextStyle(fontSize: 14)),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                );
         }),
       ),
     );
   }
 
-  Widget _buildCenterArea() {
+  Widget _buildCenterArea(bool isLandscape) {
+    final cardWidth = isLandscape ? 50.0 : 70.0;
+    final cardHeight = isLandscape ? 70.0 : 100.0;
     return Center(
       child: Row(
         mainAxisAlignment: MainAxisAlignment.center,
@@ -912,8 +956,8 @@ class _HulaScreenState extends State<HulaScreen> with TickerProviderStateMixin {
           GestureDetector(
             onTap: currentTurn == 0 && !hasDrawn ? _drawFromDeck : null,
             child: Container(
-              width: 70,
-              height: 100,
+              width: cardWidth,
+              height: cardHeight,
               decoration: BoxDecoration(
                 gradient: LinearGradient(
                   colors: [Colors.blue.shade700, Colors.blue.shade900],
@@ -945,15 +989,15 @@ class _HulaScreenState extends State<HulaScreen> with TickerProviderStateMixin {
               ),
             ),
           ),
-          const SizedBox(width: 20),
+          SizedBox(width: isLandscape ? 12 : 20),
           // 버린 더미
           GestureDetector(
             onTap: currentTurn == 0 && !hasDrawn && discardPile.isNotEmpty
                 ? _drawFromDiscard
                 : null,
             child: Container(
-              width: 70,
-              height: 100,
+              width: cardWidth,
+              height: cardHeight,
               decoration: BoxDecoration(
                 color: Colors.white,
                 borderRadius: BorderRadius.circular(8),
@@ -1018,9 +1062,9 @@ class _HulaScreenState extends State<HulaScreen> with TickerProviderStateMixin {
     );
   }
 
-  Widget _buildPlayerMelds() {
+  Widget _buildPlayerMelds(bool isLandscape) {
     return Container(
-      height: 50,
+      height: isLandscape ? 28 : 50,
       padding: const EdgeInsets.symmetric(horizontal: 8),
       child: ListView.builder(
         scrollDirection: Axis.horizontal,
@@ -1029,7 +1073,7 @@ class _HulaScreenState extends State<HulaScreen> with TickerProviderStateMixin {
           final meld = playerMelds[meldIndex];
           return Container(
             margin: const EdgeInsets.only(right: 8),
-            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+            padding: EdgeInsets.symmetric(horizontal: isLandscape ? 6 : 8, vertical: isLandscape ? 2 : 4),
             decoration: BoxDecoration(
               color: Colors.green.withValues(alpha: 0.3),
               borderRadius: BorderRadius.circular(8),
@@ -1040,7 +1084,7 @@ class _HulaScreenState extends State<HulaScreen> with TickerProviderStateMixin {
               children: [
                 Text(
                   meld.isRun ? 'Run: ' : 'Set: ',
-                  style: const TextStyle(color: Colors.green, fontSize: 10),
+                  style: TextStyle(color: Colors.green, fontSize: isLandscape ? 9 : 10),
                 ),
                 ...meld.cards.map((card) => Padding(
                       padding: const EdgeInsets.only(left: 2),
@@ -1050,7 +1094,7 @@ class _HulaScreenState extends State<HulaScreen> with TickerProviderStateMixin {
                           color: card.suitColor == Colors.red
                               ? Colors.red.shade300
                               : Colors.white,
-                          fontSize: 12,
+                          fontSize: isLandscape ? 10 : 12,
                           fontWeight: FontWeight.bold,
                         ),
                       ),
@@ -1063,10 +1107,16 @@ class _HulaScreenState extends State<HulaScreen> with TickerProviderStateMixin {
     );
   }
 
-  Widget _buildPlayerHand() {
+  Widget _buildPlayerHand(bool isLandscape) {
+    final cardWidth = isLandscape ? 40.0 : 55.0;
+    final cardHeight = isLandscape ? 58.0 : 80.0;
+    final containerHeight = isLandscape ? 75.0 : 120.0;
+    final symbolSize = isLandscape ? 16.0 : 22.0;
+    final rankSize = isLandscape ? 14.0 : 18.0;
+
     return Container(
-      height: 120,
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+      height: containerHeight,
+      padding: EdgeInsets.symmetric(horizontal: 8, vertical: isLandscape ? 4 : 8),
       child: ListView.builder(
         scrollDirection: Axis.horizontal,
         itemCount: playerHand.length,
@@ -1078,13 +1128,13 @@ class _HulaScreenState extends State<HulaScreen> with TickerProviderStateMixin {
             onTap: () => _toggleCardSelection(index),
             child: AnimatedContainer(
               duration: const Duration(milliseconds: 150),
-              transform: Matrix4.translationValues(0, isSelected ? -15 : 0, 0),
-              margin: const EdgeInsets.symmetric(horizontal: 3),
-              width: 55,
-              height: 80,
+              transform: Matrix4.translationValues(0, isSelected ? (isLandscape ? -8 : -15) : 0, 0),
+              margin: EdgeInsets.symmetric(horizontal: isLandscape ? 2 : 3),
+              width: cardWidth,
+              height: cardHeight,
               decoration: BoxDecoration(
                 color: Colors.white,
-                borderRadius: BorderRadius.circular(8),
+                borderRadius: BorderRadius.circular(isLandscape ? 6 : 8),
                 border: Border.all(
                   color: isSelected ? Colors.amber : Colors.grey.shade400,
                   width: isSelected ? 3 : 1,
@@ -1105,14 +1155,14 @@ class _HulaScreenState extends State<HulaScreen> with TickerProviderStateMixin {
                   Text(
                     card.suitSymbol,
                     style: TextStyle(
-                      fontSize: 22,
+                      fontSize: symbolSize,
                       color: card.suitColor,
                     ),
                   ),
                   Text(
                     card.rankString,
                     style: TextStyle(
-                      fontSize: 18,
+                      fontSize: rankSize,
                       fontWeight: FontWeight.bold,
                       color: card.suitColor,
                     ),
@@ -1126,46 +1176,56 @@ class _HulaScreenState extends State<HulaScreen> with TickerProviderStateMixin {
     );
   }
 
-  Widget _buildActionButtons() {
+  Widget _buildActionButtons(bool isLandscape) {
     final canMeld = selectedCardIndices.length >= 3;
     final canDiscard = hasDrawn && selectedCardIndices.length == 1;
+    final iconSize = isLandscape ? 14.0 : 18.0;
+    final buttonPadding = isLandscape
+        ? const EdgeInsets.symmetric(horizontal: 8, vertical: 4)
+        : null;
 
     return Container(
-      padding: const EdgeInsets.all(12),
+      padding: EdgeInsets.all(isLandscape ? 6 : 12),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
         children: [
           // 멜드 등록
           ElevatedButton.icon(
             onPressed: currentTurn == 0 && canMeld ? _registerMeld : null,
-            icon: const Icon(Icons.check_circle, size: 18),
-            label: const Text('등록'),
+            icon: Icon(Icons.check_circle, size: iconSize),
+            label: Text('등록', style: TextStyle(fontSize: isLandscape ? 12 : 14)),
             style: ElevatedButton.styleFrom(
               backgroundColor: Colors.green,
               foregroundColor: Colors.white,
               disabledBackgroundColor: Colors.grey.shade700,
+              padding: buttonPadding,
+              minimumSize: isLandscape ? const Size(70, 32) : null,
             ),
           ),
           // 버리기
           ElevatedButton.icon(
             onPressed: currentTurn == 0 && canDiscard ? _discardCard : null,
-            icon: const Icon(Icons.delete_outline, size: 18),
-            label: const Text('버리기'),
+            icon: Icon(Icons.delete_outline, size: iconSize),
+            label: Text('버리기', style: TextStyle(fontSize: isLandscape ? 12 : 14)),
             style: ElevatedButton.styleFrom(
               backgroundColor: Colors.orange,
               foregroundColor: Colors.white,
               disabledBackgroundColor: Colors.grey.shade700,
+              padding: buttonPadding,
+              minimumSize: isLandscape ? const Size(70, 32) : null,
             ),
           ),
           // 스톱
           ElevatedButton.icon(
             onPressed: currentTurn == 0 && !gameOver ? _callStop : null,
-            icon: const Icon(Icons.stop_circle, size: 18),
-            label: const Text('스톱'),
+            icon: Icon(Icons.stop_circle, size: iconSize),
+            label: Text('스톱', style: TextStyle(fontSize: isLandscape ? 12 : 14)),
             style: ElevatedButton.styleFrom(
               backgroundColor: Colors.red,
               foregroundColor: Colors.white,
               disabledBackgroundColor: Colors.grey.shade700,
+              padding: buttonPadding,
+              minimumSize: isLandscape ? const Size(70, 32) : null,
             ),
           ),
         ],
