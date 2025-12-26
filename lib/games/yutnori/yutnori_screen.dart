@@ -988,13 +988,57 @@ class _YutnoriScreenState extends State<YutnoriScreen>
     return LayoutBuilder(
       builder: (context, constraints) {
         final size = min(constraints.maxWidth, constraints.maxHeight) * 0.9;
+        final center = size / 2;
+        final radius = size * 0.4;
+
         return SizedBox(
           width: size,
           height: size,
           child: CustomPaint(
             painter: YutBoardPainter(),
             child: Stack(
-              children: _buildPiecesOnBoard(size),
+              children: [
+                // 시작점 라벨
+                Positioned(
+                  left: center + radius * 0.85 - 20,
+                  top: center + radius * 0.85 + 14,
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                    decoration: BoxDecoration(
+                      color: Colors.red.shade700,
+                      borderRadius: BorderRadius.circular(4),
+                    ),
+                    child: const Text(
+                      '출발',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 10,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                ),
+                // 골인 방향 화살표 (시작점 왼쪽)
+                Positioned(
+                  left: center + radius * 0.45,
+                  top: center + radius * 0.85 - 8,
+                  child: Row(
+                    children: [
+                      Icon(Icons.arrow_back, color: Colors.green.shade700, size: 16),
+                      Text(
+                        '골인',
+                        style: TextStyle(
+                          color: Colors.green.shade700,
+                          fontSize: 9,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                // 말들
+                ..._buildPiecesOnBoard(size),
+              ],
             ),
           ),
         );
@@ -1129,6 +1173,11 @@ class _YutnoriScreenState extends State<YutnoriScreen>
     return offsets[playerIndex % 4];
   }
 
+  String _getPlayerLabel(int playerIndex) {
+    if (playerIndex == 0) return 'P';
+    return 'C$playerIndex';
+  }
+
   Widget _buildPieceWidget(
     int playerIndex,
     int pieceIndex,
@@ -1136,39 +1185,42 @@ class _YutnoriScreenState extends State<YutnoriScreen>
     bool isSelectable = false,
   }) {
     final color = _getPlayerColor(playerIndex);
-    final size = 24.0 + stackCount * 4;
+    final size = 28.0 + stackCount * 4;
 
-    return Container(
-      width: size,
-      height: size,
-      decoration: BoxDecoration(
-        color: color,
-        shape: BoxShape.circle,
-        border: Border.all(
-          color: isSelectable ? Colors.yellow : Colors.white,
-          width: isSelectable ? 3 : 2,
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: isSelectable
-                ? Colors.yellow.withValues(alpha: 0.5)
-                : Colors.black.withValues(alpha: 0.3),
-            blurRadius: isSelectable ? 8 : 4,
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Container(
+          width: size,
+          height: size,
+          decoration: BoxDecoration(
+            color: color,
+            shape: BoxShape.circle,
+            border: Border.all(
+              color: isSelectable ? Colors.yellow : Colors.white,
+              width: isSelectable ? 3 : 2,
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: isSelectable
+                    ? Colors.yellow.withValues(alpha: 0.5)
+                    : Colors.black.withValues(alpha: 0.3),
+                blurRadius: isSelectable ? 8 : 4,
+              ),
+            ],
           ),
-        ],
-      ),
-      child: Center(
-        child: stackCount > 0
-            ? Text(
-                '${stackCount + 1}',
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontSize: 12,
-                  fontWeight: FontWeight.bold,
-                ),
-              )
-            : null,
-      ),
+          child: Center(
+            child: Text(
+              stackCount > 0 ? '${stackCount + 1}' : _getPlayerLabel(playerIndex),
+              style: const TextStyle(
+                color: Colors.white,
+                fontSize: 10,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ),
+        ),
+      ],
     );
   }
 
