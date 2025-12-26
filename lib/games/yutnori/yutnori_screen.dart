@@ -2514,136 +2514,147 @@ class _YutnoriScreenState extends State<YutnoriScreen>
             }),
           ),
           const SizedBox(height: 12),
-          // 버튼 영역 (윷 던지기 / 결과 표시 / 던지는 중)
-          if (canThrowYut && currentPlayer == 0 && !isThrowingYut)
-            GestureDetector(
-              onTap: _throwYut,
-              child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-                decoration: BoxDecoration(
-                  gradient: const LinearGradient(
-                    begin: Alignment.topCenter,
-                    end: Alignment.bottomCenter,
-                    colors: [Color(0xFF4CAF50), Color(0xFF388E3C)],
-                  ),
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: const Color(0xFF2E7D32), width: 2),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.3),
-                      offset: const Offset(0, 3),
-                      blurRadius: 4,
-                    ),
-                  ],
-                ),
-                child: const Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(Icons.casino, color: Colors.white, size: 20),
-                    SizedBox(width: 8),
-                    Text(
-                      '던지기',
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            )
-          else if (isThrowingYut)
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-              decoration: BoxDecoration(
-                color: Colors.grey,
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: Colors.grey.shade600, width: 2),
-              ),
-              child: const Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  SizedBox(
-                    width: 18,
-                    height: 18,
-                    child: CircularProgressIndicator(
-                      strokeWidth: 2,
-                      color: Colors.white,
-                    ),
-                  ),
-                  SizedBox(width: 8),
-                  Text(
-                    '던지는 중',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ],
-              ),
-            )
-          else if (currentYutResult != null)
-            // 던지기 결과 표시
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-              decoration: BoxDecoration(
-                gradient: const LinearGradient(
-                  begin: Alignment.topCenter,
-                  end: Alignment.bottomCenter,
-                  colors: [Color(0xFFFFD700), Color(0xFFFF8C00)],
-                ),
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: const Color(0xFFB8860B), width: 2),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.orange.withValues(alpha: 0.5),
-                    offset: const Offset(0, 2),
-                    blurRadius: 6,
-                  ),
-                ],
-              ),
-              child: Text(
-                currentYutResult!.name,
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontSize: 22,
-                  fontWeight: FontWeight.bold,
-                  shadows: [
-                    Shadow(
-                      color: Colors.black54,
-                      offset: Offset(1, 1),
-                      blurRadius: 2,
-                    ),
-                  ],
-                ),
-              ),
-            )
-          else if (pendingMoves.isNotEmpty)
-            Wrap(
-              spacing: 8,
-              children: pendingMoves.map((move) {
-                return Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFF8B4513),
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: Text(
-                    move.name,
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                );
-              }).toList(),
+          // 버튼 영역 (고정 높이로 말판 위치 고정)
+          SizedBox(
+            height: 48,
+            child: Center(
+              child: _buildThrowButtonContent(),
             ),
+          ),
         ],
       ),
     );
+  }
+
+  // 던지기 버튼/결과 내용 위젯
+  Widget _buildThrowButtonContent() {
+    if (canThrowYut && currentPlayer == 0 && !isThrowingYut) {
+      return GestureDetector(
+        onTap: _throwYut,
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+          decoration: BoxDecoration(
+            gradient: const LinearGradient(
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+              colors: [Color(0xFF4CAF50), Color(0xFF388E3C)],
+            ),
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: const Color(0xFF2E7D32), width: 2),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.3),
+                offset: const Offset(0, 3),
+                blurRadius: 4,
+              ),
+            ],
+          ),
+          child: const Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(Icons.casino, color: Colors.white, size: 20),
+              SizedBox(width: 8),
+              Text(
+                '던지기',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
+    } else if (isThrowingYut) {
+      return Container(
+        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+        decoration: BoxDecoration(
+          color: Colors.grey,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: Colors.grey.shade600, width: 2),
+        ),
+        child: const Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            SizedBox(
+              width: 18,
+              height: 18,
+              child: CircularProgressIndicator(
+                strokeWidth: 2,
+                color: Colors.white,
+              ),
+            ),
+            SizedBox(width: 8),
+            Text(
+              '던지는 중',
+              style: TextStyle(
+                color: Colors.white,
+                fontSize: 16,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ],
+        ),
+      );
+    } else if (currentYutResult != null) {
+      return Container(
+        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
+        decoration: BoxDecoration(
+          gradient: const LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [Color(0xFFFFD700), Color(0xFFFF8C00)],
+          ),
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: const Color(0xFFB8860B), width: 2),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.orange.withValues(alpha: 0.5),
+              offset: const Offset(0, 2),
+              blurRadius: 6,
+            ),
+          ],
+        ),
+        child: Text(
+          currentYutResult!.name,
+          style: const TextStyle(
+            color: Colors.white,
+            fontSize: 20,
+            fontWeight: FontWeight.bold,
+            shadows: [
+              Shadow(
+                color: Colors.black54,
+                offset: Offset(1, 1),
+                blurRadius: 2,
+              ),
+            ],
+          ),
+        ),
+      );
+    } else if (pendingMoves.isNotEmpty) {
+      return Wrap(
+        spacing: 8,
+        alignment: WrapAlignment.center,
+        children: pendingMoves.map((move) {
+          return Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+            decoration: BoxDecoration(
+              color: const Color(0xFF8B4513),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Text(
+              move.name,
+              style: const TextStyle(
+                color: Colors.white,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          );
+        }).toList(),
+      );
+    }
+    return const SizedBox();
   }
 
   Widget _buildYutThrowAreaCompact() {
