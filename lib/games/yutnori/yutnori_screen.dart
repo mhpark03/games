@@ -112,6 +112,7 @@ class _YutnoriScreenState extends State<YutnoriScreen>
   int currentPlayer = 0; // 0 = 플레이어, 1+ = 컴퓨터
   bool gameOver = false;
   String? winner;
+  List<int> rankings = []; // 완료 순서 (등수)
 
   // 각 플레이어의 말 (4개씩)
   late List<List<Piece>> playerPieces;
@@ -205,6 +206,7 @@ class _YutnoriScreenState extends State<YutnoriScreen>
     currentPlayer = 0;
     gameOver = false;
     winner = null;
+    rankings = []; // 등수 초기화
     currentYutResult = null;
     pendingMoves = [];
     isThrowingYut = false;
@@ -680,11 +682,24 @@ class _YutnoriScreenState extends State<YutnoriScreen>
       pendingMoves.removeAt(moveIndex);
       selectedMoveIndex = null; // 선택 초기화
 
-      // 승리 확인
-      if (_checkWin(currentPlayer)) {
+      // 완료 확인 및 등수 기록
+      if (_checkWin(currentPlayer) && !rankings.contains(currentPlayer)) {
+        rankings.add(currentPlayer);
+        final rank = rankings.length;
+        gameMessage = '${_getPlayerName(currentPlayer)} ${rank}등 완료!';
+      }
+
+      // 게임 종료 확인: 플레이어 완료 또는 다른 모든 플레이어 완료
+      if (_shouldEndGame()) {
         gameOver = true;
-        winner = _getPlayerName(currentPlayer);
-        gameMessage = '$winner 승리!';
+        final playerRank = rankings.indexOf(0) + 1;
+        if (playerRank > 0) {
+          winner = '$playerRank등';
+        } else {
+          // 플레이어가 아직 완료하지 않은 경우 (다른 모두가 완료)
+          winner = '${rankings.length + 1}등';
+        }
+        gameMessage = '게임 종료! 나의 등수: $winner';
       } else if (pendingMoves.isEmpty && !canThrowYut) {
         // 턴 종료
         _nextTurn();
@@ -755,6 +770,18 @@ class _YutnoriScreenState extends State<YutnoriScreen>
 
   bool _checkWin(int player) {
     return playerPieces[player].every((piece) => piece.isFinished);
+  }
+
+  // 게임 종료 확인: 플레이어(0)가 완료했거나, 다른 모든 플레이어가 완료한 경우
+  bool _shouldEndGame() {
+    // 플레이어가 완료한 경우
+    if (rankings.contains(0)) {
+      return true;
+    }
+    // 다른 모든 플레이어가 완료한 경우 (플레이어만 남은 경우)
+    final otherPlayersCount = playerCount - 1;
+    final finishedOthers = rankings.where((p) => p != 0).length;
+    return finishedOthers >= otherPlayersCount;
   }
 
   void _nextTurn() {
@@ -3284,8 +3311,53 @@ class _YutnoriScreenState extends State<YutnoriScreen>
     );
   }
 
+  // 등수순으로 정렬된 순위 리스트 생성
+  List<Widget> _buildRankingList() {
+    // 모든 플레이어를 등수순으로 정렬
+    List<int> sortedPlayers = List.generate(playerCount, (i) => i);
+    sortedPlayers.sort((a, b) {
+      final rankA = rankings.contains(a) ? rankings.indexOf(a) : playerCount;
+      final rankB = rankings.contains(b) ? rankings.indexOf(b) : playerCount;
+      return rankA.compareTo(rankB);
+    });
+
+    return sortedPlayers.map((playerIndex) {
+      final rank = rankings.contains(playerIndex)
+          ? rankings.indexOf(playerIndex) + 1
+          : rankings.length + 1;
+      final isPlayer = playerIndex == 0;
+
+      return Padding(
+        padding: const EdgeInsets.symmetric(vertical: 2),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              '$rank등: ',
+              style: TextStyle(
+                fontSize: 14,
+                fontWeight: isPlayer ? FontWeight.bold : FontWeight.normal,
+                color: isPlayer ? Colors.blue.shade800 : Colors.grey.shade700,
+              ),
+            ),
+            Text(
+              _getPlayerName(playerIndex),
+              style: TextStyle(
+                fontSize: 14,
+                fontWeight: isPlayer ? FontWeight.bold : FontWeight.normal,
+                color: isPlayer ? Colors.blue.shade800 : Colors.grey.shade700,
+              ),
+            ),
+          ],
+        ),
+      );
+    }).toList();
+  }
+
   Widget _buildGameOverOverlay() {
-    final isPlayerWinner = winner == '플레이어';
+    // 플레이어 등수 계산
+    final playerRank = rankings.contains(0) ? rankings.indexOf(0) + 1 : rankings.length + 1;
+    final isFirstPlace = playerRank == 1;
 
     return Container(
       color: Colors.black54,
@@ -3297,7 +3369,7 @@ class _YutnoriScreenState extends State<YutnoriScreen>
             color: const Color(0xFFDEB887),
             borderRadius: BorderRadius.circular(16),
             border: Border.all(
-              color: isPlayerWinner ? Colors.amber : Colors.red,
+              color: isFirstPlace ? Colors.amber : Colors.blue,
               width: 3,
             ),
           ),
@@ -3305,29 +3377,49 @@ class _YutnoriScreenState extends State<YutnoriScreen>
             mainAxisSize: MainAxisSize.min,
             children: [
               Icon(
-                isPlayerWinner
-                    ? Icons.emoji_events
-                    : Icons.sentiment_dissatisfied,
-                color: isPlayerWinner ? Colors.amber : Colors.red,
+                isFirstPlace ? Icons.emoji_events : Icons.flag,
+                color: isFirstPlace ? Colors.amber : Colors.blue,
                 size: 64,
               ),
               const SizedBox(height: 16),
               Text(
-                isPlayerWinner ? '승리!' : '패배',
-                style: TextStyle(
-                  color: isPlayerWinner
-                      ? const Color(0xFF8B4513)
-                      : Colors.red,
+                '게임 종료',
+                style: const TextStyle(
+                  color: Color(0xFF8B4513),
                   fontSize: 28,
                   fontWeight: FontWeight.bold,
                 ),
               ),
               const SizedBox(height: 8),
               Text(
-                '$winner 승리',
+                '나의 등수: $playerRank등',
                 style: TextStyle(
-                  color: Colors.grey.shade700,
-                  fontSize: 16,
+                  color: isFirstPlace ? Colors.amber.shade800 : Colors.blue.shade800,
+                  fontSize: 24,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              const SizedBox(height: 16),
+              // 전체 순위 표시
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: Colors.white.withOpacity(0.5),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Column(
+                  children: [
+                    const Text(
+                      '순위',
+                      style: TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.bold,
+                        color: Color(0xFF8B4513),
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    ..._buildRankingList(),
+                  ],
                 ),
               ),
               const SizedBox(height: 24),
