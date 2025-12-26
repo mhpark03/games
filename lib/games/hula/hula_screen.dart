@@ -2604,20 +2604,21 @@ class _HulaScreenState extends State<HulaScreen> with TickerProviderStateMixin {
     if (allMelds.isEmpty) return const SizedBox();
 
     return Container(
-      margin: EdgeInsets.only(top: isLandscape ? 8 : 12),
+      margin: EdgeInsets.only(top: isLandscape ? 4 : 12),
       padding: const EdgeInsets.symmetric(horizontal: 8),
       child: Column(
+        mainAxisSize: MainAxisSize.min,
         children: [
           Text(
             '등록된 멜드 (탭하여 붙이기)',
             style: TextStyle(
               color: Colors.white70,
-              fontSize: isLandscape ? 10 : 11,
+              fontSize: isLandscape ? 9 : 11,
             ),
           ),
-          const SizedBox(height: 4),
+          SizedBox(height: isLandscape ? 2 : 4),
           SizedBox(
-            height: isLandscape ? 32 : 40,
+            height: isLandscape ? 24 : 40,
             child: ListView.builder(
               scrollDirection: Axis.horizontal,
               itemCount: allMelds.length,
