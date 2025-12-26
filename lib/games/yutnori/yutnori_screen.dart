@@ -1106,7 +1106,7 @@ class _YutnoriScreenState extends State<YutnoriScreen>
                 children: [
                   // 좌측 열: C2 (상) + 턴정보/다음버튼 (중) + C3 (하)
                   SizedBox(
-                    width: 100,
+                    width: 130,
                     child: Column(
                       children: [
                         const SizedBox(height: 50), // 뒤로가기 버튼 공간
@@ -1163,7 +1163,7 @@ class _YutnoriScreenState extends State<YutnoriScreen>
                   ),
                   // 우측 열: C1 (상) + 윷던지기/결과 (중) + 플레이어 (하)
                   SizedBox(
-                    width: 100,
+                    width: 130,
                     child: Column(
                       children: [
                         const SizedBox(height: 50), // 새게임 버튼 공간
@@ -1212,88 +1212,93 @@ class _YutnoriScreenState extends State<YutnoriScreen>
   Widget _buildLandscapeLeftControls() {
     final showNextButton = waitingForNextTurn && currentPlayer > 0;
 
-    return Column(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: [
-        // 현재 턴 표시
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-          decoration: BoxDecoration(
-            color: _getPlayerColor(currentPlayer),
-            borderRadius: BorderRadius.circular(8),
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 8),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          // 현재 턴 표시
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+            decoration: BoxDecoration(
+              color: _getPlayerColor(currentPlayer),
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: Column(
+              children: [
+                Icon(
+                  isPlayerTurn ? Icons.person : Icons.computer,
+                  color: Colors.white,
+                  size: 18,
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  _getPlayerName(currentPlayer),
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 11,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                const Text(
+                  '차례',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 10,
+                  ),
+                ),
+              ],
+            ),
           ),
-          child: Column(
-            children: [
-              Icon(
-                isPlayerTurn ? Icons.person : Icons.computer,
-                color: Colors.white,
-                size: 14,
+          const SizedBox(height: 10),
+          // 남은 이동 표시
+          if (pendingMoves.isNotEmpty)
+            Wrap(
+              spacing: 4,
+              runSpacing: 4,
+              alignment: WrapAlignment.center,
+              children: pendingMoves.map((move) {
+                return Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF8B4513),
+                    borderRadius: BorderRadius.circular(6),
+                  ),
+                  child: Text(
+                    move.name,
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 12,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                );
+              }).toList(),
+            ),
+          const SizedBox(height: 10),
+          // 메시지
+          if (gameMessage != null)
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+              decoration: BoxDecoration(
+                color: const Color(0xFF8B4513).withValues(alpha: 0.9),
+                borderRadius: BorderRadius.circular(8),
               ),
-              Text(
-                _getPlayerName(currentPlayer),
+              child: Text(
+                gameMessage!,
+                textAlign: TextAlign.center,
                 style: const TextStyle(
                   color: Colors.white,
                   fontSize: 10,
                   fontWeight: FontWeight.bold,
                 ),
               ),
-              const Text(
-                '차례',
-                style: TextStyle(
-                  color: Colors.white,
-                  fontSize: 9,
-                ),
-              ),
-            ],
-          ),
-        ),
-        const SizedBox(height: 8),
-        // 남은 이동 표시
-        if (pendingMoves.isNotEmpty)
-          Wrap(
-            spacing: 2,
-            runSpacing: 2,
-            children: pendingMoves.map((move) {
-              return Container(
-                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                decoration: BoxDecoration(
-                  color: const Color(0xFF8B4513),
-                  borderRadius: BorderRadius.circular(4),
-                ),
-                child: Text(
-                  move.name,
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 10,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              );
-            }).toList(),
-          ),
-        const SizedBox(height: 8),
-        // 메시지
-        if (gameMessage != null)
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
-            decoration: BoxDecoration(
-              color: const Color(0xFF8B4513).withValues(alpha: 0.8),
-              borderRadius: BorderRadius.circular(6),
             ),
-            child: Text(
-              gameMessage!,
-              textAlign: TextAlign.center,
-              style: const TextStyle(
-                color: Colors.white,
-                fontSize: 9,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-          ),
-        const SizedBox(height: 10),
-        // 다음 버튼
-        if (showNextButton) _buildPlayButton(compact: true),
-      ],
+          const SizedBox(height: 12),
+          // 다음 버튼
+          if (showNextButton) _buildPlayButton(compact: true),
+        ],
+      ),
     );
   }
 
@@ -1302,19 +1307,20 @@ class _YutnoriScreenState extends State<YutnoriScreen>
     return Column(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
-        // 윷 스틱 표시 (세로로)
-        Column(
+        // 윷 스틱 표시 (세로모드처럼 세로 막대 4개 가로로 배치)
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
           children: List.generate(4, (i) {
             return Container(
-              margin: const EdgeInsets.symmetric(vertical: 2),
-              width: 50,
-              height: 16,
+              margin: const EdgeInsets.symmetric(horizontal: 3),
+              width: 18,
+              height: 55,
               decoration: BoxDecoration(
                 color: yutStickStates[i]
                     ? const Color(0xFF8B4513)
                     : const Color(0xFFF5DEB3),
-                borderRadius: BorderRadius.circular(3),
-                border: Border.all(color: const Color(0xFF654321), width: 1),
+                borderRadius: BorderRadius.circular(4),
+                border: Border.all(color: const Color(0xFF654321), width: 2),
               ),
             );
           }),
@@ -1325,16 +1331,16 @@ class _YutnoriScreenState extends State<YutnoriScreen>
           GestureDetector(
             onTap: _throwYut,
             child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
               decoration: BoxDecoration(
                 color: const Color(0xFF8B4513),
-                borderRadius: BorderRadius.circular(16),
+                borderRadius: BorderRadius.circular(20),
               ),
               child: const Text(
-                '던지기',
+                '윷 던지기',
                 style: TextStyle(
                   color: Colors.white,
-                  fontSize: 11,
+                  fontSize: 12,
                   fontWeight: FontWeight.bold,
                 ),
               ),
@@ -1342,16 +1348,32 @@ class _YutnoriScreenState extends State<YutnoriScreen>
           )
         else if (isThrowingYut)
           Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
             decoration: BoxDecoration(
               color: Colors.grey,
-              borderRadius: BorderRadius.circular(16),
+              borderRadius: BorderRadius.circular(20),
             ),
             child: const Text(
-              '...',
+              '던지는 중...',
               style: TextStyle(
                 color: Colors.white,
-                fontSize: 11,
+                fontSize: 12,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          )
+        else if (currentYutResult != null)
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+            decoration: BoxDecoration(
+              color: const Color(0xFF8B4513),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Text(
+              currentYutResult!.name,
+              style: const TextStyle(
+                color: Colors.white,
+                fontSize: 14,
                 fontWeight: FontWeight.bold,
               ),
             ),
@@ -1367,51 +1389,51 @@ class _YutnoriScreenState extends State<YutnoriScreen>
         playerPieces[playerIndex].where((p) => p.isFinished).length;
 
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
-      margin: const EdgeInsets.symmetric(horizontal: 4),
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+      margin: const EdgeInsets.symmetric(horizontal: 6),
       decoration: BoxDecoration(
         color: isCurrentTurn
             ? _getPlayerColor(playerIndex).withValues(alpha: 0.2)
             : Colors.transparent,
-        borderRadius: BorderRadius.circular(8),
+        borderRadius: BorderRadius.circular(10),
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
           Container(
-            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
             decoration: BoxDecoration(
               color: isCurrentTurn
                   ? _getPlayerColor(playerIndex)
                   : const Color(0xFF8B4513),
-              borderRadius: BorderRadius.circular(6),
+              borderRadius: BorderRadius.circular(8),
             ),
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                const Icon(Icons.computer, color: Colors.white, size: 12),
-                const SizedBox(width: 3),
+                const Icon(Icons.computer, color: Colors.white, size: 14),
+                const SizedBox(width: 4),
                 Text(
                   'C$playerIndex',
                   style: const TextStyle(
                     color: Colors.white,
-                    fontSize: 10,
+                    fontSize: 12,
                     fontWeight: FontWeight.bold,
                   ),
                 ),
               ],
             ),
           ),
-          const SizedBox(height: 4),
+          const SizedBox(height: 6),
           // 말 상태
           Row(
             mainAxisSize: MainAxisSize.min,
             children: List.generate(4, (i) {
               final pieceFinished = i < finishedCount;
               return Container(
-                margin: const EdgeInsets.symmetric(horizontal: 1),
-                width: 10,
-                height: 10,
+                margin: const EdgeInsets.symmetric(horizontal: 2),
+                width: 14,
+                height: 14,
                 decoration: BoxDecoration(
                   color: pieceFinished
                       ? Colors.amber
@@ -1439,51 +1461,51 @@ class _YutnoriScreenState extends State<YutnoriScreen>
     }
 
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
-      margin: const EdgeInsets.symmetric(horizontal: 4),
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+      margin: const EdgeInsets.symmetric(horizontal: 6),
       decoration: BoxDecoration(
         color: isCurrentTurn
             ? _getPlayerColor(0).withValues(alpha: 0.2)
             : Colors.transparent,
-        borderRadius: BorderRadius.circular(8),
+        borderRadius: BorderRadius.circular(10),
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
           Container(
-            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
             decoration: BoxDecoration(
               color: isCurrentTurn
                   ? _getPlayerColor(0)
                   : const Color(0xFF8B4513),
-              borderRadius: BorderRadius.circular(6),
+              borderRadius: BorderRadius.circular(8),
             ),
             child: const Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Icon(Icons.person, color: Colors.white, size: 12),
-                SizedBox(width: 3),
+                Icon(Icons.person, color: Colors.white, size: 14),
+                SizedBox(width: 4),
                 Text(
-                  'P',
+                  '플레이어',
                   style: TextStyle(
                     color: Colors.white,
-                    fontSize: 10,
+                    fontSize: 11,
                     fontWeight: FontWeight.bold,
                   ),
                 ),
               ],
             ),
           ),
-          const SizedBox(height: 4),
+          const SizedBox(height: 6),
           // 말 상태
           Row(
             mainAxisSize: MainAxisSize.min,
             children: List.generate(4, (i) {
               final pieceFinished = i < finishedCount;
               return Container(
-                margin: const EdgeInsets.symmetric(horizontal: 1),
-                width: 10,
-                height: 10,
+                margin: const EdgeInsets.symmetric(horizontal: 2),
+                width: 14,
+                height: 14,
                 decoration: BoxDecoration(
                   color: pieceFinished ? Colors.amber : _getPlayerColor(0),
                   shape: BoxShape.circle,
@@ -1495,7 +1517,7 @@ class _YutnoriScreenState extends State<YutnoriScreen>
           // 대기 중인 말 (선택 가능)
           if (waitingPieces.isNotEmpty && isCurrentTurn && pendingMoves.isNotEmpty)
             Padding(
-              padding: const EdgeInsets.only(top: 4),
+              padding: const EdgeInsets.only(top: 6),
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: waitingPieces.take(4).map((pieceIndex) {
@@ -1503,9 +1525,9 @@ class _YutnoriScreenState extends State<YutnoriScreen>
                   return GestureDetector(
                     onTap: canMove ? () => _selectPiece(pieceIndex) : null,
                     child: Container(
-                      margin: const EdgeInsets.symmetric(horizontal: 1),
-                      width: 16,
-                      height: 16,
+                      margin: const EdgeInsets.symmetric(horizontal: 2),
+                      width: 20,
+                      height: 20,
                       decoration: BoxDecoration(
                         color: _getPlayerColor(0),
                         shape: BoxShape.circle,
