@@ -1663,20 +1663,6 @@ class _OneCardScreenState extends State<OneCardScreen> with TickerProviderStateM
                 ],
               ),
             ),
-          if (playerCount > 2) const SizedBox(width: 12),
-          // 턴 표시 (2인용에서만)
-          if (playerCount == 2)
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-              decoration: BoxDecoration(
-                color: isPlayerTurn ? Colors.blue.withValues(alpha: 0.7) : Colors.orange.withValues(alpha: 0.7),
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: Text(
-                isPlayerTurn ? '내 턴' : '상대 턴',
-                style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 13),
-              ),
-            ),
         ],
       ),
     );
@@ -1805,6 +1791,41 @@ class _OneCardScreenState extends State<OneCardScreen> with TickerProviderStateM
       child: Row(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
+          // 현재 턴 표시 (항상 표시)
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+            decoration: BoxDecoration(
+              color: isPlayerTurn ? Colors.blue : Colors.orange,
+              borderRadius: BorderRadius.circular(12),
+              boxShadow: [
+                BoxShadow(
+                  color: (isPlayerTurn ? Colors.blue : Colors.orange).withValues(alpha: 0.5),
+                  blurRadius: 8,
+                  spreadRadius: 1,
+                ),
+              ],
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(
+                  isPlayerTurn ? Icons.person : Icons.computer,
+                  color: Colors.white,
+                  size: 18,
+                ),
+                const SizedBox(width: 6),
+                Text(
+                  isPlayerTurn ? '내 차례' : (playerCount == 2 ? '상대 차례' : '${_getPlayerName(currentTurn)} 차례'),
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 14,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(width: 8),
           // 공격 스택
           if (attackStack > 0)
             Container(
@@ -1851,7 +1872,7 @@ class _OneCardScreenState extends State<OneCardScreen> with TickerProviderStateM
               decoration: BoxDecoration(
                 color: turnDirection == 1
                     ? Colors.teal.withValues(alpha: 0.7)
-                    : Colors.orange.withValues(alpha: 0.7),
+                    : Colors.grey.withValues(alpha: 0.7),
                 borderRadius: BorderRadius.circular(8),
               ),
               child: Row(
@@ -1868,19 +1889,6 @@ class _OneCardScreenState extends State<OneCardScreen> with TickerProviderStateM
                     style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 12),
                   ),
                 ],
-              ),
-            ),
-          // 턴 표시 (2인용에서만)
-          if (playerCount == 2)
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-              decoration: BoxDecoration(
-                color: isPlayerTurn ? Colors.blue.withValues(alpha: 0.7) : Colors.orange.withValues(alpha: 0.7),
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: Text(
-                isPlayerTurn ? '내 턴' : '상대 턴',
-                style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
               ),
             ),
         ],
