@@ -1346,7 +1346,7 @@ class _YutnoriScreenState extends State<YutnoriScreen>
           }),
         ),
         const SizedBox(height: 10),
-        // 버튼 영역 (윷 던지기 / 다음 버튼 / 던지는 중)
+        // 버튼 영역 (윷 던지기 / 결과 표시 / 다음 버튼 / 던지는 중)
         if (isPlayerTurn && canThrowYut && !isThrowingYut)
           GestureDetector(
             onTap: _throwYut,
@@ -1414,6 +1414,45 @@ class _YutnoriScreenState extends State<YutnoriScreen>
                   ),
                 ),
               ],
+            ),
+          )
+        else if (currentYutResult != null && !isThrowingYut)
+          // 던지기 결과 표시 (버튼 위치에)
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+                colors: [
+                  const Color(0xFFFFD700),
+                  const Color(0xFFFF8C00),
+                ],
+              ),
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: const Color(0xFFB8860B), width: 2),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.orange.withValues(alpha: 0.5),
+                  offset: const Offset(0, 2),
+                  blurRadius: 6,
+                ),
+              ],
+            ),
+            child: Text(
+              currentYutResult!.name,
+              style: const TextStyle(
+                color: Colors.white,
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+                shadows: [
+                  Shadow(
+                    color: Colors.black54,
+                    offset: Offset(1, 1),
+                    blurRadius: 2,
+                  ),
+                ],
+              ),
             ),
           )
         else if (waitingForNextTurn && currentPlayer > 0)
