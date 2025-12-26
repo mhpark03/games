@@ -161,6 +161,8 @@ class _HulaScreenState extends State<HulaScreen> with TickerProviderStateMixin {
   Timer? _nextTurnTimer; // 자동 진행 타이머
   int _autoPlayCountdown = 5; // 자동 진행 카운트다운
   int _lastDiscardTurn = 0; // 마지막으로 카드를 버린 플레이어 턴
+  Timer? _computerActionTimer; // 컴퓨터 액션 딜레이 타이머
+  static const int _computerActionDelay = 2000; // 컴퓨터 액션 딜레이 (밀리초)
 
   // 점수
   List<int> scores = [];
@@ -193,6 +195,7 @@ class _HulaScreenState extends State<HulaScreen> with TickerProviderStateMixin {
   void dispose() {
     _messageTimer?.cancel();
     _nextTurnTimer?.cancel();
+    _computerActionTimer?.cancel();
     _animController.dispose();
     super.dispose();
   }
@@ -1446,6 +1449,7 @@ class _HulaScreenState extends State<HulaScreen> with TickerProviderStateMixin {
 
   void _computerTurn() {
     if (gameOver) return;
+    _computerActionTimer?.cancel();
 
     final computerIndex = currentTurn - 1;
     final hand = computerHands[computerIndex];
@@ -1488,137 +1492,227 @@ class _HulaScreenState extends State<HulaScreen> with TickerProviderStateMixin {
 
     hand.add(drawnCard);
     _sortHand(hand);
+    setState(() {});
 
-    // 2. 훌라 가능성 확인 후 등록 여부 결정 (스톱 위험도 포함)
+    // 딜레이 후 등록/붙이기 단계 실행
+    _computerActionTimer = Timer(Duration(milliseconds: takeDiscard ? _computerActionDelay : 500), () {
+      if (mounted && !gameOver) {
+        _computerTurnRegister(computerIndex);
+      }
+    });
+  }
+
+  // 컴퓨터 턴 - 멜드 등록 단계
+  void _computerTurnRegister(int computerIndex) {
+    if (gameOver) return;
+
+    final hand = computerHands[computerIndex];
+    final melds = computerMelds[computerIndex];
+
+    // 훌라 가능성 확인 후 등록 여부 결정 (스톱 위험도 포함)
     final shouldRegister = _shouldRegisterMelds(hand, melds, computerIndex: computerIndex + 1);
 
-    if (shouldRegister) {
-      // 2-1. 가능한 멜드 등록
-      List<PlayingCard>? bestMeld;
-      while ((bestMeld = _findBestMeld(hand)) != null) {
-        final isRun = _isValidRun(bestMeld!);
-        for (final card in bestMeld) {
-          hand.remove(card);
+    if (!shouldRegister) {
+      _computerTurnDiscard(computerIndex);
+      return;
+    }
+
+    // 등록할 멜드 수집
+    final meldsToRegister = <Map<String, dynamic>>[];
+
+    // 일반 멜드 찾기
+    final testHand = List<PlayingCard>.from(hand);
+    List<PlayingCard>? bestMeld;
+    while ((bestMeld = _findBestMeld(testHand)) != null) {
+      final isRun = _isValidRun(bestMeld!);
+      meldsToRegister.add({'cards': List<PlayingCard>.from(bestMeld), 'isRun': isRun, 'type': 'meld'});
+      for (final card in bestMeld) {
+        testHand.remove(card);
+      }
+    }
+
+    // 7 카드 찾기
+    final sevens = testHand.where((c) => _isSeven(c)).toList();
+    if (sevens.length >= 3) {
+      final decision = _decideSevensStrategy(sevens, testHand);
+      if (decision == 'group') {
+        meldsToRegister.add({'cards': sevens.take(3).toList(), 'isRun': false, 'type': '7group'});
+        for (final seven in sevens.skip(3)) {
+          meldsToRegister.add({'cards': [seven], 'isRun': false, 'type': '7'});
         }
-        melds.add(Meld(cards: bestMeld, isRun: isRun));
+      } else {
+        for (final seven in sevens) {
+          meldsToRegister.add({'cards': [seven], 'isRun': false, 'type': '7'});
+        }
+      }
+    } else {
+      for (final seven in sevens) {
+        meldsToRegister.add({'cards': [seven], 'isRun': false, 'type': '7'});
+      }
+    }
+
+    // 순차적으로 등록 실행
+    _computerRegisterMeldsSequentially(computerIndex, meldsToRegister, 0);
+  }
+
+  // 멜드를 순차적으로 등록 (딜레이 포함)
+  void _computerRegisterMeldsSequentially(int computerIndex, List<Map<String, dynamic>> meldsToRegister, int index) {
+    if (gameOver) return;
+    if (index >= meldsToRegister.length) {
+      // 모든 등록 완료, 붙여놓기 단계로
+      _computerActionTimer = Timer(Duration(milliseconds: _computerActionDelay), () {
+        if (mounted && !gameOver) {
+          _computerTurnAttach(computerIndex);
+        }
+      });
+      return;
+    }
+
+    final hand = computerHands[computerIndex];
+    final melds = computerMelds[computerIndex];
+    final meldData = meldsToRegister[index];
+    final cards = meldData['cards'] as List<PlayingCard>;
+    final isRun = meldData['isRun'] as bool;
+    final type = meldData['type'] as String;
+
+    // 카드가 손에 있는지 확인
+    bool allCardsInHand = cards.every((c) => hand.contains(c));
+    if (!allCardsInHand) {
+      // 이미 처리된 카드, 다음으로
+      _computerRegisterMeldsSequentially(computerIndex, meldsToRegister, index + 1);
+      return;
+    }
+
+    // 멜드 등록
+    for (final card in cards) {
+      hand.remove(card);
+    }
+    melds.add(Meld(cards: cards, isRun: isRun));
+
+    // 메시지 표시
+    if (type == '7group') {
+      _showMessage('컴퓨터${computerIndex + 1}: 7 Group 등록!');
+    } else if (type == '7') {
+      _showMessage('컴퓨터${computerIndex + 1}: 7 등록!');
+    } else {
+      final cardStr = cards.map((c) => '${c.suitSymbol}${c.rankString}').join(' ');
+      _showMessage('컴퓨터${computerIndex + 1}: ${isRun ? 'Run' : 'Group'} 등록! $cardStr');
+    }
+
+    setState(() {});
+    _saveGame();
+
+    if (hand.isEmpty) {
+      _endGame(currentTurn);
+      return;
+    }
+
+    // 다음 멜드 등록 (딜레이 후)
+    _computerActionTimer = Timer(Duration(milliseconds: _computerActionDelay), () {
+      if (mounted && !gameOver) {
+        _computerRegisterMeldsSequentially(computerIndex, meldsToRegister, index + 1);
+      }
+    });
+  }
+
+  // 컴퓨터 턴 - 붙여놓기 단계
+  void _computerTurnAttach(int computerIndex) {
+    if (gameOver) return;
+
+    final hand = computerHands[computerIndex];
+    final melds = computerMelds[computerIndex];
+
+    if (melds.isEmpty) {
+      _computerTurnDiscard(computerIndex);
+      return;
+    }
+
+    // 붙일 수 있는 카드 찾기
+    for (int i = hand.length - 1; i >= 0; i--) {
+      final card = hand[i];
+
+      // 자신의 멜드에 붙이기
+      final ownMeldIndex = _canAttachToMeldList(card, melds);
+      if (ownMeldIndex >= 0) {
+        _attachToMeldList(ownMeldIndex, card, melds);
+        hand.removeAt(i);
+        _showMessage('컴퓨터${computerIndex + 1}: ${card.suitSymbol}${card.rankString} 붙이기!');
+        setState(() {});
+        _saveGame();
 
         if (hand.isEmpty) {
-          // 컴퓨터 승리
           _endGame(currentTurn);
           return;
         }
+
+        // 딜레이 후 다음 붙이기 확인
+        _computerActionTimer = Timer(Duration(milliseconds: _computerActionDelay), () {
+          if (mounted && !gameOver) {
+            _computerTurnAttach(computerIndex);
+          }
+        });
+        return;
       }
 
-      // 2-2. 7 카드 스마트 등록 (Group vs Run 결정)
-      final sevens = hand.where((c) => _isSeven(c)).toList();
-      if (sevens.length >= 3) {
-        // 3장 이상: Group vs 개별 Run 결정
-        final decision = _decideSevensStrategy(sevens, hand);
-        if (decision == 'group') {
-          // Group으로 등록
-          for (final seven in sevens.take(3)) {
-            hand.remove(seven);
+      // 플레이어 멜드에 붙이기
+      final playerMeldIndex = _canAttachToMeldList(card, playerMelds);
+      if (playerMeldIndex >= 0) {
+        _attachToMeldList(playerMeldIndex, card, playerMelds);
+        hand.removeAt(i);
+        _showMessage('컴퓨터${computerIndex + 1}: ${card.suitSymbol}${card.rankString} 붙이기!');
+        setState(() {});
+        _saveGame();
+
+        if (hand.isEmpty) {
+          _endGame(currentTurn);
+          return;
+        }
+
+        _computerActionTimer = Timer(Duration(milliseconds: _computerActionDelay), () {
+          if (mounted && !gameOver) {
+            _computerTurnAttach(computerIndex);
           }
-          melds.add(Meld(cards: sevens.take(3).toList(), isRun: false));
-          _showMessage('컴퓨터${computerIndex + 1}: 7 Group 등록!');
+        });
+        return;
+      }
+
+      // 다른 컴퓨터 멜드에 붙이기
+      for (int c = 0; c < computerMelds.length; c++) {
+        if (c == computerIndex) continue;
+        final otherMeldIndex = _canAttachToMeldList(card, computerMelds[c]);
+        if (otherMeldIndex >= 0) {
+          _attachToMeldList(otherMeldIndex, card, computerMelds[c]);
+          hand.removeAt(i);
+          _showMessage('컴퓨터${computerIndex + 1}: ${card.suitSymbol}${card.rankString} 붙이기!');
+          setState(() {});
+          _saveGame();
 
           if (hand.isEmpty) {
             _endGame(currentTurn);
             return;
           }
 
-          // 남은 7이 있으면 단독 등록
-          final remaining = hand.where((c) => _isSeven(c)).toList();
-          for (final seven in remaining) {
-            hand.remove(seven);
-            melds.add(Meld(cards: [seven], isRun: false));
-            if (hand.isEmpty) {
-              _endGame(currentTurn);
-              return;
+          _computerActionTimer = Timer(Duration(milliseconds: _computerActionDelay), () {
+            if (mounted && !gameOver) {
+              _computerTurnAttach(computerIndex);
             }
-          }
-        } else {
-          // 개별 등록 (Run 가능성 높음)
-          for (final seven in sevens) {
-            hand.remove(seven);
-            melds.add(Meld(cards: [seven], isRun: false));
-            _showMessage('컴퓨터${computerIndex + 1}: 7 등록!');
-
-            if (hand.isEmpty) {
-              _endGame(currentTurn);
-              return;
-            }
-          }
-        }
-      } else {
-        // 2장 이하: 개별 등록
-        for (final seven in sevens) {
-          hand.remove(seven);
-          melds.add(Meld(cards: [seven], isRun: false));
-          _showMessage('컴퓨터${computerIndex + 1}: 7 등록!');
-
-          if (hand.isEmpty) {
-            _endGame(currentTurn);
-            return;
-          }
-        }
-      }
-
-      // 2-3. 기존 멜드에 붙여놓기 (자신 + 다른 플레이어 멜드)
-      if (melds.isNotEmpty) {
-        bool attached = true;
-        while (attached) {
-          attached = false;
-          for (int i = hand.length - 1; i >= 0; i--) {
-            final card = hand[i];
-
-            // 자신의 멜드에 붙이기
-            final ownMeldIndex = _canAttachToMeldList(card, melds);
-            if (ownMeldIndex >= 0) {
-              _attachToMeldList(ownMeldIndex, card, melds);
-              hand.removeAt(i);
-              attached = true;
-              if (hand.isEmpty) {
-                _endGame(currentTurn);
-                return;
-              }
-              continue;
-            }
-
-            // 플레이어 멜드에 붙이기
-            final playerMeldIndex = _canAttachToMeldList(card, playerMelds);
-            if (playerMeldIndex >= 0) {
-              _attachToMeldList(playerMeldIndex, card, playerMelds);
-              hand.removeAt(i);
-              attached = true;
-              if (hand.isEmpty) {
-                _endGame(currentTurn);
-                return;
-              }
-              continue;
-            }
-
-            // 다른 컴퓨터 멜드에 붙이기
-            for (int c = 0; c < computerMelds.length; c++) {
-              if (c == computerIndex) continue; // 자신 제외
-              final otherMeldIndex = _canAttachToMeldList(card, computerMelds[c]);
-              if (otherMeldIndex >= 0) {
-                _attachToMeldList(otherMeldIndex, card, computerMelds[c]);
-                hand.removeAt(i);
-                attached = true;
-                if (hand.isEmpty) {
-                  _endGame(currentTurn);
-                  return;
-                }
-                break;
-              }
-            }
-          }
+          });
+          return;
         }
       }
     }
 
-    // 3. 스마트 카드 버리기
+    // 붙일 카드 없음, 버리기 단계로
+    _computerTurnDiscard(computerIndex);
+  }
+
+  // 컴퓨터 턴 - 버리기 단계
+  void _computerTurnDiscard(int computerIndex) {
+    if (gameOver) return;
+
+    final hand = computerHands[computerIndex];
+
+    // 스마트 카드 버리기
     final discardCard = _selectCardToDiscard(hand);
     hand.remove(discardCard);
     discardPile.add(discardCard);
@@ -1640,7 +1734,7 @@ class _HulaScreenState extends State<HulaScreen> with TickerProviderStateMixin {
 
     // 땡큐 확인: 플레이어 전 순서 컴퓨터는 즉시, 후 순서는 5초 후
     _lastDiscardTurn = currentTurn;
-    Timer(const Duration(milliseconds: 500), () {
+    _computerActionTimer = Timer(const Duration(milliseconds: 500), () {
       if (mounted && !gameOver) {
         // 1. 플레이어 전 순서 컴퓨터 땡큐 확인 (즉시)
         final beforeResult = _checkComputerThankYouBeforePlayer(currentTurn);
@@ -1705,142 +1799,227 @@ class _HulaScreenState extends State<HulaScreen> with TickerProviderStateMixin {
   // 컴퓨터 땡큐 실행
   void _executeComputerThankYou(int computerIndex) {
     if (discardPile.isEmpty) return;
+    _computerActionTimer?.cancel();
 
     final card = discardPile.removeLast();
     final hand = computerHands[computerIndex];
-    final melds = computerMelds[computerIndex];
 
     hand.add(card);
     _sortHand(hand);
     _showMessage('컴퓨터${computerIndex + 1}: 땡큐! ${card.suitSymbol}${card.rankString}');
+    setState(() {});
+    _saveGame();
+
+    // 딜레이 후 등록 단계 실행
+    _computerActionTimer = Timer(Duration(milliseconds: _computerActionDelay), () {
+      if (mounted && !gameOver) {
+        _executeComputerThankYouRegister(computerIndex);
+      }
+    });
+  }
+
+  // 컴퓨터 땡큐 후 - 멜드 등록 단계
+  void _executeComputerThankYouRegister(int computerIndex) {
+    if (gameOver) return;
+
+    final hand = computerHands[computerIndex];
+    final melds = computerMelds[computerIndex];
 
     // 훌라 가능성 확인 후 등록 여부 결정 (스톱 위험도 포함)
     final shouldRegister = _shouldRegisterMelds(hand, melds, computerIndex: computerIndex + 1);
 
-    if (shouldRegister) {
-      // 멜드 등록
-      List<PlayingCard>? bestMeld;
-      while ((bestMeld = _findBestMeld(hand)) != null) {
-        final isRun = _isValidRun(bestMeld!);
-        for (final c in bestMeld) {
-          hand.remove(c);
-        }
-        melds.add(Meld(cards: bestMeld, isRun: isRun));
+    if (!shouldRegister) {
+      _computerDiscardAfterThankYou(computerIndex);
+      return;
+    }
 
-        if (hand.isEmpty) {
-          _endGame(computerIndex + 1);
-          return;
-        }
+    // 등록할 멜드 수집
+    final meldsToRegister = <Map<String, dynamic>>[];
+
+    // 일반 멜드 찾기
+    final testHand = List<PlayingCard>.from(hand);
+    List<PlayingCard>? bestMeld;
+    while ((bestMeld = _findBestMeld(testHand)) != null) {
+      final isRun = _isValidRun(bestMeld!);
+      meldsToRegister.add({'cards': List<PlayingCard>.from(bestMeld), 'isRun': isRun, 'type': 'meld'});
+      for (final card in bestMeld) {
+        testHand.remove(card);
       }
+    }
 
-      // 7 카드 스마트 등록
-      final sevens = hand.where((c) => _isSeven(c)).toList();
-      if (sevens.length >= 3) {
-        final decision = _decideSevensStrategy(sevens, hand);
-        if (decision == 'group') {
-          for (final seven in sevens.take(3)) {
-            hand.remove(seven);
-          }
-          melds.add(Meld(cards: sevens.take(3).toList(), isRun: false));
-
-          if (hand.isEmpty) {
-            _endGame(computerIndex + 1);
-            return;
-          }
-
-          final remaining = hand.where((c) => _isSeven(c)).toList();
-          for (final seven in remaining) {
-            hand.remove(seven);
-            melds.add(Meld(cards: [seven], isRun: false));
-            if (hand.isEmpty) {
-              _endGame(computerIndex + 1);
-              return;
-            }
-          }
-        } else {
-          for (final seven in sevens) {
-            hand.remove(seven);
-            melds.add(Meld(cards: [seven], isRun: false));
-            if (hand.isEmpty) {
-              _endGame(computerIndex + 1);
-              return;
-            }
-          }
+    // 7 카드 찾기
+    final sevens = testHand.where((c) => _isSeven(c)).toList();
+    if (sevens.length >= 3) {
+      final decision = _decideSevensStrategy(sevens, testHand);
+      if (decision == 'group') {
+        meldsToRegister.add({'cards': sevens.take(3).toList(), 'isRun': false, 'type': '7group'});
+        for (final seven in sevens.skip(3)) {
+          meldsToRegister.add({'cards': [seven], 'isRun': false, 'type': '7'});
         }
       } else {
         for (final seven in sevens) {
-          hand.remove(seven);
-          melds.add(Meld(cards: [seven], isRun: false));
-          if (hand.isEmpty) {
-            _endGame(computerIndex + 1);
-            return;
-          }
+          meldsToRegister.add({'cards': [seven], 'isRun': false, 'type': '7'});
         }
       }
-
-      // 기존 멜드에 붙여놓기 (자신 + 다른 플레이어 멜드)
-      if (melds.isNotEmpty) {
-        bool attached = true;
-        while (attached) {
-          attached = false;
-          for (int i = hand.length - 1; i >= 0; i--) {
-            final card = hand[i];
-
-            // 자신의 멜드에 붙이기
-            final ownMeldIndex = _canAttachToMeldList(card, melds);
-            if (ownMeldIndex >= 0) {
-              _attachToMeldList(ownMeldIndex, card, melds);
-              hand.removeAt(i);
-              attached = true;
-              if (hand.isEmpty) {
-                _endGame(computerIndex + 1);
-                return;
-              }
-              continue;
-            }
-
-            // 플레이어 멜드에 붙이기
-            final playerMeldIndex = _canAttachToMeldList(card, playerMelds);
-            if (playerMeldIndex >= 0) {
-              _attachToMeldList(playerMeldIndex, card, playerMelds);
-              hand.removeAt(i);
-              attached = true;
-              if (hand.isEmpty) {
-                _endGame(computerIndex + 1);
-                return;
-              }
-              continue;
-            }
-
-            // 다른 컴퓨터 멜드에 붙이기
-            for (int c = 0; c < computerMelds.length; c++) {
-              if (c == computerIndex) continue;
-              final otherMeldIndex = _canAttachToMeldList(card, computerMelds[c]);
-              if (otherMeldIndex >= 0) {
-                _attachToMeldList(otherMeldIndex, card, computerMelds[c]);
-                hand.removeAt(i);
-                attached = true;
-                if (hand.isEmpty) {
-                  _endGame(computerIndex + 1);
-                  return;
-                }
-                break;
-              }
-            }
-          }
-        }
+    } else {
+      for (final seven in sevens) {
+        meldsToRegister.add({'cards': [seven], 'isRun': false, 'type': '7'});
       }
+    }
+
+    // 순차적으로 등록 실행
+    _executeComputerThankYouRegisterSequentially(computerIndex, meldsToRegister, 0);
+  }
+
+  // 땡큐 후 멜드를 순차적으로 등록 (딜레이 포함)
+  void _executeComputerThankYouRegisterSequentially(int computerIndex, List<Map<String, dynamic>> meldsToRegister, int index) {
+    if (gameOver) return;
+    if (index >= meldsToRegister.length) {
+      // 모든 등록 완료, 붙여놓기 단계로
+      _computerActionTimer = Timer(Duration(milliseconds: _computerActionDelay), () {
+        if (mounted && !gameOver) {
+          _executeComputerThankYouAttach(computerIndex);
+        }
+      });
+      return;
+    }
+
+    final hand = computerHands[computerIndex];
+    final melds = computerMelds[computerIndex];
+    final meldData = meldsToRegister[index];
+    final cards = meldData['cards'] as List<PlayingCard>;
+    final isRun = meldData['isRun'] as bool;
+    final type = meldData['type'] as String;
+
+    // 카드가 손에 있는지 확인
+    bool allCardsInHand = cards.every((c) => hand.contains(c));
+    if (!allCardsInHand) {
+      // 이미 처리된 카드, 다음으로
+      _executeComputerThankYouRegisterSequentially(computerIndex, meldsToRegister, index + 1);
+      return;
+    }
+
+    // 멜드 등록
+    for (final card in cards) {
+      hand.remove(card);
+    }
+    melds.add(Meld(cards: cards, isRun: isRun));
+
+    // 메시지 표시
+    if (type == '7group') {
+      _showMessage('컴퓨터${computerIndex + 1}: 7 Group 등록!');
+    } else if (type == '7') {
+      _showMessage('컴퓨터${computerIndex + 1}: 7 등록!');
+    } else {
+      final cardStr = cards.map((c) => '${c.suitSymbol}${c.rankString}').join(' ');
+      _showMessage('컴퓨터${computerIndex + 1}: ${isRun ? 'Run' : 'Group'} 등록! $cardStr');
     }
 
     setState(() {});
     _saveGame();
 
-    // 땡큐한 컴퓨터가 카드 버리기
-    Timer(const Duration(milliseconds: 500), () {
+    if (hand.isEmpty) {
+      _endGame(computerIndex + 1);
+      return;
+    }
+
+    // 다음 멜드 등록 (딜레이 후)
+    _computerActionTimer = Timer(Duration(milliseconds: _computerActionDelay), () {
       if (mounted && !gameOver) {
-        _computerDiscardAfterThankYou(computerIndex);
+        _executeComputerThankYouRegisterSequentially(computerIndex, meldsToRegister, index + 1);
       }
     });
+  }
+
+  // 컴퓨터 땡큐 후 - 붙여놓기 단계
+  void _executeComputerThankYouAttach(int computerIndex) {
+    if (gameOver) return;
+
+    final hand = computerHands[computerIndex];
+    final melds = computerMelds[computerIndex];
+
+    if (melds.isEmpty) {
+      _computerDiscardAfterThankYou(computerIndex);
+      return;
+    }
+
+    // 붙일 수 있는 카드 찾기
+    for (int i = hand.length - 1; i >= 0; i--) {
+      final card = hand[i];
+
+      // 자신의 멜드에 붙이기
+      final ownMeldIndex = _canAttachToMeldList(card, melds);
+      if (ownMeldIndex >= 0) {
+        _attachToMeldList(ownMeldIndex, card, melds);
+        hand.removeAt(i);
+        _showMessage('컴퓨터${computerIndex + 1}: ${card.suitSymbol}${card.rankString} 붙이기!');
+        setState(() {});
+        _saveGame();
+
+        if (hand.isEmpty) {
+          _endGame(computerIndex + 1);
+          return;
+        }
+
+        // 딜레이 후 다음 붙이기 확인
+        _computerActionTimer = Timer(Duration(milliseconds: _computerActionDelay), () {
+          if (mounted && !gameOver) {
+            _executeComputerThankYouAttach(computerIndex);
+          }
+        });
+        return;
+      }
+
+      // 플레이어 멜드에 붙이기
+      final playerMeldIndex = _canAttachToMeldList(card, playerMelds);
+      if (playerMeldIndex >= 0) {
+        _attachToMeldList(playerMeldIndex, card, playerMelds);
+        hand.removeAt(i);
+        _showMessage('컴퓨터${computerIndex + 1}: ${card.suitSymbol}${card.rankString} 붙이기!');
+        setState(() {});
+        _saveGame();
+
+        if (hand.isEmpty) {
+          _endGame(computerIndex + 1);
+          return;
+        }
+
+        _computerActionTimer = Timer(Duration(milliseconds: _computerActionDelay), () {
+          if (mounted && !gameOver) {
+            _executeComputerThankYouAttach(computerIndex);
+          }
+        });
+        return;
+      }
+
+      // 다른 컴퓨터 멜드에 붙이기
+      for (int c = 0; c < computerMelds.length; c++) {
+        if (c == computerIndex) continue;
+        final otherMeldIndex = _canAttachToMeldList(card, computerMelds[c]);
+        if (otherMeldIndex >= 0) {
+          _attachToMeldList(otherMeldIndex, card, computerMelds[c]);
+          hand.removeAt(i);
+          _showMessage('컴퓨터${computerIndex + 1}: ${card.suitSymbol}${card.rankString} 붙이기!');
+          setState(() {});
+          _saveGame();
+
+          if (hand.isEmpty) {
+            _endGame(computerIndex + 1);
+            return;
+          }
+
+          _computerActionTimer = Timer(Duration(milliseconds: _computerActionDelay), () {
+            if (mounted && !gameOver) {
+              _executeComputerThankYouAttach(computerIndex);
+            }
+          });
+          return;
+        }
+      }
+    }
+
+    // 붙일 카드 없음, 버리기 단계로
+    _computerDiscardAfterThankYou(computerIndex);
   }
 
   // 땡큐 후 컴퓨터가 카드 버리기
