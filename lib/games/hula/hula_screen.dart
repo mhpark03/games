@@ -1,0 +1,1264 @@
+import 'dart:async';
+import 'dart:math';
+import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import '../../services/game_save_service.dart';
+
+// 카드 무늬
+enum Suit { spade, heart, diamond, club }
+
+// 플레잉 카드
+class PlayingCard {
+  final Suit suit;
+  final int rank; // 1-13 (A, 2-10, J, Q, K)
+
+  PlayingCard({required this.suit, required this.rank});
+
+  // 카드 점수 (A=1, 2-10=숫자, J/Q/K=10)
+  int get point {
+    if (rank == 1) return 1;
+    if (rank >= 11) return 10;
+    return rank;
+  }
+
+  String get rankString {
+    switch (rank) {
+      case 1:
+        return 'A';
+      case 11:
+        return 'J';
+      case 12:
+        return 'Q';
+      case 13:
+        return 'K';
+      default:
+        return '$rank';
+    }
+  }
+
+  String get suitSymbol {
+    switch (suit) {
+      case Suit.spade:
+        return '♠';
+      case Suit.heart:
+        return '♥';
+      case Suit.diamond:
+        return '♦';
+      case Suit.club:
+        return '♣';
+    }
+  }
+
+  Color get suitColor {
+    if (suit == Suit.heart || suit == Suit.diamond) {
+      return Colors.red;
+    }
+    return Colors.black;
+  }
+
+  int get suitIndex {
+    switch (suit) {
+      case Suit.spade:
+        return 0;
+      case Suit.heart:
+        return 1;
+      case Suit.diamond:
+        return 2;
+      case Suit.club:
+        return 3;
+    }
+  }
+
+  @override
+  bool operator ==(Object other) {
+    if (other is PlayingCard) {
+      return suit == other.suit && rank == other.rank;
+    }
+    return false;
+  }
+
+  @override
+  int get hashCode => Object.hash(suit, rank);
+
+  @override
+  String toString() => '$suitSymbol$rankString';
+}
+
+// 멜드 (등록된 조합)
+class Meld {
+  final List<PlayingCard> cards;
+  final bool isRun; // true = Run (시퀀스), false = Group (세트)
+
+  Meld({required this.cards, required this.isRun});
+
+  int get size => cards.length;
+}
+
+// 52장 덱 생성
+List<PlayingCard> createDeck() {
+  final deck = <PlayingCard>[];
+  for (final suit in Suit.values) {
+    for (int rank = 1; rank <= 13; rank++) {
+      deck.add(PlayingCard(suit: suit, rank: rank));
+    }
+  }
+  return deck;
+}
+
+class HulaScreen extends StatefulWidget {
+  final int playerCount;
+  final bool resumeGame;
+
+  const HulaScreen({
+    super.key,
+    this.playerCount = 2,
+    this.resumeGame = false,
+  });
+
+  static Future<bool> hasSavedGame() async {
+    return await GameSaveService.hasSavedGame('hula');
+  }
+
+  static Future<int?> getSavedPlayerCount() async {
+    final gameState = await GameSaveService.loadGame('hula');
+    if (gameState == null) return null;
+    return gameState['playerCount'] as int?;
+  }
+
+  static Future<void> clearSavedGame() async {
+    await GameSaveService.clearSave();
+  }
+
+  @override
+  State<HulaScreen> createState() => _HulaScreenState();
+}
+
+class _HulaScreenState extends State<HulaScreen> with TickerProviderStateMixin {
+  // 카드 덱
+  List<PlayingCard> deck = [];
+  List<PlayingCard> discardPile = [];
+
+  // 손패
+  List<PlayingCard> playerHand = [];
+  List<List<PlayingCard>> computerHands = [];
+
+  // 등록된 멜드
+  List<Meld> playerMelds = [];
+  List<List<Meld>> computerMelds = [];
+
+  // 게임 상태
+  late int playerCount;
+  int currentTurn = 0; // 0 = 플레이어
+  bool gameOver = false;
+  String? winner;
+  int? winnerIndex;
+  bool isHula = false; // 훌라 여부
+
+  // 턴 단계
+  bool hasDrawn = false; // 이번 턴에 드로우했는지
+  List<int> selectedCardIndices = []; // 선택된 카드 인덱스들
+
+  // 점수
+  List<int> scores = [];
+
+  // 메시지
+  String? gameMessage;
+  Timer? _messageTimer;
+
+  // 애니메이션
+  late AnimationController _animController;
+
+  @override
+  void initState() {
+    super.initState();
+    playerCount = widget.playerCount;
+
+    _animController = AnimationController(
+      duration: const Duration(milliseconds: 300),
+      vsync: this,
+    );
+
+    if (widget.resumeGame) {
+      _loadSavedGame();
+    } else {
+      _initGame();
+    }
+  }
+
+  @override
+  void dispose() {
+    _messageTimer?.cancel();
+    _animController.dispose();
+    super.dispose();
+  }
+
+  void _initGame() {
+    deck = createDeck();
+    deck.shuffle(Random());
+
+    discardPile = [];
+    playerHand = [];
+    computerHands = List.generate(playerCount - 1, (_) => []);
+    playerMelds = [];
+    computerMelds = List.generate(playerCount - 1, (_) => []);
+    scores = List.generate(playerCount, (_) => 0);
+
+    // 각 플레이어에게 7장씩 배분
+    for (int i = 0; i < 7; i++) {
+      playerHand.add(deck.removeLast());
+      for (int c = 0; c < playerCount - 1; c++) {
+        computerHands[c].add(deck.removeLast());
+      }
+    }
+
+    // 버린 더미에 1장 공개
+    discardPile.add(deck.removeLast());
+
+    // 손패 정렬
+    _sortHand(playerHand);
+    for (var hand in computerHands) {
+      _sortHand(hand);
+    }
+
+    currentTurn = 0;
+    gameOver = false;
+    winner = null;
+    winnerIndex = null;
+    isHula = false;
+    hasDrawn = false;
+    selectedCardIndices = [];
+
+    setState(() {});
+  }
+
+  void _sortHand(List<PlayingCard> hand) {
+    hand.sort((a, b) {
+      if (a.suit != b.suit) {
+        return a.suitIndex.compareTo(b.suitIndex);
+      }
+      return a.rank.compareTo(b.rank);
+    });
+  }
+
+  Future<void> _loadSavedGame() async {
+    _initGame();
+  }
+
+  void _showMessage(String message, {int seconds = 2}) {
+    setState(() {
+      gameMessage = message;
+    });
+    _messageTimer?.cancel();
+    _messageTimer = Timer(Duration(seconds: seconds), () {
+      if (mounted) {
+        setState(() {
+          gameMessage = null;
+        });
+      }
+    });
+  }
+
+  // 덱에서 카드 드로우
+  void _drawFromDeck() {
+    if (hasDrawn || gameOver || currentTurn != 0) return;
+    if (deck.isEmpty) {
+      // 덱이 비면 버린 더미 섞기
+      if (discardPile.length <= 1) {
+        _showMessage('더 이상 카드가 없습니다');
+        return;
+      }
+      final topCard = discardPile.removeLast();
+      deck = List.from(discardPile);
+      deck.shuffle(Random());
+      discardPile = [topCard];
+    }
+
+    final card = deck.removeLast();
+    playerHand.add(card);
+    _sortHand(playerHand);
+
+    setState(() {
+      hasDrawn = true;
+      selectedCardIndices = [];
+    });
+    _showMessage('덱에서 ${card.suitSymbol}${card.rankString} 드로우');
+  }
+
+  // 버린 더미에서 카드 가져오기 (땡큐)
+  void _drawFromDiscard() {
+    if (hasDrawn || gameOver || currentTurn != 0) return;
+    if (discardPile.isEmpty) return;
+
+    final card = discardPile.removeLast();
+    playerHand.add(card);
+    _sortHand(playerHand);
+
+    setState(() {
+      hasDrawn = true;
+      selectedCardIndices = [];
+    });
+    _showMessage('땡큐! ${card.suitSymbol}${card.rankString} 획득');
+  }
+
+  // 카드 선택/해제
+  void _toggleCardSelection(int index) {
+    if (gameOver || currentTurn != 0) return;
+
+    setState(() {
+      if (selectedCardIndices.contains(index)) {
+        selectedCardIndices.remove(index);
+      } else {
+        selectedCardIndices.add(index);
+      }
+      selectedCardIndices.sort();
+    });
+  }
+
+  // 선택된 카드들이 유효한 멜드인지 확인
+  bool _isValidMeld(List<PlayingCard> cards) {
+    if (cards.length < 3) return false;
+
+    // Group (같은 숫자) 체크
+    if (_isValidGroup(cards)) return true;
+
+    // Run (같은 무늬 연속) 체크
+    if (_isValidRun(cards)) return true;
+
+    return false;
+  }
+
+  bool _isValidGroup(List<PlayingCard> cards) {
+    if (cards.length < 3 || cards.length > 4) return false;
+    final rank = cards.first.rank;
+    return cards.every((c) => c.rank == rank);
+  }
+
+  bool _isValidRun(List<PlayingCard> cards) {
+    if (cards.length < 3) return false;
+
+    final suit = cards.first.suit;
+    if (!cards.every((c) => c.suit == suit)) return false;
+
+    // 랭크 정렬
+    final ranks = cards.map((c) => c.rank).toList()..sort();
+
+    // A-2-3 또는 Q-K-A 처리
+    // A를 1 또는 14로 취급
+    bool isSequential = true;
+    for (int i = 1; i < ranks.length; i++) {
+      if (ranks[i] != ranks[i - 1] + 1) {
+        isSequential = false;
+        break;
+      }
+    }
+    if (isSequential) return true;
+
+    // A를 14로 취급해서 다시 체크 (Q-K-A)
+    if (ranks.contains(1)) {
+      final highRanks = ranks.map((r) => r == 1 ? 14 : r).toList()..sort();
+      isSequential = true;
+      for (int i = 1; i < highRanks.length; i++) {
+        if (highRanks[i] != highRanks[i - 1] + 1) {
+          isSequential = false;
+          break;
+        }
+      }
+      if (isSequential) return true;
+    }
+
+    return false;
+  }
+
+  // 멜드 등록
+  void _registerMeld() {
+    if (selectedCardIndices.length < 3) {
+      _showMessage('3장 이상 선택하세요');
+      return;
+    }
+
+    final selectedCards =
+        selectedCardIndices.map((i) => playerHand[i]).toList();
+
+    if (!_isValidMeld(selectedCards)) {
+      _showMessage('유효하지 않은 조합입니다');
+      return;
+    }
+
+    final isRun = _isValidRun(selectedCards);
+
+    // 카드 제거 (역순으로)
+    for (int i = selectedCardIndices.length - 1; i >= 0; i--) {
+      playerHand.removeAt(selectedCardIndices[i]);
+    }
+
+    playerMelds.add(Meld(cards: selectedCards, isRun: isRun));
+
+    setState(() {
+      selectedCardIndices = [];
+    });
+
+    _showMessage(isRun ? 'Run 등록!' : 'Group 등록!');
+
+    // 손패가 비었으면 승리
+    if (playerHand.isEmpty) {
+      _playerWins();
+    }
+  }
+
+  // 카드 버리기
+  void _discardCard() {
+    if (!hasDrawn) {
+      _showMessage('먼저 카드를 드로우하세요');
+      return;
+    }
+    if (selectedCardIndices.length != 1) {
+      _showMessage('버릴 카드 1장을 선택하세요');
+      return;
+    }
+
+    final cardIndex = selectedCardIndices.first;
+    final card = playerHand.removeAt(cardIndex);
+    discardPile.add(card);
+
+    setState(() {
+      selectedCardIndices = [];
+      hasDrawn = false;
+    });
+
+    _showMessage('${card.suitSymbol}${card.rankString} 버림');
+
+    // 손패가 비었으면 승리
+    if (playerHand.isEmpty) {
+      _playerWins();
+      return;
+    }
+
+    _endTurn();
+  }
+
+  void _playerWins() {
+    // 등록 없이 한 번에 다 냈으면 훌라
+    isHula = playerMelds.isEmpty && playerHand.isEmpty;
+    _endGame(0);
+  }
+
+  void _endTurn() {
+    if (gameOver) return;
+
+    setState(() {
+      currentTurn = (currentTurn + 1) % playerCount;
+      hasDrawn = false;
+      selectedCardIndices = [];
+    });
+
+    if (currentTurn != 0) {
+      Timer(const Duration(milliseconds: 800), () {
+        if (mounted && !gameOver) {
+          _computerTurn();
+        }
+      });
+    }
+  }
+
+  void _computerTurn() {
+    if (gameOver) return;
+
+    final computerIndex = currentTurn - 1;
+    final hand = computerHands[computerIndex];
+    final melds = computerMelds[computerIndex];
+
+    // 1. 드로우 (버린 더미 or 덱)
+    PlayingCard drawnCard;
+    final topDiscard = discardPile.isNotEmpty ? discardPile.last : null;
+
+    // 버린 카드가 멜드에 도움이 되면 가져오기
+    bool takeDiscard = false;
+    if (topDiscard != null) {
+      final testHand = [...hand, topDiscard];
+      if (_findBestMeld(testHand) != null) {
+        takeDiscard = true;
+      }
+    }
+
+    if (takeDiscard && discardPile.isNotEmpty) {
+      drawnCard = discardPile.removeLast();
+      _showMessage('컴퓨터${computerIndex + 1}: 땡큐!');
+    } else {
+      if (deck.isEmpty && discardPile.length > 1) {
+        final topCard = discardPile.removeLast();
+        deck = List.from(discardPile);
+        deck.shuffle(Random());
+        discardPile = [topCard];
+      }
+      if (deck.isEmpty) {
+        _endTurn();
+        return;
+      }
+      drawnCard = deck.removeLast();
+    }
+
+    hand.add(drawnCard);
+    _sortHand(hand);
+
+    // 2. 가능한 멜드 등록
+    List<PlayingCard>? bestMeld;
+    while ((bestMeld = _findBestMeld(hand)) != null) {
+      final isRun = _isValidRun(bestMeld!);
+      for (final card in bestMeld) {
+        hand.remove(card);
+      }
+      melds.add(Meld(cards: bestMeld, isRun: isRun));
+
+      if (hand.isEmpty) {
+        // 컴퓨터 승리
+        _endGame(currentTurn);
+        return;
+      }
+    }
+
+    // 3. 가장 높은 점수 카드 버리기
+    hand.sort((a, b) => b.point.compareTo(a.point));
+    final discardCard = hand.removeAt(0);
+    discardPile.add(discardCard);
+    _sortHand(hand);
+
+    setState(() {});
+
+    if (hand.isEmpty) {
+      _endGame(currentTurn);
+      return;
+    }
+
+    Timer(const Duration(milliseconds: 500), () {
+      if (mounted && !gameOver) {
+        _endTurn();
+      }
+    });
+  }
+
+  List<PlayingCard>? _findBestMeld(List<PlayingCard> hand) {
+    if (hand.length < 3) return null;
+
+    // Group 찾기
+    final rankGroups = <int, List<PlayingCard>>{};
+    for (final card in hand) {
+      rankGroups.putIfAbsent(card.rank, () => []).add(card);
+    }
+    for (final group in rankGroups.values) {
+      if (group.length >= 3) {
+        return group.take(3).toList();
+      }
+    }
+
+    // Run 찾기
+    final suitGroups = <Suit, List<PlayingCard>>{};
+    for (final card in hand) {
+      suitGroups.putIfAbsent(card.suit, () => []).add(card);
+    }
+    for (final cards in suitGroups.values) {
+      if (cards.length >= 3) {
+        cards.sort((a, b) => a.rank.compareTo(b.rank));
+        for (int i = 0; i <= cards.length - 3; i++) {
+          final run = <PlayingCard>[cards[i]];
+          for (int j = i + 1; j < cards.length && run.length < 3; j++) {
+            if (cards[j].rank == run.last.rank + 1) {
+              run.add(cards[j]);
+            }
+          }
+          if (run.length >= 3) {
+            return run;
+          }
+        }
+      }
+    }
+
+    return null;
+  }
+
+  // 스톱 선언
+  void _callStop() {
+    if (gameOver) return;
+    _calculateScoresAndEnd();
+  }
+
+  void _calculateScoresAndEnd() {
+    // 모든 플레이어 점수 계산
+    scores[0] = _calculateHandScore(playerHand);
+    for (int i = 0; i < computerHands.length; i++) {
+      scores[i + 1] = _calculateHandScore(computerHands[i]);
+    }
+
+    // 최저 점수 찾기
+    int minScore = scores[0];
+    int minIndex = 0;
+    for (int i = 1; i < scores.length; i++) {
+      if (scores[i] < minScore) {
+        minScore = scores[i];
+        minIndex = i;
+      }
+    }
+
+    _endGame(minIndex);
+  }
+
+  int _calculateHandScore(List<PlayingCard> hand) {
+    return hand.fold(0, (sum, card) => sum + card.point);
+  }
+
+  void _endGame(int winnerIdx) {
+    // 점수 계산
+    scores[0] = _calculateHandScore(playerHand);
+    for (int i = 0; i < computerHands.length; i++) {
+      scores[i + 1] = _calculateHandScore(computerHands[i]);
+    }
+
+    setState(() {
+      gameOver = true;
+      winnerIndex = winnerIdx;
+      if (winnerIdx == 0) {
+        winner = '플레이어';
+      } else {
+        winner = '컴퓨터$winnerIdx';
+      }
+    });
+
+    _showGameOverDialog();
+  }
+
+  void _showGameOverDialog() {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => AlertDialog(
+        backgroundColor: Colors.grey.shade900,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+          side: BorderSide(
+            color: winnerIndex == 0 ? Colors.amber : Colors.red.withValues(alpha: 0.5),
+            width: 2,
+          ),
+        ),
+        title: Column(
+          children: [
+            Text(
+              winnerIndex == 0 ? '🎉 승리!' : '😢 패배',
+              style: TextStyle(
+                color: winnerIndex == 0 ? Colors.amber : Colors.red,
+                fontWeight: FontWeight.bold,
+                fontSize: 24,
+              ),
+              textAlign: TextAlign.center,
+            ),
+            if (isHula && winnerIndex == 0)
+              const Text(
+                '🎊 훌라! 🎊',
+                style: TextStyle(
+                  color: Colors.orange,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 20,
+                ),
+              ),
+          ],
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              '$winner 승리!',
+              style: const TextStyle(color: Colors.white, fontSize: 18),
+            ),
+            const SizedBox(height: 16),
+            const Text(
+              '남은 카드 점수:',
+              style: TextStyle(color: Colors.grey, fontSize: 14),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              '플레이어: ${scores[0]}점',
+              style: TextStyle(
+                color: winnerIndex == 0 ? Colors.amber : Colors.white70,
+              ),
+            ),
+            ...List.generate(
+              computerHands.length,
+              (i) => Text(
+                '컴퓨터${i + 1}: ${scores[i + 1]}점',
+                style: TextStyle(
+                  color: winnerIndex == i + 1 ? Colors.red : Colors.white70,
+                ),
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () {
+              Navigator.pop(context);
+              _initGame();
+            },
+            child: const Text('다시 하기'),
+          ),
+          TextButton(
+            onPressed: () {
+              Navigator.pop(context);
+              Navigator.pop(context);
+            },
+            child: const Text('나가기'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: const Color(0xFF0D5C2E), // 녹색 테이블
+      appBar: AppBar(
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        title: const Text('훌라', style: TextStyle(color: Colors.white)),
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back, color: Colors.white),
+          onPressed: () => Navigator.pop(context),
+        ),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.refresh, color: Colors.white),
+            onPressed: _initGame,
+          ),
+          IconButton(
+            icon: const Icon(Icons.help_outline, color: Colors.white),
+            onPressed: _showRulesDialog,
+          ),
+        ],
+      ),
+      body: SafeArea(
+        child: Column(
+          children: [
+            // 상태 표시
+            _buildStatusBar(),
+
+            // 컴퓨터 손패
+            _buildComputerHands(),
+
+            // 덱과 버린 더미
+            Expanded(
+              child: _buildCenterArea(),
+            ),
+
+            // 메시지
+            if (gameMessage != null)
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                margin: const EdgeInsets.only(bottom: 8),
+                decoration: BoxDecoration(
+                  color: Colors.black54,
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Text(
+                  gameMessage!,
+                  style: const TextStyle(color: Colors.white),
+                ),
+              ),
+
+            // 등록된 멜드
+            if (playerMelds.isNotEmpty) _buildPlayerMelds(),
+
+            // 플레이어 손패
+            _buildPlayerHand(),
+
+            // 액션 버튼
+            _buildActionButtons(),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildStatusBar() {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceAround,
+        children: [
+          _buildStatusChip(
+            '플레이어',
+            '${playerHand.length}장',
+            currentTurn == 0,
+          ),
+          ...List.generate(
+            computerHands.length,
+            (i) => _buildStatusChip(
+              'COM${i + 1}',
+              '${computerHands[i].length}장',
+              currentTurn == i + 1,
+            ),
+          ),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+            decoration: BoxDecoration(
+              color: Colors.brown.shade700,
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Text(
+              '덱: ${deck.length}',
+              style: const TextStyle(color: Colors.white, fontSize: 12),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildStatusChip(String name, String info, bool isActive) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+      decoration: BoxDecoration(
+        color: isActive ? Colors.amber.shade700 : Colors.grey.shade800,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: isActive ? Colors.amber : Colors.transparent,
+          width: 2,
+        ),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(
+            name,
+            style: TextStyle(
+              color: isActive ? Colors.white : Colors.grey.shade400,
+              fontSize: 12,
+            ),
+          ),
+          const SizedBox(width: 8),
+          Text(
+            info,
+            style: TextStyle(
+              color: isActive ? Colors.white : Colors.grey.shade300,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildComputerHands() {
+    return Container(
+      height: 70,
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+        children: List.generate(computerHands.length, (i) {
+          final hand = computerHands[i];
+          final melds = computerMelds[i];
+          return Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    'COM${i + 1}',
+                    style: TextStyle(
+                      color: currentTurn == i + 1 ? Colors.amber : Colors.white54,
+                      fontSize: 11,
+                    ),
+                  ),
+                  if (melds.isNotEmpty)
+                    Text(
+                      ' (${melds.length}멜드)',
+                      style: const TextStyle(color: Colors.green, fontSize: 10),
+                    ),
+                ],
+              ),
+              const SizedBox(height: 4),
+              Row(
+                mainAxisSize: MainAxisSize.min,
+                children: List.generate(
+                  min(hand.length, 7),
+                  (j) => Container(
+                    width: 22,
+                    height: 32,
+                    margin: const EdgeInsets.only(left: 2),
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        colors: [Colors.blue.shade800, Colors.blue.shade900],
+                      ),
+                      borderRadius: BorderRadius.circular(3),
+                      border: Border.all(color: Colors.white24),
+                    ),
+                    child: const Center(
+                      child: Text('🂠', style: TextStyle(fontSize: 14)),
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          );
+        }),
+      ),
+    );
+  }
+
+  Widget _buildCenterArea() {
+    return Center(
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          // 덱
+          GestureDetector(
+            onTap: currentTurn == 0 && !hasDrawn ? _drawFromDeck : null,
+            child: Container(
+              width: 70,
+              height: 100,
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [Colors.blue.shade700, Colors.blue.shade900],
+                ),
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(
+                  color: currentTurn == 0 && !hasDrawn
+                      ? Colors.yellow
+                      : Colors.white24,
+                  width: currentTurn == 0 && !hasDrawn ? 3 : 1,
+                ),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.3),
+                    blurRadius: 8,
+                    offset: const Offset(2, 2),
+                  ),
+                ],
+              ),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const Text('🂠', style: TextStyle(fontSize: 28)),
+                  Text(
+                    '${deck.length}',
+                    style: const TextStyle(color: Colors.white, fontSize: 12),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          const SizedBox(width: 20),
+          // 버린 더미
+          GestureDetector(
+            onTap: currentTurn == 0 && !hasDrawn && discardPile.isNotEmpty
+                ? _drawFromDiscard
+                : null,
+            child: Container(
+              width: 70,
+              height: 100,
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(
+                  color: currentTurn == 0 && !hasDrawn && discardPile.isNotEmpty
+                      ? Colors.green
+                      : Colors.grey,
+                  width: currentTurn == 0 && !hasDrawn && discardPile.isNotEmpty
+                      ? 3
+                      : 1,
+                ),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.3),
+                    blurRadius: 8,
+                    offset: const Offset(2, 2),
+                  ),
+                ],
+              ),
+              child: discardPile.isEmpty
+                  ? const Center(
+                      child: Text(
+                        '버림',
+                        style: TextStyle(color: Colors.grey),
+                      ),
+                    )
+                  : _buildCardFace(discardPile.last, small: true),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildCardFace(PlayingCard card, {bool small = false}) {
+    final fontSize = small ? 14.0 : 18.0;
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(small ? 6 : 8),
+      ),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Text(
+            card.suitSymbol,
+            style: TextStyle(
+              fontSize: fontSize + 4,
+              color: card.suitColor,
+            ),
+          ),
+          Text(
+            card.rankString,
+            style: TextStyle(
+              fontSize: fontSize,
+              fontWeight: FontWeight.bold,
+              color: card.suitColor,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildPlayerMelds() {
+    return Container(
+      height: 50,
+      padding: const EdgeInsets.symmetric(horizontal: 8),
+      child: ListView.builder(
+        scrollDirection: Axis.horizontal,
+        itemCount: playerMelds.length,
+        itemBuilder: (context, meldIndex) {
+          final meld = playerMelds[meldIndex];
+          return Container(
+            margin: const EdgeInsets.only(right: 8),
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+            decoration: BoxDecoration(
+              color: Colors.green.withValues(alpha: 0.3),
+              borderRadius: BorderRadius.circular(8),
+              border: Border.all(color: Colors.green),
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  meld.isRun ? 'Run: ' : 'Set: ',
+                  style: const TextStyle(color: Colors.green, fontSize: 10),
+                ),
+                ...meld.cards.map((card) => Padding(
+                      padding: const EdgeInsets.only(left: 2),
+                      child: Text(
+                        '${card.suitSymbol}${card.rankString}',
+                        style: TextStyle(
+                          color: card.suitColor == Colors.red
+                              ? Colors.red.shade300
+                              : Colors.white,
+                          fontSize: 12,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    )),
+              ],
+            ),
+          );
+        },
+      ),
+    );
+  }
+
+  Widget _buildPlayerHand() {
+    return Container(
+      height: 120,
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+      child: ListView.builder(
+        scrollDirection: Axis.horizontal,
+        itemCount: playerHand.length,
+        itemBuilder: (context, index) {
+          final card = playerHand[index];
+          final isSelected = selectedCardIndices.contains(index);
+
+          return GestureDetector(
+            onTap: () => _toggleCardSelection(index),
+            child: AnimatedContainer(
+              duration: const Duration(milliseconds: 150),
+              transform: Matrix4.translationValues(0, isSelected ? -15 : 0, 0),
+              margin: const EdgeInsets.symmetric(horizontal: 3),
+              width: 55,
+              height: 80,
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(
+                  color: isSelected ? Colors.amber : Colors.grey.shade400,
+                  width: isSelected ? 3 : 1,
+                ),
+                boxShadow: [
+                  BoxShadow(
+                    color: isSelected
+                        ? Colors.amber.withValues(alpha: 0.5)
+                        : Colors.black.withValues(alpha: 0.2),
+                    blurRadius: isSelected ? 8 : 4,
+                    offset: const Offset(1, 2),
+                  ),
+                ],
+              ),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text(
+                    card.suitSymbol,
+                    style: TextStyle(
+                      fontSize: 22,
+                      color: card.suitColor,
+                    ),
+                  ),
+                  Text(
+                    card.rankString,
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                      color: card.suitColor,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          );
+        },
+      ),
+    );
+  }
+
+  Widget _buildActionButtons() {
+    final canMeld = selectedCardIndices.length >= 3;
+    final canDiscard = hasDrawn && selectedCardIndices.length == 1;
+
+    return Container(
+      padding: const EdgeInsets.all(12),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+        children: [
+          // 멜드 등록
+          ElevatedButton.icon(
+            onPressed: currentTurn == 0 && canMeld ? _registerMeld : null,
+            icon: const Icon(Icons.check_circle, size: 18),
+            label: const Text('등록'),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.green,
+              foregroundColor: Colors.white,
+              disabledBackgroundColor: Colors.grey.shade700,
+            ),
+          ),
+          // 버리기
+          ElevatedButton.icon(
+            onPressed: currentTurn == 0 && canDiscard ? _discardCard : null,
+            icon: const Icon(Icons.delete_outline, size: 18),
+            label: const Text('버리기'),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.orange,
+              foregroundColor: Colors.white,
+              disabledBackgroundColor: Colors.grey.shade700,
+            ),
+          ),
+          // 스톱
+          ElevatedButton.icon(
+            onPressed: currentTurn == 0 && !gameOver ? _callStop : null,
+            icon: const Icon(Icons.stop_circle, size: 18),
+            label: const Text('스톱'),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.red,
+              foregroundColor: Colors.white,
+              disabledBackgroundColor: Colors.grey.shade700,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showRulesDialog() {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: Colors.grey.shade900,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+        ),
+        title: const Text(
+          '훌라 게임 규칙',
+          style: TextStyle(color: Colors.amber),
+        ),
+        content: SingleChildScrollView(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: const [
+              Text(
+                '🎯 게임 목표',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              SizedBox(height: 4),
+              Text(
+                '손패의 카드 합을 최소화하여 승리하세요.\n'
+                '한 번에 7장 모두 내면 "훌라"!',
+                style: TextStyle(color: Colors.white70, fontSize: 13),
+              ),
+              SizedBox(height: 12),
+              Text(
+                '🃏 진행 방법',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              SizedBox(height: 4),
+              Text(
+                '1. 덱 또는 버린 더미에서 1장 드로우\n'
+                '2. 멜드(조합) 등록 (선택)\n'
+                '3. 카드 1장 버리기',
+                style: TextStyle(color: Colors.white70, fontSize: 13),
+              ),
+              SizedBox(height: 12),
+              Text(
+                '📋 멜드 종류',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              SizedBox(height: 4),
+              Text(
+                '• Run: 같은 무늬 연속 3장+\n'
+                '  (예: ♠3-♠4-♠5)\n'
+                '• Group: 같은 숫자 3~4장\n'
+                '  (예: ♠7-♥7-♦7)',
+                style: TextStyle(color: Colors.white70, fontSize: 13),
+              ),
+              SizedBox(height: 12),
+              Text(
+                '💯 점수 계산',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              SizedBox(height: 4),
+              Text(
+                '• A = 1점\n'
+                '• 2~10 = 숫자 그대로\n'
+                '• J, Q, K = 10점',
+                style: TextStyle(color: Colors.white70, fontSize: 13),
+              ),
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('확인'),
+          ),
+        ],
+      ),
+    );
+  }
+}
