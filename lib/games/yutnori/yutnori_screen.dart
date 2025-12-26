@@ -501,8 +501,12 @@ class _YutnoriScreenState extends State<YutnoriScreen>
 
     // 지름길 처리
     if (currentPos == 21) {
-      // 우상단 코너(21)에서 대각선으로
-      // 21 → 22 → 23 → 24(중앙) → 25 → 26 → 27(→15) → 외곽 합류
+      // 우상단 코너(21)에서
+      if (moveCount < 0) {
+        // 빽도: 외곽 경로 4번으로
+        return 4;
+      }
+      // 대각선으로: 21 → 22 → 23 → 24(중앙) → 25 → 26 → 27(→15) → 외곽 합류
       newPos = 21 + moveCount; // 도(1)면 22, 개(2)면 23...
       if (newPos > 26) {
         // 좌하단 코너(15) 방향으로 외곽 합류
@@ -533,8 +537,12 @@ class _YutnoriScreenState extends State<YutnoriScreen>
         }
       }
     } else if (currentPos == 28) {
-      // 좌상단 코너(28)에서 대각선으로
-      // 28 → 29 → 30 → 31(중앙) → 32 → 33 → 골인
+      // 좌상단 코너(28)에서
+      if (moveCount < 0) {
+        // 빽도: 외곽 경로 9번으로
+        return 9;
+      }
+      // 대각선으로: 28 → 29 → 30 → 31(중앙) → 32 → 33 → 골인
       newPos = 28 + moveCount; // 도(1)면 29, 개(2)면 30...
       if (newPos > lastBoardPosition) {
         return finishPosition;
