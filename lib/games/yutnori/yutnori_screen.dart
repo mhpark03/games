@@ -846,11 +846,17 @@ class _YutnoriScreenState extends State<YutnoriScreen>
         }
       }
 
-      // 업을 수 있으면 점수
+      // 업을 수 있으면 점수 (안전 지역에서만)
+      // 안전 지역: 코너 (5/21, 10/28, 15, 0/34)
+      bool isSafePosition = (newPos == 21 || newPos == 28 || newPos == 15 || newPos == 34);
       for (int i = 0; i < 4; i++) {
         if (i == pieceIndex) continue;
         if (playerPieces[currentPlayer][i].position == newPos) {
-          score += 10;
+          if (isSafePosition) {
+            score += 10; // 안전 지역에서 업기
+          } else {
+            score -= 5; // 위험 지역에서 업기는 오히려 감점
+          }
         }
       }
 
