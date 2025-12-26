@@ -1571,11 +1571,6 @@ class _YutnoriScreenState extends State<YutnoriScreen>
     return Offset(center, center);
   }
 
-  String _getPlayerLabel(int playerIndex) {
-    if (playerIndex == 0) return 'P';
-    return 'C$playerIndex';
-  }
-
   Widget _buildPieceWidget(
     int playerIndex,
     int pieceIndex,
@@ -1621,16 +1616,18 @@ class _YutnoriScreenState extends State<YutnoriScreen>
           ),
         ],
       ),
-      child: Center(
-        child: Text(
-          stackCount > 0 ? '${stackCount + 1}' : _getPlayerLabel(playerIndex),
-          style: const TextStyle(
-            color: Colors.white,
-            fontSize: 10,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-      ),
+      child: stackCount > 0
+          ? Center(
+              child: Text(
+                '${stackCount + 1}',
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 12,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            )
+          : null,
     );
   }
 
