@@ -122,6 +122,10 @@ class _YutnoriScreenState extends State<YutnoriScreen>
   bool isThrowingYut = false;
   bool canThrowYut = true;
 
+  // 턴 대기 (다음 순서 버튼)
+  bool waitingForNextTurn = false;
+  int? lastPlayerIndex;
+
   // 말 선택
   int? selectedPieceIndex;
 
@@ -191,9 +195,14 @@ class _YutnoriScreenState extends State<YutnoriScreen>
     pendingMoves = [];
     isThrowingYut = false;
     canThrowYut = true;
+    waitingForNextTurn = false;
+    lastPlayerIndex = null;
     selectedPieceIndex = null;
     gameMessage = '윷을 던지세요!';
   }
+
+  // 플레이어 턴인지 확인
+  bool get isPlayerTurn => currentPlayer == 0;
 
   Future<void> _saveGame() async {
     if (gameOver) {
@@ -555,20 +564,19 @@ class _YutnoriScreenState extends State<YutnoriScreen>
 
   void _nextTurn() {
     setState(() {
+      lastPlayerIndex = currentPlayer;
       currentPlayer = (currentPlayer + 1) % playerCount;
       canThrowYut = true;
       pendingMoves.clear();
-      gameMessage = '${_getPlayerName(currentPlayer)} 차례 - 윷을 던지세요!';
+      gameMessage = '${_getPlayerName(currentPlayer)} 차례';
+
+      // 컴퓨터 턴이면 다음 순서 버튼 대기
+      if (currentPlayer > 0 && !gameOver) {
+        waitingForNextTurn = true;
+      }
     });
 
     _saveGame();
-
-    // 컴퓨터 턴
-    if (currentPlayer > 0 && !gameOver) {
-      Future.delayed(const Duration(milliseconds: 800), () {
-        if (mounted) _computerTurn();
-      });
-    }
   }
 
   String _getPlayerName(int player) {
@@ -696,7 +704,7 @@ class _YutnoriScreenState extends State<YutnoriScreen>
 
   Widget _buildPortraitLayout() {
     return Scaffold(
-      backgroundColor: const Color(0xFFDEB887), // 베이지색 배경
+      backgroundColor: const Color(0xFFDEB887),
       appBar: AppBar(
         backgroundColor: const Color(0xFF8B4513),
         foregroundColor: Colors.white,
@@ -718,19 +726,33 @@ class _YutnoriScreenState extends State<YutnoriScreen>
           children: [
             Column(
               children: [
-                // 상대 플레이어 정보
-                _buildOpponentInfo(),
+                // 상단 컴퓨터: 2인용은 컴퓨터1, 3/4인용은 컴퓨터2
+                if (playerCount >= 2)
+                  _buildComputerHandWidget(playerCount == 2 ? 0 : 1),
+                // 현재 턴 표시 및 게임 정보
+                _buildTurnInfo(),
+                // 중앙 영역 (좌우 컴퓨터 + 윷판)
+                Expanded(
+                  child: playerCount > 2
+                      ? Row(
+                          children: [
+                            // 왼쪽 컴퓨터 (컴퓨터 3) - 4인용
+                            if (playerCount >= 4)
+                              _buildSideComputerWidget(2),
+                            // 윷판
+                            Expanded(child: _buildYutBoard()),
+                            // 오른쪽 컴퓨터 (컴퓨터 1) - 3/4인용
+                            if (playerCount >= 3)
+                              _buildSideComputerWidget(0),
+                          ],
+                        )
+                      : _buildYutBoard(),
+                ),
                 // 게임 메시지
                 if (gameMessage != null) _buildMessage(),
-                // 윷판
-                Expanded(
-                  child: Center(
-                    child: _buildYutBoard(),
-                  ),
-                ),
                 // 윷 던지기 영역
                 _buildYutThrowArea(),
-                // 플레이어 말 및 정보
+                // 플레이어 영역 (하단)
                 _buildPlayerArea(),
               ],
             ),
@@ -740,6 +762,256 @@ class _YutnoriScreenState extends State<YutnoriScreen>
         ),
       ),
     );
+  }
+
+  // 상단 컴퓨터 위젯
+  Widget _buildComputerHandWidget(int computerIndex) {
+    if (computerIndex >= playerCount - 1) return const SizedBox();
+
+    final player = computerIndex + 1;
+    final isCurrentTurn = currentPlayer == player;
+    final finishedCount = playerPieces[player].where((p) => p.isFinished).length;
+    final waitingCount = playerPieces[player].where((p) => p.isWaiting).length;
+    final showPlayButton = waitingForNextTurn && isCurrentTurn;
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+      child: Column(
+        children: [
+          // 컴퓨터 이름과 상태
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+            decoration: BoxDecoration(
+              color: isCurrentTurn ? _getPlayerColor(player) : const Color(0xFF8B4513),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Icon(Icons.computer, color: Colors.white, size: 16),
+                const SizedBox(width: 6),
+                Text(
+                  '컴퓨터 $player',
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 13,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                const SizedBox(width: 10),
+                // 말 상태: 골인/대기
+                ...List.generate(4, (i) {
+                  final pieceFinished = i < finishedCount;
+                  final pieceWaiting = i < waitingCount && !pieceFinished;
+                  return Container(
+                    margin: const EdgeInsets.only(left: 3),
+                    width: 14,
+                    height: 14,
+                    decoration: BoxDecoration(
+                      color: pieceFinished
+                          ? Colors.amber
+                          : _getPlayerColor(player).withValues(alpha: pieceWaiting ? 0.4 : 1.0),
+                      shape: BoxShape.circle,
+                      border: Border.all(color: Colors.white, width: 1),
+                    ),
+                    child: pieceFinished
+                        ? const Icon(Icons.check, color: Colors.white, size: 10)
+                        : null,
+                  );
+                }),
+              ],
+            ),
+          ),
+          // 다음 순서 버튼
+          if (showPlayButton)
+            Padding(
+              padding: const EdgeInsets.only(top: 8),
+              child: _buildPlayButton(),
+            ),
+        ],
+      ),
+    );
+  }
+
+  // 좌우 컴퓨터 위젯
+  Widget _buildSideComputerWidget(int computerIndex) {
+    if (computerIndex >= playerCount - 1) return const SizedBox();
+
+    final player = computerIndex + 1;
+    final isCurrentTurn = currentPlayer == player;
+    final finishedCount = playerPieces[player].where((p) => p.isFinished).length;
+    final showPlayButton = waitingForNextTurn && isCurrentTurn;
+
+    return Container(
+      width: 55,
+      padding: const EdgeInsets.symmetric(vertical: 8),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          // 컴퓨터 번호
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
+            decoration: BoxDecoration(
+              color: isCurrentTurn ? _getPlayerColor(player) : const Color(0xFF8B4513),
+              borderRadius: BorderRadius.circular(6),
+            ),
+            child: Column(
+              children: [
+                const Icon(Icons.computer, color: Colors.white, size: 14),
+                Text(
+                  'C$player',
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 10,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 6),
+          // 말 상태 (세로)
+          Column(
+            children: List.generate(4, (i) {
+              final pieceFinished = i < finishedCount;
+              return Container(
+                margin: const EdgeInsets.only(bottom: 3),
+                width: 16,
+                height: 16,
+                decoration: BoxDecoration(
+                  color: pieceFinished ? Colors.amber : _getPlayerColor(player),
+                  shape: BoxShape.circle,
+                  border: Border.all(color: Colors.white, width: 1),
+                ),
+                child: pieceFinished
+                    ? const Icon(Icons.check, color: Colors.white, size: 10)
+                    : null,
+              );
+            }),
+          ),
+          // 다음 순서 버튼
+          if (showPlayButton)
+            Padding(
+              padding: const EdgeInsets.only(top: 8),
+              child: _buildPlayButton(compact: true),
+            ),
+        ],
+      ),
+    );
+  }
+
+  // 현재 턴 표시
+  Widget _buildTurnInfo() {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          // 현재 턴 표시
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+            decoration: BoxDecoration(
+              color: _getPlayerColor(currentPlayer),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(
+                  isPlayerTurn ? Icons.person : Icons.computer,
+                  color: Colors.white,
+                  size: 16,
+                ),
+                const SizedBox(width: 6),
+                Text(
+                  '${_getPlayerName(currentPlayer)} 차례',
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 13,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          // 남은 이동 표시
+          if (pendingMoves.isNotEmpty)
+            Padding(
+              padding: const EdgeInsets.only(left: 10),
+              child: Row(
+                children: pendingMoves.map((move) {
+                  return Container(
+                    margin: const EdgeInsets.only(left: 4),
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF8B4513),
+                      borderRadius: BorderRadius.circular(6),
+                    ),
+                    child: Text(
+                      move.name,
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 11,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  );
+                }).toList(),
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+
+  // 다음 순서 버튼
+  Widget _buildPlayButton({bool compact = false}) {
+    return GestureDetector(
+      onTap: _onNextTurn,
+      child: Container(
+        padding: compact
+            ? const EdgeInsets.all(8)
+            : const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        decoration: BoxDecoration(
+          color: Colors.blue.shade700,
+          borderRadius: BorderRadius.circular(compact ? 20 : 8),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.blue.withValues(alpha: 0.5),
+              blurRadius: 8,
+              spreadRadius: 1,
+            ),
+          ],
+        ),
+        child: compact
+            ? const Icon(Icons.play_arrow, color: Colors.white, size: 24)
+            : Row(
+                mainAxisSize: MainAxisSize.min,
+                children: const [
+                  Icon(Icons.play_arrow, color: Colors.white, size: 20),
+                  SizedBox(width: 4),
+                  Text(
+                    '다음',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 14,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ],
+              ),
+      ),
+    );
+  }
+
+  // 다음 순서 버튼 눌렀을 때
+  void _onNextTurn() {
+    setState(() {
+      waitingForNextTurn = false;
+    });
+    if (currentPlayer > 0 && !gameOver) {
+      Future.delayed(const Duration(milliseconds: 300), () => _computerTurn());
+    }
   }
 
   Widget _buildLandscapeLayout() {
@@ -1384,56 +1656,65 @@ class _YutnoriScreenState extends State<YutnoriScreen>
         .toList();
 
     return Container(
-      padding: const EdgeInsets.all(12),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       decoration: BoxDecoration(
         color: isCurrentTurn
-            ? Colors.blue.withValues(alpha: 0.2)
+            ? _getPlayerColor(0).withValues(alpha: 0.15)
             : Colors.transparent,
         borderRadius: BorderRadius.circular(12),
       ),
       child: Column(
         children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(Icons.person,
-                  color: isCurrentTurn ? Colors.blue : Colors.grey),
-              const SizedBox(width: 8),
-              Text(
-                '플레이어',
-                style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
-                  color: isCurrentTurn ? Colors.blue : Colors.grey.shade700,
-                ),
-              ),
-              const SizedBox(width: 16),
-              // 골인한 말 표시
-              ...List.generate(4, (i) {
-                return Container(
-                  margin: const EdgeInsets.only(left: 4),
-                  width: 20,
-                  height: 20,
-                  decoration: BoxDecoration(
-                    color: i < finishedCount
-                        ? _getPlayerColor(0)
-                        : Colors.grey.shade300,
-                    shape: BoxShape.circle,
-                    border: Border.all(color: Colors.white, width: 2),
+          // 플레이어 정보와 말 상태
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+            decoration: BoxDecoration(
+              color: isCurrentTurn ? _getPlayerColor(0) : const Color(0xFF8B4513),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Icon(Icons.person, color: Colors.white, size: 18),
+                const SizedBox(width: 6),
+                const Text(
+                  '플레이어',
+                  style: TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
                   ),
-                );
-              }),
-            ],
+                ),
+                const SizedBox(width: 12),
+                // 말 상태: 골인/대기
+                ...List.generate(4, (i) {
+                  final pieceFinished = i < finishedCount;
+                  return Container(
+                    margin: const EdgeInsets.only(left: 3),
+                    width: 18,
+                    height: 18,
+                    decoration: BoxDecoration(
+                      color: pieceFinished ? Colors.amber : _getPlayerColor(0).withValues(alpha: 0.5),
+                      shape: BoxShape.circle,
+                      border: Border.all(color: Colors.white, width: 1),
+                    ),
+                    child: pieceFinished
+                        ? const Icon(Icons.check, color: Colors.white, size: 12)
+                        : null,
+                  );
+                }),
+              ],
+            ),
           ),
           const SizedBox(height: 8),
-          // 대기 중인 말들
+          // 대기 중인 말들 (선택 가능)
           if (waitingPieces.isNotEmpty)
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                const Text(
+                Text(
                   '대기: ',
-                  style: TextStyle(fontSize: 12, color: Colors.grey),
+                  style: TextStyle(fontSize: 12, color: Colors.grey.shade700),
                 ),
                 ...waitingPieces.map((entry) {
                   final canMove = pendingMoves.isNotEmpty &&
@@ -1443,8 +1724,8 @@ class _YutnoriScreenState extends State<YutnoriScreen>
                     onTap: canMove ? () => _selectPiece(entry.key) : null,
                     child: Container(
                       margin: const EdgeInsets.symmetric(horizontal: 4),
-                      width: 28,
-                      height: 28,
+                      width: 32,
+                      height: 32,
                       decoration: BoxDecoration(
                         color: _getPlayerColor(0),
                         shape: BoxShape.circle,
@@ -1460,6 +1741,16 @@ class _YutnoriScreenState extends State<YutnoriScreen>
                                 ),
                               ]
                             : null,
+                      ),
+                      child: Center(
+                        child: Text(
+                          'P',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 12,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
                       ),
                     ),
                   );
