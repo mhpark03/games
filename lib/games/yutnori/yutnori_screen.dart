@@ -219,6 +219,7 @@ class _YutnoriScreenState extends State<YutnoriScreen>
           .toList(),
       'pendingMoves': pendingMoves.map((m) => m.index).toList(),
       'canThrowYut': canThrowYut,
+      'waitingForNextTurn': waitingForNextTurn,
     };
 
     await GameSaveService.saveGame('yutnori', gameState);
@@ -228,7 +229,7 @@ class _YutnoriScreenState extends State<YutnoriScreen>
     final gameState = await GameSaveService.loadGame('yutnori');
 
     if (gameState == null) {
-      _initGame();
+      // 저장된 게임이 없으면 초기화 상태 유지
       return;
     }
 
@@ -256,20 +257,33 @@ class _YutnoriScreenState extends State<YutnoriScreen>
 
     canThrowYut = gameState['canThrowYut'] as bool? ?? pendingMoves.isEmpty;
 
+    // waitingForNextTurn 상태 복원 - 컴퓨터 턴이면 대기 상태로
+    if (currentPlayer > 0) {
+      waitingForNextTurn = true;
+    } else {
+      waitingForNextTurn = gameState['waitingForNextTurn'] as bool? ?? false;
+    }
+
     gameOver = false;
     winner = null;
     isThrowingYut = false;
     selectedPieceIndex = null;
-    gameMessage = '게임을 이어서 시작합니다';
+
+    if (currentPlayer == 0) {
+      if (pendingMoves.isNotEmpty) {
+        gameMessage = '${pendingMoves.first.name}! 말을 선택하세요';
+      } else if (canThrowYut) {
+        gameMessage = '윷을 던지세요!';
+      } else {
+        gameMessage = '게임을 이어서 시작합니다';
+      }
+    } else {
+      gameMessage = '${_getPlayerName(currentPlayer)} 차례 - 다음 버튼을 눌러주세요';
+    }
 
     setState(() {});
 
-    // 컴퓨터 턴인 경우
-    if (currentPlayer > 0) {
-      Future.delayed(const Duration(milliseconds: 500), () {
-        if (mounted) _computerTurn();
-      });
-    }
+    // 컴퓨터 턴이어도 자동 시작하지 않음 - 사용자가 "다음" 버튼을 눌러야 함
   }
 
   // 윷 던지기
@@ -388,8 +402,8 @@ class _YutnoriScreenState extends State<YutnoriScreen>
   // 이동 후 위치 계산
   int _calculateNewPosition(int currentPos, int moveCount) {
     if (currentPos == -1) {
-      // 대기 중인 말: 시작점으로
-      return moveCount > 0 ? moveCount - 1 : -1;
+      // 대기 중인 말: 출발점(0)에서 이동칸수만큼 진행
+      return moveCount > 0 ? moveCount : -1;
     }
 
     int newPos = currentPos;
