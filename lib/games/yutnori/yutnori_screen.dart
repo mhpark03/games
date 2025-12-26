@@ -479,14 +479,14 @@ class _YutnoriScreenState extends State<YutnoriScreen>
 
     // 지름길 처리
     if (currentPos == cornerTopRight) {
-      // 우상단 코너에서 대각선으로 (5 → 20, 21, 22 중앙 → 30, 31 좌하단 → 15로 합류)
+      // 우상단 코너에서 대각선으로 (5 → 20, 21, 22 중앙 → 23, 24 좌하단 → 15로 합류)
       newPos = 19 + moveCount; // 도(1)면 20, 개(2)면 21...
       if (newPos > 22) {
-        // 중앙 지나면 30번(좌하단 대각선)으로 연결
-        newPos = 30 + (newPos - 23);
-        if (newPos > 31) {
+        // 중앙 지나면 23번(좌하단 대각선)으로 연결
+        newPos = 23 + (newPos - 23);
+        if (newPos > 24) {
           // 좌하단 코너(15) 방향으로 외곽 합류
-          newPos = 15 + (newPos - 32);
+          newPos = 15 + (newPos - 25);
           if (newPos > 19) {
             // 외곽 합류 후 시작점 지나면 골인
             return finishPosition;
@@ -504,18 +504,29 @@ class _YutnoriScreenState extends State<YutnoriScreen>
         return finishPosition;
       }
     } else if (currentPos >= 20 && currentPos <= 22) {
-      // 우상단 대각선에서 (20, 21 → 22 중앙 → 30, 31 좌하단 → 15로 합류)
+      // 우상단 대각선에서 (20, 21 → 22 중앙 → 23, 24 좌하단 → 15로 합류)
       newPos = currentPos + moveCount;
       if (newPos > 22) {
-        // 중앙 지나면 30번(좌하단 대각선)으로 연결
-        newPos = 30 + (newPos - 23);
-        if (newPos > 31) {
+        // 중앙 지나면 23번(좌하단 대각선)으로 연결 (newPos는 그대로 사용)
+        // 예: 22+1=23, 22+2=24, 22+3=25→15, ...
+        if (newPos > 24) {
           // 좌하단 코너(15) 방향으로 외곽 합류
-          newPos = 15 + (newPos - 32);
+          newPos = 15 + (newPos - 25);
           if (newPos > 19) {
             // 외곽 합류 후 시작점 지나면 골인
             return finishPosition;
           }
+        }
+      }
+    } else if (currentPos == 23 || currentPos == 24) {
+      // 중앙 → 좌하단 대각선에서 (23, 24 → 15로 합류)
+      newPos = currentPos + moveCount;
+      if (newPos > 24) {
+        // 좌하단 코너(15) 방향으로 외곽 합류
+        newPos = 15 + (newPos - 25);
+        if (newPos > 19) {
+          // 외곽 합류 후 시작점 지나면 골인
+          return finishPosition;
         }
       }
     } else if (currentPos >= 25 && currentPos <= 27) {
@@ -533,17 +544,6 @@ class _YutnoriScreenState extends State<YutnoriScreen>
       newPos = currentPos + moveCount;
       if (newPos > lastBoardPosition) {
         return finishPosition;
-      }
-    } else if (currentPos >= 30 && currentPos <= 31) {
-      // 중앙 → 좌하단 대각선에서 (30, 31 → 15로 합류)
-      newPos = currentPos + moveCount;
-      if (newPos > 31) {
-        // 좌하단 코너(15) 방향으로 외곽 합류
-        newPos = 15 + (newPos - 32);
-        if (newPos > 19) {
-          // 외곽 합류 후 시작점 지나면 골인
-          return finishPosition;
-        }
       }
     } else {
       // 일반 외곽 경로
