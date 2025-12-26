@@ -414,10 +414,30 @@ class _HulaScreenState extends State<HulaScreen> with TickerProviderStateMixin {
     playerMelds[meldIndex] = Meld(cards: newCards, isRun: meld.isRun);
   }
 
+  // 7 카드인지 확인
+  bool _isSeven(PlayingCard card) => card.rank == 7;
+
   // 멜드 등록
   void _registerMeld() {
     final selectedCards =
         selectedCardIndices.map((i) => playerHand[i]).toList();
+
+    // 7 카드 단독 등록 (훌라 특별 규칙)
+    if (selectedCardIndices.length == 1 && _isSeven(selectedCards.first)) {
+      final card = selectedCards.first;
+      playerHand.remove(card);
+      playerMelds.add(Meld(cards: [card], isRun: false));
+
+      setState(() {
+        selectedCardIndices = [];
+      });
+      _showMessage('7 단독 등록!');
+
+      if (playerHand.isEmpty) {
+        _playerWins();
+      }
+      return;
+    }
 
     // 1~2장 선택: 기존 멜드에 붙이기 시도
     if (selectedCardIndices.length < 3) {
@@ -1247,11 +1267,14 @@ class _HulaScreenState extends State<HulaScreen> with TickerProviderStateMixin {
   }
 
   Widget _buildActionButtons(bool isLandscape) {
-    // 1~2장: 붙이기 가능 여부, 3장+: 새 멜드 가능 여부
+    // 7 단독: 특별 규칙, 1~2장: 붙이기 가능 여부, 3장+: 새 멜드 가능 여부
     bool canMeld = false;
     if (selectedCardIndices.length >= 3) {
       final cards = selectedCardIndices.map((i) => playerHand[i]).toList();
       canMeld = _isValidMeld(cards);
+    } else if (selectedCardIndices.length == 1 && _isSeven(playerHand[selectedCardIndices.first])) {
+      // 7 카드 단독 등록 가능 (훌라 특별 규칙)
+      canMeld = true;
     } else if (selectedCardIndices.isNotEmpty && playerMelds.isNotEmpty) {
       // 1~2장 선택 시 붙이기 가능 여부 확인
       for (final idx in selectedCardIndices) {
