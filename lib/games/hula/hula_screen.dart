@@ -154,6 +154,9 @@ class _HulaScreenState extends State<HulaScreen> with TickerProviderStateMixin {
   int? winnerIndex;
   bool isHula = false; // 훌라 여부
 
+  // 컴퓨터 난이도 (0=쉬움, 1=보통, 2=어려움)
+  List<int> computerDifficulties = [];
+
   // 턴 단계
   bool hasDrawn = false; // 이번 턴에 드로우했는지
   List<int> selectedCardIndices = []; // 선택된 카드 인덱스들
@@ -210,6 +213,15 @@ class _HulaScreenState extends State<HulaScreen> with TickerProviderStateMixin {
     playerMelds = [];
     computerMelds = List.generate(playerCount - 1, (_) => []);
     scores = List.generate(playerCount, (_) => 0);
+
+    // 컴퓨터 난이도 랜덤 설정 (쉬움 40%, 보통 40%, 어려움 20%)
+    final random = Random();
+    computerDifficulties = List.generate(playerCount - 1, (_) {
+      final roll = random.nextInt(100);
+      if (roll < 40) return 0; // 쉬움
+      if (roll < 80) return 1; // 보통
+      return 2; // 어려움
+    });
 
     // 각 플레이어에게 7장씩 배분
     for (int i = 0; i < 7; i++) {
@@ -366,6 +378,7 @@ class _HulaScreenState extends State<HulaScreen> with TickerProviderStateMixin {
       'currentTurn': currentTurn,
       'hasDrawn': hasDrawn,
       'scores': scores,
+      'computerDifficulties': computerDifficulties,
     };
 
     await GameSaveService.saveGame('hula', gameState);
@@ -420,6 +433,19 @@ class _HulaScreenState extends State<HulaScreen> with TickerProviderStateMixin {
       currentTurn = gameState['currentTurn'] as int;
       hasDrawn = gameState['hasDrawn'] as bool;
       scores = List<int>.from(gameState['scores'] as List);
+
+      // 난이도 복원 (저장된 게임에 없으면 랜덤 생성)
+      if (gameState.containsKey('computerDifficulties')) {
+        computerDifficulties = List<int>.from(gameState['computerDifficulties'] as List);
+      } else {
+        final random = Random();
+        computerDifficulties = List.generate(playerCount - 1, (_) {
+          final roll = random.nextInt(100);
+          if (roll < 40) return 0;
+          if (roll < 80) return 1;
+          return 2;
+        });
+      }
 
       gameOver = false;
       winner = null;
@@ -715,8 +741,21 @@ class _HulaScreenState extends State<HulaScreen> with TickerProviderStateMixin {
   }
 
   // 스마트 카드 버리기: 버릴 카드 선택
-  PlayingCard _selectCardToDiscard(List<PlayingCard> hand) {
+  PlayingCard _selectCardToDiscard(List<PlayingCard> hand, {int? computerIndex}) {
     if (hand.length == 1) return hand.first;
+
+    // 난이도에 따른 랜덤 선택 확률 (쉬움: 40%, 보통: 15%, 어려움: 0%)
+    if (computerIndex != null && computerIndex < computerDifficulties.length) {
+      final difficulty = computerDifficulties[computerIndex];
+      final randomChance = difficulty == 0 ? 40 : (difficulty == 1 ? 15 : 0);
+      if (Random().nextInt(100) < randomChance) {
+        // 랜덤하게 카드 선택 (단, 7은 제외)
+        final nonSevenCards = hand.where((c) => !_isSeven(c)).toList();
+        if (nonSevenCards.isNotEmpty) {
+          return nonSevenCards[Random().nextInt(nonSevenCards.length)];
+        }
+      }
+    }
 
     // 각 카드의 "유지 가치" 점수 계산 (높을수록 유지해야 함)
     final scores = <PlayingCard, double>{};
@@ -1074,6 +1113,12 @@ class _HulaScreenState extends State<HulaScreen> with TickerProviderStateMixin {
 
   // 컴퓨터가 스톱을 외칠지 결정
   bool _shouldComputerCallStop(int computerIndex) {
+    // 난이도에 따른 스톱 확률 (쉬움: 0%, 보통: 50%, 어려움: 100%)
+    final difficulty = computerDifficulties.length > computerIndex
+        ? computerDifficulties[computerIndex]
+        : 2;
+    if (difficulty == 0) return false; // 쉬운 난이도는 스톱 안 함
+
     final myHand = computerHands[computerIndex];
     final myScore = _calculateHandScore(myHand);
 
@@ -1134,6 +1179,8 @@ class _HulaScreenState extends State<HulaScreen> with TickerProviderStateMixin {
 
     // 4-5. 손패 1장 & 점수 10점 이하 (거의 확실히 유리)
     if (myHand.length == 1 && myScore <= 10 && betterCount == 0) {
+      // 보통 난이도는 50% 확률
+      if (difficulty == 1 && Random().nextInt(100) >= 50) return false;
       return true;
     }
 
@@ -1455,13 +1502,19 @@ class _HulaScreenState extends State<HulaScreen> with TickerProviderStateMixin {
     final hand = computerHands[computerIndex];
     final melds = computerMelds[computerIndex];
 
+    // 난이도에 따른 땡큐(드로우) 확률 (쉬움: 50%, 보통: 80%, 어려움: 100%)
+    final difficulty = computerDifficulties.length > computerIndex
+        ? computerDifficulties[computerIndex]
+        : 2;
+    final drawDiscardChance = difficulty == 0 ? 50 : (difficulty == 1 ? 80 : 100);
+
     // 1. 드로우 (버린 더미 or 덱)
     PlayingCard drawnCard;
     final topDiscard = discardPile.isNotEmpty ? discardPile.last : null;
 
-    // 버린 카드가 멜드에 도움이 되면 가져오기
+    // 버린 카드가 멜드에 도움이 되면 가져오기 (난이도 적용)
     bool takeDiscard = false;
-    if (topDiscard != null) {
+    if (topDiscard != null && Random().nextInt(100) < drawDiscardChance) {
       // 7 카드는 단독 등록 가능하므로 항상 가져오기
       if (_isSeven(topDiscard)) {
         takeDiscard = true;
@@ -1627,13 +1680,19 @@ class _HulaScreenState extends State<HulaScreen> with TickerProviderStateMixin {
       return;
     }
 
+    // 난이도에 따른 붙여놓기 확률 (쉬움: 50%, 보통: 80%, 어려움: 100%)
+    final difficulty = computerDifficulties.length > computerIndex
+        ? computerDifficulties[computerIndex]
+        : 2;
+    final attachChance = difficulty == 0 ? 50 : (difficulty == 1 ? 80 : 100);
+
     // 붙일 수 있는 카드 찾기
     for (int i = hand.length - 1; i >= 0; i--) {
       final card = hand[i];
 
       // 자신의 멜드에 붙이기
       final ownMeldIndex = _canAttachToMeldList(card, melds);
-      if (ownMeldIndex >= 0) {
+      if (ownMeldIndex >= 0 && Random().nextInt(100) < attachChance) {
         _attachToMeldList(ownMeldIndex, card, melds);
         hand.removeAt(i);
         _showMessage('컴퓨터${computerIndex + 1}: ${card.suitSymbol}${card.rankString} 붙이기!');
@@ -1656,7 +1715,7 @@ class _HulaScreenState extends State<HulaScreen> with TickerProviderStateMixin {
 
       // 플레이어 멜드에 붙이기
       final playerMeldIndex = _canAttachToMeldList(card, playerMelds);
-      if (playerMeldIndex >= 0) {
+      if (playerMeldIndex >= 0 && Random().nextInt(100) < attachChance) {
         _attachToMeldList(playerMeldIndex, card, playerMelds);
         hand.removeAt(i);
         _showMessage('컴퓨터${computerIndex + 1}: ${card.suitSymbol}${card.rankString} 붙이기!');
@@ -1680,7 +1739,7 @@ class _HulaScreenState extends State<HulaScreen> with TickerProviderStateMixin {
       for (int c = 0; c < computerMelds.length; c++) {
         if (c == computerIndex) continue;
         final otherMeldIndex = _canAttachToMeldList(card, computerMelds[c]);
-        if (otherMeldIndex >= 0) {
+        if (otherMeldIndex >= 0 && Random().nextInt(100) < attachChance) {
           _attachToMeldList(otherMeldIndex, card, computerMelds[c]);
           hand.removeAt(i);
           _showMessage('컴퓨터${computerIndex + 1}: ${card.suitSymbol}${card.rankString} 붙이기!');
@@ -1712,8 +1771,8 @@ class _HulaScreenState extends State<HulaScreen> with TickerProviderStateMixin {
 
     final hand = computerHands[computerIndex];
 
-    // 스마트 카드 버리기
-    final discardCard = _selectCardToDiscard(hand);
+    // 스마트 카드 버리기 (난이도 적용)
+    final discardCard = _selectCardToDiscard(hand, computerIndex: computerIndex);
     hand.remove(discardCard);
     discardPile.add(discardCard);
     _sortHand(hand);
@@ -1753,6 +1812,7 @@ class _HulaScreenState extends State<HulaScreen> with TickerProviderStateMixin {
   int? _checkComputerThankYou(int fromTurn, {bool? beforePlayer}) {
     if (discardPile.isEmpty) return null;
     final topCard = discardPile.last;
+    final random = Random();
 
     // fromTurn 다음 순서부터 확인
     bool passedPlayer = false;
@@ -1772,15 +1832,30 @@ class _HulaScreenState extends State<HulaScreen> with TickerProviderStateMixin {
       if (computerIndex < 0 || computerIndex >= computerHands.length) continue;
       final hand = computerHands[computerIndex];
 
-      // 7 카드는 항상 땡큐
+      // 난이도에 따른 땡큐 확률 (쉬움: 50%, 보통: 80%, 어려움: 100%)
+      final difficulty = computerDifficulties.length > computerIndex
+          ? computerDifficulties[computerIndex]
+          : 2;
+      final thankYouChance = difficulty == 0 ? 50 : (difficulty == 1 ? 80 : 100);
+
+      bool shouldThankYou = false;
+
+      // 7 카드는 항상 땡큐 (난이도 적용)
       if (_isSeven(topCard)) {
-        return computerIndex;
+        shouldThankYou = true;
+      } else {
+        // 멜드를 만들 수 있으면 땡큐
+        final testHand = [...hand, topCard];
+        if (_findBestMeld(testHand) != null) {
+          shouldThankYou = true;
+        }
       }
 
-      // 멜드를 만들 수 있으면 땡큐
-      final testHand = [...hand, topCard];
-      if (_findBestMeld(testHand) != null) {
-        return computerIndex;
+      if (shouldThankYou) {
+        // 난이도에 따른 확률 체크
+        if (random.nextInt(100) < thankYouChance) {
+          return computerIndex;
+        }
       }
     }
     return null;
@@ -1943,13 +2018,19 @@ class _HulaScreenState extends State<HulaScreen> with TickerProviderStateMixin {
       return;
     }
 
+    // 난이도에 따른 붙여놓기 확률 (쉬움: 50%, 보통: 80%, 어려움: 100%)
+    final difficulty = computerDifficulties.length > computerIndex
+        ? computerDifficulties[computerIndex]
+        : 2;
+    final attachChance = difficulty == 0 ? 50 : (difficulty == 1 ? 80 : 100);
+
     // 붙일 수 있는 카드 찾기
     for (int i = hand.length - 1; i >= 0; i--) {
       final card = hand[i];
 
       // 자신의 멜드에 붙이기
       final ownMeldIndex = _canAttachToMeldList(card, melds);
-      if (ownMeldIndex >= 0) {
+      if (ownMeldIndex >= 0 && Random().nextInt(100) < attachChance) {
         _attachToMeldList(ownMeldIndex, card, melds);
         hand.removeAt(i);
         _showMessage('컴퓨터${computerIndex + 1}: ${card.suitSymbol}${card.rankString} 붙이기!');
@@ -1972,7 +2053,7 @@ class _HulaScreenState extends State<HulaScreen> with TickerProviderStateMixin {
 
       // 플레이어 멜드에 붙이기
       final playerMeldIndex = _canAttachToMeldList(card, playerMelds);
-      if (playerMeldIndex >= 0) {
+      if (playerMeldIndex >= 0 && Random().nextInt(100) < attachChance) {
         _attachToMeldList(playerMeldIndex, card, playerMelds);
         hand.removeAt(i);
         _showMessage('컴퓨터${computerIndex + 1}: ${card.suitSymbol}${card.rankString} 붙이기!');
@@ -1996,7 +2077,7 @@ class _HulaScreenState extends State<HulaScreen> with TickerProviderStateMixin {
       for (int c = 0; c < computerMelds.length; c++) {
         if (c == computerIndex) continue;
         final otherMeldIndex = _canAttachToMeldList(card, computerMelds[c]);
-        if (otherMeldIndex >= 0) {
+        if (otherMeldIndex >= 0 && Random().nextInt(100) < attachChance) {
           _attachToMeldList(otherMeldIndex, card, computerMelds[c]);
           hand.removeAt(i);
           _showMessage('컴퓨터${computerIndex + 1}: ${card.suitSymbol}${card.rankString} 붙이기!');
@@ -2026,8 +2107,8 @@ class _HulaScreenState extends State<HulaScreen> with TickerProviderStateMixin {
   void _computerDiscardAfterThankYou(int computerIndex) {
     final hand = computerHands[computerIndex];
 
-    // 스마트 카드 버리기
-    final discardCard = _selectCardToDiscard(hand);
+    // 스마트 카드 버리기 (난이도 적용)
+    final discardCard = _selectCardToDiscard(hand, computerIndex: computerIndex);
     hand.remove(discardCard);
     discardPile.add(discardCard);
     _sortHand(hand);
