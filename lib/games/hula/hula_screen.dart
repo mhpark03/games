@@ -2339,8 +2339,12 @@ class _HulaScreenState extends State<HulaScreen> with TickerProviderStateMixin {
     setState(() {});
     _saveGame();
 
-    // 땡큐 후 대기 상태로 전환
-    _startWaitWithAction(() => _executeComputerThankYouRegister(computerIndex));
+    // 땡큐 후 바로 등록 단계로 진행 (등록 후 타이머가 동작함)
+    Timer(const Duration(milliseconds: 300), () {
+      if (mounted && !gameOver) {
+        _executeComputerThankYouRegister(computerIndex);
+      }
+    });
   }
 
   // 컴퓨터 땡큐 후 - 멜드 등록 단계
