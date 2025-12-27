@@ -1870,6 +1870,7 @@ class _HulaScreenState extends State<HulaScreen> with TickerProviderStateMixin {
       selectedCardIndices = [];
       waitingForNextTurn = true;
     });
+    _saveGame();
 
     // 플레이어 턴이면 타이머 없이 대기, 컴퓨터 턴이면 10초 타이머
     if (currentTurn != 0) {
@@ -1895,6 +1896,7 @@ class _HulaScreenState extends State<HulaScreen> with TickerProviderStateMixin {
       selectedCardIndices = [];
       waitingForNextTurn = true;
     });
+    _saveGame();
 
     if (currentTurn != 0) {
       // 컴퓨터 턴: 10초 타이머 시작
