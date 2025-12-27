@@ -957,25 +957,31 @@ class _SolitaireScreenState extends State<SolitaireScreen> {
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  GestureDetector(
-                    onTap: _togglePause,
-                    child: Row(
-                      children: [
-                        Icon(
-                          _isPaused ? Icons.play_arrow : Icons.timer,
+                  Row(
+                    children: [
+                      Icon(
+                        Icons.timer,
+                        color: _isPaused ? Colors.amber : Colors.white70,
+                        size: 18,
+                      ),
+                      const SizedBox(width: 4),
+                      Text(
+                        _isPaused ? '일시정지' : _formatTime(_elapsedSeconds),
+                        style: TextStyle(
+                          color: _isPaused ? Colors.amber : Colors.white,
+                          fontSize: 14,
+                        ),
+                      ),
+                      const SizedBox(width: 6),
+                      GestureDetector(
+                        onTap: _togglePause,
+                        child: Icon(
+                          _isPaused ? Icons.play_arrow : Icons.pause,
                           color: _isPaused ? Colors.amber : Colors.white70,
                           size: 18,
                         ),
-                        const SizedBox(width: 4),
-                        Text(
-                          _isPaused ? '일시정지' : _formatTime(_elapsedSeconds),
-                          style: TextStyle(
-                            color: _isPaused ? Colors.amber : Colors.white,
-                            fontSize: 14,
-                          ),
-                        ),
-                      ],
-                    ),
+                      ),
+                    ],
                   ),
                   const SizedBox(width: 16),
                   Icon(Icons.swap_horiz, color: Colors.white70, size: 18),
