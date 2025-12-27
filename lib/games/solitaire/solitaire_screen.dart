@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'dart:math';
+import 'dart:async';
 import '../../services/game_save_service.dart';
 
 enum Suit { hearts, diamonds, clubs, spades }
@@ -95,6 +96,10 @@ class _SolitaireScreenState extends State<SolitaireScreen> {
   // Undo 히스토리
   List<Map<String, dynamic>> _undoHistory = [];
 
+  // 게임 타이머
+  Timer? _timer;
+  int _elapsedSeconds = 0;
+
   @override
   void initState() {
     super.initState();
@@ -103,9 +108,31 @@ class _SolitaireScreenState extends State<SolitaireScreen> {
 
   @override
   void dispose() {
+    _timer?.cancel();
     // 화면을 나갈 때 상태바 복원
     SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
     super.dispose();
+  }
+
+  void _startTimer() {
+    _timer?.cancel();
+    _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
+      if (!isGameWon) {
+        setState(() {
+          _elapsedSeconds++;
+        });
+      }
+    });
+  }
+
+  void _stopTimer() {
+    _timer?.cancel();
+  }
+
+  String _formatTime(int seconds) {
+    final minutes = seconds ~/ 60;
+    final secs = seconds % 60;
+    return '${minutes.toString().padLeft(2, '0')}:${secs.toString().padLeft(2, '0')}';
   }
 
   Future<void> _checkSavedGame() async {
@@ -274,6 +301,7 @@ class _SolitaireScreenState extends State<SolitaireScreen> {
       'waste': waste.map((c) => c.toJson()).toList(),
       'moves': moves,
       'drawCount': drawCount,
+      'elapsedSeconds': _elapsedSeconds,
     };
 
     await GameSaveService.saveGame('solitaire', gameState);
@@ -307,6 +335,7 @@ class _SolitaireScreenState extends State<SolitaireScreen> {
 
           moves = gameState['moves'] as int;
           drawCount = gameState['drawCount'] as int? ?? 1;
+          _elapsedSeconds = gameState['elapsedSeconds'] as int? ?? 0;
           isGameWon = false;
           draggedCards = null;
           dragSource = null;
@@ -319,6 +348,7 @@ class _SolitaireScreenState extends State<SolitaireScreen> {
             }
           }
         });
+        _startTimer();
       } catch (e) {
         _initGame();
       }
@@ -341,6 +371,8 @@ class _SolitaireScreenState extends State<SolitaireScreen> {
     dragSource = null;
     dragSourceIndex = null;
     _undoHistory = [];
+    _elapsedSeconds = 0;
+    _startTimer();
   }
 
   // 역방향 딜로 항상 풀 수 있는 게임 생성
@@ -918,6 +950,13 @@ class _SolitaireScreenState extends State<SolitaireScreen> {
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
+                  Icon(Icons.timer, color: Colors.white70, size: 18),
+                  const SizedBox(width: 4),
+                  Text(
+                    _formatTime(_elapsedSeconds),
+                    style: const TextStyle(color: Colors.white, fontSize: 14),
+                  ),
+                  const SizedBox(width: 16),
                   Icon(Icons.swap_horiz, color: Colors.white70, size: 18),
                   const SizedBox(width: 4),
                   Text(
@@ -928,7 +967,7 @@ class _SolitaireScreenState extends State<SolitaireScreen> {
                   Icon(Icons.style, color: Colors.white70, size: 18),
                   const SizedBox(width: 4),
                   Text(
-                    '${drawCount}장 모드',
+                    '${drawCount}장',
                     style: const TextStyle(color: Colors.white, fontSize: 14),
                   ),
                 ],
@@ -1004,7 +1043,7 @@ class _SolitaireScreenState extends State<SolitaireScreen> {
                           borderRadius: BorderRadius.circular(12),
                         ),
                         child: Text(
-                          '이동: $moves (${drawCount}장)',
+                          '${_formatTime(_elapsedSeconds)} | 이동: $moves (${drawCount}장)',
                           style: const TextStyle(
                             color: Colors.white70,
                             fontSize: 12,
