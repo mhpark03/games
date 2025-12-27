@@ -1022,11 +1022,10 @@ class _SolitaireScreenState extends State<SolitaireScreen> {
                   );
                 },
               ),
-              // 왼쪽: 뒤로가기 버튼 + 제목 + 상태 정보 (세로 배치)
+              // 왼쪽 상단: 뒤로가기 버튼 + 제목 + 상태 정보
               Positioned(
                 top: 4,
                 left: 4,
-                bottom: 4,
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -1055,63 +1054,84 @@ class _SolitaireScreenState extends State<SolitaireScreen> {
                         ),
                       ],
                     ),
-                    const Spacer(),
-                    // 상태 정보 세로 배치
+                    const SizedBox(height: 8),
+                    // 상태 정보 (제목 아래 세로 배치)
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+                      margin: const EdgeInsets.only(left: 8),
+                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
                       decoration: BoxDecoration(
                         color: Colors.black.withValues(alpha: 0.4),
                         borderRadius: BorderRadius.circular(12),
                       ),
                       child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          GestureDetector(
-                            onTap: _togglePause,
-                            child: Column(
-                              children: [
-                                Icon(
-                                  _isPaused ? Icons.play_arrow : Icons.timer,
-                                  color: _isPaused ? Colors.amber : Colors.white70,
-                                  size: 20,
-                                ),
-                                const SizedBox(height: 2),
-                                Text(
-                                  _isPaused ? '정지' : _formatTime(_elapsedSeconds),
-                                  style: TextStyle(
-                                    color: _isPaused ? Colors.amber : Colors.white,
-                                    fontSize: 11,
-                                  ),
-                                ),
-                              ],
+                          // 카드 뽑기 모드
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                            decoration: BoxDecoration(
+                              color: Colors.green.withValues(alpha: 0.4),
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: Text(
+                              '${drawCount}장 모드',
+                              style: const TextStyle(
+                                fontSize: 12,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.white,
+                              ),
                             ),
                           ),
-                          const SizedBox(height: 12),
-                          Column(
+                          const SizedBox(height: 6),
+                          // 시간 + 일시정지 버튼
+                          Row(
+                            mainAxisSize: MainAxisSize.min,
                             children: [
-                              const Icon(Icons.swap_horiz, color: Colors.white70, size: 18),
-                              const SizedBox(height: 2),
+                              Icon(
+                                Icons.timer,
+                                size: 14,
+                                color: _isPaused ? Colors.amber : Colors.white70,
+                              ),
+                              const SizedBox(width: 4),
                               Text(
-                                '$moves',
-                                style: const TextStyle(color: Colors.white, fontSize: 11),
+                                _isPaused ? '일시정지' : _formatTime(_elapsedSeconds),
+                                style: TextStyle(
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.bold,
+                                  color: _isPaused ? Colors.amber : Colors.white,
+                                ),
+                              ),
+                              const SizedBox(width: 6),
+                              GestureDetector(
+                                onTap: _togglePause,
+                                child: Icon(
+                                  _isPaused ? Icons.play_arrow : Icons.pause,
+                                  size: 16,
+                                  color: _isPaused ? Colors.amber : Colors.white70,
+                                ),
                               ),
                             ],
                           ),
-                          const SizedBox(height: 12),
-                          Column(
+                          const SizedBox(height: 4),
+                          // 이동 횟수
+                          Row(
+                            mainAxisSize: MainAxisSize.min,
                             children: [
-                              const Icon(Icons.style, color: Colors.white70, size: 18),
-                              const SizedBox(height: 2),
+                              const Icon(Icons.swap_horiz, size: 14, color: Colors.white70),
+                              const SizedBox(width: 4),
                               Text(
-                                '${drawCount}장',
-                                style: const TextStyle(color: Colors.white, fontSize: 11),
+                                '이동: $moves',
+                                style: const TextStyle(
+                                  fontSize: 13,
+                                  color: Colors.white,
+                                ),
                               ),
                             ],
                           ),
                         ],
                       ),
                     ),
-                    const SizedBox(height: 8),
                   ],
                 ),
               ),
