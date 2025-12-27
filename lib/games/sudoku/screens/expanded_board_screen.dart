@@ -377,6 +377,16 @@ class _ExpandedBoardScreenState extends State<ExpandedBoardScreen> {
                     ],
                   ),
                 ),
+                // 오른쪽 상단: 취소 버튼
+                Positioned(
+                  top: 4,
+                  right: 4,
+                  child: _buildCircleButton(
+                    icon: Icons.undo,
+                    onPressed: widget.gameState.canUndo ? _onUndo : null,
+                    tooltip: '취소',
+                  ),
+                ),
               ],
             ),
           ),
@@ -385,7 +395,7 @@ class _ExpandedBoardScreenState extends State<ExpandedBoardScreen> {
     );
   }
 
-  // 원형 버튼 위젯
+  // 원형 버튼 위젯 (가로 모드용)
   Widget _buildCircleButton({
     required IconData icon,
     required VoidCallback? onPressed,

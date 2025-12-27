@@ -716,14 +716,24 @@ class _KillerGameScreenState extends State<KillerGameScreen>
                   ],
                 ),
               ),
-              // 오른쪽 상단: 새 게임 버튼
+              // 오른쪽 상단: 취소 + 새 게임 버튼
               Positioned(
                 top: 4,
                 right: 4,
-                child: _buildCircleButton(
-                  icon: Icons.refresh,
-                  onPressed: _showDifficultyDialog,
-                  tooltip: '새 게임',
+                child: Row(
+                  children: [
+                    _buildCircleButton(
+                      icon: Icons.undo,
+                      onPressed: _gameState.canUndo ? _onUndo : null,
+                      tooltip: '취소',
+                    ),
+                    const SizedBox(width: 8),
+                    _buildCircleButton(
+                      icon: Icons.refresh,
+                      onPressed: _showDifficultyDialog,
+                      tooltip: '새 게임',
+                    ),
+                  ],
                 ),
               ),
             ],
