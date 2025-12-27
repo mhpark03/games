@@ -8,6 +8,7 @@ class NumberPad extends StatelessWidget {
   final int? quickInputNumber; // 빠른 입력 모드에서 선택된 숫자
   final VoidCallback? onQuickInputToggle; // 빠른 입력 모드 토글
   final Set<int> disabledNumbers; // 비활성화된 숫자들 (모두 채워진 숫자)
+  final bool showUndoButton; // 취소 버튼 표시 여부
 
   const NumberPad({
     super.key,
@@ -18,6 +19,7 @@ class NumberPad extends StatelessWidget {
     this.quickInputNumber,
     this.onQuickInputToggle,
     this.disabledNumbers = const {},
+    this.showUndoButton = true,
   });
 
   bool get isQuickInputMode => quickInputNumber != null;
@@ -67,10 +69,11 @@ class NumberPad extends StatelessWidget {
               );
             }),
           ),
-          Padding(
-            padding: EdgeInsets.all(spacing / 2),
-            child: _buildUndoButton(buttonSize * 2 + spacing, buttonSize, iconSize),
-          ),
+          if (showUndoButton)
+            Padding(
+              padding: EdgeInsets.all(spacing / 2),
+              child: _buildUndoButton(buttonSize * 2 + spacing, buttonSize, iconSize),
+            ),
         ],
       );
     } else {
@@ -96,7 +99,8 @@ class NumberPad extends StatelessWidget {
               ...List.generate(4, (index) {
                 return _buildNumberButton(index + 6, buttonSize, fontSize);
               }),
-              _buildUndoButton(buttonSize, buttonSize, iconSize),
+              if (showUndoButton)
+                _buildUndoButton(buttonSize, buttonSize, iconSize),
             ],
           ),
         ],

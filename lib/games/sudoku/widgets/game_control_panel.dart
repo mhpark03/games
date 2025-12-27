@@ -229,6 +229,7 @@ class GameControlPanelState extends State<GameControlPanel> {
               quickInputNumber: _isQuickInputMode ? _quickInputNumber : null,
               onQuickInputToggle: null,
               disabledNumbers: widget.disabledNumbers,
+              showUndoButton: false, // 컨트롤 버튼에 취소 버튼이 있으므로 숨김
             ),
           ],
         ),
@@ -342,6 +343,11 @@ class GameControlPanelState extends State<GameControlPanel> {
           activeColor: Colors.red,
           onTap: toggleEraseMode,
         ),
+        _buildUndoFeatureButton(
+          icon: Icons.undo,
+          label: '취소',
+          onTap: widget.canUndo ? widget.onUndo : null,
+        ),
         _buildFeatureButton(
           icon: Icons.lightbulb_outline,
           label: '힌트',
@@ -419,6 +425,44 @@ class GameControlPanelState extends State<GameControlPanel> {
               label,
               style: TextStyle(
                 color: color ?? Colors.blue,
+                fontWeight: FontWeight.w500,
+                fontSize: widget.isCompact ? 12 : 14,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildUndoFeatureButton({
+    required IconData icon,
+    required String label,
+    required VoidCallback? onTap,
+  }) {
+    final isEnabled = onTap != null;
+    final color = isEnabled ? Colors.grey.shade700 : Colors.grey.shade400;
+
+    return InkWell(
+      onTap: onTap,
+      child: Container(
+        padding: EdgeInsets.symmetric(
+          horizontal: widget.isCompact ? 12 : 16,
+          vertical: widget.isCompact ? 6 : 8,
+        ),
+        decoration: BoxDecoration(
+          color: isEnabled ? Colors.grey.shade200 : Colors.grey.shade100,
+          borderRadius: BorderRadius.circular(8),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(icon, size: widget.isCompact ? 16 : 18, color: color),
+            const SizedBox(width: 6),
+            Text(
+              label,
+              style: TextStyle(
+                color: color,
                 fontWeight: FontWeight.w500,
                 fontSize: widget.isCompact ? 12 : 14,
               ),
