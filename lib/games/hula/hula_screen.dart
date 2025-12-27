@@ -3786,8 +3786,8 @@ class _HulaScreenState extends State<HulaScreen> with TickerProviderStateMixin {
               SizedBox(height: 4),
               Text(
                 '• 땡큐: 버린 카드를 가져와 바로 등록\n'
-                '• 붙이기: 카드를 기존 멜드에 추가\n'
-                '  (자신/상대 멜드 모두 가능)',
+                '• 붙이기: 본인 멜드가 있어야 가능\n'
+                '  (자신/상대 멜드 모두에 추가 가능)',
                 style: TextStyle(color: Colors.white70, fontSize: 13),
               ),
               SizedBox(height: 12),
