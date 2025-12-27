@@ -3748,7 +3748,7 @@ class _HulaScreenState extends State<HulaScreen> with TickerProviderStateMixin {
               SizedBox(height: 4),
               Text(
                 '1. 덱 또는 버린 더미에서 1장 드로우\n'
-                '2. 멜드(조합) 등록 (선택)\n'
+                '2. 멜드(조합) 등록 또는 붙이기 (선택)\n'
                 '3. 카드 1장 버리기',
                 style: TextStyle(color: Colors.white70, fontSize: 13),
               ),
@@ -3766,6 +3766,51 @@ class _HulaScreenState extends State<HulaScreen> with TickerProviderStateMixin {
                 '  (예: ♠3-♠4-♠5)\n'
                 '• Group: 같은 숫자 3~4장\n'
                 '  (예: ♠7-♥7-♦7)',
+                style: TextStyle(color: Colors.white70, fontSize: 13),
+              ),
+              SizedBox(height: 12),
+              Text(
+                '⭐ 7 카드 특별 규칙',
+                style: TextStyle(
+                  color: Colors.amber,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              SizedBox(height: 4),
+              Text(
+                '• 7은 단독으로 등록 가능!\n'
+                '• 나중에 Run 또는 Group으로 확장 가능\n'
+                '• 땡큐로 항상 가져갈 수 있음',
+                style: TextStyle(color: Colors.white70, fontSize: 13),
+              ),
+              SizedBox(height: 12),
+              Text(
+                '🙏 땡큐 & 붙이기',
+                style: TextStyle(
+                  color: Colors.cyan,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              SizedBox(height: 4),
+              Text(
+                '• 땡큐: 버린 카드를 가져와 바로 등록\n'
+                '• 붙이기: 카드를 기존 멜드에 추가\n'
+                '  (자신/상대 멜드 모두 가능)',
+                style: TextStyle(color: Colors.white70, fontSize: 13),
+              ),
+              SizedBox(height: 12),
+              Text(
+                '🛑 스톱',
+                style: TextStyle(
+                  color: Colors.red,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              SizedBox(height: 4),
+              Text(
+                '• 언제든 스톱 선언 가능\n'
+                '• 스톱 시 손패 점수가 가장 낮은 사람 승리\n'
+                '• 손패가 적을 때 선언하면 유리!',
                 style: TextStyle(color: Colors.white70, fontSize: 13),
               ),
               SizedBox(height: 12),
