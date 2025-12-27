@@ -472,12 +472,12 @@ class _SamuraiGameScreenState extends State<SamuraiGameScreen>
                   // 왼쪽: 게임 보드 (최대 크기)
                   Expanded(
                     child: Padding(
-                      padding: const EdgeInsets.all(8.0),
+                      padding: const EdgeInsets.fromLTRB(8, 48, 8, 8),
                       child: Column(
                         children: [
                           // 안내 텍스트
                           Padding(
-                            padding: const EdgeInsets.only(top: 32, bottom: 4),
+                            padding: const EdgeInsets.only(bottom: 4),
                             child: Text(
                               '셀을 탭하면 편집 화면으로 이동합니다',
                               style: TextStyle(
