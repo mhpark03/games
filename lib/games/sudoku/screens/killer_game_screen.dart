@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import '../models/killer_game_state.dart';
 import '../models/killer_sudoku_generator.dart';
 import '../services/game_storage.dart';
@@ -62,6 +63,8 @@ class _KillerGameScreenState extends State<KillerGameScreen>
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
     _timer?.cancel();
+    // 화면을 나갈 때 상태바 복원
+    SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
     super.dispose();
   }
 
@@ -518,15 +521,34 @@ class _KillerGameScreenState extends State<KillerGameScreen>
 
   @override
   Widget build(BuildContext context) {
-    final isLandscape =
-        MediaQuery.of(context).orientation == Orientation.landscape;
+    return OrientationBuilder(
+      builder: (context, orientation) {
+        if (orientation == Orientation.landscape) {
+          // 가로 모드: 상태바 숨김 (몰입 모드)
+          SystemChrome.setEnabledSystemUIMode(
+            SystemUiMode.immersiveSticky,
+            overlays: [],
+          );
+          return _buildLandscapeLayout(context);
+        } else {
+          // 세로 모드: 상태바 표시
+          SystemChrome.setEnabledSystemUIMode(
+            SystemUiMode.edgeToEdge,
+            overlays: SystemUiOverlay.values,
+          );
+          return _buildPortraitLayout(context);
+        }
+      },
+    );
+  }
 
+  // 세로 모드 레이아웃
+  Widget _buildPortraitLayout(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         title: const Text('킬러 스도쿠'),
         backgroundColor: Colors.teal,
         foregroundColor: Colors.white,
-        toolbarHeight: isLandscape ? 45 : kToolbarHeight,
         actions: [
           TextButton.icon(
             onPressed: _showDifficultyDialog,
@@ -551,80 +573,264 @@ class _KillerGameScreenState extends State<KillerGameScreen>
             )
           : SafeArea(
               child: Padding(
-                padding: EdgeInsets.all(isLandscape ? 8.0 : 16.0),
-                child: isLandscape
-                    ? Row(
-                        children: [
-                          Expanded(
-                            flex: 1,
-                            child: Column(
-                              children: [
-                                GameStatusBar(
-                                  elapsedSeconds: _elapsedSeconds,
-                                  failureCount: _failureCount,
-                                  isPaused: _isPaused,
-                                  onPauseToggle: _togglePause,
-                                  isCompact: true,
-                                  difficultyText: _getDifficultyText(),
-                                  themeColor: Colors.teal,
-                                ),
-                                const SizedBox(height: 8),
-                                Expanded(
-                                  child: Center(
-                                    child: AspectRatio(
-                                      aspectRatio: 1,
-                                      child: _isPaused
-                                          ? _buildPausedOverlay()
-                                          : KillerSudokuBoard(
-                                              gameState: _gameState,
-                                              onCellTap: _onCellTap,
-                                              isQuickInputMode:
-                                                  _isQuickInputMode,
-                                              quickInputNumber:
-                                                  _quickInputNumber,
-                                            ),
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            ),
+                padding: const EdgeInsets.all(16.0),
+                child: Column(
+                  children: [
+                    GameStatusBar(
+                      elapsedSeconds: _elapsedSeconds,
+                      failureCount: _failureCount,
+                      isPaused: _isPaused,
+                      onPauseToggle: _togglePause,
+                      isCompact: false,
+                      difficultyText: _getDifficultyText(),
+                      themeColor: Colors.teal,
+                    ),
+                    const SizedBox(height: 12),
+                    _isPaused
+                        ? AspectRatio(
+                            aspectRatio: 1,
+                            child: _buildPausedOverlay(),
+                          )
+                        : KillerSudokuBoard(
+                            gameState: _gameState,
+                            onCellTap: _onCellTap,
+                            isQuickInputMode: _isQuickInputMode,
+                            quickInputNumber: _quickInputNumber,
                           ),
-                          const SizedBox(width: 16),
-                          Expanded(
-                            flex: 1,
-                            child: _buildControls(isLandscape: true),
-                          ),
-                        ],
-                      )
-                    : Column(
-                        children: [
-                          GameStatusBar(
-                            elapsedSeconds: _elapsedSeconds,
-                            failureCount: _failureCount,
-                            isPaused: _isPaused,
-                            onPauseToggle: _togglePause,
-                            isCompact: false,
-                            difficultyText: _getDifficultyText(),
-                            themeColor: Colors.teal,
-                          ),
-                          const SizedBox(height: 12),
-                          _isPaused
-                              ? AspectRatio(
-                                  aspectRatio: 1,
-                                  child: _buildPausedOverlay(),
-                                )
+                    const SizedBox(height: 20),
+                    _buildControls(isLandscape: false),
+                  ],
+                ),
+              ),
+            ),
+    );
+  }
+
+  // 가로 모드 레이아웃 (오목 스타일)
+  Widget _buildLandscapeLayout(BuildContext context) {
+    if (_isLoading) {
+      return Scaffold(
+        backgroundColor: Colors.teal.shade900,
+        body: const Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              CircularProgressIndicator(color: Colors.white),
+              SizedBox(height: 16),
+              Text('퍼즐 생성 중...', style: TextStyle(color: Colors.white)),
+            ],
+          ),
+        ),
+      );
+    }
+
+    return Scaffold(
+      body: Container(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [
+              Colors.teal.shade700,
+              Colors.teal.shade900,
+            ],
+          ),
+        ),
+        child: SafeArea(
+          child: Stack(
+            children: [
+              // 메인 영역: 보드 + 컨트롤
+              Row(
+                children: [
+                  // 왼쪽: 게임 보드 (최대 크기)
+                  Expanded(
+                    child: Padding(
+                      padding: const EdgeInsets.all(8.0),
+                      child: Center(
+                        child: AspectRatio(
+                          aspectRatio: 1,
+                          child: _isPaused
+                              ? _buildPausedOverlay()
                               : KillerSudokuBoard(
                                   gameState: _gameState,
                                   onCellTap: _onCellTap,
                                   isQuickInputMode: _isQuickInputMode,
                                   quickInputNumber: _quickInputNumber,
                                 ),
-                          const SizedBox(height: 20),
-                          _buildControls(isLandscape: false),
+                        ),
+                      ),
+                    ),
+                  ),
+                  // 오른쪽: 상태바 + 컨트롤 패널
+                  SizedBox(
+                    width: 200,
+                    child: Container(
+                      margin: const EdgeInsets.symmetric(vertical: 8, horizontal: 4),
+                      decoration: BoxDecoration(
+                        color: Colors.black.withValues(alpha: 0.3),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Column(
+                        children: [
+                          const SizedBox(height: 40), // 상단 버튼 공간
+                          // 상태 정보
+                          _buildLandscapeStatusInfo(),
+                          const SizedBox(height: 8),
+                          // 컨트롤 패널
+                          Expanded(
+                            child: _buildControls(isLandscape: true),
+                          ),
                         ],
                       ),
+                    ),
+                  ),
+                ],
+              ),
+              // 왼쪽 상단: 뒤로가기 + 제목
+              Positioned(
+                top: 4,
+                left: 4,
+                child: Row(
+                  children: [
+                    _buildCircleButton(
+                      icon: Icons.arrow_back,
+                      onPressed: () => Navigator.pop(context),
+                      tooltip: '뒤로가기',
+                    ),
+                    const SizedBox(width: 8),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+                      decoration: BoxDecoration(
+                        color: Colors.black.withValues(alpha: 0.5),
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      child: const Text(
+                        '킬러 스도쿠',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              // 오른쪽 상단: 새 게임 버튼
+              Positioned(
+                top: 4,
+                right: 4,
+                child: _buildCircleButton(
+                  icon: Icons.refresh,
+                  onPressed: _showDifficultyDialog,
+                  tooltip: '새 게임',
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  // 원형 버튼 위젯
+  Widget _buildCircleButton({
+    required IconData icon,
+    required VoidCallback? onPressed,
+    required String tooltip,
+  }) {
+    final isEnabled = onPressed != null;
+    return Opacity(
+      opacity: isEnabled ? 1.0 : 0.3,
+      child: Material(
+        color: Colors.black.withValues(alpha: 0.5),
+        shape: const CircleBorder(),
+        child: InkWell(
+          onTap: onPressed,
+          customBorder: const CircleBorder(),
+          child: Tooltip(
+            message: tooltip,
+            child: Container(
+              padding: const EdgeInsets.all(10),
+              child: Icon(
+                icon,
+                color: Colors.white70,
+                size: 22,
               ),
             ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  // 가로 모드용 상태 정보
+  Widget _buildLandscapeStatusInfo() {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      child: Column(
+        children: [
+          // 난이도
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+            decoration: BoxDecoration(
+              color: Colors.teal.withValues(alpha: 0.3),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Text(
+              _getDifficultyText(),
+              style: const TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.bold,
+                color: Colors.white,
+              ),
+            ),
+          ),
+          const SizedBox(height: 8),
+          // 시간 + 일시정지 버튼
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const Icon(Icons.timer, size: 18, color: Colors.white70),
+              const SizedBox(width: 4),
+              Text(
+                _formatTime(_elapsedSeconds),
+                style: const TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.white,
+                ),
+              ),
+              const SizedBox(width: 8),
+              GestureDetector(
+                onTap: _togglePause,
+                child: Icon(
+                  _isPaused ? Icons.play_arrow : Icons.pause,
+                  size: 20,
+                  color: Colors.white70,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 4),
+          // 실패 횟수
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(Icons.close, size: 16, color: Colors.red.shade300),
+              const SizedBox(width: 4),
+              Text(
+                '$_failureCount',
+                style: TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.red.shade300,
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
     );
   }
 

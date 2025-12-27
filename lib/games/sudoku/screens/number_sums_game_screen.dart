@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import '../models/number_sums_game_state.dart';
 import '../models/number_sums_generator.dart';
 import '../services/game_storage.dart';
@@ -57,6 +58,8 @@ class _NumberSumsGameScreenState extends State<NumberSumsGameScreen>
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
     _timer?.cancel();
+    // 화면을 나갈 때 상태바 복원
+    SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
     super.dispose();
   }
 
@@ -345,6 +348,29 @@ class _NumberSumsGameScreenState extends State<NumberSumsGameScreen>
 
   @override
   Widget build(BuildContext context) {
+    return OrientationBuilder(
+      builder: (context, orientation) {
+        if (orientation == Orientation.landscape) {
+          // 가로 모드: 상태바 숨김 (몰입 모드)
+          SystemChrome.setEnabledSystemUIMode(
+            SystemUiMode.immersiveSticky,
+            overlays: [],
+          );
+          return _buildLandscapeLayout(context);
+        } else {
+          // 세로 모드: 상태바 표시
+          SystemChrome.setEnabledSystemUIMode(
+            SystemUiMode.edgeToEdge,
+            overlays: SystemUiOverlay.values,
+          );
+          return _buildPortraitLayout(context);
+        }
+      },
+    );
+  }
+
+  // 세로 모드 레이아웃
+  Widget _buildPortraitLayout(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFF1A1A2E),
       appBar: AppBar(
@@ -378,87 +404,261 @@ class _NumberSumsGameScreenState extends State<NumberSumsGameScreen>
               ),
             )
           : SafeArea(
-              child: OrientationBuilder(
-                builder: (context, orientation) {
-                  if (orientation == Orientation.landscape) {
-                    return _buildLandscapeLayout();
-                  }
-                  return _buildPortraitLayout();
-                },
-              ),
-            ),
-    );
-  }
-
-  Widget _buildPortraitLayout() {
-    return Column(
-      children: [
-        _buildStatusBar(),
-        const SizedBox(height: 8),
-        _buildHelpText(),
-        Expanded(
-          child: Padding(
-            padding: const EdgeInsets.all(12.0),
-            child: Center(
-              child: _isPaused
-                  ? _buildPausedOverlay()
-                  : NumberSumsBoard(
-                      gameState: _gameState,
-                      onCellTap: _onCellTap,
-                      errorRow: _errorRow,
-                      errorCol: _errorCol,
-                    ),
-            ),
-          ),
-        ),
-        _buildToolBar(),
-        const SizedBox(height: 16),
-      ],
-    );
-  }
-
-  Widget _buildLandscapeLayout() {
-    return Row(
-      children: [
-        // 왼쪽: 게임 보드
-        Expanded(
-          flex: 3,
-          child: Padding(
-            padding: const EdgeInsets.all(12.0),
-            child: Center(
-              child: _isPaused
-                  ? _buildPausedOverlay()
-                  : NumberSumsBoard(
-                      gameState: _gameState,
-                      onCellTap: _onCellTap,
-                      errorRow: _errorRow,
-                      errorCol: _errorCol,
-                    ),
-            ),
-          ),
-        ),
-        // 오른쪽: 정보 및 도구 모음
-        Expanded(
-          flex: 2,
-          child: Container(
-            decoration: const BoxDecoration(
-              color: Color(0xFF16213E),
-            ),
-            child: SingleChildScrollView(
               child: Column(
-                mainAxisSize: MainAxisSize.min,
                 children: [
-                  _buildLandscapeStatusBar(),
+                  _buildStatusBar(),
+                  const SizedBox(height: 8),
                   _buildHelpText(),
-                  const SizedBox(height: 8),
-                  _buildLandscapeToolBar(),
-                  const SizedBox(height: 8),
+                  Expanded(
+                    child: Padding(
+                      padding: const EdgeInsets.all(12.0),
+                      child: Center(
+                        child: _isPaused
+                            ? _buildPausedOverlay()
+                            : NumberSumsBoard(
+                                gameState: _gameState,
+                                onCellTap: _onCellTap,
+                                errorRow: _errorRow,
+                                errorCol: _errorCol,
+                              ),
+                      ),
+                    ),
+                  ),
+                  _buildToolBar(),
+                  const SizedBox(height: 16),
                 ],
               ),
             ),
+    );
+  }
+
+  // 가로 모드 레이아웃 (오목 스타일)
+  Widget _buildLandscapeLayout(BuildContext context) {
+    if (_isLoading) {
+      return Scaffold(
+        backgroundColor: const Color(0xFF1A1A2E),
+        body: const Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              CircularProgressIndicator(color: Colors.deepOrange),
+              SizedBox(height: 16),
+              Text('퍼즐 생성 중...', style: TextStyle(color: Colors.white70)),
+            ],
           ),
         ),
-      ],
+      );
+    }
+
+    return Scaffold(
+      body: Container(
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [
+              Color(0xFF16213E),
+              Color(0xFF1A1A2E),
+            ],
+          ),
+        ),
+        child: SafeArea(
+          child: Stack(
+            children: [
+              // 메인 영역: 보드 + 도구
+              Row(
+                children: [
+                  // 왼쪽: 게임 보드 (최대 크기)
+                  Expanded(
+                    child: Padding(
+                      padding: const EdgeInsets.all(8.0),
+                      child: Center(
+                        child: AspectRatio(
+                          aspectRatio: 1,
+                          child: _isPaused
+                              ? _buildPausedOverlay()
+                              : NumberSumsBoard(
+                                  gameState: _gameState,
+                                  onCellTap: _onCellTap,
+                                  errorRow: _errorRow,
+                                  errorCol: _errorCol,
+                                ),
+                        ),
+                      ),
+                    ),
+                  ),
+                  // 오른쪽: 상태 + 도구
+                  SizedBox(
+                    width: 160,
+                    child: Container(
+                      margin: const EdgeInsets.symmetric(vertical: 8, horizontal: 4),
+                      decoration: BoxDecoration(
+                        color: Colors.black.withValues(alpha: 0.3),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Column(
+                        children: [
+                          const SizedBox(height: 40), // 상단 버튼 공간
+                          _buildLandscapeStatusInfo(),
+                          _buildHelpText(),
+                          const SizedBox(height: 8),
+                          Expanded(
+                            child: SingleChildScrollView(
+                              child: _buildLandscapeToolBar(),
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                        ],
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              // 왼쪽 상단: 뒤로가기 + 제목
+              Positioned(
+                top: 4,
+                left: 4,
+                child: Row(
+                  children: [
+                    _buildCircleButton(
+                      icon: Icons.arrow_back,
+                      onPressed: () => Navigator.pop(context),
+                      tooltip: '뒤로가기',
+                    ),
+                    const SizedBox(width: 8),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+                      decoration: BoxDecoration(
+                        color: Colors.black.withValues(alpha: 0.5),
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      child: const Text(
+                        '넘버 썸즈',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              // 오른쪽 상단: 새 게임 버튼
+              Positioned(
+                top: 4,
+                right: 4,
+                child: _buildCircleButton(
+                  icon: Icons.refresh,
+                  onPressed: _showDifficultyDialog,
+                  tooltip: '새 게임',
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  // 원형 버튼 위젯
+  Widget _buildCircleButton({
+    required IconData icon,
+    required VoidCallback? onPressed,
+    required String tooltip,
+  }) {
+    final isEnabled = onPressed != null;
+    return Opacity(
+      opacity: isEnabled ? 1.0 : 0.3,
+      child: Material(
+        color: Colors.black.withValues(alpha: 0.5),
+        shape: const CircleBorder(),
+        child: InkWell(
+          onTap: onPressed,
+          customBorder: const CircleBorder(),
+          child: Tooltip(
+            message: tooltip,
+            child: Container(
+              padding: const EdgeInsets.all(10),
+              child: Icon(
+                icon,
+                color: Colors.white70,
+                size: 22,
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  // 가로 모드용 상태 정보
+  Widget _buildLandscapeStatusInfo() {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      child: Column(
+        children: [
+          // 난이도
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
+            decoration: BoxDecoration(
+              color: Colors.deepOrange.withValues(alpha: 0.2),
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: Text(
+              _getDifficultyLabel(),
+              style: const TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.w600,
+                color: Colors.deepOrange,
+              ),
+            ),
+          ),
+          const SizedBox(height: 8),
+          // 시간 + 일시정지 버튼
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const Icon(Icons.timer_outlined, size: 16, color: Colors.white70),
+              const SizedBox(width: 4),
+              Text(
+                _formatTime(_elapsedSeconds),
+                style: const TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.white,
+                ),
+              ),
+              const SizedBox(width: 8),
+              GestureDetector(
+                onTap: _togglePause,
+                child: Icon(
+                  _isPaused ? Icons.play_arrow : Icons.pause,
+                  size: 18,
+                  color: Colors.white70,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 4),
+          // 실패 횟수
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(Icons.close, size: 14, color: Colors.red.shade300),
+              const SizedBox(width: 4),
+              Text(
+                '$_failureCount',
+                style: TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w600,
+                  color: Colors.red.shade300,
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
     );
   }
 
