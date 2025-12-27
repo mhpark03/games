@@ -94,6 +94,52 @@ class Meld {
   int get size => cards.length;
 }
 
+// 땡큐 옵션 타입
+enum ThankYouType {
+  seven,        // 7 단독 등록
+  attachPlayer, // 플레이어 멜드에 붙이기
+  attachComputer, // 컴퓨터 멜드에 붙이기
+  newMeld,      // 새 멜드 생성
+}
+
+// 땡큐 옵션
+class ThankYouOption {
+  final ThankYouType type;
+  final PlayingCard discardCard;
+  final List<PlayingCard> handCards; // 손패에서 사용할 카드들
+  final int? meldIndex; // 붙일 멜드 인덱스
+  final int? computerIndex; // 컴퓨터 인덱스 (컴퓨터 멜드에 붙일 때)
+  final bool isRun; // 새 멜드가 Run인지
+
+  ThankYouOption({
+    required this.type,
+    required this.discardCard,
+    this.handCards = const [],
+    this.meldIndex,
+    this.computerIndex,
+    this.isRun = false,
+  });
+
+  // 옵션 설명 문자열
+  String get description {
+    switch (type) {
+      case ThankYouType.seven:
+        return '${discardCard.suitSymbol}7 단독 등록';
+      case ThankYouType.attachPlayer:
+        return '${discardCard.suitSymbol}${discardCard.rankString} 내 멜드에 붙이기';
+      case ThankYouType.attachComputer:
+        return '${discardCard.suitSymbol}${discardCard.rankString} 컴퓨터${computerIndex! + 1} 멜드에 붙이기';
+      case ThankYouType.newMeld:
+        final allCards = [...handCards, discardCard];
+        if (isRun) {
+          allCards.sort((a, b) => a.rank.compareTo(b.rank));
+        }
+        final cardStr = allCards.map((c) => '${c.suitSymbol}${c.rankString}').join(' ');
+        return isRun ? 'Run: $cardStr' : 'Group: $cardStr';
+    }
+  }
+}
+
 // 52장 덱 생성
 List<PlayingCard> createDeck() {
   final deck = <PlayingCard>[];
@@ -542,6 +588,95 @@ class _HulaScreenState extends State<HulaScreen> with TickerProviderStateMixin {
     // 땡큐 가능 여부 확인 (등록 가능한 경우에만)
     if (!_canThankYou()) return;
 
+    // 모든 가능한 옵션 찾기
+    final options = _findAllThankYouOptions();
+    if (options.isEmpty) return;
+
+    // 옵션이 1개면 바로 실행, 2개 이상이면 선택 다이얼로그
+    if (options.length == 1) {
+      _executeThankYouOption(options.first);
+    } else {
+      _showThankYouOptionsDialog(options);
+    }
+  }
+
+  // 땡큐 옵션 선택 다이얼로그 표시
+  void _showThankYouOptionsDialog(List<ThankYouOption> options) {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => AlertDialog(
+        title: Row(
+          children: [
+            Text(
+              '${options.first.discardCard.suitSymbol}${options.first.discardCard.rankString}',
+              style: TextStyle(
+                color: options.first.discardCard.suitColor,
+                fontSize: 24,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            const SizedBox(width: 8),
+            const Text('땡큐 옵션 선택'),
+          ],
+        ),
+        content: SizedBox(
+          width: double.maxFinite,
+          child: ListView.builder(
+            shrinkWrap: true,
+            itemCount: options.length,
+            itemBuilder: (context, index) {
+              final option = options[index];
+              return Card(
+                margin: const EdgeInsets.symmetric(vertical: 4),
+                child: ListTile(
+                  leading: _buildOptionIcon(option),
+                  title: Text(
+                    option.description,
+                    style: const TextStyle(fontWeight: FontWeight.bold),
+                  ),
+                  onTap: () {
+                    Navigator.pop(context);
+                    _executeThankYouOption(option);
+                  },
+                ),
+              );
+            },
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('취소'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // 옵션 아이콘 빌드
+  Widget _buildOptionIcon(ThankYouOption option) {
+    IconData icon;
+    Color color;
+    switch (option.type) {
+      case ThankYouType.seven:
+        icon = Icons.looks_one;
+        color = Colors.purple;
+      case ThankYouType.attachPlayer:
+        icon = Icons.add_circle;
+        color = Colors.green;
+      case ThankYouType.attachComputer:
+        icon = Icons.add_circle_outline;
+        color = Colors.orange;
+      case ThankYouType.newMeld:
+        icon = option.isRun ? Icons.linear_scale : Icons.grid_view;
+        color = Colors.blue;
+    }
+    return Icon(icon, color: color, size: 32);
+  }
+
+  // 땡큐 옵션 실행
+  void _executeThankYouOption(ThankYouOption option) {
     // 땡큐 상황: 대기 중에 가져가기
     if (waitingForNextTurn) {
       _cancelNextTurnTimer();
@@ -553,51 +688,32 @@ class _HulaScreenState extends State<HulaScreen> with TickerProviderStateMixin {
     }
 
     final card = discardPile.removeLast();
-
-    // 자동 등록 수행
     String meldMessage = '';
 
-    // 1. 7이면 단독 등록
-    if (_isSeven(card)) {
-      playerMelds.add(Meld(cards: [card], isRun: false));
-      meldMessage = '땡큐! ${card.suitSymbol}7 등록!';
-    }
-    // 2. 기존 플레이어 멜드에 붙이기
-    else if (_canAttachToMeld(card) >= 0) {
-      final meldIndex = _canAttachToMeld(card);
-      _attachToMeld(meldIndex, card);
-      meldMessage = '땡큐! ${card.suitSymbol}${card.rankString} 붙이기!';
-    }
-    // 3. 컴퓨터 멜드에 붙이기
-    else {
-      bool attached = false;
-      for (int c = 0; c < computerMelds.length; c++) {
-        final compMeldIndex = _canAttachToMeldList(card, computerMelds[c]);
-        if (compMeldIndex >= 0) {
-          _attachToMeldList(compMeldIndex, card, computerMelds[c]);
-          meldMessage = '땡큐! ${card.suitSymbol}${card.rankString} 컴퓨터${c + 1} 멜드에 붙이기!';
-          attached = true;
-          break;
+    switch (option.type) {
+      case ThankYouType.seven:
+        playerMelds.add(Meld(cards: [card], isRun: false));
+        meldMessage = '땡큐! ${card.suitSymbol}7 등록!';
+
+      case ThankYouType.attachPlayer:
+        _attachToMeld(option.meldIndex!, card);
+        meldMessage = '땡큐! ${card.suitSymbol}${card.rankString} 붙이기!';
+
+      case ThankYouType.attachComputer:
+        _attachToMeldList(option.meldIndex!, card, computerMelds[option.computerIndex!]);
+        meldMessage = '땡큐! ${card.suitSymbol}${card.rankString} 컴퓨터${option.computerIndex! + 1} 멜드에 붙이기!';
+
+      case ThankYouType.newMeld:
+        final newMeldCards = [...option.handCards, card];
+        // 손패에서 제거
+        for (final c in option.handCards) {
+          playerHand.remove(c);
         }
-      }
-      // 4. 손패와 합쳐서 새 멜드 생성
-      if (!attached) {
-        final meldCards = _findThankYouMeldCards(card);
-        if (meldCards != null) {
-          final newMeldCards = [...meldCards, card];
-          // 손패에서 제거
-          for (final c in meldCards) {
-            playerHand.remove(c);
-          }
-          // Run인지 Group인지 판별
-          final isRun = _isValidRun(newMeldCards);
-          if (isRun) {
-            newMeldCards.sort((a, b) => a.rank.compareTo(b.rank));
-          }
-          playerMelds.add(Meld(cards: newMeldCards, isRun: isRun));
-          meldMessage = '땡큐! ${card.suitSymbol}${card.rankString} 포함 멜드 등록!';
+        if (option.isRun) {
+          newMeldCards.sort((a, b) => a.rank.compareTo(b.rank));
         }
-      }
+        playerMelds.add(Meld(cards: newMeldCards, isRun: option.isRun));
+        meldMessage = '땡큐! ${option.description}';
     }
 
     setState(() {
@@ -775,44 +891,146 @@ class _HulaScreenState extends State<HulaScreen> with TickerProviderStateMixin {
     return false;
   }
 
-  // 땡큐 카드와 손패로 만들 수 있는 멜드 카드 찾기
+  // 땡큐 카드와 손패로 만들 수 있는 멜드 카드 찾기 (첫 번째만)
   List<PlayingCard>? _findThankYouMeldCards(PlayingCard discardCard) {
+    final options = _findAllNewMeldOptions(discardCard);
+    if (options.isNotEmpty) {
+      return options.first.handCards;
+    }
+    return null;
+  }
+
+  // 모든 가능한 새 멜드 옵션 찾기 (손패와 합쳐서)
+  List<ThankYouOption> _findAllNewMeldOptions(PlayingCard discardCard) {
+    final options = <ThankYouOption>[];
+
     // Group 체크: 같은 숫자 2장 이상 있는지
     final sameRank = playerHand.where((c) => c.rank == discardCard.rank).toList();
     if (sameRank.length >= 2) {
-      // 3장 이상의 Group 가능
-      return sameRank.take(2).toList();
+      // 3장 Group
+      options.add(ThankYouOption(
+        type: ThankYouType.newMeld,
+        discardCard: discardCard,
+        handCards: sameRank.take(2).toList(),
+        isRun: false,
+      ));
     }
 
-    // Run 체크: 같은 무늬의 연속 숫자 2장 이상 있는지
+    // Run 체크: 같은 무늬의 연속 숫자
     final sameSuit = playerHand.where((c) => c.suit == discardCard.suit).toList();
     if (sameSuit.length >= 2) {
-      // 가능한 Run 조합 찾기
       sameSuit.sort((a, b) => a.rank.compareTo(b.rank));
 
-      // discardCard.rank를 포함하는 3장 연속 찾기
-      for (int i = 0; i < sameSuit.length - 1; i++) {
-        final c1 = sameSuit[i];
-        final c2 = sameSuit[i + 1];
+      // 모든 2장 조합 체크
+      for (int i = 0; i < sameSuit.length; i++) {
+        for (int j = i + 1; j < sameSuit.length; j++) {
+          final c1 = sameSuit[i];
+          final c2 = sameSuit[j];
 
-        // c1, c2, discardCard가 연속인지 확인
-        final ranks = [c1.rank, c2.rank, discardCard.rank]..sort();
-        if (ranks[1] == ranks[0] + 1 && ranks[2] == ranks[1] + 1) {
-          return [c1, c2];
-        }
+          // c1, c2, discardCard가 연속인지 확인
+          final ranks = [c1.rank, c2.rank, discardCard.rank]..sort();
+          bool isSequential = ranks[1] == ranks[0] + 1 && ranks[2] == ranks[1] + 1;
 
-        // A-2-3 또는 Q-K-A 특수 케이스
-        if (ranks.contains(1)) {
-          // A를 14로 변환해서 체크
-          final highRanks = ranks.map((r) => r == 1 ? 14 : r).toList()..sort();
-          if (highRanks[1] == highRanks[0] + 1 && highRanks[2] == highRanks[1] + 1) {
-            return [c1, c2];
+          // A-2-3 또는 Q-K-A 특수 케이스
+          if (!isSequential && ranks.contains(1)) {
+            final highRanks = ranks.map((r) => r == 1 ? 14 : r).toList()..sort();
+            isSequential = highRanks[1] == highRanks[0] + 1 && highRanks[2] == highRanks[1] + 1;
+          }
+
+          if (isSequential) {
+            options.add(ThankYouOption(
+              type: ThankYouType.newMeld,
+              discardCard: discardCard,
+              handCards: [c1, c2],
+              isRun: true,
+            ));
           }
         }
       }
     }
 
-    return null;
+    return options;
+  }
+
+  // 모든 땡큐 옵션 찾기
+  List<ThankYouOption> _findAllThankYouOptions() {
+    if (discardPile.isEmpty) return [];
+    final card = discardPile.last;
+    final options = <ThankYouOption>[];
+
+    // 1. 7이면 단독 등록 가능
+    if (_isSeven(card)) {
+      options.add(ThankYouOption(
+        type: ThankYouType.seven,
+        discardCard: card,
+      ));
+    }
+
+    // 2. 플레이어 멜드에 붙이기 가능
+    for (int i = 0; i < playerMelds.length; i++) {
+      if (_canAttachToMeldAtIndex(card, playerMelds, i)) {
+        options.add(ThankYouOption(
+          type: ThankYouType.attachPlayer,
+          discardCard: card,
+          meldIndex: i,
+        ));
+      }
+    }
+
+    // 3. 컴퓨터 멜드에 붙이기 가능
+    for (int c = 0; c < computerMelds.length; c++) {
+      for (int i = 0; i < computerMelds[c].length; i++) {
+        if (_canAttachToMeldAtIndex(card, computerMelds[c], i)) {
+          options.add(ThankYouOption(
+            type: ThankYouType.attachComputer,
+            discardCard: card,
+            meldIndex: i,
+            computerIndex: c,
+          ));
+        }
+      }
+    }
+
+    // 4. 손패와 합쳐서 새 멜드 생성
+    options.addAll(_findAllNewMeldOptions(card));
+
+    return options;
+  }
+
+  // 특정 인덱스의 멜드에 카드를 붙일 수 있는지 확인
+  bool _canAttachToMeldAtIndex(PlayingCard card, List<Meld> melds, int index) {
+    if (index < 0 || index >= melds.length) return false;
+    final meld = melds[index];
+
+    // 단독 7 카드 특별 처리
+    if (meld.cards.length == 1 && meld.cards.first.rank == 7) {
+      final seven = meld.cards.first;
+      if (card.suit == seven.suit && (card.rank == 6 || card.rank == 8)) {
+        return true;
+      }
+      if (card.rank == 7 && card.suit != seven.suit) {
+        return true;
+      }
+      return false;
+    }
+
+    if (meld.isRun) {
+      if (card.suit == meld.cards.first.suit) {
+        final ranks = meld.cards.map((c) => c.rank).toList()..sort();
+        final minRank = ranks.first;
+        final maxRank = ranks.last;
+        if (card.rank == minRank - 1) return true;
+        if (card.rank == maxRank + 1) return true;
+        if (maxRank == 13 && card.rank == 1) return true;
+      }
+    } else {
+      if (meld.cards.length < 4 && card.rank == meld.cards.first.rank) {
+        if (!meld.cards.any((c) => c.suit == card.suit)) {
+          return true;
+        }
+      }
+    }
+    return false;
   }
 
   // 범용: 특정 멜드 목록에 카드를 붙일 수 있는지 확인
