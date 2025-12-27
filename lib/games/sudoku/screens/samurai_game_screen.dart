@@ -41,6 +41,9 @@ class _SamuraiGameScreenState extends State<SamuraiGameScreen>
   int? _quickInputNumber;
   bool _isNoteMode = false;
 
+  // 마지막으로 설정한 방향 (SystemChrome 중복 호출 방지)
+  Orientation? _lastOrientation;
+
   @override
   void initState() {
     super.initState();
@@ -336,19 +339,27 @@ class _SamuraiGameScreenState extends State<SamuraiGameScreen>
   Widget build(BuildContext context) {
     return OrientationBuilder(
       builder: (context, orientation) {
+        // 방향이 바뀔 때만 SystemChrome 호출 (깜박임 방지)
+        if (_lastOrientation != orientation) {
+          _lastOrientation = orientation;
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            if (orientation == Orientation.landscape) {
+              SystemChrome.setEnabledSystemUIMode(
+                SystemUiMode.immersiveSticky,
+                overlays: [],
+              );
+            } else {
+              SystemChrome.setEnabledSystemUIMode(
+                SystemUiMode.edgeToEdge,
+                overlays: SystemUiOverlay.values,
+              );
+            }
+          });
+        }
+
         if (orientation == Orientation.landscape) {
-          // 가로 모드: 상태바 숨김 (몰입 모드)
-          SystemChrome.setEnabledSystemUIMode(
-            SystemUiMode.immersiveSticky,
-            overlays: [],
-          );
           return _buildLandscapeLayout(context);
         } else {
-          // 세로 모드: 상태바 표시
-          SystemChrome.setEnabledSystemUIMode(
-            SystemUiMode.edgeToEdge,
-            overlays: SystemUiOverlay.values,
-          );
           return _buildPortraitLayout(context);
         }
       },
