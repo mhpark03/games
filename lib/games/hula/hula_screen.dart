@@ -512,6 +512,8 @@ class _HulaScreenState extends State<HulaScreen> with TickerProviderStateMixin {
     setState(() {
       hasDrawn = true;
       selectedCardIndices = [];
+      waitingForNextTurn = false;
+      gameMessage = null;
     });
     _showMessage('덱에서 ${card.suitSymbol}${card.rankString} 드로우');
     _saveGame();
@@ -532,6 +534,7 @@ class _HulaScreenState extends State<HulaScreen> with TickerProviderStateMixin {
       setState(() {
         currentTurn = 0;
         waitingForNextTurn = false;
+        gameMessage = null;
       });
     }
 
@@ -1478,7 +1481,14 @@ class _HulaScreenState extends State<HulaScreen> with TickerProviderStateMixin {
       selectedCardIndices = [];
       waitingForNextTurn = true;
     });
-    _startNextTurnTimer();
+
+    // 플레이어 턴이면 타이머 없이 대기, 컴퓨터 턴이면 5초 타이머
+    if (currentTurn != 0) {
+      _startNextTurnTimer();
+    } else {
+      // 플레이어 턴: 메시지 타이머만 취소 (메시지 유지)
+      _messageTimer?.cancel();
+    }
   }
 
   void _playerWins() {
@@ -1494,14 +1504,15 @@ class _HulaScreenState extends State<HulaScreen> with TickerProviderStateMixin {
       currentTurn = (currentTurn + 1) % playerCount;
       hasDrawn = false;
       selectedCardIndices = [];
+      waitingForNextTurn = true;
     });
 
     if (currentTurn != 0) {
-      // 컴퓨터 턴: 대기 상태로 전환하고 타이머 시작
-      setState(() {
-        waitingForNextTurn = true;
-      });
+      // 컴퓨터 턴: 5초 타이머 시작
       _startNextTurnTimer();
+    } else {
+      // 플레이어 턴: 타이머 없이 대기 (동작할 때까지 유지)
+      _messageTimer?.cancel();
     }
   }
 
@@ -2799,7 +2810,7 @@ class _HulaScreenState extends State<HulaScreen> with TickerProviderStateMixin {
                 ),
                 child: Text(
                   currentTurn == 0
-                      ? '내 차례! ($_autoPlayCountdown)'
+                      ? '내 차례!'
                       : '다음: 컴퓨터$currentTurn ($_autoPlayCountdown)',
                   style: const TextStyle(
                     fontSize: 16,
