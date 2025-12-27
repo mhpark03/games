@@ -473,34 +473,17 @@ class _SamuraiGameScreenState extends State<SamuraiGameScreen>
                   Expanded(
                     child: Padding(
                       padding: const EdgeInsets.fromLTRB(140, 8, 8, 8),
-                      child: Column(
-                        children: [
-                          // 안내 텍스트
-                          Padding(
-                            padding: const EdgeInsets.only(bottom: 4),
-                            child: Text(
-                              '셀을 탭하면 편집 화면으로 이동합니다',
-                              style: TextStyle(
-                                fontSize: 12,
-                                color: Colors.white.withValues(alpha: 0.7),
-                              ),
-                            ),
-                          ),
-                          Expanded(
-                            child: Center(
-                              child: AspectRatio(
-                                aspectRatio: 1,
-                                child: _isPaused
-                                    ? _buildPausedOverlay()
-                                    : SamuraiBoard(
-                                        gameState: _gameState,
-                                        onCellTap: _onCellTap,
-                                        onBoardSelect: _onBoardSelect,
-                                      ),
-                              ),
-                            ),
-                          ),
-                        ],
+                      child: Center(
+                        child: AspectRatio(
+                          aspectRatio: 1,
+                          child: _isPaused
+                              ? _buildPausedOverlay()
+                              : SamuraiBoard(
+                                  gameState: _gameState,
+                                  onCellTap: _onCellTap,
+                                  onBoardSelect: _onBoardSelect,
+                                ),
+                        ),
                       ),
                     ),
                   ),
@@ -525,30 +508,45 @@ class _SamuraiGameScreenState extends State<SamuraiGameScreen>
                   ),
                 ],
               ),
-              // 왼쪽 상단: 뒤로가기 + 제목
+              // 왼쪽 상단: 뒤로가기 + 제목 + 안내
               Positioned(
                 top: 4,
                 left: 4,
-                child: Row(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    _buildCircleButton(
-                      icon: Icons.arrow_back,
-                      onPressed: () => Navigator.pop(context),
-                      tooltip: '뒤로가기',
+                    Row(
+                      children: [
+                        _buildCircleButton(
+                          icon: Icons.arrow_back,
+                          onPressed: () => Navigator.pop(context),
+                          tooltip: '뒤로가기',
+                        ),
+                        const SizedBox(width: 8),
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+                          decoration: BoxDecoration(
+                            color: Colors.black.withValues(alpha: 0.5),
+                            borderRadius: BorderRadius.circular(20),
+                          ),
+                          child: const Text(
+                            '사무라이 스도쿠',
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
-                    const SizedBox(width: 8),
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
-                      decoration: BoxDecoration(
-                        color: Colors.black.withValues(alpha: 0.5),
-                        borderRadius: BorderRadius.circular(20),
-                      ),
-                      child: const Text(
-                        '사무라이 스도쿠',
+                    Padding(
+                      padding: const EdgeInsets.only(left: 52, top: 4),
+                      child: Text(
+                        '셀을 탭하면 편집 화면으로 이동합니다',
                         style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
+                          fontSize: 11,
+                          color: Colors.white.withValues(alpha: 0.7),
                         ),
                       ),
                     ),
