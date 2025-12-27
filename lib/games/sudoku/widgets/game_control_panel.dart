@@ -267,14 +267,14 @@ class GameControlPanelState extends State<GameControlPanel> {
       textColor = Colors.red.shade700;
     } else if (_isQuickInputMode && _isNoteMode) {
       guideText = _quickInputNumber != null
-          ? '숫자 $_quickInputNumber 선택됨 - 셀을 탭하여 메모 입력'
+          ? '숫자 $_quickInputNumber 선택됨 - 셀 탭→메모'
           : '아래에서 숫자를 먼저 선택하세요';
       bgColor = Colors.amber.shade50;
       borderColor = Colors.amber.shade200;
       textColor = Colors.amber.shade700;
     } else {
       guideText = _quickInputNumber != null
-          ? '숫자 $_quickInputNumber 선택됨 - 셀을 탭하여 입력'
+          ? '숫자 $_quickInputNumber 선택됨 - 셀 탭→입력'
           : '아래에서 숫자를 먼저 선택하세요';
       bgColor = Colors.orange.shade50;
       borderColor = Colors.orange.shade200;
@@ -298,12 +298,15 @@ class GameControlPanelState extends State<GameControlPanel> {
             color: textColor,
           ),
           const SizedBox(width: 6),
-          Text(
-            guideText,
-            style: TextStyle(
-              fontSize: 12,
-              color: textColor,
-              fontWeight: FontWeight.w500,
+          Flexible(
+            child: Text(
+              guideText,
+              style: TextStyle(
+                fontSize: 12,
+                color: textColor,
+                fontWeight: FontWeight.w500,
+              ),
+              overflow: TextOverflow.ellipsis,
             ),
           ),
         ],
