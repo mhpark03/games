@@ -250,6 +250,11 @@ class _HulaScreenState extends State<HulaScreen> with TickerProviderStateMixin {
   }
 
   void _initGame() {
+    // 타이머 모두 취소
+    _cancelNextTurnTimer();
+    _messageTimer?.cancel();
+    _computerActionTimer?.cancel();
+
     deck = createDeck();
     deck.shuffle(Random());
 
@@ -295,7 +300,8 @@ class _HulaScreenState extends State<HulaScreen> with TickerProviderStateMixin {
     hasDrawn = false;
     selectedCardIndices = [];
     waitingForNextTurn = false;
-    _cancelNextTurnTimer();
+    gameMessage = null;
+    _lastDiscardTurn = 0;
 
     setState(() {});
     _saveGame();
@@ -308,6 +314,9 @@ class _HulaScreenState extends State<HulaScreen> with TickerProviderStateMixin {
         waitingForNextTurn = true;
       });
       _startNextTurnTimer();
+    } else {
+      // 플레이어가 먼저 시작
+      _showMessage('내 차례! 카드를 드로우하세요');
     }
   }
 
