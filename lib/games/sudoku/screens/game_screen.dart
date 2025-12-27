@@ -786,16 +786,17 @@ class _GameScreenState extends State<GameScreen> with WidgetsBindingObserver {
     );
   }
 
-  // 왼쪽 상태 정보 (가로 배치)
+  // 왼쪽 상태 정보 (세로 배치)
   Widget _buildLeftStatusInfo() {
     return Container(
-      margin: const EdgeInsets.only(left: 52),
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+      margin: const EdgeInsets.only(left: 8, top: 4),
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
       decoration: BoxDecoration(
         color: Colors.black.withValues(alpha: 0.4),
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(12),
       ),
-      child: Row(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         mainAxisSize: MainAxisSize.min,
         children: [
           // 난이도
@@ -814,39 +815,48 @@ class _GameScreenState extends State<GameScreen> with WidgetsBindingObserver {
               ),
             ),
           ),
-          const SizedBox(width: 12),
-          // 시간
-          const Icon(Icons.timer, size: 14, color: Colors.white70),
-          const SizedBox(width: 4),
-          Text(
-            _formatTime(_elapsedSeconds),
-            style: const TextStyle(
-              fontSize: 13,
-              fontWeight: FontWeight.bold,
-              color: Colors.white,
-            ),
+          const SizedBox(height: 6),
+          // 시간 + 일시정지 버튼
+          Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Icon(Icons.timer, size: 14, color: Colors.white70),
+              const SizedBox(width: 4),
+              Text(
+                _formatTime(_elapsedSeconds),
+                style: const TextStyle(
+                  fontSize: 13,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.white,
+                ),
+              ),
+              const SizedBox(width: 6),
+              GestureDetector(
+                onTap: _togglePause,
+                child: Icon(
+                  _isPaused ? Icons.play_arrow : Icons.pause,
+                  size: 16,
+                  color: Colors.white70,
+                ),
+              ),
+            ],
           ),
-          const SizedBox(width: 6),
-          // 일시정지 버튼
-          GestureDetector(
-            onTap: _togglePause,
-            child: Icon(
-              _isPaused ? Icons.play_arrow : Icons.pause,
-              size: 16,
-              color: Colors.white70,
-            ),
-          ),
-          const SizedBox(width: 12),
+          const SizedBox(height: 4),
           // 실패 횟수
-          Icon(Icons.close, size: 14, color: Colors.red.shade300),
-          const SizedBox(width: 2),
-          Text(
-            '$_failureCount',
-            style: TextStyle(
-              fontSize: 12,
-              fontWeight: FontWeight.bold,
-              color: Colors.red.shade300,
-            ),
+          Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(Icons.close, size: 14, color: Colors.red.shade300),
+              const SizedBox(width: 2),
+              Text(
+                '$_failureCount',
+                style: TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.red.shade300,
+                ),
+              ),
+            ],
           ),
         ],
       ),
