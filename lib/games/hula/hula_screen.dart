@@ -212,6 +212,7 @@ class _HulaScreenState extends State<HulaScreen> with TickerProviderStateMixin {
   int _lastDiscardTurn = 0; // 마지막으로 카드를 버린 플레이어 턴
   Timer? _computerActionTimer; // 컴퓨터 액션 딜레이 타이머
   static const int _computerActionDelay = 2000; // 컴퓨터 액션 딜레이 (밀리초)
+  VoidCallback? _pendingComputerAction; // 대기 후 실행할 컴퓨터 동작
 
   // 점수
   List<int> scores = [];
@@ -302,6 +303,7 @@ class _HulaScreenState extends State<HulaScreen> with TickerProviderStateMixin {
     waitingForNextTurn = false;
     gameMessage = null;
     _lastDiscardTurn = 0;
+    _pendingComputerAction = null;
 
     setState(() {});
     _saveGame();
@@ -321,9 +323,9 @@ class _HulaScreenState extends State<HulaScreen> with TickerProviderStateMixin {
   }
 
   // 다음 턴 자동 진행 타이머 시작
-  void _startNextTurnTimer() {
+  void _startNextTurnTimer({int seconds = 10}) {
     _cancelNextTurnTimer();
-    _autoPlayCountdown = 10;
+    _autoPlayCountdown = seconds;
 
     // 메시지 타이머 취소 (타이머 동안 메시지 유지)
     _messageTimer?.cancel();
@@ -351,15 +353,36 @@ class _HulaScreenState extends State<HulaScreen> with TickerProviderStateMixin {
     _nextTurnTimer = null;
   }
 
+  // 컴퓨터 동작 후 대기 상태로 전환 (다음 동작을 콜백으로 저장)
+  void _startWaitWithAction(VoidCallback nextAction, {int seconds = 10}) {
+    setState(() {
+      waitingForNextTurn = true;
+      _pendingComputerAction = nextAction;
+    });
+    _startNextTurnTimer(seconds: seconds);
+  }
+
   // 다음 턴 버튼 클릭
   void _onNextTurn() {
     _cancelNextTurnTimer();
+    final pendingAction = _pendingComputerAction;
     setState(() {
       waitingForNextTurn = false;
+      _pendingComputerAction = null;
     });
     _messageTimer?.cancel();
 
     if (gameOver) return;
+
+    // 대기 중인 컴퓨터 동작이 있으면 실행
+    if (pendingAction != null) {
+      Timer(const Duration(milliseconds: 300), () {
+        if (mounted && !gameOver) {
+          pendingAction();
+        }
+      });
+      return;
+    }
 
     // 플레이어 후 순서 컴퓨터 땡큐 확인
     final afterResult = _checkComputerThankYouAfterPlayer(_lastDiscardTurn);
@@ -1899,8 +1922,8 @@ class _HulaScreenState extends State<HulaScreen> with TickerProviderStateMixin {
     _saveGame();
 
     if (currentTurn != 0) {
-      // 컴퓨터 턴: 10초 타이머 시작
-      _startNextTurnTimer();
+      // 컴퓨터 턴: 1초 타이머 시작 (플레이어 버리기 후)
+      _startNextTurnTimer(seconds: 1);
     } else {
       // 플레이어 턴: 타이머 없이 대기 (동작할 때까지 유지)
       _messageTimer?.cancel();
@@ -1960,13 +1983,10 @@ class _HulaScreenState extends State<HulaScreen> with TickerProviderStateMixin {
     hand.add(drawnCard);
     _sortHand(hand);
     setState(() {});
+    _saveGame();
 
-    // 딜레이 후 등록/붙이기 단계 실행
-    _computerActionTimer = Timer(Duration(milliseconds: takeDiscard ? _computerActionDelay : 500), () {
-      if (mounted && !gameOver) {
-        _computerTurnRegister(computerIndex);
-      }
-    });
+    // 드로우 후 대기 상태로 전환 (1초 타이머)
+    _startWaitWithAction(() => _computerTurnRegister(computerIndex), seconds: 1);
   }
 
   // 컴퓨터 턴 - 멜드 등록 단계
@@ -2022,16 +2042,12 @@ class _HulaScreenState extends State<HulaScreen> with TickerProviderStateMixin {
     _computerRegisterMeldsSequentially(computerIndex, meldsToRegister, 0);
   }
 
-  // 멜드를 순차적으로 등록 (딜레이 포함)
+  // 멜드를 순차적으로 등록 (대기 상태 포함)
   void _computerRegisterMeldsSequentially(int computerIndex, List<Map<String, dynamic>> meldsToRegister, int index) {
     if (gameOver) return;
     if (index >= meldsToRegister.length) {
-      // 모든 등록 완료, 붙여놓기 단계로
-      _computerActionTimer = Timer(Duration(milliseconds: _computerActionDelay), () {
-        if (mounted && !gameOver) {
-          _computerTurnAttach(computerIndex);
-        }
-      });
+      // 모든 등록 완료, 붙여놓기 단계로 (대기 후)
+      _startWaitWithAction(() => _computerTurnAttach(computerIndex));
       return;
     }
 
@@ -2074,12 +2090,8 @@ class _HulaScreenState extends State<HulaScreen> with TickerProviderStateMixin {
       return;
     }
 
-    // 다음 멜드 등록 (딜레이 후)
-    _computerActionTimer = Timer(Duration(milliseconds: _computerActionDelay), () {
-      if (mounted && !gameOver) {
-        _computerRegisterMeldsSequentially(computerIndex, meldsToRegister, index + 1);
-      }
-    });
+    // 등록 후 대기 상태로 전환 (다음 등록 또는 붙여놓기 단계)
+    _startWaitWithAction(() => _computerRegisterMeldsSequentially(computerIndex, meldsToRegister, index + 1));
   }
 
   // 컴퓨터 턴 - 붙여놓기 단계
@@ -2119,12 +2131,8 @@ class _HulaScreenState extends State<HulaScreen> with TickerProviderStateMixin {
           return;
         }
 
-        // 딜레이 후 다음 붙이기 확인
-        _computerActionTimer = Timer(Duration(milliseconds: _computerActionDelay), () {
-          if (mounted && !gameOver) {
-            _computerTurnAttach(computerIndex);
-          }
-        });
+        // 붙이기 후 대기 상태로 전환
+        _startWaitWithAction(() => _computerTurnAttach(computerIndex));
         return;
       }
 
@@ -2142,11 +2150,8 @@ class _HulaScreenState extends State<HulaScreen> with TickerProviderStateMixin {
           return;
         }
 
-        _computerActionTimer = Timer(Duration(milliseconds: _computerActionDelay), () {
-          if (mounted && !gameOver) {
-            _computerTurnAttach(computerIndex);
-          }
-        });
+        // 붙이기 후 대기 상태로 전환
+        _startWaitWithAction(() => _computerTurnAttach(computerIndex));
         return;
       }
 
@@ -2166,11 +2171,8 @@ class _HulaScreenState extends State<HulaScreen> with TickerProviderStateMixin {
             return;
           }
 
-          _computerActionTimer = Timer(Duration(milliseconds: _computerActionDelay), () {
-            if (mounted && !gameOver) {
-              _computerTurnAttach(computerIndex);
-            }
-          });
+          // 붙이기 후 대기 상태로 전환
+          _startWaitWithAction(() => _computerTurnAttach(computerIndex));
           return;
         }
       }
@@ -2329,12 +2331,8 @@ class _HulaScreenState extends State<HulaScreen> with TickerProviderStateMixin {
     setState(() {});
     _saveGame();
 
-    // 딜레이 후 등록 단계 실행
-    _computerActionTimer = Timer(Duration(milliseconds: _computerActionDelay), () {
-      if (mounted && !gameOver) {
-        _executeComputerThankYouRegister(computerIndex);
-      }
-    });
+    // 땡큐 후 대기 상태로 전환
+    _startWaitWithAction(() => _executeComputerThankYouRegister(computerIndex));
   }
 
   // 컴퓨터 땡큐 후 - 멜드 등록 단계
@@ -2390,16 +2388,12 @@ class _HulaScreenState extends State<HulaScreen> with TickerProviderStateMixin {
     _executeComputerThankYouRegisterSequentially(computerIndex, meldsToRegister, 0);
   }
 
-  // 땡큐 후 멜드를 순차적으로 등록 (딜레이 포함)
+  // 땡큐 후 멜드를 순차적으로 등록 (대기 상태 포함)
   void _executeComputerThankYouRegisterSequentially(int computerIndex, List<Map<String, dynamic>> meldsToRegister, int index) {
     if (gameOver) return;
     if (index >= meldsToRegister.length) {
-      // 모든 등록 완료, 붙여놓기 단계로
-      _computerActionTimer = Timer(Duration(milliseconds: _computerActionDelay), () {
-        if (mounted && !gameOver) {
-          _executeComputerThankYouAttach(computerIndex);
-        }
-      });
+      // 모든 등록 완료, 붙여놓기 단계로 (대기 후)
+      _startWaitWithAction(() => _executeComputerThankYouAttach(computerIndex));
       return;
     }
 
@@ -2442,12 +2436,8 @@ class _HulaScreenState extends State<HulaScreen> with TickerProviderStateMixin {
       return;
     }
 
-    // 다음 멜드 등록 (딜레이 후)
-    _computerActionTimer = Timer(Duration(milliseconds: _computerActionDelay), () {
-      if (mounted && !gameOver) {
-        _executeComputerThankYouRegisterSequentially(computerIndex, meldsToRegister, index + 1);
-      }
-    });
+    // 등록 후 대기 상태로 전환
+    _startWaitWithAction(() => _executeComputerThankYouRegisterSequentially(computerIndex, meldsToRegister, index + 1));
   }
 
   // 컴퓨터 땡큐 후 - 붙여놓기 단계
@@ -2487,12 +2477,8 @@ class _HulaScreenState extends State<HulaScreen> with TickerProviderStateMixin {
           return;
         }
 
-        // 딜레이 후 다음 붙이기 확인
-        _computerActionTimer = Timer(Duration(milliseconds: _computerActionDelay), () {
-          if (mounted && !gameOver) {
-            _executeComputerThankYouAttach(computerIndex);
-          }
-        });
+        // 붙이기 후 대기 상태로 전환
+        _startWaitWithAction(() => _executeComputerThankYouAttach(computerIndex));
         return;
       }
 
@@ -2510,11 +2496,8 @@ class _HulaScreenState extends State<HulaScreen> with TickerProviderStateMixin {
           return;
         }
 
-        _computerActionTimer = Timer(Duration(milliseconds: _computerActionDelay), () {
-          if (mounted && !gameOver) {
-            _executeComputerThankYouAttach(computerIndex);
-          }
-        });
+        // 붙이기 후 대기 상태로 전환
+        _startWaitWithAction(() => _executeComputerThankYouAttach(computerIndex));
         return;
       }
 
@@ -2534,11 +2517,8 @@ class _HulaScreenState extends State<HulaScreen> with TickerProviderStateMixin {
             return;
           }
 
-          _computerActionTimer = Timer(Duration(milliseconds: _computerActionDelay), () {
-            if (mounted && !gameOver) {
-              _executeComputerThankYouAttach(computerIndex);
-            }
-          });
+          // 붙이기 후 대기 상태로 전환
+          _startWaitWithAction(() => _executeComputerThankYouAttach(computerIndex));
           return;
         }
       }
