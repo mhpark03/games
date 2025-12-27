@@ -356,7 +356,6 @@ class _HulaScreenState extends State<HulaScreen> with TickerProviderStateMixin {
     _cancelNextTurnTimer();
     setState(() {
       waitingForNextTurn = false;
-      gameMessage = null; // 메시지 지우기
     });
     _messageTimer?.cancel();
 
@@ -550,19 +549,7 @@ class _HulaScreenState extends State<HulaScreen> with TickerProviderStateMixin {
       gameMessage = message;
     });
     _messageTimer?.cancel();
-
-    // 컴퓨터 턴, waitingForNextTurn 중, keepDuringWait가 true이면 메시지 유지
-    if (currentTurn != 0 || waitingForNextTurn || keepDuringWait) {
-      return; // 타이머를 설정하지 않음
-    }
-
-    _messageTimer = Timer(Duration(seconds: seconds), () {
-      if (mounted) {
-        setState(() {
-          gameMessage = null;
-        });
-      }
-    });
+    // 메시지는 다음 동작까지 항상 유지 (타이머로 지우지 않음)
   }
 
   // 덱에서 카드 드로우
@@ -594,7 +581,6 @@ class _HulaScreenState extends State<HulaScreen> with TickerProviderStateMixin {
       hasDrawn = true;
       selectedCardIndices = [];
       waitingForNextTurn = false;
-      gameMessage = null;
     });
     _showMessage('덱에서 ${card.suitSymbol}${card.rankString} 드로우');
     _saveGame();
@@ -707,7 +693,6 @@ class _HulaScreenState extends State<HulaScreen> with TickerProviderStateMixin {
       setState(() {
         currentTurn = 0;
         waitingForNextTurn = false;
-        gameMessage = null;
       });
     }
 
@@ -2315,6 +2300,9 @@ class _HulaScreenState extends State<HulaScreen> with TickerProviderStateMixin {
     if (discardPile.isEmpty) return;
     _computerActionTimer?.cancel();
 
+    // 땡큐한 컴퓨터의 턴으로 설정
+    currentTurn = computerIndex + 1;
+
     final card = discardPile.removeLast();
     final hand = computerHands[computerIndex];
 
@@ -3253,14 +3241,14 @@ class _HulaScreenState extends State<HulaScreen> with TickerProviderStateMixin {
               ),
             ],
           ),
-          // 다음 순서 버튼
-          if (waitingForNextTurn)
+          // 현재 순서 표시 (항상 표시)
+          if (!gameOver)
             Padding(
               padding: const EdgeInsets.only(top: 12),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  // 상태 표시 버튼
+                  // 현재 순서 표시
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                     decoration: BoxDecoration(
@@ -3269,8 +3257,8 @@ class _HulaScreenState extends State<HulaScreen> with TickerProviderStateMixin {
                     ),
                     child: Text(
                       currentTurn == 0
-                          ? '내 차례! ($_autoPlayCountdown)'
-                          : '다음: 컴퓨터$currentTurn ($_autoPlayCountdown)',
+                          ? (waitingForNextTurn ? '내 차례! ($_autoPlayCountdown)' : '내 차례')
+                          : (waitingForNextTurn ? '다음: 컴퓨터$currentTurn ($_autoPlayCountdown)' : '컴퓨터$currentTurn 차례'),
                       style: const TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.bold,
@@ -3278,26 +3266,28 @@ class _HulaScreenState extends State<HulaScreen> with TickerProviderStateMixin {
                       ),
                     ),
                   ),
-                  const SizedBox(width: 12),
-                  // 시작하기 버튼
-                  ElevatedButton(
-                    onPressed: _onNextTurn,
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.blue,
-                      foregroundColor: Colors.white,
-                      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(8),
+                  // 시작하기 버튼 (대기 중일 때만 표시)
+                  if (waitingForNextTurn) ...[
+                    const SizedBox(width: 12),
+                    ElevatedButton(
+                      onPressed: _onNextTurn,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.blue,
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                      ),
+                      child: const Text(
+                        '시작 ▶',
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
                     ),
-                    child: const Text(
-                      '시작 ▶',
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ),
+                  ],
                 ],
               ),
             ),
