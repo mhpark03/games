@@ -1891,13 +1891,17 @@ class _HulaScreenState extends State<HulaScreen> with TickerProviderStateMixin {
       currentTurn = (currentTurn + 1) % playerCount;
       hasDrawn = false;
       selectedCardIndices = [];
-      waitingForNextTurn = true;
+      waitingForNextTurn = currentTurn == 0; // 플레이어 턴일 때만 대기 상태
     });
     _saveGame();
 
-    // 플레이어 턴이면 타이머 없이 대기, 컴퓨터 턴이면 1초 타이머
     if (currentTurn != 0) {
-      _startNextTurnTimer(seconds: 1);
+      // 컴퓨터 턴: 타이머 없이 바로 진행 (드로우 후 타이머가 동작함)
+      Timer(const Duration(milliseconds: 300), () {
+        if (mounted && !gameOver) {
+          _onNextTurn();
+        }
+      });
     } else {
       // 플레이어 턴: 메시지 타이머만 취소 (메시지 유지)
       _messageTimer?.cancel();
@@ -1917,13 +1921,17 @@ class _HulaScreenState extends State<HulaScreen> with TickerProviderStateMixin {
       currentTurn = (currentTurn + 1) % playerCount;
       hasDrawn = false;
       selectedCardIndices = [];
-      waitingForNextTurn = true;
+      waitingForNextTurn = currentTurn == 0; // 플레이어 턴일 때만 대기 상태
     });
     _saveGame();
 
     if (currentTurn != 0) {
-      // 컴퓨터 턴: 1초 타이머 시작 (플레이어 버리기 후)
-      _startNextTurnTimer(seconds: 1);
+      // 컴퓨터 턴: 타이머 없이 바로 진행 (드로우 후 타이머가 동작함)
+      Timer(const Duration(milliseconds: 300), () {
+        if (mounted && !gameOver) {
+          _computerTurn();
+        }
+      });
     } else {
       // 플레이어 턴: 타이머 없이 대기 (동작할 때까지 유지)
       _messageTimer?.cancel();
