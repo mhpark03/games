@@ -3770,9 +3770,9 @@ class _HulaScreenState extends State<HulaScreen> with TickerProviderStateMixin {
               SizedBox(height: 4),
               Text(
                 '• 7은 단독으로 등록 가능!\n'
+                '• Run/Group에 포함해서도 등록 가능\n'
                 '• 단독 등록 후 Run으로만 확장 가능\n'
-                '  (같은 무늬 6 또는 8 붙이기)\n'
-                '• 땡큐로 항상 가져갈 수 있음',
+                '  (같은 무늬 6 또는 8 붙이기)',
                 style: TextStyle(color: Colors.white70, fontSize: 13),
               ),
               SizedBox(height: 12),
