@@ -259,6 +259,9 @@ class _HulaScreenState extends State<HulaScreen> with TickerProviderStateMixin {
     _cancelNextTurnTimer();
     _autoPlayCountdown = 5;
 
+    // 메시지 타이머 취소 (타이머 동안 메시지 유지)
+    _messageTimer?.cancel();
+
     _nextTurnTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
       if (!mounted || gameOver) {
         timer.cancel();
@@ -287,7 +290,9 @@ class _HulaScreenState extends State<HulaScreen> with TickerProviderStateMixin {
     _cancelNextTurnTimer();
     setState(() {
       waitingForNextTurn = false;
+      gameMessage = null; // 메시지 지우기
     });
+    _messageTimer?.cancel();
 
     if (gameOver) return;
 
@@ -465,11 +470,17 @@ class _HulaScreenState extends State<HulaScreen> with TickerProviderStateMixin {
     }
   }
 
-  void _showMessage(String message, {int seconds = 2}) {
+  void _showMessage(String message, {int seconds = 2, bool keepDuringWait = false}) {
     setState(() {
       gameMessage = message;
     });
     _messageTimer?.cancel();
+
+    // waitingForNextTurn 중이거나 keepDuringWait가 true이면 메시지 유지
+    if (waitingForNextTurn || keepDuringWait) {
+      return; // 타이머를 설정하지 않음
+    }
+
     _messageTimer = Timer(Duration(seconds: seconds), () {
       if (mounted) {
         setState(() {
@@ -2778,7 +2789,7 @@ class _HulaScreenState extends State<HulaScreen> with TickerProviderStateMixin {
               child: ElevatedButton(
                 onPressed: _onNextTurn,
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.orange,
+                  backgroundColor: currentTurn == 0 ? Colors.green : Colors.orange,
                   foregroundColor: Colors.white,
                   padding:
                       const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
@@ -2787,7 +2798,9 @@ class _HulaScreenState extends State<HulaScreen> with TickerProviderStateMixin {
                   ),
                 ),
                 child: Text(
-                  '다음 순서 ($_autoPlayCountdown)',
+                  currentTurn == 0
+                      ? '내 차례! ($_autoPlayCountdown)'
+                      : '다음: 컴퓨터$currentTurn ($_autoPlayCountdown)',
                   style: const TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.bold,
