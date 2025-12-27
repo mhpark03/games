@@ -1922,8 +1922,8 @@ class _HulaScreenState extends State<HulaScreen> with TickerProviderStateMixin {
     _saveGame();
 
     if (currentTurn != 0) {
-      // 컴퓨터 턴: 10초 타이머 시작
-      _startNextTurnTimer();
+      // 컴퓨터 턴: 1초 타이머 시작 (플레이어 버리기 후)
+      _startNextTurnTimer(seconds: 1);
     } else {
       // 플레이어 턴: 타이머 없이 대기 (동작할 때까지 유지)
       _messageTimer?.cancel();
