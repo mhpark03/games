@@ -2060,7 +2060,11 @@ class _HulaScreenState extends State<HulaScreen> with TickerProviderStateMixin {
     final hand = computerHands[computerIndex];
     final melds = computerMelds[computerIndex];
 
-    if (melds.isEmpty) {
+    // 모든 멜드가 비어있으면 붙여놓기 스킵
+    final hasAnyMelds = melds.isNotEmpty ||
+        playerMelds.isNotEmpty ||
+        computerMelds.any((m) => m.isNotEmpty);
+    if (!hasAnyMelds) {
       _computerTurnDiscard(computerIndex);
       return;
     }
