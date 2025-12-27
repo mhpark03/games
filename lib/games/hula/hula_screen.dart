@@ -1885,7 +1885,7 @@ class _HulaScreenState extends State<HulaScreen> with TickerProviderStateMixin {
     });
   }
 
-  // 땡큐 대기 시작 (플레이어에게 10초 기회 부여)
+  // 땡큐 대기 시작 (플레이어에게 기회 부여)
   void _startThankYouWait() {
     setState(() {
       currentTurn = (currentTurn + 1) % playerCount;
@@ -1895,9 +1895,9 @@ class _HulaScreenState extends State<HulaScreen> with TickerProviderStateMixin {
     });
     _saveGame();
 
-    // 플레이어 턴이면 타이머 없이 대기, 컴퓨터 턴이면 10초 타이머
+    // 플레이어 턴이면 타이머 없이 대기, 컴퓨터 턴이면 1초 타이머
     if (currentTurn != 0) {
-      _startNextTurnTimer();
+      _startNextTurnTimer(seconds: 1);
     } else {
       // 플레이어 턴: 메시지 타이머만 취소 (메시지 유지)
       _messageTimer?.cancel();
