@@ -3739,7 +3739,8 @@ class _HulaScreenState extends State<HulaScreen> with TickerProviderStateMixin {
               Text(
                 '1. 덱에서 1장 가져오기\n'
                 '2. 멜드 등록 (Run, Group, 7) 또는 붙여놓기\n'
-                '3. 카드 1장 버리기',
+                '3. 카드 1장 버리기\n'
+                '• 반시계 방향으로 진행',
                 style: TextStyle(color: Colors.white70, fontSize: 13),
               ),
               SizedBox(height: 12),
