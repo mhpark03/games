@@ -57,10 +57,7 @@ class SudokuCell extends StatelessWidget {
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        decoration: BoxDecoration(
-          color: backgroundColor,
-          border: Border.all(color: Colors.grey.shade300, width: 0.5),
-        ),
+        color: backgroundColor,
         child: value != 0
             ? Center(
                 child: Text(
