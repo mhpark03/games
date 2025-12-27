@@ -323,9 +323,9 @@ class _HulaScreenState extends State<HulaScreen> with TickerProviderStateMixin {
   }
 
   // 다음 턴 자동 진행 타이머 시작
-  void _startNextTurnTimer() {
+  void _startNextTurnTimer({int seconds = 10}) {
     _cancelNextTurnTimer();
-    _autoPlayCountdown = 10;
+    _autoPlayCountdown = seconds;
 
     // 메시지 타이머 취소 (타이머 동안 메시지 유지)
     _messageTimer?.cancel();
@@ -354,12 +354,12 @@ class _HulaScreenState extends State<HulaScreen> with TickerProviderStateMixin {
   }
 
   // 컴퓨터 동작 후 대기 상태로 전환 (다음 동작을 콜백으로 저장)
-  void _startWaitWithAction(VoidCallback nextAction) {
+  void _startWaitWithAction(VoidCallback nextAction, {int seconds = 10}) {
     setState(() {
       waitingForNextTurn = true;
       _pendingComputerAction = nextAction;
     });
-    _startNextTurnTimer();
+    _startNextTurnTimer(seconds: seconds);
   }
 
   // 다음 턴 버튼 클릭
@@ -1985,8 +1985,8 @@ class _HulaScreenState extends State<HulaScreen> with TickerProviderStateMixin {
     setState(() {});
     _saveGame();
 
-    // 드로우 후 대기 상태로 전환 (10초 타이머/시작 버튼 표시)
-    _startWaitWithAction(() => _computerTurnRegister(computerIndex));
+    // 드로우 후 대기 상태로 전환 (1초 타이머)
+    _startWaitWithAction(() => _computerTurnRegister(computerIndex), seconds: 1);
   }
 
   // 컴퓨터 턴 - 멜드 등록 단계
