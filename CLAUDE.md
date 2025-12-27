@@ -43,15 +43,20 @@ flutter analyze
 - 컴퓨터 AI는 각 게임 화면 내에 구현
 
 ### 주요 게임
-| 게임 | 파일 | 특징 |
+| 게임 | 폴더 | 특징 |
 |------|------|------|
-| 오목 | `gomoku_screen.dart` | vs 컴퓨터(흑/백), 2인 플레이, 난이도 선택 |
-| 오델로 | `othello_screen.dart` | vs 컴퓨터(흑/백), 2인 플레이, 난이도 선택 |
-| 체스 | `chess_screen.dart` | vs 컴퓨터(흑/백), 2인 플레이 |
-| 장기 | `janggi_screen.dart` | vs 컴퓨터(초/한), 2인 플레이 |
-| 원카드 | `onecard_screen.dart` | 2~4인, 컴퓨터 AI |
-| 윷놀이 | `yutnori_screen.dart` | 2~4인, 컴퓨터 AI |
-| 훌라 | `hula_screen.dart` | 2~4인, 컴퓨터 AI (땡큐, 멜드 등록) |
+| 오목 | `gomoku/` | vs 컴퓨터(흑/백), 2인 플레이, 난이도 선택 |
+| 오델로 | `othello/` | vs 컴퓨터(흑/백), 2인 플레이, 난이도 선택 |
+| 체스 | `chess/` | vs 컴퓨터(흑/백), 2인 플레이 |
+| 장기 | `janggi/` | vs 컴퓨터(초/한), 2인 플레이 |
+| 원카드 | `onecard/` | 2~4인, 컴퓨터 AI |
+| 윷놀이 | `yutnori/` | 2~4인, 컴퓨터 AI |
+| 훌라 | `hula/` | 2~4인, 컴퓨터 AI (땡큐, 멜드 등록) |
+| 테트리스 | `tetris/` | 싱글 플레이 |
+| 지뢰찾기 | `minesweeper/` | 난이도 선택 |
+| 솔리테어 | `solitaire/` | 클론다이크 |
+| 숫자야구 | `baseball/` | vs 컴퓨터 |
+| 스도쿠 | `sudoku/` | 일반/사무라이/킬러/넘버썸즈 (별도 저장 시스템) |
 
 ## 윷놀이 말판 구조
 
@@ -163,3 +168,18 @@ flutter analyze
 - Run: 같은 무늬 연속 3장 이상
 - Group: 같은 숫자 3~4장
 - 7 카드: 단독 등록 가능, 다른 플레이어 멜드에 붙여놓기 가능
+
+## 스도쿠 게임
+
+### 게임 종류
+| 게임 | 화면 | 설명 |
+|------|------|------|
+| 일반 스도쿠 | `game_screen.dart` | 9x9 클래식, 쉬움/보통/어려움/달인 |
+| 사무라이 스도쿠 | `samurai_game_screen.dart` | 5개 보드 겹침 |
+| 킬러 스도쿠 | `killer_game_screen.dart` | 케이지 합계 맞추기 |
+| 넘버 썸즈 | `number_sums_game_screen.dart` | 5x5/6x6/7x7 합계 힌트 |
+
+### 저장 시스템
+스도쿠는 `sudoku/services/game_storage.dart`에서 별도 저장 관리
+- 게임 종류별 독립 저장 (일반, 사무라이, 킬러, 넘버썸즈)
+- main.dart에서 `sudoku.` prefix로 import
