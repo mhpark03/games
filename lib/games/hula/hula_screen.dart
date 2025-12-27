@@ -853,15 +853,11 @@ class _HulaScreenState extends State<HulaScreen> with TickerProviderStateMixin {
     for (int i = 0; i < playerMelds.length; i++) {
       final meld = playerMelds[i];
 
-      // 단독 7 카드 특별 처리: Run 또는 Group으로 확장 가능
+      // 단독 7 카드 특별 처리: Run으로만 확장 가능 (Group 불가)
       if (meld.cards.length == 1 && meld.cards.first.rank == 7) {
         final seven = meld.cards.first;
         // 같은 무늬의 6 또는 8이면 Run으로 확장
         if (card.suit == seven.suit && (card.rank == 6 || card.rank == 8)) {
-          return i;
-        }
-        // 다른 무늬의 7이면 Group으로 확장
-        if (card.rank == 7 && card.suit != seven.suit) {
           return i;
         }
         continue;
@@ -1056,13 +1052,10 @@ class _HulaScreenState extends State<HulaScreen> with TickerProviderStateMixin {
     if (index < 0 || index >= melds.length) return false;
     final meld = melds[index];
 
-    // 단독 7 카드 특별 처리
+    // 단독 7 카드 특별 처리: Run으로만 확장 가능 (Group 불가)
     if (meld.cards.length == 1 && meld.cards.first.rank == 7) {
       final seven = meld.cards.first;
       if (card.suit == seven.suit && (card.rank == 6 || card.rank == 8)) {
-        return true;
-      }
-      if (card.rank == 7 && card.suit != seven.suit) {
         return true;
       }
       return false;
@@ -1092,13 +1085,10 @@ class _HulaScreenState extends State<HulaScreen> with TickerProviderStateMixin {
     for (int i = 0; i < melds.length; i++) {
       final meld = melds[i];
 
-      // 단독 7 카드 특별 처리
+      // 단독 7 카드 특별 처리: Run으로만 확장 가능 (Group 불가)
       if (meld.cards.length == 1 && meld.cards.first.rank == 7) {
         final seven = meld.cards.first;
         if (card.suit == seven.suit && (card.rank == 6 || card.rank == 8)) {
-          return i;
-        }
-        if (card.rank == 7 && card.suit != seven.suit) {
           return i;
         }
         continue;
@@ -3765,7 +3755,7 @@ class _HulaScreenState extends State<HulaScreen> with TickerProviderStateMixin {
                 '• Run: 같은 무늬 연속 3장+\n'
                 '  (예: ♠3-♠4-♠5)\n'
                 '• Group: 같은 숫자 3~4장\n'
-                '  (예: ♠7-♥7-♦7)',
+                '  (예: ♠5-♥5-♦5)',
                 style: TextStyle(color: Colors.white70, fontSize: 13),
               ),
               SizedBox(height: 12),
@@ -3779,7 +3769,8 @@ class _HulaScreenState extends State<HulaScreen> with TickerProviderStateMixin {
               SizedBox(height: 4),
               Text(
                 '• 7은 단독으로 등록 가능!\n'
-                '• 나중에 Run 또는 Group으로 확장 가능\n'
+                '• 단독 등록 후 Run으로만 확장 가능\n'
+                '  (같은 무늬 6 또는 8 붙이기)\n'
                 '• 땡큐로 항상 가져갈 수 있음',
                 style: TextStyle(color: Colors.white70, fontSize: 13),
               ),
