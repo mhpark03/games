@@ -539,6 +539,9 @@ class _HulaScreenState extends State<HulaScreen> with TickerProviderStateMixin {
     if (currentTurn == 0 && hasDrawn) return;
     if (currentTurn != 0 && !waitingForNextTurn) return;
 
+    // 땡큐 가능 여부 확인 (등록 가능한 경우에만)
+    if (!_canThankYou()) return;
+
     // 땡큐 상황: 대기 중에 가져가기
     if (waitingForNextTurn) {
       _cancelNextTurnTimer();
@@ -550,14 +553,59 @@ class _HulaScreenState extends State<HulaScreen> with TickerProviderStateMixin {
     }
 
     final card = discardPile.removeLast();
-    playerHand.add(card);
-    _sortHand(playerHand);
+
+    // 자동 등록 수행
+    String meldMessage = '';
+
+    // 1. 7이면 단독 등록
+    if (_isSeven(card)) {
+      playerMelds.add(Meld(cards: [card], isRun: false));
+      meldMessage = '땡큐! ${card.suitSymbol}7 등록!';
+    }
+    // 2. 기존 플레이어 멜드에 붙이기
+    else if (_canAttachToMeld(card) >= 0) {
+      final meldIndex = _canAttachToMeld(card);
+      _attachToMeld(meldIndex, card);
+      meldMessage = '땡큐! ${card.suitSymbol}${card.rankString} 붙이기!';
+    }
+    // 3. 컴퓨터 멜드에 붙이기
+    else {
+      bool attached = false;
+      for (int c = 0; c < computerMelds.length; c++) {
+        final compMeldIndex = _canAttachToMeldList(card, computerMelds[c]);
+        if (compMeldIndex >= 0) {
+          _attachToMeldList(compMeldIndex, card, computerMelds[c]);
+          meldMessage = '땡큐! ${card.suitSymbol}${card.rankString} 컴퓨터${c + 1} 멜드에 붙이기!';
+          attached = true;
+          break;
+        }
+      }
+      // 4. 손패와 합쳐서 새 멜드 생성
+      if (!attached) {
+        final meldCards = _findThankYouMeldCards(card);
+        if (meldCards != null) {
+          final newMeldCards = [...meldCards, card];
+          // 손패에서 제거
+          for (final c in meldCards) {
+            playerHand.remove(c);
+          }
+          // Run인지 Group인지 판별
+          final isRun = _isValidRun(newMeldCards);
+          if (isRun) {
+            newMeldCards.sort((a, b) => a.rank.compareTo(b.rank));
+          }
+          playerMelds.add(Meld(cards: newMeldCards, isRun: isRun));
+          meldMessage = '땡큐! ${card.suitSymbol}${card.rankString} 포함 멜드 등록!';
+        }
+      }
+    }
 
     setState(() {
       hasDrawn = true;
       selectedCardIndices = [];
     });
-    _showMessage('땡큐! ${card.suitSymbol}${card.rankString} 획득');
+    _showMessage(meldMessage);
+    _checkWin();
     _saveGame();
   }
 
@@ -705,6 +753,67 @@ class _HulaScreenState extends State<HulaScreen> with TickerProviderStateMixin {
 
   // 7 카드인지 확인
   bool _isSeven(PlayingCard card) => card.rank == 7;
+
+  // 땡큐 가능 여부 확인 (버린 카드를 가져와서 바로 등록 가능한지)
+  bool _canThankYou() {
+    if (discardPile.isEmpty) return false;
+    final card = discardPile.last;
+
+    // 1. 7이면 단독 등록 가능
+    if (_isSeven(card)) return true;
+
+    // 2. 기존 멜드에 붙이기 가능
+    if (_canAttachToMeld(card) >= 0) return true;
+    for (final compMelds in computerMelds) {
+      if (_canAttachToMeldList(card, compMelds) >= 0) return true;
+    }
+
+    // 3. 손패와 합쳐서 새로운 멜드 가능한지 확인
+    final thankYouCards = _findThankYouMeldCards(card);
+    if (thankYouCards != null) return true;
+
+    return false;
+  }
+
+  // 땡큐 카드와 손패로 만들 수 있는 멜드 카드 찾기
+  List<PlayingCard>? _findThankYouMeldCards(PlayingCard discardCard) {
+    // Group 체크: 같은 숫자 2장 이상 있는지
+    final sameRank = playerHand.where((c) => c.rank == discardCard.rank).toList();
+    if (sameRank.length >= 2) {
+      // 3장 이상의 Group 가능
+      return sameRank.take(2).toList();
+    }
+
+    // Run 체크: 같은 무늬의 연속 숫자 2장 이상 있는지
+    final sameSuit = playerHand.where((c) => c.suit == discardCard.suit).toList();
+    if (sameSuit.length >= 2) {
+      // 가능한 Run 조합 찾기
+      sameSuit.sort((a, b) => a.rank.compareTo(b.rank));
+
+      // discardCard.rank를 포함하는 3장 연속 찾기
+      for (int i = 0; i < sameSuit.length - 1; i++) {
+        final c1 = sameSuit[i];
+        final c2 = sameSuit[i + 1];
+
+        // c1, c2, discardCard가 연속인지 확인
+        final ranks = [c1.rank, c2.rank, discardCard.rank]..sort();
+        if (ranks[1] == ranks[0] + 1 && ranks[2] == ranks[1] + 1) {
+          return [c1, c2];
+        }
+
+        // A-2-3 또는 Q-K-A 특수 케이스
+        if (ranks.contains(1)) {
+          // A를 14로 변환해서 체크
+          final highRanks = ranks.map((r) => r == 1 ? 14 : r).toList()..sort();
+          if (highRanks[1] == highRanks[0] + 1 && highRanks[2] == highRanks[1] + 1) {
+            return [c1, c2];
+          }
+        }
+      }
+    }
+
+    return null;
+  }
 
   // 범용: 특정 멜드 목록에 카드를 붙일 수 있는지 확인
   int _canAttachToMeldList(PlayingCard card, List<Meld> melds) {
@@ -2831,17 +2940,18 @@ class _HulaScreenState extends State<HulaScreen> with TickerProviderStateMixin {
               // 버린 더미
               Builder(
                 builder: (context) {
-                  // 땡큐 가능: 대기 중일 때 또는 플레이어 턴에서 아직 드로우 안했을 때
-                  final canDraw = discardPile.isNotEmpty &&
-                      ((currentTurn == 0 && !hasDrawn) || waitingForNextTurn);
+                  // 땡큐 가능: 대기 중이거나 플레이어 턴에서 드로우 안했을 때, 그리고 등록 가능할 때만
+                  final canTakeDiscard = discardPile.isNotEmpty &&
+                      ((currentTurn == 0 && !hasDrawn) || waitingForNextTurn) &&
+                      _canThankYou();
                   // 땡큐 상태면 주황색, 일반 드로우면 녹색
                   final borderColor =
-                      waitingForNextTurn && discardPile.isNotEmpty
+                      waitingForNextTurn && canTakeDiscard
                           ? Colors.orange
-                          : (canDraw ? Colors.green : Colors.grey);
+                          : (canTakeDiscard ? Colors.green : Colors.grey);
 
                   return GestureDetector(
-                    onTap: canDraw ? _drawFromDiscard : null,
+                    onTap: canTakeDiscard ? _drawFromDiscard : null,
                     child: Container(
                       width: cardWidth,
                       height: cardHeight,
@@ -2850,7 +2960,7 @@ class _HulaScreenState extends State<HulaScreen> with TickerProviderStateMixin {
                         borderRadius: BorderRadius.circular(8),
                         border: Border.all(
                           color: borderColor,
-                          width: canDraw ? 3 : 1,
+                          width: canTakeDiscard ? 3 : 1,
                         ),
                         boxShadow: [
                           BoxShadow(
