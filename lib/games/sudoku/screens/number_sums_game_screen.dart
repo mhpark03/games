@@ -382,6 +382,11 @@ class _NumberSumsGameScreenState extends State<NumberSumsGameScreen>
         elevation: 0,
         actions: [
           IconButton(
+            onPressed: _showRulesDialog,
+            icon: const Icon(Icons.help_outline),
+            tooltip: '게임 규칙',
+          ),
+          IconButton(
             onPressed: _showDifficultyDialog,
             icon: const Icon(Icons.refresh),
             tooltip: '새 게임',
@@ -1037,6 +1042,93 @@ class _NumberSumsGameScreenState extends State<NumberSumsGameScreen>
             ],
           ),
         ),
+      ),
+    );
+  }
+
+  void _showRulesDialog() {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: Colors.grey.shade900,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+        ),
+        title: Text(
+          '넘버 썸즈 규칙',
+          style: TextStyle(color: Colors.deepOrange.shade400),
+        ),
+        content: SingleChildScrollView(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: const [
+              Text(
+                '🎯 게임 목표',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              SizedBox(height: 4),
+              Text(
+                '행과 열의 합계 힌트를 이용하여 빈 칸을 채우세요!',
+                style: TextStyle(color: Colors.white70, fontSize: 13),
+              ),
+              SizedBox(height: 12),
+              Text(
+                '📏 기본 규칙',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              SizedBox(height: 4),
+              Text(
+                '• 각 행에 1~N이 한 번씩 (N=보드 크기)\n'
+                '• 각 열에 1~N이 한 번씩\n'
+                '• 중복 숫자 사용 불가',
+                style: TextStyle(color: Colors.white70, fontSize: 13),
+              ),
+              SizedBox(height: 12),
+              Text(
+                '🔢 합계 힌트',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              SizedBox(height: 4),
+              Text(
+                '• 행/열 끝에 표시된 숫자가 합계 힌트\n'
+                '• 해당 행/열의 특정 칸들의 합계를 나타냄\n'
+                '• 힌트가 없는 칸은 합계에 포함 안 됨',
+                style: TextStyle(color: Colors.white70, fontSize: 13),
+              ),
+              SizedBox(height: 12),
+              Text(
+                '💡 팁',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              SizedBox(height: 4),
+              Text(
+                '• 작은 합계부터 풀어보세요\n'
+                '• 행과 열 힌트를 함께 활용하세요\n'
+                '• 소거법으로 가능한 숫자를 줄이세요',
+                style: TextStyle(color: Colors.white70, fontSize: 13),
+              ),
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('확인'),
+          ),
+        ],
       ),
     );
   }

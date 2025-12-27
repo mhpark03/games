@@ -557,6 +557,11 @@ class _GameScreenState extends State<GameScreen> with WidgetsBindingObserver {
         backgroundColor: Colors.blue,
         foregroundColor: Colors.white,
         actions: [
+          IconButton(
+            onPressed: _showRulesDialog,
+            icon: const Icon(Icons.help_outline, color: Colors.white),
+            tooltip: '게임 규칙',
+          ),
           TextButton.icon(
             onPressed: _showDifficultyDialog,
             icon: const Icon(Icons.refresh, color: Colors.white, size: 20),
@@ -898,6 +903,93 @@ class _GameScreenState extends State<GameScreen> with WidgetsBindingObserver {
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  void _showRulesDialog() {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: Colors.grey.shade900,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+        ),
+        title: const Text(
+          '스도쿠 게임 규칙',
+          style: TextStyle(color: Colors.blue),
+        ),
+        content: SingleChildScrollView(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: const [
+              Text(
+                '🎯 게임 목표',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              SizedBox(height: 4),
+              Text(
+                '9x9 격자의 모든 빈 칸을 1~9 숫자로 채우세요!',
+                style: TextStyle(color: Colors.white70, fontSize: 13),
+              ),
+              SizedBox(height: 12),
+              Text(
+                '📏 기본 규칙',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              SizedBox(height: 4),
+              Text(
+                '• 각 가로줄에 1~9가 한 번씩만\n'
+                '• 각 세로줄에 1~9가 한 번씩만\n'
+                '• 각 3x3 박스에 1~9가 한 번씩만',
+                style: TextStyle(color: Colors.white70, fontSize: 13),
+              ),
+              SizedBox(height: 12),
+              Text(
+                '🎮 조작 방법',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              SizedBox(height: 4),
+              Text(
+                '• 빈 칸을 탭하여 선택\n'
+                '• 하단 숫자 패드로 숫자 입력\n'
+                '• 메모 모드로 후보 숫자 기록 가능',
+                style: TextStyle(color: Colors.white70, fontSize: 13),
+              ),
+              SizedBox(height: 12),
+              Text(
+                '💡 팁',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              SizedBox(height: 4),
+              Text(
+                '• 확실한 숫자부터 채우세요\n'
+                '• 메모 기능을 적극 활용하세요\n'
+                '• 3번 틀리면 게임 오버!',
+                style: TextStyle(color: Colors.white70, fontSize: 13),
+              ),
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('확인'),
+          ),
+        ],
       ),
     );
   }
