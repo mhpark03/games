@@ -721,8 +721,12 @@ class _HulaScreenState extends State<HulaScreen> with TickerProviderStateMixin {
       selectedCardIndices = [];
     });
     _showMessage(meldMessage);
-    _checkWin();
     _saveGame();
+
+    // 손패가 비었으면 승리
+    if (playerHand.isEmpty) {
+      _playerWins();
+    }
   }
 
   // 카드 선택/해제
