@@ -889,15 +889,6 @@ class _SolitaireScreenState extends State<SolitaireScreen> {
             onPressed: _showRulesDialog,
             tooltip: '게임 규칙',
           ),
-          Center(
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 8),
-              child: Text(
-                '이동: $moves (${drawCount}장)',
-                style: const TextStyle(fontSize: 16),
-              ),
-            ),
-          ),
           Opacity(
             opacity: _undoHistory.isNotEmpty ? 1.0 : 0.3,
             child: IconButton(
@@ -918,7 +909,34 @@ class _SolitaireScreenState extends State<SolitaireScreen> {
       ),
       backgroundColor: Colors.green.shade700,
       body: SafeArea(
-        child: _buildGameContent(),
+        child: Column(
+          children: [
+            // 상태 바
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              color: Colors.green.shade800.withValues(alpha: 0.5),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(Icons.swap_horiz, color: Colors.white70, size: 18),
+                  const SizedBox(width: 4),
+                  Text(
+                    '이동: $moves',
+                    style: const TextStyle(color: Colors.white, fontSize: 14),
+                  ),
+                  const SizedBox(width: 16),
+                  Icon(Icons.style, color: Colors.white70, size: 18),
+                  const SizedBox(width: 4),
+                  Text(
+                    '${drawCount}장 모드',
+                    style: const TextStyle(color: Colors.white, fontSize: 14),
+                  ),
+                ],
+              ),
+            ),
+            Expanded(child: _buildGameContent()),
+          ],
+        ),
       ),
     );
   }
