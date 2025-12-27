@@ -972,13 +972,20 @@ class _SolitaireScreenState extends State<SolitaireScreen> {
                           fontSize: 14,
                         ),
                       ),
-                      const SizedBox(width: 6),
+                      const SizedBox(width: 8),
                       GestureDetector(
                         onTap: _togglePause,
-                        child: Icon(
-                          _isPaused ? Icons.play_arrow : Icons.pause,
-                          color: _isPaused ? Colors.amber : Colors.white70,
-                          size: 18,
+                        child: Container(
+                          padding: const EdgeInsets.all(6),
+                          decoration: BoxDecoration(
+                            color: _isPaused ? Colors.amber.withValues(alpha: 0.3) : Colors.white.withValues(alpha: 0.2),
+                            borderRadius: BorderRadius.circular(6),
+                          ),
+                          child: Icon(
+                            _isPaused ? Icons.play_arrow : Icons.pause,
+                            color: _isPaused ? Colors.amber : Colors.white,
+                            size: 20,
+                          ),
                         ),
                       ),
                     ],
@@ -1108,13 +1115,20 @@ class _SolitaireScreenState extends State<SolitaireScreen> {
                                   color: _isPaused ? Colors.amber : Colors.white,
                                 ),
                               ),
-                              const SizedBox(width: 6),
+                              const SizedBox(width: 8),
                               GestureDetector(
                                 onTap: _togglePause,
-                                child: Icon(
-                                  _isPaused ? Icons.play_arrow : Icons.pause,
-                                  size: 16,
-                                  color: _isPaused ? Colors.amber : Colors.white70,
+                                child: Container(
+                                  padding: const EdgeInsets.all(4),
+                                  decoration: BoxDecoration(
+                                    color: _isPaused ? Colors.amber.withValues(alpha: 0.3) : Colors.white.withValues(alpha: 0.2),
+                                    borderRadius: BorderRadius.circular(4),
+                                  ),
+                                  child: Icon(
+                                    _isPaused ? Icons.play_arrow : Icons.pause,
+                                    size: 16,
+                                    color: _isPaused ? Colors.amber : Colors.white,
+                                  ),
                                 ),
                               ),
                             ],
