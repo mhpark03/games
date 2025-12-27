@@ -14,7 +14,7 @@ class PlayingCard {
 
   PlayingCard({required this.suit, required this.rank});
 
-  // 카드 점수 (A=1, 2-10=숫자, J=10, Q=11, K=12)
+  // 카드 점수 (A=1, 2-9=숫자, J=10, Q=11, K=12)
   int get point {
     if (rank == 1) return 1;
     if (rank == 11) return 10; // J
@@ -3818,7 +3818,7 @@ class _HulaScreenState extends State<HulaScreen> with TickerProviderStateMixin {
               SizedBox(height: 4),
               Text(
                 '• A = 1점\n'
-                '• 2~10 = 숫자 그대로\n'
+                '• 2~9 = 숫자 그대로\n'
                 '• J = 10점, Q = 11점, K = 12점',
                 style: TextStyle(color: Colors.white70, fontSize: 13),
               ),
