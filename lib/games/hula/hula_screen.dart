@@ -240,7 +240,8 @@ class _HulaScreenState extends State<HulaScreen> with TickerProviderStateMixin {
       _sortHand(hand);
     }
 
-    currentTurn = 0;
+    // 시작 플레이어 랜덤 선택 (0 = 플레이어, 1~N = 컴퓨터)
+    currentTurn = random.nextInt(playerCount);
     gameOver = false;
     winner = null;
     winnerIndex = null;
@@ -252,6 +253,16 @@ class _HulaScreenState extends State<HulaScreen> with TickerProviderStateMixin {
 
     setState(() {});
     _saveGame();
+
+    // 컴퓨터가 먼저 시작하면 대기 상태로 전환
+    if (currentTurn != 0) {
+      final startingComputer = currentTurn;
+      _showMessage('컴퓨터$startingComputer 먼저 시작!');
+      setState(() {
+        waitingForNextTurn = true;
+      });
+      _startNextTurnTimer();
+    }
   }
 
   // 다음 턴 자동 진행 타이머 시작
