@@ -2315,6 +2315,9 @@ class _HulaScreenState extends State<HulaScreen> with TickerProviderStateMixin {
     if (discardPile.isEmpty) return;
     _computerActionTimer?.cancel();
 
+    // 땡큐한 컴퓨터의 턴으로 설정
+    currentTurn = computerIndex + 1;
+
     final card = discardPile.removeLast();
     final hand = computerHands[computerIndex];
 
