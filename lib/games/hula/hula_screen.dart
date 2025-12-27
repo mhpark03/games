@@ -441,6 +441,8 @@ class _HulaScreenState extends State<HulaScreen> with TickerProviderStateMixin {
       'hasDrawn': hasDrawn,
       'scores': scores,
       'computerDifficulties': computerDifficulties,
+      'waitingForNextTurn': waitingForNextTurn,
+      'lastDiscardTurn': _lastDiscardTurn,
     };
 
     await GameSaveService.saveGame('hula', gameState);
@@ -514,12 +516,19 @@ class _HulaScreenState extends State<HulaScreen> with TickerProviderStateMixin {
       winnerIndex = null;
       isHula = false;
       selectedCardIndices = [];
-      waitingForNextTurn = false;
+
+      // 대기 상태 복원
+      waitingForNextTurn = gameState['waitingForNextTurn'] as bool? ?? false;
+      _lastDiscardTurn = gameState['lastDiscardTurn'] as int? ?? 0;
     });
     _cancelNextTurnTimer();
 
-    // 컴퓨터 턴이면 대기 상태로 시작
-    if (currentTurn != 0) {
+    // 대기 상태면 타이머 시작 (플레이어든 컴퓨터든)
+    if (waitingForNextTurn) {
+      _startNextTurnTimer();
+    }
+    // 컴퓨터 턴이고 대기 상태 아니면 컴퓨터 턴 시작
+    else if (currentTurn != 0 && !hasDrawn) {
       setState(() {
         waitingForNextTurn = true;
       });
