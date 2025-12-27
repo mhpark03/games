@@ -29,22 +29,24 @@ class SudokuBoard extends StatelessWidget {
             return Expanded(
               child: Row(
                 children: List.generate(9, (col) {
+                  // 3x3 박스 테두리 계산
+                  bool rightBorder = (col + 1) % 3 == 0 && col != 8;
+                  bool bottomBorder = (row + 1) % 3 == 0 && row != 8;
+
                   return Expanded(
                     child: Container(
                       decoration: BoxDecoration(
                         border: Border(
                           right: BorderSide(
-                            color: (col + 1) % 3 == 0 && col != 8
-                                ? Colors.black87
-                                : Colors.transparent,
-                            width: 3,
+                            color: rightBorder ? Colors.black87 : Colors.grey.shade300,
+                            width: rightBorder ? 3 : 0.5,
                           ),
                           bottom: BorderSide(
-                            color: (row + 1) % 3 == 0 && row != 8
-                                ? Colors.black87
-                                : Colors.transparent,
-                            width: 3,
+                            color: bottomBorder ? Colors.black87 : Colors.grey.shade300,
+                            width: bottomBorder ? 3 : 0.5,
                           ),
+                          left: BorderSide(color: Colors.grey.shade300, width: 0.5),
+                          top: BorderSide(color: Colors.grey.shade300, width: 0.5),
                         ),
                       ),
                       child: SudokuCell(
