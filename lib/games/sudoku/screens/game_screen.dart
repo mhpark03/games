@@ -978,7 +978,7 @@ class _GameScreenState extends State<GameScreen> with WidgetsBindingObserver {
               Text(
                 '• 확실한 숫자부터 채우세요\n'
                 '• 메모 기능을 적극 활용하세요\n'
-                '• 3번 틀리면 게임 오버!',
+                '• 실패 횟수가 기록됩니다',
                 style: TextStyle(color: Colors.white70, fontSize: 13),
               ),
             ],
