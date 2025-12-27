@@ -1022,10 +1022,11 @@ class _SolitaireScreenState extends State<SolitaireScreen> {
                   );
                 },
               ),
-              // 왼쪽 상단: 뒤로가기 버튼 + 제목 + 이동 수
+              // 왼쪽: 뒤로가기 버튼 + 제목 + 상태 정보 (세로 배치)
               Positioned(
                 top: 4,
                 left: 4,
+                bottom: 4,
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -1054,38 +1055,63 @@ class _SolitaireScreenState extends State<SolitaireScreen> {
                         ),
                       ],
                     ),
-                    const SizedBox(height: 4),
-                    Padding(
-                      padding: const EdgeInsets.only(left: 50),
-                      child: GestureDetector(
-                        onTap: _togglePause,
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-                          decoration: BoxDecoration(
-                            color: Colors.black.withValues(alpha: 0.3),
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Icon(
-                                _isPaused ? Icons.play_arrow : Icons.timer,
-                                color: _isPaused ? Colors.amber : Colors.white70,
-                                size: 14,
-                              ),
-                              const SizedBox(width: 4),
-                              Text(
-                                _isPaused ? '일시정지' : '${_formatTime(_elapsedSeconds)} | 이동: $moves (${drawCount}장)',
-                                style: TextStyle(
+                    const Spacer(),
+                    // 상태 정보 세로 배치
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+                      decoration: BoxDecoration(
+                        color: Colors.black.withValues(alpha: 0.4),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          GestureDetector(
+                            onTap: _togglePause,
+                            child: Column(
+                              children: [
+                                Icon(
+                                  _isPaused ? Icons.play_arrow : Icons.timer,
                                   color: _isPaused ? Colors.amber : Colors.white70,
-                                  fontSize: 12,
+                                  size: 20,
                                 ),
+                                const SizedBox(height: 2),
+                                Text(
+                                  _isPaused ? '정지' : _formatTime(_elapsedSeconds),
+                                  style: TextStyle(
+                                    color: _isPaused ? Colors.amber : Colors.white,
+                                    fontSize: 11,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          const SizedBox(height: 12),
+                          Column(
+                            children: [
+                              const Icon(Icons.swap_horiz, color: Colors.white70, size: 18),
+                              const SizedBox(height: 2),
+                              Text(
+                                '$moves',
+                                style: const TextStyle(color: Colors.white, fontSize: 11),
                               ),
                             ],
                           ),
-                        ),
+                          const SizedBox(height: 12),
+                          Column(
+                            children: [
+                              const Icon(Icons.style, color: Colors.white70, size: 18),
+                              const SizedBox(height: 2),
+                              Text(
+                                '${drawCount}장',
+                                style: const TextStyle(color: Colors.white, fontSize: 11),
+                              ),
+                            ],
+                          ),
+                        ],
                       ),
                     ),
+                    const SizedBox(height: 8),
                   ],
                 ),
               ),
