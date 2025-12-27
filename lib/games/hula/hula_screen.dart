@@ -3257,7 +3257,7 @@ class _HulaScreenState extends State<HulaScreen> with TickerProviderStateMixin {
                     ),
                     child: Text(
                       currentTurn == 0
-                          ? (waitingForNextTurn ? '내 차례! ($_autoPlayCountdown)' : '내 차례')
+                          ? '내 차례'
                           : (waitingForNextTurn ? '다음: 컴퓨터$currentTurn ($_autoPlayCountdown)' : '컴퓨터$currentTurn 차례'),
                       style: const TextStyle(
                         fontSize: 16,
@@ -3266,8 +3266,8 @@ class _HulaScreenState extends State<HulaScreen> with TickerProviderStateMixin {
                       ),
                     ),
                   ),
-                  // 시작하기 버튼 (대기 중일 때만 표시)
-                  if (waitingForNextTurn) ...[
+                  // 시작하기 버튼 (컴퓨터 차례 대기 중일 때만 표시)
+                  if (waitingForNextTurn && currentTurn != 0) ...[
                     const SizedBox(width: 12),
                     ElevatedButton(
                       onPressed: _onNextTurn,
