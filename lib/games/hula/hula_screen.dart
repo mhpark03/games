@@ -835,7 +835,14 @@ class _HulaScreenState extends State<HulaScreen> with TickerProviderStateMixin {
     final sortedCards = hand.toList()
       ..sort((a, b) => scores[a]!.compareTo(scores[b]!));
 
-    return sortedCards.first;
+    // 최종 안전장치: 7은 절대 버리지 않음 (다른 카드가 있는 경우)
+    final selectedCard = sortedCards.first;
+    if (_isSeven(selectedCard)) {
+      final nonSeven = sortedCards.firstWhere((c) => !_isSeven(c), orElse: () => selectedCard);
+      return nonSeven;
+    }
+
+    return selectedCard;
   }
 
   // 훌라 가능성 분석 (모든 카드를 한 번에 낼 수 있는지)
@@ -3171,9 +3178,9 @@ class _HulaScreenState extends State<HulaScreen> with TickerProviderStateMixin {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
         children: [
-          // 멜드 등록
+          // 멜드 등록 (드로우 후에만 가능)
           ElevatedButton.icon(
-            onPressed: currentTurn == 0 && canMeld ? _registerMeld : null,
+            onPressed: currentTurn == 0 && hasDrawn && canMeld ? _registerMeld : null,
             icon: Icon(Icons.check_circle, size: iconSize),
             label: Text('등록', style: TextStyle(fontSize: isLandscape ? 12 : 14)),
             style: ElevatedButton.styleFrom(
