@@ -306,7 +306,7 @@ class _ExpandedBoardScreenState extends State<ExpandedBoardScreen> {
                     // 왼쪽: 게임 보드 (최대 크기)
                     Expanded(
                       child: Padding(
-                        padding: const EdgeInsets.fromLTRB(8, 48, 8, 8),
+                        padding: const EdgeInsets.fromLTRB(100, 8, 8, 8),
                         child: Center(
                           child: AspectRatio(
                             aspectRatio: 1,
