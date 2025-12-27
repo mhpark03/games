@@ -14,12 +14,13 @@ import 'games/hula/hula_screen.dart';
 import 'games/sudoku/screens/game_screen.dart' as sudoku;
 import 'games/sudoku/screens/samurai_game_screen.dart' as sudoku;
 import 'games/sudoku/screens/killer_game_screen.dart' as sudoku;
-import 'games/sudoku/screens/number_sums_game_screen.dart' as sudoku;
 import 'games/sudoku/models/game_state.dart' as sudoku;
 import 'games/sudoku/models/samurai_game_state.dart' as sudoku;
 import 'games/sudoku/models/killer_sudoku_generator.dart' as sudoku;
-import 'games/sudoku/models/number_sums_generator.dart' as sudoku;
 import 'games/sudoku/services/game_storage.dart' as sudoku;
+import 'games/number_sums/screens/number_sums_game_screen.dart' as number_sums;
+import 'games/number_sums/models/number_sums_generator.dart' as number_sums;
+import 'games/number_sums/services/game_storage.dart' as number_sums;
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
@@ -2512,7 +2513,7 @@ class HomeScreen extends StatelessWidget {
 
   // 넘버 썸즈 다이얼로그
   Future<void> _showNumberSumsDialog(BuildContext context) async {
-    final hasSaved = await sudoku.GameStorage.hasNumberSumsGame();
+    final hasSaved = await number_sums.GameStorage.hasNumberSumsGame();
 
     if (!context.mounted) return;
 
@@ -2543,11 +2544,11 @@ class HomeScreen extends StatelessWidget {
                   Text('새 게임', style: TextStyle(color: Colors.grey.shade400, fontSize: 12)),
                   const SizedBox(height: 8),
                 ],
-                _buildNumberSumsDifficultyButton(context, '쉬움 (5x5)', sudoku.NumberSumsDifficulty.easy, Colors.green),
+                _buildNumberSumsDifficultyButton(context, '쉬움 (5x5)', number_sums.NumberSumsDifficulty.easy, Colors.green),
                 const SizedBox(height: 8),
-                _buildNumberSumsDifficultyButton(context, '보통 (6x6)', sudoku.NumberSumsDifficulty.medium, Colors.orange),
+                _buildNumberSumsDifficultyButton(context, '보통 (6x6)', number_sums.NumberSumsDifficulty.medium, Colors.orange),
                 const SizedBox(height: 8),
-                _buildNumberSumsDifficultyButton(context, '어려움 (7x7)', sudoku.NumberSumsDifficulty.hard, Colors.red),
+                _buildNumberSumsDifficultyButton(context, '어려움 (7x7)', number_sums.NumberSumsDifficulty.hard, Colors.red),
               ],
             ),
           ),
@@ -2560,9 +2561,9 @@ class HomeScreen extends StatelessWidget {
     return InkWell(
       onTap: () async {
         Navigator.pop(context);
-        final savedGame = await sudoku.GameStorage.loadNumberSumsGame();
+        final savedGame = await number_sums.GameStorage.loadNumberSumsGame();
         if (savedGame != null && context.mounted) {
-          Navigator.push(context, MaterialPageRoute(builder: (context) => sudoku.NumberSumsGameScreen(savedGameState: savedGame)));
+          Navigator.push(context, MaterialPageRoute(builder: (context) => number_sums.NumberSumsGameScreen(savedGameState: savedGame)));
         }
       },
       borderRadius: BorderRadius.circular(12),
@@ -2587,11 +2588,11 @@ class HomeScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildNumberSumsDifficultyButton(BuildContext context, String label, sudoku.NumberSumsDifficulty difficulty, Color color) {
+  Widget _buildNumberSumsDifficultyButton(BuildContext context, String label, number_sums.NumberSumsDifficulty difficulty, Color color) {
     return InkWell(
       onTap: () {
         Navigator.pop(context);
-        Navigator.push(context, MaterialPageRoute(builder: (context) => sudoku.NumberSumsGameScreen(initialDifficulty: difficulty)));
+        Navigator.push(context, MaterialPageRoute(builder: (context) => number_sums.NumberSumsGameScreen(initialDifficulty: difficulty)));
       },
       borderRadius: BorderRadius.circular(12),
       child: Container(
