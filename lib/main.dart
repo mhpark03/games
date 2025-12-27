@@ -2717,6 +2717,7 @@ class HomeScreen extends StatelessWidget {
                                 subtitle: '테트리스',
                                 icon: Icons.grid_view_rounded,
                                 color: Colors.cyan,
+                                description: '떨어지는 블록을 회전하고 배치하여 가로줄을 완성하면 줄이 사라집니다. 블록이 천장에 닿으면 게임 오버!',
                                 onTap: () => Navigator.push(
                                   context,
                                   MaterialPageRoute(
@@ -2730,6 +2731,7 @@ class HomeScreen extends StatelessWidget {
                                 subtitle: '오목',
                                 icon: Icons.circle_outlined,
                                 color: Colors.amber,
+                                description: '흑과 백이 번갈아 돌을 놓아 가로, 세로, 대각선으로 5개를 먼저 연속으로 놓으면 승리합니다.',
                                 onTap: () => _showGomokuModeDialog(context),
                               ),
                               _buildGameTile(
@@ -2738,6 +2740,7 @@ class HomeScreen extends StatelessWidget {
                                 subtitle: '오델로',
                                 icon: Icons.blur_circular,
                                 color: Colors.green,
+                                description: '상대 돌을 자신의 돌 사이에 끼워 뒤집어 더 많은 돌을 차지하면 승리합니다. 리버시라고도 불립니다.',
                                 onTap: () => _showOthelloModeDialog(context),
                               ),
                               _buildGameTile(
@@ -2746,6 +2749,7 @@ class HomeScreen extends StatelessWidget {
                                 subtitle: '체스',
                                 icon: Icons.castle,
                                 color: Colors.brown,
+                                description: '각 기물의 고유한 움직임을 활용하여 상대 킹을 체크메이트하면 승리하는 전략 게임입니다.',
                                 onTap: () => _showChessModeDialog(context),
                               ),
                               _buildGameTile(
@@ -2754,6 +2758,7 @@ class HomeScreen extends StatelessWidget {
                                 subtitle: '장기',
                                 icon: Icons.apps,
                                 color: const Color(0xFFD2691E),
+                                description: '한국 전통 보드 게임으로, 상대방의 궁(왕)을 외통수로 잡으면 승리합니다.',
                                 onTap: () => _showJanggiContinueDialog(context),
                               ),
                               _buildGameTile(
@@ -2762,6 +2767,7 @@ class HomeScreen extends StatelessWidget {
                                 subtitle: '솔리테어',
                                 icon: Icons.style,
                                 color: Colors.green.shade700,
+                                description: '카드를 정렬하여 에이스부터 킹까지 무늬별로 쌓아 올리는 1인용 카드 게임입니다.',
                                 onTap: () {
                                   Navigator.push(
                                     context,
@@ -2777,6 +2783,7 @@ class HomeScreen extends StatelessWidget {
                                 subtitle: 'Minesweeper',
                                 icon: Icons.terrain,
                                 color: Colors.blueGrey,
+                                description: '숫자 힌트를 이용하여 지뢰를 피하면서 모든 안전한 칸을 찾아내는 퍼즐 게임입니다.',
                                 onTap: () => _showMinesweeperDifficultyDialog(context),
                               ),
                               _buildGameTile(
@@ -2785,6 +2792,7 @@ class HomeScreen extends StatelessWidget {
                                 subtitle: 'Number Baseball',
                                 icon: Icons.sports_baseball,
                                 color: Colors.deepOrange,
+                                description: '스트라이크와 볼 힌트를 이용하여 상대방의 비밀 숫자 3자리를 맞추는 추리 게임입니다.',
                                 onTap: () => _showBaseballDifficultyDialog(context),
                               ),
                               _buildGameTile(
@@ -2793,6 +2801,7 @@ class HomeScreen extends StatelessWidget {
                                 subtitle: 'One Card',
                                 icon: Icons.style,
                                 color: Colors.purple,
+                                description: '같은 숫자나 무늬의 카드를 내며, 먼저 모든 카드를 버리면 승리하는 카드 게임입니다.',
                                 onTap: () => _showOneCardModeDialog(context),
                               ),
                               _buildGameTile(
@@ -2801,6 +2810,7 @@ class HomeScreen extends StatelessWidget {
                                 subtitle: 'Yut Nori',
                                 icon: Icons.casino,
                                 color: const Color(0xFFDEB887),
+                                description: '윷을 던져 나온 결과대로 말을 이동하여 먼저 모든 말을 골인시키면 승리하는 한국 전통 게임입니다.',
                                 onTap: () => _showYutnoriModeDialog(context),
                               ),
                               _buildGameTile(
@@ -2809,6 +2819,7 @@ class HomeScreen extends StatelessWidget {
                                 subtitle: 'Hula',
                                 icon: Icons.style,
                                 color: Colors.teal,
+                                description: '같은 무늬 연속 3장(런) 또는 같은 숫자 3장(그룹)으로 멜드를 등록하고 카드를 버려 점수를 낮추는 게임입니다.',
                                 onTap: () => _showHulaModeDialog(context),
                               ),
                               _buildGameTile(
@@ -2817,6 +2828,7 @@ class HomeScreen extends StatelessWidget {
                                 subtitle: 'Sudoku',
                                 icon: Icons.grid_3x3,
                                 color: Colors.blue,
+                                description: '9x9 격자에 1부터 9까지 숫자를 행, 열, 3x3 박스에 중복 없이 채우는 논리 퍼즐입니다.',
                                 onTap: () => _showSudokuModeDialog(context),
                               ),
                               _buildGameTile(
@@ -2825,6 +2837,7 @@ class HomeScreen extends StatelessWidget {
                                 subtitle: 'Samurai',
                                 icon: Icons.apps,
                                 color: Colors.deepPurple,
+                                description: '5개의 스도쿠 보드가 겹쳐진 확장 스도쿠입니다. 겹치는 영역의 숫자는 모든 보드에서 유효해야 합니다.',
                                 onTap: () => _showSamuraiSudokuDialog(context),
                               ),
                               _buildGameTile(
@@ -2833,6 +2846,7 @@ class HomeScreen extends StatelessWidget {
                                 subtitle: 'Killer',
                                 icon: Icons.calculate,
                                 color: Colors.teal.shade700,
+                                description: '케이지(점선 영역) 안의 숫자 합이 지정된 값이 되어야 하는 조건이 추가된 스도쿠입니다.',
                                 onTap: () => _showKillerSudokuDialog(context),
                               ),
                               _buildGameTile(
@@ -2841,6 +2855,7 @@ class HomeScreen extends StatelessWidget {
                                 subtitle: 'Number Sums',
                                 icon: Icons.add_box,
                                 color: Colors.deepOrange.shade700,
+                                description: '각 행과 열의 합계 힌트를 이용하여 빈 칸에 숫자를 채우는 퍼즐 게임입니다.',
                                 onTap: () => _showNumberSumsDialog(context),
                               ),
                             ],
@@ -2865,6 +2880,39 @@ class HomeScreen extends StatelessWidget {
     );
   }
 
+  void _showGameDescription(BuildContext context, String title, String description, Color color) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: Colors.grey.shade900,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+          side: BorderSide(color: color.withValues(alpha: 0.5), width: 2),
+        ),
+        title: Row(
+          children: [
+            Icon(Icons.info_outline, color: color),
+            const SizedBox(width: 8),
+            Text(
+              title,
+              style: TextStyle(color: color, fontWeight: FontWeight.bold),
+            ),
+          ],
+        ),
+        content: Text(
+          description,
+          style: const TextStyle(color: Colors.white70, fontSize: 14, height: 1.5),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text('확인', style: TextStyle(color: color)),
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _buildGameTile(
     BuildContext context, {
     required String title,
@@ -2872,9 +2920,13 @@ class HomeScreen extends StatelessWidget {
     required IconData icon,
     required Color color,
     required VoidCallback onTap,
+    String? description,
   }) {
     return GestureDetector(
       onTap: onTap,
+      onLongPress: description != null
+          ? () => _showGameDescription(context, title, description, color)
+          : null,
       child: LayoutBuilder(
         builder: (context, constraints) {
           final isCompact = constraints.maxHeight < 120;
