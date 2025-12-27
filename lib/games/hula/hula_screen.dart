@@ -559,6 +559,12 @@ class _HulaScreenState extends State<HulaScreen> with TickerProviderStateMixin {
   // 덱에서 카드 드로우
   void _drawFromDeck() {
     if (hasDrawn || gameOver || currentTurn != 0) return;
+
+    // 대기 상태면 타이머 취소
+    if (waitingForNextTurn) {
+      _cancelNextTurnTimer();
+    }
+
     if (deck.isEmpty) {
       // 덱이 비면 버린 더미 섞기
       if (discardPile.length <= 1) {
@@ -3132,9 +3138,9 @@ class _HulaScreenState extends State<HulaScreen> with TickerProviderStateMixin {
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              // 덱
+              // 덱 - 내 차례이고 드로우 전이면 탭 가능 (waitingForNextTurn 상태에서도)
               GestureDetector(
-                onTap: currentTurn == 0 && !hasDrawn && !waitingForNextTurn
+                onTap: currentTurn == 0 && !hasDrawn
                     ? _drawFromDeck
                     : null,
                 child: Container(
@@ -3146,10 +3152,10 @@ class _HulaScreenState extends State<HulaScreen> with TickerProviderStateMixin {
                     ),
                     borderRadius: BorderRadius.circular(8),
                     border: Border.all(
-                      color: currentTurn == 0 && !hasDrawn && !waitingForNextTurn
+                      color: currentTurn == 0 && !hasDrawn
                           ? Colors.yellow
                           : Colors.white24,
-                      width: currentTurn == 0 && !hasDrawn && !waitingForNextTurn
+                      width: currentTurn == 0 && !hasDrawn
                           ? 3
                           : 1,
                     ),
