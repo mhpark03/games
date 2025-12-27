@@ -322,9 +322,9 @@ class _ExpandedBoardScreenState extends State<ExpandedBoardScreen> {
                         ),
                       ),
                     ),
-                    // 오른쪽: 상태바 + 컨트롤 패널
+                    // 오른쪽: 컨트롤 패널만 (상태 정보 제거)
                     SizedBox(
-                      width: 200,
+                      width: 220,
                       child: Container(
                         margin: const EdgeInsets.symmetric(vertical: 8, horizontal: 4),
                         decoration: BoxDecoration(
@@ -333,10 +333,7 @@ class _ExpandedBoardScreenState extends State<ExpandedBoardScreen> {
                         ),
                         child: Column(
                           children: [
-                            const SizedBox(height: 40), // 상단 버튼 공간
-                            // 상태 정보
-                            _buildLandscapeStatusInfo(),
-                            const SizedBox(height: 8),
+                            const SizedBox(height: 44), // 상단 버튼 공간
                             // 컨트롤 패널
                             Expanded(
                               child: _buildControlPanel(isCompact: true),
@@ -347,33 +344,41 @@ class _ExpandedBoardScreenState extends State<ExpandedBoardScreen> {
                     ),
                   ],
                 ),
-                // 왼쪽 상단: 뒤로가기 + 제목
+                // 왼쪽 상단: 뒤로가기 + 제목 + 상태 정보
                 Positioned(
                   top: 4,
                   left: 4,
-                  child: Row(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      _buildCircleButton(
-                        icon: Icons.arrow_back,
-                        onPressed: _popWithResult,
-                        tooltip: '뒤로가기',
-                      ),
-                      const SizedBox(width: 8),
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
-                        decoration: BoxDecoration(
-                          color: Colors.black.withValues(alpha: 0.5),
-                          borderRadius: BorderRadius.circular(20),
-                        ),
-                        child: Text(
-                          '보드 ${widget.boardIndex + 1}',
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontSize: 16,
-                            fontWeight: FontWeight.bold,
+                      Row(
+                        children: [
+                          _buildCircleButton(
+                            icon: Icons.arrow_back,
+                            onPressed: _popWithResult,
+                            tooltip: '뒤로가기',
                           ),
-                        ),
+                          const SizedBox(width: 8),
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+                            decoration: BoxDecoration(
+                              color: Colors.black.withValues(alpha: 0.5),
+                              borderRadius: BorderRadius.circular(20),
+                            ),
+                            child: Text(
+                              '보드 ${widget.boardIndex + 1}',
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ),
+                        ],
                       ),
+                      const SizedBox(height: 8),
+                      // 상태 정보 (세로 배치)
+                      _buildLeftStatusInfo(),
                     ],
                   ),
                 ),
@@ -426,32 +431,39 @@ class _ExpandedBoardScreenState extends State<ExpandedBoardScreen> {
     );
   }
 
-  // 가로 모드용 상태 정보
-  Widget _buildLandscapeStatusInfo() {
+  // 왼쪽 상태 정보 (세로 배치)
+  Widget _buildLeftStatusInfo() {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      margin: const EdgeInsets.only(left: 8, top: 4),
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+      decoration: BoxDecoration(
+        color: Colors.black.withValues(alpha: 0.4),
+        borderRadius: BorderRadius.circular(12),
+      ),
       child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
         children: [
           // 시간 + 일시정지 버튼
           Row(
-            mainAxisAlignment: MainAxisAlignment.center,
+            mainAxisSize: MainAxisSize.min,
             children: [
-              const Icon(Icons.timer, size: 18, color: Colors.white70),
+              const Icon(Icons.timer, size: 14, color: Colors.white70),
               const SizedBox(width: 4),
               Text(
                 _formatTime(_localElapsedSeconds),
                 style: const TextStyle(
-                  fontSize: 16,
+                  fontSize: 13,
                   fontWeight: FontWeight.bold,
                   color: Colors.white,
                 ),
               ),
-              const SizedBox(width: 8),
+              const SizedBox(width: 6),
               GestureDetector(
                 onTap: _togglePause,
                 child: Icon(
                   _localIsPaused ? Icons.play_arrow : Icons.pause,
-                  size: 20,
+                  size: 16,
                   color: Colors.white70,
                 ),
               ),
@@ -460,14 +472,14 @@ class _ExpandedBoardScreenState extends State<ExpandedBoardScreen> {
           const SizedBox(height: 4),
           // 실패 횟수
           Row(
-            mainAxisAlignment: MainAxisAlignment.center,
+            mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(Icons.close, size: 16, color: Colors.red.shade300),
-              const SizedBox(width: 4),
+              Icon(Icons.close, size: 14, color: Colors.red.shade300),
+              const SizedBox(width: 2),
               Text(
                 '$_localFailureCount',
                 style: TextStyle(
-                  fontSize: 14,
+                  fontSize: 12,
                   fontWeight: FontWeight.bold,
                   color: Colors.red.shade300,
                 ),
