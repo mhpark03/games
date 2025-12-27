@@ -2125,7 +2125,7 @@ class _HulaScreenState extends State<HulaScreen> with TickerProviderStateMixin {
       if (playerMeldIndex >= 0 && Random().nextInt(100) < attachChance) {
         _attachToMeldList(playerMeldIndex, card, playerMelds);
         hand.removeAt(i);
-        _showMessage('컴퓨터${computerIndex + 1}: ${card.suitSymbol}${card.rankString} 붙이기!');
+        _showMessage('컴퓨터${computerIndex + 1}: ${card.suitSymbol}${card.rankString} → 플레이어에게 붙이기!');
         setState(() {});
         _saveGame();
 
@@ -2149,7 +2149,7 @@ class _HulaScreenState extends State<HulaScreen> with TickerProviderStateMixin {
         if (otherMeldIndex >= 0 && Random().nextInt(100) < attachChance) {
           _attachToMeldList(otherMeldIndex, card, computerMelds[c]);
           hand.removeAt(i);
-          _showMessage('컴퓨터${computerIndex + 1}: ${card.suitSymbol}${card.rankString} 붙이기!');
+          _showMessage('컴퓨터${computerIndex + 1}: ${card.suitSymbol}${card.rankString} → 컴퓨터${c + 1}에게 붙이기!');
           setState(() {});
           _saveGame();
 
@@ -2496,7 +2496,7 @@ class _HulaScreenState extends State<HulaScreen> with TickerProviderStateMixin {
       if (playerMeldIndex >= 0 && Random().nextInt(100) < attachChance) {
         _attachToMeldList(playerMeldIndex, card, playerMelds);
         hand.removeAt(i);
-        _showMessage('컴퓨터${computerIndex + 1}: ${card.suitSymbol}${card.rankString} 붙이기!');
+        _showMessage('컴퓨터${computerIndex + 1}: ${card.suitSymbol}${card.rankString} → 플레이어에게 붙이기!');
         setState(() {});
         _saveGame();
 
@@ -2520,7 +2520,7 @@ class _HulaScreenState extends State<HulaScreen> with TickerProviderStateMixin {
         if (otherMeldIndex >= 0 && Random().nextInt(100) < attachChance) {
           _attachToMeldList(otherMeldIndex, card, computerMelds[c]);
           hand.removeAt(i);
-          _showMessage('컴퓨터${computerIndex + 1}: ${card.suitSymbol}${card.rankString} 붙이기!');
+          _showMessage('컴퓨터${computerIndex + 1}: ${card.suitSymbol}${card.rankString} → 컴퓨터${c + 1}에게 붙이기!');
           setState(() {});
           _saveGame();
 
