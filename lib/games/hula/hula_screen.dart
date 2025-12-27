@@ -1377,16 +1377,29 @@ class _HulaScreenState extends State<HulaScreen> with TickerProviderStateMixin {
       return;
     }
 
-    // 1~2장 선택: 기존 멜드에 붙이기 시도
+    // 1~2장 선택: 기존 멜드에 붙이기 시도 (플레이어 + 컴퓨터 멜드)
     if (selectedCardIndices.length < 3) {
       // 각 카드에 대해 붙이기 가능 여부 확인
       bool attached = false;
       for (final card in selectedCards) {
-        final meldIndex = _canAttachToMeld(card);
-        if (meldIndex >= 0) {
-          _attachToMeld(meldIndex, card);
+        // 1. 플레이어 멜드에 붙이기 시도
+        final playerMeldIndex = _canAttachToMeld(card);
+        if (playerMeldIndex >= 0) {
+          _attachToMeld(playerMeldIndex, card);
           playerHand.remove(card);
           attached = true;
+          continue;
+        }
+
+        // 2. 컴퓨터 멜드에 붙이기 시도
+        for (int c = 0; c < computerMelds.length; c++) {
+          final compMeldIndex = _canAttachToMeldList(card, computerMelds[c]);
+          if (compMeldIndex >= 0) {
+            _attachToMeldList(compMeldIndex, card, computerMelds[c]);
+            playerHand.remove(card);
+            attached = true;
+            break;
+          }
         }
       }
 
@@ -3209,12 +3222,22 @@ class _HulaScreenState extends State<HulaScreen> with TickerProviderStateMixin {
       // 7 카드 단독 등록 가능 (훌라 특별 규칙)
       canMeld = true;
     } else if (selectedCardIndices.isNotEmpty && playerMelds.isNotEmpty) {
-      // 1~2장 선택 시 붙이기 가능 여부 확인
+      // 1~2장 선택 시 붙이기 가능 여부 확인 (모든 멜드 - 플레이어 + 컴퓨터)
       for (final idx in selectedCardIndices) {
-        if (_canAttachToMeld(playerHand[idx]) >= 0) {
+        final card = playerHand[idx];
+        // 플레이어 멜드 확인
+        if (_canAttachToMeld(card) >= 0) {
           canMeld = true;
           break;
         }
+        // 컴퓨터 멜드 확인
+        for (final compMelds in computerMelds) {
+          if (_canAttachToMeldList(card, compMelds) >= 0) {
+            canMeld = true;
+            break;
+          }
+        }
+        if (canMeld) break;
       }
     }
     final canDiscard = hasDrawn && selectedCardIndices.length == 1;
