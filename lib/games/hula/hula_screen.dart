@@ -1799,6 +1799,31 @@ class _HulaScreenState extends State<HulaScreen> with TickerProviderStateMixin {
     if (gameOver) return;
 
     final hand = computerHands[computerIndex];
+    final melds = computerMelds[computerIndex];
+
+    // 손에 7이 있으면 먼저 등록
+    final sevens = hand.where((c) => _isSeven(c)).toList();
+    if (sevens.isNotEmpty) {
+      final seven = sevens.first;
+      hand.remove(seven);
+      melds.add(Meld(cards: [seven], isRun: false));
+      _showMessage('컴퓨터${computerIndex + 1}: 7 등록!');
+      setState(() {});
+      _saveGame();
+
+      if (hand.isEmpty) {
+        _endGame(currentTurn);
+        return;
+      }
+
+      // 딜레이 후 다시 버리기 단계
+      _computerActionTimer = Timer(Duration(milliseconds: _computerActionDelay), () {
+        if (mounted && !gameOver) {
+          _computerTurnDiscard(computerIndex);
+        }
+      });
+      return;
+    }
 
     // 스마트 카드 버리기 (난이도 적용)
     final discardCard = _selectCardToDiscard(hand, computerIndex: computerIndex);
@@ -2135,6 +2160,31 @@ class _HulaScreenState extends State<HulaScreen> with TickerProviderStateMixin {
   // 땡큐 후 컴퓨터가 카드 버리기
   void _computerDiscardAfterThankYou(int computerIndex) {
     final hand = computerHands[computerIndex];
+    final melds = computerMelds[computerIndex];
+
+    // 손에 7이 있으면 먼저 등록
+    final sevens = hand.where((c) => _isSeven(c)).toList();
+    if (sevens.isNotEmpty) {
+      final seven = sevens.first;
+      hand.remove(seven);
+      melds.add(Meld(cards: [seven], isRun: false));
+      _showMessage('컴퓨터${computerIndex + 1}: 7 등록!');
+      setState(() {});
+      _saveGame();
+
+      if (hand.isEmpty) {
+        _endGame(computerIndex + 1);
+        return;
+      }
+
+      // 딜레이 후 다시 버리기 단계
+      _computerActionTimer = Timer(Duration(milliseconds: _computerActionDelay), () {
+        if (mounted && !gameOver) {
+          _computerDiscardAfterThankYou(computerIndex);
+        }
+      });
+      return;
+    }
 
     // 스마트 카드 버리기 (난이도 적용)
     final discardCard = _selectCardToDiscard(hand, computerIndex: computerIndex);
