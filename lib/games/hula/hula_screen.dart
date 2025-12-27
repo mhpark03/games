@@ -1908,7 +1908,7 @@ class _HulaScreenState extends State<HulaScreen> with TickerProviderStateMixin {
 
     if (takeDiscard && discardPile.isNotEmpty) {
       drawnCard = discardPile.removeLast();
-      _showMessage('컴퓨터${computerIndex + 1}: 땡큐!');
+      _showMessage('컴퓨터${computerIndex + 1}: ${drawnCard.suitSymbol}${drawnCard.rankString} 땡큐!');
     } else {
       if (deck.isEmpty && discardPile.length > 1) {
         final topCard = discardPile.removeLast();
@@ -1921,6 +1921,7 @@ class _HulaScreenState extends State<HulaScreen> with TickerProviderStateMixin {
         return;
       }
       drawnCard = deck.removeLast();
+      _showMessage('컴퓨터${computerIndex + 1}: 덱에서 드로우');
     }
 
     hand.add(drawnCard);
@@ -2182,6 +2183,7 @@ class _HulaScreenState extends State<HulaScreen> with TickerProviderStateMixin {
     discardPile.add(discardCard);
     _sortHand(hand);
 
+    _showMessage('컴퓨터${computerIndex + 1}: ${discardCard.suitSymbol}${discardCard.rankString} 버림');
     setState(() {});
     _saveGame();
 
@@ -2543,6 +2545,7 @@ class _HulaScreenState extends State<HulaScreen> with TickerProviderStateMixin {
     discardPile.add(discardCard);
     _sortHand(hand);
 
+    _showMessage('컴퓨터${computerIndex + 1}: ${discardCard.suitSymbol}${discardCard.rankString} 버림');
     setState(() {});
     _saveGame();
 
