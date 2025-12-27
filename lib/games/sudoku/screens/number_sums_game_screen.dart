@@ -486,9 +486,9 @@ class _NumberSumsGameScreenState extends State<NumberSumsGameScreen>
                       ),
                     ),
                   ),
-                  // 오른쪽: 상태 + 도구
+                  // 오른쪽: 도구만 (상태 정보 제거)
                   SizedBox(
-                    width: 160,
+                    width: 180,
                     child: Container(
                       margin: const EdgeInsets.symmetric(vertical: 8, horizontal: 4),
                       decoration: BoxDecoration(
@@ -497,8 +497,7 @@ class _NumberSumsGameScreenState extends State<NumberSumsGameScreen>
                       ),
                       child: Column(
                         children: [
-                          const SizedBox(height: 40), // 상단 버튼 공간
-                          _buildLandscapeStatusInfo(),
+                          const SizedBox(height: 44), // 상단 버튼 공간
                           _buildHelpText(),
                           const SizedBox(height: 8),
                           Expanded(
@@ -513,33 +512,41 @@ class _NumberSumsGameScreenState extends State<NumberSumsGameScreen>
                   ),
                 ],
               ),
-              // 왼쪽 상단: 뒤로가기 + 제목
+              // 왼쪽 상단: 뒤로가기 + 제목 + 상태 정보
               Positioned(
                 top: 4,
                 left: 4,
-                child: Row(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    _buildCircleButton(
-                      icon: Icons.arrow_back,
-                      onPressed: () => Navigator.pop(context),
-                      tooltip: '뒤로가기',
-                    ),
-                    const SizedBox(width: 8),
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
-                      decoration: BoxDecoration(
-                        color: Colors.black.withValues(alpha: 0.5),
-                        borderRadius: BorderRadius.circular(20),
-                      ),
-                      child: const Text(
-                        '넘버 썸즈',
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
+                    Row(
+                      children: [
+                        _buildCircleButton(
+                          icon: Icons.arrow_back,
+                          onPressed: () => Navigator.pop(context),
+                          tooltip: '뒤로가기',
                         ),
-                      ),
+                        const SizedBox(width: 8),
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+                          decoration: BoxDecoration(
+                            color: Colors.black.withValues(alpha: 0.5),
+                            borderRadius: BorderRadius.circular(20),
+                          ),
+                          child: const Text(
+                            '넘버 썸즈',
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
+                    const SizedBox(height: 8),
+                    // 상태 정보 (세로 배치)
+                    _buildLeftStatusInfo(),
                   ],
                 ),
               ),
@@ -591,49 +598,56 @@ class _NumberSumsGameScreenState extends State<NumberSumsGameScreen>
     );
   }
 
-  // 가로 모드용 상태 정보
-  Widget _buildLandscapeStatusInfo() {
+  // 왼쪽 상태 정보 (세로 배치)
+  Widget _buildLeftStatusInfo() {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      margin: const EdgeInsets.only(left: 8, top: 4),
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+      decoration: BoxDecoration(
+        color: Colors.black.withValues(alpha: 0.4),
+        borderRadius: BorderRadius.circular(12),
+      ),
       child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
         children: [
           // 난이도
           Container(
-            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
             decoration: BoxDecoration(
-              color: Colors.deepOrange.withValues(alpha: 0.2),
-              borderRadius: BorderRadius.circular(10),
+              color: Colors.deepOrange.withValues(alpha: 0.3),
+              borderRadius: BorderRadius.circular(8),
             ),
             child: Text(
               _getDifficultyLabel(),
               style: const TextStyle(
                 fontSize: 12,
-                fontWeight: FontWeight.w600,
-                color: Colors.deepOrange,
+                fontWeight: FontWeight.bold,
+                color: Colors.white,
               ),
             ),
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: 6),
           // 시간 + 일시정지 버튼
           Row(
-            mainAxisAlignment: MainAxisAlignment.center,
+            mainAxisSize: MainAxisSize.min,
             children: [
-              const Icon(Icons.timer_outlined, size: 16, color: Colors.white70),
+              const Icon(Icons.timer, size: 14, color: Colors.white70),
               const SizedBox(width: 4),
               Text(
                 _formatTime(_elapsedSeconds),
                 style: const TextStyle(
-                  fontSize: 14,
+                  fontSize: 13,
                   fontWeight: FontWeight.bold,
                   color: Colors.white,
                 ),
               ),
-              const SizedBox(width: 8),
+              const SizedBox(width: 6),
               GestureDetector(
                 onTap: _togglePause,
                 child: Icon(
                   _isPaused ? Icons.play_arrow : Icons.pause,
-                  size: 18,
+                  size: 16,
                   color: Colors.white70,
                 ),
               ),
@@ -642,15 +656,15 @@ class _NumberSumsGameScreenState extends State<NumberSumsGameScreen>
           const SizedBox(height: 4),
           // 실패 횟수
           Row(
-            mainAxisAlignment: MainAxisAlignment.center,
+            mainAxisSize: MainAxisSize.min,
             children: [
               Icon(Icons.close, size: 14, color: Colors.red.shade300),
-              const SizedBox(width: 4),
+              const SizedBox(width: 2),
               Text(
                 '$_failureCount',
                 style: TextStyle(
                   fontSize: 12,
-                  fontWeight: FontWeight.w600,
+                  fontWeight: FontWeight.bold,
                   color: Colors.red.shade300,
                 ),
               ),
