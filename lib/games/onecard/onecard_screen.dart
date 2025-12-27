@@ -2551,21 +2551,51 @@ class _OneCardScreenState extends State<OneCardScreen> with TickerProviderStateM
               ),
               SizedBox(height: 12),
               Text(
-                '⚡ 특수 카드',
+                '⚔️ 공격 카드',
                 style: TextStyle(
-                  color: Colors.white,
+                  color: Colors.red,
                   fontWeight: FontWeight.bold,
                 ),
               ),
               SizedBox(height: 4),
               Text(
-                '• A: 다음 사람 1장 뽑기\n'
-                '• 2: 다음 사람 2장 뽑기 (중첩 가능)\n'
-                '• 3: 방어 카드 (공격 무효화)\n'
+                '• 2: +2장 뽑기 (중첩 가능)\n'
+                '• A: +3장 뽑기 (♠A는 +5장)\n'
+                '• 흑백조커: +5장 뽑기\n'
+                '• 컬러조커: +7장 뽑기 (방어 불가)',
+                style: TextStyle(color: Colors.white70, fontSize: 13),
+              ),
+              SizedBox(height: 12),
+              Text(
+                '🛡️ 공격 방어',
+                style: TextStyle(
+                  color: Colors.blue,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              SizedBox(height: 4),
+              Text(
+                '• 2 공격 → 2, 같은무늬 A, 조커로 방어\n'
+                '• A 공격 → A, 조커로 방어\n'
+                '• 흑백조커 → 컬러조커로만 방어\n'
+                '• 컬러조커 → 방어 불가!\n'
+                '• 방어 시 공격이 누적되어 다음 사람에게',
+                style: TextStyle(color: Colors.white70, fontSize: 13),
+              ),
+              SizedBox(height: 12),
+              Text(
+                '⚡ 특수 카드',
+                style: TextStyle(
+                  color: Colors.amber,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              SizedBox(height: 4),
+              Text(
+                '• 7: 무늬 변경 가능\n'
                 '• J: 다음 사람 건너뛰기\n'
                 '• Q: 진행 방향 바꾸기\n'
-                '• K: 무늬 상관없이 낼 수 있음\n'
-                '• 7: 무늬 변경 가능',
+                '• K: 연속 2턴 건너뛰기',
                 style: TextStyle(color: Colors.white70, fontSize: 13),
               ),
               SizedBox(height: 12),
@@ -2578,8 +2608,8 @@ class _OneCardScreenState extends State<OneCardScreen> with TickerProviderStateM
               ),
               SizedBox(height: 4),
               Text(
-                '• 특수 카드를 전략적으로 사용하세요\n'
-                '• 공격이 오면 방어 카드(3)로 막으세요\n'
+                '• 공격이 오면 같거나 더 강한 공격 카드로 방어\n'
+                '• 조커는 강력하지만 아껴서 사용하세요\n'
                 '• 마지막 1장에서 원카드를 놓치면 벌칙!',
                 style: TextStyle(color: Colors.white70, fontSize: 13),
               ),
