@@ -961,9 +961,10 @@ class _GameScreenState extends State<GameScreen> with WidgetsBindingObserver {
               ),
               SizedBox(height: 4),
               Text(
-                '• 빈 칸을 탭하여 선택\n'
-                '• 하단 숫자 패드로 숫자 입력\n'
-                '• 메모 모드로 후보 숫자 기록 가능',
+                '• 빈 칸을 탭 → 숫자 패드로 입력\n'
+                '• 빠른 입력: 숫자 먼저 선택 → 셀 탭\n'
+                '• 메모: 후보 숫자를 작게 기록\n'
+                '• 빠른+메모: 셀 탭으로 메모 입력',
                 style: TextStyle(color: Colors.white70, fontSize: 13),
               ),
               SizedBox(height: 12),
@@ -977,7 +978,7 @@ class _GameScreenState extends State<GameScreen> with WidgetsBindingObserver {
               SizedBox(height: 4),
               Text(
                 '• 확실한 숫자부터 채우세요\n'
-                '• 메모 기능을 적극 활용하세요\n'
+                '• 모든 메모로 후보 자동 채우기\n'
                 '• 실패 횟수가 기록됩니다',
                 style: TextStyle(color: Colors.white70, fontSize: 13),
               ),
