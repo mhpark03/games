@@ -2933,32 +2933,48 @@ class _HulaScreenState extends State<HulaScreen> with TickerProviderStateMixin {
               : _buildCenterArea(isLandscape),
         ),
 
-        // 메시지
-        if (gameMessage != null)
-          Container(
-            padding: EdgeInsets.symmetric(
-                horizontal: 12, vertical: isLandscape ? 2 : 8),
-            margin: EdgeInsets.only(bottom: isLandscape ? 2 : 8),
-            decoration: BoxDecoration(
-              color: Colors.black54,
-              borderRadius: BorderRadius.circular(8),
-            ),
-            child: Text(
-              gameMessage!,
-              style: TextStyle(
-                  color: Colors.white, fontSize: isLandscape ? 11 : 14),
-            ),
-          ),
-
-        // 등록된 멜드
-        if (playerMelds.isNotEmpty) _buildPlayerMelds(isLandscape),
-
-        // 플레이어 손패
-        _buildPlayerHand(isLandscape),
-
-        // 액션 버튼
-        _buildActionButtons(isLandscape),
+        // 하단 영역 (메시지, 멜드, 손패, 버튼)
+        _buildBottomSection(isLandscape),
       ],
+    );
+  }
+
+  // 하단 영역 (스크롤 가능)
+  Widget _buildBottomSection(bool isLandscape) {
+    return Flexible(
+      flex: 0,
+      child: SingleChildScrollView(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            // 메시지
+            if (gameMessage != null)
+              Container(
+                padding: EdgeInsets.symmetric(
+                    horizontal: 12, vertical: isLandscape ? 2 : 8),
+                margin: EdgeInsets.only(bottom: isLandscape ? 2 : 8),
+                decoration: BoxDecoration(
+                  color: Colors.black54,
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Text(
+                  gameMessage!,
+                  style: TextStyle(
+                      color: Colors.white, fontSize: isLandscape ? 11 : 14),
+                ),
+              ),
+
+            // 등록된 멜드
+            if (playerMelds.isNotEmpty) _buildPlayerMelds(isLandscape),
+
+            // 플레이어 손패
+            _buildPlayerHand(isLandscape),
+
+            // 액션 버튼
+            _buildActionButtons(isLandscape),
+          ],
+        ),
+      ),
     );
   }
 
