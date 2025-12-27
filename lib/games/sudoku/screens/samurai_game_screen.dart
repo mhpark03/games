@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import '../models/samurai_game_state.dart';
 import '../models/samurai_sudoku_generator.dart';
 import '../services/game_storage.dart';
@@ -64,6 +65,8 @@ class _SamuraiGameScreenState extends State<SamuraiGameScreen>
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
     _timer?.cancel();
+    // 화면을 나갈 때 상태바 복원
+    SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
     super.dispose();
   }
 
@@ -331,15 +334,34 @@ class _SamuraiGameScreenState extends State<SamuraiGameScreen>
 
   @override
   Widget build(BuildContext context) {
-    final isLandscape =
-        MediaQuery.of(context).orientation == Orientation.landscape;
+    return OrientationBuilder(
+      builder: (context, orientation) {
+        if (orientation == Orientation.landscape) {
+          // 가로 모드: 상태바 숨김 (몰입 모드)
+          SystemChrome.setEnabledSystemUIMode(
+            SystemUiMode.immersiveSticky,
+            overlays: [],
+          );
+          return _buildLandscapeLayout(context);
+        } else {
+          // 세로 모드: 상태바 표시
+          SystemChrome.setEnabledSystemUIMode(
+            SystemUiMode.edgeToEdge,
+            overlays: SystemUiOverlay.values,
+          );
+          return _buildPortraitLayout(context);
+        }
+      },
+    );
+  }
 
+  // 세로 모드 레이아웃
+  Widget _buildPortraitLayout(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         title: const Text('사무라이 스도쿠'),
         backgroundColor: Colors.deepPurple,
         foregroundColor: Colors.white,
-        toolbarHeight: isLandscape ? 45 : kToolbarHeight,
         actions: [
           TextButton.icon(
             onPressed: _showDifficultyDialog,
@@ -364,56 +386,297 @@ class _SamuraiGameScreenState extends State<SamuraiGameScreen>
             )
           : SafeArea(
               child: Padding(
-                padding: EdgeInsets.all(isLandscape ? 4.0 : 8.0),
-                child: isLandscape
-                    ? _buildLandscapeLayout()
-                    : _buildPortraitLayout(),
+                padding: const EdgeInsets.all(8.0),
+                child: Column(
+                  children: [
+                    // 게임 상태 표시 바
+                    GameStatusBar(
+                      elapsedSeconds: _elapsedSeconds,
+                      failureCount: _failureCount,
+                      isPaused: _isPaused,
+                      onPauseToggle: _togglePause,
+                      difficultyText: _getDifficultyText(),
+                      themeColor: Colors.deepPurple,
+                    ),
+                    const SizedBox(height: 8),
+                    // 안내 텍스트
+                    Padding(
+                      padding: const EdgeInsets.only(bottom: 8),
+                      child: Text(
+                        '셀을 탭하면 편집 화면으로 이동합니다',
+                        style: TextStyle(
+                          fontSize: 14,
+                          color: Colors.grey.shade600,
+                        ),
+                      ),
+                    ),
+                    // 사무라이 보드 또는 일시정지 오버레이
+                    Expanded(
+                      child: Center(
+                        child: AspectRatio(
+                          aspectRatio: 1,
+                          child: _isPaused
+                              ? _buildPausedOverlay()
+                              : SamuraiBoard(
+                                  gameState: _gameState,
+                                  onCellTap: _onCellTap,
+                                  onBoardSelect: _onBoardSelect,
+                                ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                  ],
+                ),
               ),
             ),
     );
   }
 
-  Widget _buildPortraitLayout() {
-    return Column(
-      children: [
-        // 게임 상태 표시 바
-        GameStatusBar(
-          elapsedSeconds: _elapsedSeconds,
-          failureCount: _failureCount,
-          isPaused: _isPaused,
-          onPauseToggle: _togglePause,
-          difficultyText: _getDifficultyText(),
-          themeColor: Colors.deepPurple,
-        ),
-        const SizedBox(height: 8),
-        // 안내 텍스트
-        Padding(
-          padding: const EdgeInsets.only(bottom: 8),
-          child: Text(
-            '셀을 탭하면 편집 화면으로 이동합니다',
-            style: TextStyle(
-              fontSize: 14,
-              color: Colors.grey.shade600,
-            ),
+  // 가로 모드 레이아웃 (오목 스타일)
+  Widget _buildLandscapeLayout(BuildContext context) {
+    if (_isLoading) {
+      return Scaffold(
+        backgroundColor: Colors.deepPurple.shade900,
+        body: const Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              CircularProgressIndicator(color: Colors.white),
+              SizedBox(height: 16),
+              Text('퍼즐 생성 중...', style: TextStyle(color: Colors.white)),
+            ],
           ),
         ),
-        // 사무라이 보드 또는 일시정지 오버레이
-        Expanded(
-          child: Center(
-            child: AspectRatio(
-              aspectRatio: 1,
-              child: _isPaused
-                  ? _buildPausedOverlay()
-                  : SamuraiBoard(
-                      gameState: _gameState,
-                      onCellTap: _onCellTap,
-                      onBoardSelect: _onBoardSelect,
+      );
+    }
+
+    return Scaffold(
+      body: Container(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [
+              Colors.deepPurple.shade700,
+              Colors.deepPurple.shade900,
+            ],
+          ),
+        ),
+        child: SafeArea(
+          child: Stack(
+            children: [
+              // 메인 영역: 보드 + 상태 정보
+              Row(
+                children: [
+                  // 왼쪽: 게임 보드 (최대 크기)
+                  Expanded(
+                    child: Padding(
+                      padding: const EdgeInsets.all(8.0),
+                      child: Column(
+                        children: [
+                          // 안내 텍스트
+                          Padding(
+                            padding: const EdgeInsets.only(top: 32, bottom: 4),
+                            child: Text(
+                              '셀을 탭하면 편집 화면으로 이동합니다',
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: Colors.white.withValues(alpha: 0.7),
+                              ),
+                            ),
+                          ),
+                          Expanded(
+                            child: Center(
+                              child: AspectRatio(
+                                aspectRatio: 1,
+                                child: _isPaused
+                                    ? _buildPausedOverlay()
+                                    : SamuraiBoard(
+                                        gameState: _gameState,
+                                        onCellTap: _onCellTap,
+                                        onBoardSelect: _onBoardSelect,
+                                      ),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
+                  ),
+                  // 오른쪽: 상태 정보
+                  SizedBox(
+                    width: 140,
+                    child: Container(
+                      margin: const EdgeInsets.symmetric(vertical: 8, horizontal: 4),
+                      decoration: BoxDecoration(
+                        color: Colors.black.withValues(alpha: 0.3),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          const SizedBox(height: 40), // 상단 버튼 공간
+                          _buildLandscapeStatusInfo(),
+                          const Spacer(),
+                        ],
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              // 왼쪽 상단: 뒤로가기 + 제목
+              Positioned(
+                top: 4,
+                left: 4,
+                child: Row(
+                  children: [
+                    _buildCircleButton(
+                      icon: Icons.arrow_back,
+                      onPressed: () => Navigator.pop(context),
+                      tooltip: '뒤로가기',
+                    ),
+                    const SizedBox(width: 8),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+                      decoration: BoxDecoration(
+                        color: Colors.black.withValues(alpha: 0.5),
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      child: const Text(
+                        '사무라이 스도쿠',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              // 오른쪽 상단: 새 게임 버튼
+              Positioned(
+                top: 4,
+                right: 4,
+                child: _buildCircleButton(
+                  icon: Icons.refresh,
+                  onPressed: _showDifficultyDialog,
+                  tooltip: '새 게임',
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  // 원형 버튼 위젯
+  Widget _buildCircleButton({
+    required IconData icon,
+    required VoidCallback? onPressed,
+    required String tooltip,
+  }) {
+    final isEnabled = onPressed != null;
+    return Opacity(
+      opacity: isEnabled ? 1.0 : 0.3,
+      child: Material(
+        color: Colors.black.withValues(alpha: 0.5),
+        shape: const CircleBorder(),
+        child: InkWell(
+          onTap: onPressed,
+          customBorder: const CircleBorder(),
+          child: Tooltip(
+            message: tooltip,
+            child: Container(
+              padding: const EdgeInsets.all(10),
+              child: Icon(
+                icon,
+                color: Colors.white70,
+                size: 22,
+              ),
             ),
           ),
         ),
-        const SizedBox(height: 16),
-      ],
+      ),
+    );
+  }
+
+  // 가로 모드용 상태 정보
+  Widget _buildLandscapeStatusInfo() {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      child: Column(
+        children: [
+          // 난이도
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+            decoration: BoxDecoration(
+              color: Colors.deepPurple.withValues(alpha: 0.3),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Text(
+              _getDifficultyText(),
+              style: const TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.bold,
+                color: Colors.white,
+              ),
+            ),
+          ),
+          const SizedBox(height: 12),
+          // 시간 + 일시정지 버튼
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const Icon(Icons.timer, size: 18, color: Colors.white70),
+              const SizedBox(width: 4),
+              Text(
+                _formatTime(_elapsedSeconds),
+                style: const TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.white,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          GestureDetector(
+            onTap: _togglePause,
+            child: Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: Colors.white.withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(20),
+              ),
+              child: Icon(
+                _isPaused ? Icons.play_arrow : Icons.pause,
+                size: 24,
+                color: Colors.white70,
+              ),
+            ),
+          ),
+          const SizedBox(height: 12),
+          // 실패 횟수
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(Icons.close, size: 16, color: Colors.red.shade300),
+              const SizedBox(width: 4),
+              Text(
+                '$_failureCount',
+                style: TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.red.shade300,
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
     );
   }
 
@@ -452,58 +715,6 @@ class _SamuraiGameScreenState extends State<SamuraiGameScreen>
           ],
         ),
       ),
-    );
-  }
-
-  Widget _buildLandscapeLayout() {
-    return Row(
-      children: [
-        // 사무라이 보드
-        Expanded(
-          flex: 3,
-          child: Column(
-            children: [
-              Text(
-                '셀을 탭하면 편집 화면으로 이동합니다',
-                style: TextStyle(
-                  fontSize: 12,
-                  color: Colors.grey.shade600,
-                ),
-              ),
-              Expanded(
-                child: Center(
-                  child: AspectRatio(
-                    aspectRatio: 1,
-                    child: _isPaused
-                        ? _buildPausedOverlay()
-                        : SamuraiBoard(
-                            gameState: _gameState,
-                            onCellTap: _onCellTap,
-                            onBoardSelect: _onBoardSelect,
-                          ),
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
-        const SizedBox(width: 8),
-        // 상태 바
-        Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            GameStatusBar(
-              elapsedSeconds: _elapsedSeconds,
-              failureCount: _failureCount,
-              isPaused: _isPaused,
-              onPauseToggle: _togglePause,
-              isCompact: true,
-              difficultyText: _getDifficultyText(),
-              themeColor: Colors.deepPurple,
-            ),
-          ],
-        ),
-      ],
     );
   }
 }
