@@ -3737,7 +3737,7 @@ class _HulaScreenState extends State<HulaScreen> with TickerProviderStateMixin {
               ),
               SizedBox(height: 4),
               Text(
-                '1. 덱 또는 버린 더미에서 1장 드로우\n'
+                '1. 덱에서 1장 가져오기\n'
                 '2. 멜드(조합) 등록 또는 붙이기 (선택)\n'
                 '3. 카드 1장 버리기',
                 style: TextStyle(color: Colors.white70, fontSize: 13),
