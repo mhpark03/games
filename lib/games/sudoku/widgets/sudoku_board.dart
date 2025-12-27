@@ -22,7 +22,7 @@ class SudokuBoard extends StatelessWidget {
       aspectRatio: 1,
       child: Container(
         decoration: BoxDecoration(
-          border: Border.all(color: Colors.black, width: 2),
+          border: Border.all(color: Colors.black87, width: 3),
         ),
         child: Column(
           children: List.generate(9, (row) {
@@ -35,15 +35,15 @@ class SudokuBoard extends StatelessWidget {
                         border: Border(
                           right: BorderSide(
                             color: (col + 1) % 3 == 0 && col != 8
-                                ? Colors.black
+                                ? Colors.black87
                                 : Colors.transparent,
-                            width: 2,
+                            width: 3,
                           ),
                           bottom: BorderSide(
                             color: (row + 1) % 3 == 0 && row != 8
-                                ? Colors.black
+                                ? Colors.black87
                                 : Colors.transparent,
-                            width: 2,
+                            width: 3,
                           ),
                         ),
                       ),
