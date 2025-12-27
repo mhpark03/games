@@ -2060,7 +2060,11 @@ class _HulaScreenState extends State<HulaScreen> with TickerProviderStateMixin {
     final hand = computerHands[computerIndex];
     final melds = computerMelds[computerIndex];
 
-    if (melds.isEmpty) {
+    // 모든 멜드가 비어있으면 붙여놓기 스킵
+    final hasAnyMelds = melds.isNotEmpty ||
+        playerMelds.isNotEmpty ||
+        computerMelds.any((m) => m.isNotEmpty);
+    if (!hasAnyMelds) {
       _computerTurnDiscard(computerIndex);
       return;
     }
@@ -3567,7 +3571,7 @@ class _HulaScreenState extends State<HulaScreen> with TickerProviderStateMixin {
     } else if (selectedCardIndices.length == 1 && _isSeven(playerHand[selectedCardIndices.first])) {
       // 7 카드 단독 등록 가능 (훌라 특별 규칙)
       canMeld = true;
-    } else if (selectedCardIndices.isNotEmpty && playerMelds.isNotEmpty) {
+    } else if (selectedCardIndices.isNotEmpty) {
       // 1~2장 선택 시 붙이기 가능 여부 확인 (모든 멜드 - 플레이어 + 컴퓨터)
       for (final idx in selectedCardIndices) {
         final card = playerHand[idx];
