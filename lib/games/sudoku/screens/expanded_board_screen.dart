@@ -105,8 +105,7 @@ class _ExpandedBoardScreenState extends State<ExpandedBoardScreen> {
     _timer?.cancel();
     // 화면 종료 시 부모에게 현재 시간 전달
     widget.onElapsedSecondsUpdate(_localElapsedSeconds);
-    // 화면을 나갈 때 상태바 복원
-    SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
+    // 상태바는 부모 화면에서 관리하므로 여기서 복원하지 않음
     super.dispose();
   }
 
