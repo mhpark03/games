@@ -472,7 +472,7 @@ class _SamuraiGameScreenState extends State<SamuraiGameScreen>
                   // 왼쪽: 게임 보드 (최대 크기)
                   Expanded(
                     child: Padding(
-                      padding: const EdgeInsets.fromLTRB(8, 48, 8, 8),
+                      padding: const EdgeInsets.fromLTRB(140, 8, 8, 8),
                       child: Column(
                         children: [
                           // 안내 텍스트
