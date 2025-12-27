@@ -528,15 +528,24 @@ class _HulaScreenState extends State<HulaScreen> with TickerProviderStateMixin {
       // 대기 상태 복원
       waitingForNextTurn = gameState['waitingForNextTurn'] as bool? ?? false;
       _lastDiscardTurn = gameState['lastDiscardTurn'] as int? ?? 0;
+
+      // 내 차례에서는 대기 상태 불필요 (타이머/시작버튼 없음)
+      if (currentTurn == 0) {
+        waitingForNextTurn = false;
+      }
     });
     _cancelNextTurnTimer();
 
-    // 대기 상태면 타이머 시작 (플레이어든 컴퓨터든)
-    if (waitingForNextTurn) {
+    // 내 차례면 메시지만 표시
+    if (currentTurn == 0) {
+      _showMessage(hasDrawn ? '카드를 버리거나 등록하세요' : '카드를 드로우하세요');
+    }
+    // 컴퓨터 턴이고 대기 상태면 타이머 시작
+    else if (waitingForNextTurn) {
       _startNextTurnTimer();
     }
     // 컴퓨터 턴이고 대기 상태 아니면 컴퓨터 턴 시작
-    else if (currentTurn != 0 && !hasDrawn) {
+    else if (!hasDrawn) {
       setState(() {
         waitingForNextTurn = true;
       });
