@@ -14,10 +14,12 @@ class PlayingCard {
 
   PlayingCard({required this.suit, required this.rank});
 
-  // 카드 점수 (A=1, 2-10=숫자, J/Q/K=10)
+  // 카드 점수 (A=1, 2-9=숫자, J=10, Q=11, K=12)
   int get point {
     if (rank == 1) return 1;
-    if (rank >= 11) return 10;
+    if (rank == 11) return 10; // J
+    if (rank == 12) return 11; // Q
+    if (rank == 13) return 12; // K
     return rank;
   }
 
@@ -3737,9 +3739,10 @@ class _HulaScreenState extends State<HulaScreen> with TickerProviderStateMixin {
               ),
               SizedBox(height: 4),
               Text(
-                '1. 덱 또는 버린 더미에서 1장 드로우\n'
-                '2. 멜드(조합) 등록 또는 붙이기 (선택)\n'
-                '3. 카드 1장 버리기',
+                '1. 덱에서 1장 가져오기\n'
+                '2. 멜드 등록 (Run, Group, 7) 또는 붙여놓기\n'
+                '3. 카드 1장 버리기\n'
+                '• 반시계 방향으로 진행',
                 style: TextStyle(color: Colors.white70, fontSize: 13),
               ),
               SizedBox(height: 12),
@@ -3769,9 +3772,9 @@ class _HulaScreenState extends State<HulaScreen> with TickerProviderStateMixin {
               SizedBox(height: 4),
               Text(
                 '• 7은 단독으로 등록 가능!\n'
+                '• Run/Group에 포함해서도 등록 가능\n'
                 '• 단독 등록 후 Run으로만 확장 가능\n'
-                '  (같은 무늬 6 또는 8 붙이기)\n'
-                '• 땡큐로 항상 가져갈 수 있음',
+                '  (같은 무늬 6 또는 8 붙이기)',
                 style: TextStyle(color: Colors.white70, fontSize: 13),
               ),
               SizedBox(height: 12),
@@ -3785,8 +3788,8 @@ class _HulaScreenState extends State<HulaScreen> with TickerProviderStateMixin {
               SizedBox(height: 4),
               Text(
                 '• 땡큐: 버린 카드를 가져와 바로 등록\n'
-                '• 붙이기: 카드를 기존 멜드에 추가\n'
-                '  (자신/상대 멜드 모두 가능)',
+                '• 붙이기: 본인 멜드가 있어야 가능\n'
+                '  (자신/상대 멜드 모두에 추가 가능)',
                 style: TextStyle(color: Colors.white70, fontSize: 13),
               ),
               SizedBox(height: 12),
@@ -3815,8 +3818,8 @@ class _HulaScreenState extends State<HulaScreen> with TickerProviderStateMixin {
               SizedBox(height: 4),
               Text(
                 '• A = 1점\n'
-                '• 2~10 = 숫자 그대로\n'
-                '• J, Q, K = 10점',
+                '• 2~9 = 숫자 그대로\n'
+                '• J = 10점, Q = 11점, K = 12점',
                 style: TextStyle(color: Colors.white70, fontSize: 13),
               ),
             ],
