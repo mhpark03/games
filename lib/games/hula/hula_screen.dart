@@ -208,7 +208,7 @@ class _HulaScreenState extends State<HulaScreen> with TickerProviderStateMixin {
   List<int> selectedCardIndices = []; // 선택된 카드 인덱스들
   bool waitingForNextTurn = false; // 다음 턴 대기 중
   Timer? _nextTurnTimer; // 자동 진행 타이머
-  int _autoPlayCountdown = 5; // 자동 진행 카운트다운
+  int _autoPlayCountdown = 10; // 자동 진행 카운트다운
   int _lastDiscardTurn = 0; // 마지막으로 카드를 버린 플레이어 턴
   Timer? _computerActionTimer; // 컴퓨터 액션 딜레이 타이머
   static const int _computerActionDelay = 2000; // 컴퓨터 액션 딜레이 (밀리초)
@@ -314,7 +314,7 @@ class _HulaScreenState extends State<HulaScreen> with TickerProviderStateMixin {
   // 다음 턴 자동 진행 타이머 시작
   void _startNextTurnTimer() {
     _cancelNextTurnTimer();
-    _autoPlayCountdown = 5;
+    _autoPlayCountdown = 10;
 
     // 메시지 타이머 취소 (타이머 동안 메시지 유지)
     _messageTimer?.cancel();
@@ -1834,7 +1834,7 @@ class _HulaScreenState extends State<HulaScreen> with TickerProviderStateMixin {
       return;
     }
 
-    // 땡큐 확인: 플레이어 전 순서 컴퓨터는 즉시, 후 순서는 5초 후
+    // 땡큐 확인: 플레이어 전 순서 컴퓨터는 즉시, 후 순서는 10초 후
     _lastDiscardTurn = 0;
     Timer(const Duration(milliseconds: 300), () {
       if (mounted && !gameOver) {
@@ -1843,14 +1843,14 @@ class _HulaScreenState extends State<HulaScreen> with TickerProviderStateMixin {
         if (beforeResult != null) {
           _executeComputerThankYou(beforeResult);
         } else {
-          // 2. 플레이어 후 순서 컴퓨터가 있으면 5초 대기
+          // 2. 플레이어 후 순서 컴퓨터가 있으면 10초 대기
           _startThankYouWait();
         }
       }
     });
   }
 
-  // 땡큐 대기 시작 (플레이어에게 5초 기회 부여)
+  // 땡큐 대기 시작 (플레이어에게 10초 기회 부여)
   void _startThankYouWait() {
     setState(() {
       currentTurn = (currentTurn + 1) % playerCount;
@@ -1859,7 +1859,7 @@ class _HulaScreenState extends State<HulaScreen> with TickerProviderStateMixin {
       waitingForNextTurn = true;
     });
 
-    // 플레이어 턴이면 타이머 없이 대기, 컴퓨터 턴이면 5초 타이머
+    // 플레이어 턴이면 타이머 없이 대기, 컴퓨터 턴이면 10초 타이머
     if (currentTurn != 0) {
       _startNextTurnTimer();
     } else {
@@ -1885,7 +1885,7 @@ class _HulaScreenState extends State<HulaScreen> with TickerProviderStateMixin {
     });
 
     if (currentTurn != 0) {
-      // 컴퓨터 턴: 5초 타이머 시작
+      // 컴퓨터 턴: 10초 타이머 시작
       _startNextTurnTimer();
     } else {
       // 플레이어 턴: 타이머 없이 대기 (동작할 때까지 유지)
@@ -2221,7 +2221,7 @@ class _HulaScreenState extends State<HulaScreen> with TickerProviderStateMixin {
       return;
     }
 
-    // 땡큐 확인: 플레이어 전 순서 컴퓨터는 즉시, 후 순서는 5초 후
+    // 땡큐 확인: 플레이어 전 순서 컴퓨터는 즉시, 후 순서는 10초 후
     _lastDiscardTurn = currentTurn;
     _computerActionTimer = Timer(const Duration(milliseconds: 500), () {
       if (mounted && !gameOver) {
@@ -2230,7 +2230,7 @@ class _HulaScreenState extends State<HulaScreen> with TickerProviderStateMixin {
         if (beforeResult != null) {
           _executeComputerThankYou(beforeResult);
         } else {
-          // 2. 플레이어에게 5초 기회 부여 후 플레이어 후 순서 컴퓨터 확인
+          // 2. 플레이어에게 10초 기회 부여 후 플레이어 후 순서 컴퓨터 확인
           _startThankYouWait();
         }
       }
@@ -2296,7 +2296,7 @@ class _HulaScreenState extends State<HulaScreen> with TickerProviderStateMixin {
     return _checkComputerThankYou(fromTurn, beforePlayer: true);
   }
 
-  // 플레이어 후 순서 컴퓨터만 땡큐 확인 (5초 후 실행)
+  // 플레이어 후 순서 컴퓨터만 땡큐 확인 (10초 후 실행)
   int? _checkComputerThankYouAfterPlayer(int fromTurn) {
     return _checkComputerThankYou(fromTurn, beforePlayer: false);
   }
@@ -2583,7 +2583,7 @@ class _HulaScreenState extends State<HulaScreen> with TickerProviderStateMixin {
       return;
     }
 
-    // 땡큐 확인: 플레이어 전 순서 컴퓨터는 즉시, 후 순서는 5초 후
+    // 땡큐 확인: 플레이어 전 순서 컴퓨터는 즉시, 후 순서는 10초 후
     final discardTurn = computerIndex + 1;
     _lastDiscardTurn = discardTurn;
     Timer(const Duration(milliseconds: 500), () {
@@ -2593,7 +2593,7 @@ class _HulaScreenState extends State<HulaScreen> with TickerProviderStateMixin {
         if (beforeResult != null) {
           _executeComputerThankYou(beforeResult);
         } else {
-          // 2. 플레이어에게 5초 기회 부여 후 플레이어 후 순서 컴퓨터 확인
+          // 2. 플레이어에게 10초 기회 부여 후 플레이어 후 순서 컴퓨터 확인
           _startThankYouWait();
         }
       }
@@ -3248,26 +3248,48 @@ class _HulaScreenState extends State<HulaScreen> with TickerProviderStateMixin {
           if (waitingForNextTurn)
             Padding(
               padding: const EdgeInsets.only(top: 12),
-              child: ElevatedButton(
-                onPressed: _onNextTurn,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: currentTurn == 0 ? Colors.green : Colors.orange,
-                  foregroundColor: Colors.white,
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(8),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  // 상태 표시 버튼
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                    decoration: BoxDecoration(
+                      color: currentTurn == 0 ? Colors.green : Colors.orange,
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Text(
+                      currentTurn == 0
+                          ? '내 차례! ($_autoPlayCountdown)'
+                          : '다음: 컴퓨터$currentTurn ($_autoPlayCountdown)',
+                      style: const TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
+                      ),
+                    ),
                   ),
-                ),
-                child: Text(
-                  currentTurn == 0
-                      ? '내 차례!'
-                      : '다음: 컴퓨터$currentTurn ($_autoPlayCountdown)',
-                  style: const TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
+                  const SizedBox(width: 12),
+                  // 시작하기 버튼
+                  ElevatedButton(
+                    onPressed: _onNextTurn,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.blue,
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                    ),
+                    child: const Text(
+                      '시작 ▶',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
                   ),
-                ),
+                ],
               ),
             ),
           // 모든 등록된 멜드 표시
