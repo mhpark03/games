@@ -2054,8 +2054,8 @@ class _HulaScreenState extends State<HulaScreen> with TickerProviderStateMixin {
   void _computerRegisterMeldsSequentially(int computerIndex, List<Map<String, dynamic>> meldsToRegister, int index) {
     if (gameOver) return;
     if (index >= meldsToRegister.length) {
-      // 모든 등록 완료, 붙여놓기 단계로 (대기 후)
-      _startWaitWithAction(() => _computerTurnAttach(computerIndex));
+      // 모든 등록 완료, 붙여놓기 단계로 (타이머 없이 바로 진행)
+      _computerTurnAttach(computerIndex);
       return;
     }
 
@@ -2400,8 +2400,8 @@ class _HulaScreenState extends State<HulaScreen> with TickerProviderStateMixin {
   void _executeComputerThankYouRegisterSequentially(int computerIndex, List<Map<String, dynamic>> meldsToRegister, int index) {
     if (gameOver) return;
     if (index >= meldsToRegister.length) {
-      // 모든 등록 완료, 붙여놓기 단계로 (대기 후)
-      _startWaitWithAction(() => _executeComputerThankYouAttach(computerIndex));
+      // 모든 등록 완료, 붙여놓기 단계로 (타이머 없이 바로 진행)
+      _executeComputerThankYouAttach(computerIndex);
       return;
     }
 
