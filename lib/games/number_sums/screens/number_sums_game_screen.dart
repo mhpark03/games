@@ -97,7 +97,7 @@ class _NumberSumsGameScreenState extends State<NumberSumsGameScreen>
   }
 
   Future<void> _startNewGame() async {
-    await GameStorage.deleteAllGames();
+    await GameStorage.deleteNumberSumsGame();
 
     setState(() {
       _isLoading = true;
