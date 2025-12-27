@@ -476,8 +476,8 @@ class _HulaScreenState extends State<HulaScreen> with TickerProviderStateMixin {
     });
     _messageTimer?.cancel();
 
-    // waitingForNextTurn 중이거나 keepDuringWait가 true이면 메시지 유지
-    if (waitingForNextTurn || keepDuringWait) {
+    // 컴퓨터 턴, waitingForNextTurn 중, keepDuringWait가 true이면 메시지 유지
+    if (currentTurn != 0 || waitingForNextTurn || keepDuringWait) {
       return; // 타이머를 설정하지 않음
     }
 
