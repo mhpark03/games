@@ -2660,7 +2660,7 @@ class HomeScreen extends StatelessWidget {
                                 ),
                               ),
                               Text(
-                                '게임을 선택하세요',
+                                '게임을 선택하세요 (길게 누르면 설명)',
                                 style: TextStyle(
                                   fontSize: 14,
                                   color: Colors.grey.shade400,
@@ -2687,7 +2687,7 @@ class HomeScreen extends StatelessWidget {
                               ),
                               const SizedBox(height: 6),
                               Text(
-                                '게임을 선택하세요',
+                                '게임을 선택하세요 (길게 누르면 설명)',
                                 style: TextStyle(
                                   fontSize: 14,
                                   color: Colors.grey.shade400,
