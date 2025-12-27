@@ -1,8 +1,59 @@
-# 게임 센터 앱
+# CLAUDE.md
 
-## 윷놀이 (Yut Nori)
+This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
-### 말판 구조
+## 프로젝트 개요
+
+Flutter 기반 게임 센터 앱으로, 다양한 보드 게임과 카드 게임을 포함합니다.
+
+## 개발 명령어
+
+```bash
+# 의존성 설치
+flutter pub get
+
+# 앱 실행
+flutter run
+
+# 빌드
+flutter build apk          # Android
+flutter build ios          # iOS
+flutter build windows      # Windows
+
+# 분석
+flutter analyze
+```
+
+## 아키텍처
+
+### 디렉토리 구조
+- `lib/main.dart` - 앱 진입점 및 홈 화면 (게임 선택 다이얼로그 포함)
+- `lib/games/` - 각 게임별 폴더
+- `lib/services/` - 공통 서비스 (게임 저장, Gemini API 등)
+
+### 게임 저장 시스템
+`GameSaveService` (`lib/services/game_save_service.dart`)를 통해 게임 상태를 SharedPreferences에 저장합니다.
+- 한 번에 하나의 게임만 저장 가능
+- 각 게임 화면에서 `hasSavedGame()`, `loadGame()`, `saveGame()`, `clearSavedGame()` 정적 메서드 구현
+
+### 게임 화면 패턴
+각 게임은 `lib/games/{game_name}/{game_name}_screen.dart` 형식으로 구성됩니다.
+- `resumeGame` 파라미터로 이어하기 지원
+- 게임 모드, 난이도 등은 enum으로 정의
+- 컴퓨터 AI는 각 게임 화면 내에 구현
+
+### 주요 게임
+| 게임 | 파일 | 특징 |
+|------|------|------|
+| 오목 | `gomoku_screen.dart` | vs 컴퓨터(흑/백), 2인 플레이, 난이도 선택 |
+| 오델로 | `othello_screen.dart` | vs 컴퓨터(흑/백), 2인 플레이, 난이도 선택 |
+| 체스 | `chess_screen.dart` | vs 컴퓨터(흑/백), 2인 플레이 |
+| 장기 | `janggi_screen.dart` | vs 컴퓨터(초/한), 2인 플레이 |
+| 원카드 | `onecard_screen.dart` | 2~4인, 컴퓨터 AI |
+| 윷놀이 | `yutnori_screen.dart` | 2~4인, 컴퓨터 AI |
+| 훌라 | `hula_screen.dart` | 2~4인, 컴퓨터 AI (땡큐, 멜드 등록) |
+
+## 윷놀이 말판 구조
 
 ```
           10/28 ─── 9 ─── 8 ─── 7 ─── 6 ─── 5/21
@@ -101,5 +152,14 @@
                                        11 → ... → 15 → 16 → 17 → 18 → 19 → 34 → 골인
 ```
 
-### 주요 파일
-- `lib/games/yutnori/yutnori_screen.dart` - 윷놀이 게임 메인 화면
+## 훌라 게임 규칙
+
+### 턴 진행
+- `currentTurn`: 0 = 플레이어, 1~3 = 컴퓨터
+- 턴 변경 시 반드시 `_saveGame()` 호출 필요 (이어하기 정확성)
+- 땡큐 시스템: 다른 플레이어가 버린 카드를 가져갈 수 있음
+
+### 멜드 시스템
+- Run: 같은 무늬 연속 3장 이상
+- Group: 같은 숫자 3~4장
+- 7 카드: 단독 등록 가능, 다른 플레이어 멜드에 붙여놓기 가능

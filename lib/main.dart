@@ -11,6 +11,15 @@ import 'games/baseball/baseball_screen.dart';
 import 'games/onecard/onecard_screen.dart';
 import 'games/yutnori/yutnori_screen.dart';
 import 'games/hula/hula_screen.dart';
+import 'games/sudoku/screens/game_screen.dart' as sudoku;
+import 'games/sudoku/screens/samurai_game_screen.dart' as sudoku;
+import 'games/sudoku/screens/killer_game_screen.dart' as sudoku;
+import 'games/sudoku/screens/number_sums_game_screen.dart' as sudoku;
+import 'games/sudoku/models/game_state.dart' as sudoku;
+import 'games/sudoku/models/samurai_game_state.dart' as sudoku;
+import 'games/sudoku/models/killer_sudoku_generator.dart' as sudoku;
+import 'games/sudoku/models/number_sums_generator.dart' as sudoku;
+import 'games/sudoku/services/game_storage.dart' as sudoku;
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
@@ -2181,6 +2190,431 @@ class HomeScreen extends StatelessWidget {
     );
   }
 
+  // 스도쿠 게임 다이얼로그
+  Future<void> _showSudokuModeDialog(BuildContext context) async {
+    final hasSaved = await sudoku.GameStorage.hasRegularGame();
+
+    if (!context.mounted) return;
+
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          backgroundColor: Colors.grey.shade900,
+          insetPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+            side: BorderSide(color: Colors.blue.withValues(alpha: 0.5), width: 2),
+          ),
+          title: const Text(
+            '스도쿠',
+            style: TextStyle(
+              color: Colors.blue,
+              fontWeight: FontWeight.bold,
+            ),
+            textAlign: TextAlign.center,
+          ),
+          content: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                if (hasSaved) ...[
+                  _buildSudokuResumeButton(context, '일반 스도쿠', Colors.blue),
+                  const SizedBox(height: 16),
+                  Divider(color: Colors.grey.shade700),
+                  const SizedBox(height: 8),
+                  Text('새 게임', style: TextStyle(color: Colors.grey.shade400, fontSize: 12)),
+                  const SizedBox(height: 8),
+                ],
+                _buildSudokuDifficultyButton(context, '쉬움', sudoku.Difficulty.easy, Colors.green),
+                const SizedBox(height: 8),
+                _buildSudokuDifficultyButton(context, '보통', sudoku.Difficulty.medium, Colors.orange),
+                const SizedBox(height: 8),
+                _buildSudokuDifficultyButton(context, '어려움', sudoku.Difficulty.hard, Colors.red),
+                const SizedBox(height: 8),
+                _buildSudokuDifficultyButton(context, '달인', sudoku.Difficulty.expert, Colors.purple),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildSudokuResumeButton(BuildContext context, String title, Color color) {
+    return InkWell(
+      onTap: () async {
+        Navigator.pop(context);
+        final savedGame = await sudoku.GameStorage.loadRegularGame();
+        if (savedGame != null && context.mounted) {
+          Navigator.push(context, MaterialPageRoute(builder: (context) => sudoku.GameScreen(savedGameState: savedGame)));
+        }
+      },
+      borderRadius: BorderRadius.circular(12),
+      child: Container(
+        width: double.infinity,
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        decoration: BoxDecoration(
+          color: Colors.green.withValues(alpha: 0.2),
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: Colors.green.withValues(alpha: 0.5), width: 2),
+        ),
+        child: Row(
+          children: [
+            const Icon(Icons.play_arrow, color: Colors.green, size: 28),
+            const SizedBox(width: 12),
+            Text('이어하기', style: TextStyle(color: Colors.green, fontSize: 16, fontWeight: FontWeight.bold)),
+            const Spacer(),
+            Icon(Icons.arrow_forward_ios, color: Colors.green.withValues(alpha: 0.7), size: 16),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSudokuDifficultyButton(BuildContext context, String label, sudoku.Difficulty difficulty, Color color) {
+    return InkWell(
+      onTap: () {
+        Navigator.pop(context);
+        Navigator.push(context, MaterialPageRoute(builder: (context) => sudoku.GameScreen(initialDifficulty: difficulty)));
+      },
+      borderRadius: BorderRadius.circular(12),
+      child: Container(
+        width: double.infinity,
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        decoration: BoxDecoration(
+          color: color.withValues(alpha: 0.1),
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: color.withValues(alpha: 0.3), width: 1),
+        ),
+        child: Row(
+          children: [
+            Icon(Icons.play_arrow, color: color, size: 24),
+            const SizedBox(width: 12),
+            Text(label, style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold)),
+            const Spacer(),
+            Icon(Icons.arrow_forward_ios, color: color.withValues(alpha: 0.7), size: 16),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // 사무라이 스도쿠 다이얼로그
+  Future<void> _showSamuraiSudokuDialog(BuildContext context) async {
+    final hasSaved = await sudoku.GameStorage.hasSamuraiGame();
+
+    if (!context.mounted) return;
+
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          backgroundColor: Colors.grey.shade900,
+          insetPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+            side: BorderSide(color: Colors.deepPurple.withValues(alpha: 0.5), width: 2),
+          ),
+          title: const Text(
+            '사무라이 스도쿠',
+            style: TextStyle(color: Colors.deepPurple, fontWeight: FontWeight.bold),
+            textAlign: TextAlign.center,
+          ),
+          content: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                if (hasSaved) ...[
+                  _buildSamuraiResumeButton(context),
+                  const SizedBox(height: 16),
+                  Divider(color: Colors.grey.shade700),
+                  const SizedBox(height: 8),
+                  Text('새 게임', style: TextStyle(color: Colors.grey.shade400, fontSize: 12)),
+                  const SizedBox(height: 8),
+                ],
+                _buildSamuraiDifficultyButton(context, '쉬움', sudoku.SamuraiDifficulty.easy, Colors.green),
+                const SizedBox(height: 8),
+                _buildSamuraiDifficultyButton(context, '보통', sudoku.SamuraiDifficulty.medium, Colors.orange),
+                const SizedBox(height: 8),
+                _buildSamuraiDifficultyButton(context, '어려움', sudoku.SamuraiDifficulty.hard, Colors.red),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildSamuraiResumeButton(BuildContext context) {
+    return InkWell(
+      onTap: () async {
+        Navigator.pop(context);
+        final savedGame = await sudoku.GameStorage.loadSamuraiGame();
+        if (savedGame != null && context.mounted) {
+          Navigator.push(context, MaterialPageRoute(builder: (context) => sudoku.SamuraiGameScreen(savedGameState: savedGame)));
+        }
+      },
+      borderRadius: BorderRadius.circular(12),
+      child: Container(
+        width: double.infinity,
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        decoration: BoxDecoration(
+          color: Colors.green.withValues(alpha: 0.2),
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: Colors.green.withValues(alpha: 0.5), width: 2),
+        ),
+        child: Row(
+          children: [
+            const Icon(Icons.play_arrow, color: Colors.green, size: 28),
+            const SizedBox(width: 12),
+            Text('이어하기', style: TextStyle(color: Colors.green, fontSize: 16, fontWeight: FontWeight.bold)),
+            const Spacer(),
+            Icon(Icons.arrow_forward_ios, color: Colors.green.withValues(alpha: 0.7), size: 16),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSamuraiDifficultyButton(BuildContext context, String label, sudoku.SamuraiDifficulty difficulty, Color color) {
+    return InkWell(
+      onTap: () {
+        Navigator.pop(context);
+        Navigator.push(context, MaterialPageRoute(builder: (context) => sudoku.SamuraiGameScreen(initialDifficulty: difficulty)));
+      },
+      borderRadius: BorderRadius.circular(12),
+      child: Container(
+        width: double.infinity,
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        decoration: BoxDecoration(
+          color: color.withValues(alpha: 0.1),
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: color.withValues(alpha: 0.3), width: 1),
+        ),
+        child: Row(
+          children: [
+            Icon(Icons.play_arrow, color: color, size: 24),
+            const SizedBox(width: 12),
+            Text(label, style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold)),
+            const Spacer(),
+            Icon(Icons.arrow_forward_ios, color: color.withValues(alpha: 0.7), size: 16),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // 킬러 스도쿠 다이얼로그
+  Future<void> _showKillerSudokuDialog(BuildContext context) async {
+    final hasSaved = await sudoku.GameStorage.hasKillerGame();
+
+    if (!context.mounted) return;
+
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          backgroundColor: Colors.grey.shade900,
+          insetPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+            side: BorderSide(color: Colors.teal.shade700.withValues(alpha: 0.5), width: 2),
+          ),
+          title: Text(
+            '킬러 스도쿠',
+            style: TextStyle(color: Colors.teal.shade700, fontWeight: FontWeight.bold),
+            textAlign: TextAlign.center,
+          ),
+          content: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                if (hasSaved) ...[
+                  _buildKillerResumeButton(context),
+                  const SizedBox(height: 16),
+                  Divider(color: Colors.grey.shade700),
+                  const SizedBox(height: 8),
+                  Text('새 게임', style: TextStyle(color: Colors.grey.shade400, fontSize: 12)),
+                  const SizedBox(height: 8),
+                ],
+                _buildKillerDifficultyButton(context, '쉬움', sudoku.KillerDifficulty.easy, Colors.green),
+                const SizedBox(height: 8),
+                _buildKillerDifficultyButton(context, '보통', sudoku.KillerDifficulty.medium, Colors.orange),
+                const SizedBox(height: 8),
+                _buildKillerDifficultyButton(context, '어려움', sudoku.KillerDifficulty.hard, Colors.red),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildKillerResumeButton(BuildContext context) {
+    return InkWell(
+      onTap: () async {
+        Navigator.pop(context);
+        final savedGame = await sudoku.GameStorage.loadKillerGame();
+        if (savedGame != null && context.mounted) {
+          Navigator.push(context, MaterialPageRoute(builder: (context) => sudoku.KillerGameScreen(savedGameState: savedGame)));
+        }
+      },
+      borderRadius: BorderRadius.circular(12),
+      child: Container(
+        width: double.infinity,
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        decoration: BoxDecoration(
+          color: Colors.green.withValues(alpha: 0.2),
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: Colors.green.withValues(alpha: 0.5), width: 2),
+        ),
+        child: Row(
+          children: [
+            const Icon(Icons.play_arrow, color: Colors.green, size: 28),
+            const SizedBox(width: 12),
+            Text('이어하기', style: TextStyle(color: Colors.green, fontSize: 16, fontWeight: FontWeight.bold)),
+            const Spacer(),
+            Icon(Icons.arrow_forward_ios, color: Colors.green.withValues(alpha: 0.7), size: 16),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildKillerDifficultyButton(BuildContext context, String label, sudoku.KillerDifficulty difficulty, Color color) {
+    return InkWell(
+      onTap: () {
+        Navigator.pop(context);
+        Navigator.push(context, MaterialPageRoute(builder: (context) => sudoku.KillerGameScreen(initialDifficulty: difficulty)));
+      },
+      borderRadius: BorderRadius.circular(12),
+      child: Container(
+        width: double.infinity,
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        decoration: BoxDecoration(
+          color: color.withValues(alpha: 0.1),
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: color.withValues(alpha: 0.3), width: 1),
+        ),
+        child: Row(
+          children: [
+            Icon(Icons.play_arrow, color: color, size: 24),
+            const SizedBox(width: 12),
+            Text(label, style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold)),
+            const Spacer(),
+            Icon(Icons.arrow_forward_ios, color: color.withValues(alpha: 0.7), size: 16),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // 넘버 썸즈 다이얼로그
+  Future<void> _showNumberSumsDialog(BuildContext context) async {
+    final hasSaved = await sudoku.GameStorage.hasNumberSumsGame();
+
+    if (!context.mounted) return;
+
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          backgroundColor: Colors.grey.shade900,
+          insetPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+            side: BorderSide(color: Colors.deepOrange.shade700.withValues(alpha: 0.5), width: 2),
+          ),
+          title: Text(
+            '넘버 썸즈',
+            style: TextStyle(color: Colors.deepOrange.shade700, fontWeight: FontWeight.bold),
+            textAlign: TextAlign.center,
+          ),
+          content: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                if (hasSaved) ...[
+                  _buildNumberSumsResumeButton(context),
+                  const SizedBox(height: 16),
+                  Divider(color: Colors.grey.shade700),
+                  const SizedBox(height: 8),
+                  Text('새 게임', style: TextStyle(color: Colors.grey.shade400, fontSize: 12)),
+                  const SizedBox(height: 8),
+                ],
+                _buildNumberSumsDifficultyButton(context, '쉬움 (5x5)', sudoku.NumberSumsDifficulty.easy, Colors.green),
+                const SizedBox(height: 8),
+                _buildNumberSumsDifficultyButton(context, '보통 (6x6)', sudoku.NumberSumsDifficulty.medium, Colors.orange),
+                const SizedBox(height: 8),
+                _buildNumberSumsDifficultyButton(context, '어려움 (7x7)', sudoku.NumberSumsDifficulty.hard, Colors.red),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildNumberSumsResumeButton(BuildContext context) {
+    return InkWell(
+      onTap: () async {
+        Navigator.pop(context);
+        final savedGame = await sudoku.GameStorage.loadNumberSumsGame();
+        if (savedGame != null && context.mounted) {
+          Navigator.push(context, MaterialPageRoute(builder: (context) => sudoku.NumberSumsGameScreen(savedGameState: savedGame)));
+        }
+      },
+      borderRadius: BorderRadius.circular(12),
+      child: Container(
+        width: double.infinity,
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        decoration: BoxDecoration(
+          color: Colors.green.withValues(alpha: 0.2),
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: Colors.green.withValues(alpha: 0.5), width: 2),
+        ),
+        child: Row(
+          children: [
+            const Icon(Icons.play_arrow, color: Colors.green, size: 28),
+            const SizedBox(width: 12),
+            Text('이어하기', style: TextStyle(color: Colors.green, fontSize: 16, fontWeight: FontWeight.bold)),
+            const Spacer(),
+            Icon(Icons.arrow_forward_ios, color: Colors.green.withValues(alpha: 0.7), size: 16),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildNumberSumsDifficultyButton(BuildContext context, String label, sudoku.NumberSumsDifficulty difficulty, Color color) {
+    return InkWell(
+      onTap: () {
+        Navigator.pop(context);
+        Navigator.push(context, MaterialPageRoute(builder: (context) => sudoku.NumberSumsGameScreen(initialDifficulty: difficulty)));
+      },
+      borderRadius: BorderRadius.circular(12),
+      child: Container(
+        width: double.infinity,
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        decoration: BoxDecoration(
+          color: color.withValues(alpha: 0.1),
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: color.withValues(alpha: 0.3), width: 1),
+        ),
+        child: Row(
+          children: [
+            Icon(Icons.play_arrow, color: color, size: 24),
+            const SizedBox(width: 12),
+            Text(label, style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold)),
+            const Spacer(),
+            Icon(Icons.arrow_forward_ios, color: color.withValues(alpha: 0.7), size: 16),
+          ],
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -2376,6 +2810,38 @@ class HomeScreen extends StatelessWidget {
                                 icon: Icons.style,
                                 color: Colors.teal,
                                 onTap: () => _showHulaModeDialog(context),
+                              ),
+                              _buildGameTile(
+                                context,
+                                title: '스도쿠',
+                                subtitle: 'Sudoku',
+                                icon: Icons.grid_3x3,
+                                color: Colors.blue,
+                                onTap: () => _showSudokuModeDialog(context),
+                              ),
+                              _buildGameTile(
+                                context,
+                                title: '사무라이',
+                                subtitle: 'Samurai',
+                                icon: Icons.apps,
+                                color: Colors.deepPurple,
+                                onTap: () => _showSamuraiSudokuDialog(context),
+                              ),
+                              _buildGameTile(
+                                context,
+                                title: '킬러 스도쿠',
+                                subtitle: 'Killer',
+                                icon: Icons.calculate,
+                                color: Colors.teal.shade700,
+                                onTap: () => _showKillerSudokuDialog(context),
+                              ),
+                              _buildGameTile(
+                                context,
+                                title: '넘버 썸즈',
+                                subtitle: 'Number Sums',
+                                icon: Icons.add_box,
+                                color: Colors.deepOrange.shade700,
+                                onTap: () => _showNumberSumsDialog(context),
                               ),
                             ],
                           );
