@@ -99,6 +99,7 @@ class _SolitaireScreenState extends State<SolitaireScreen> {
   // 게임 타이머
   Timer? _timer;
   int _elapsedSeconds = 0;
+  bool _isPaused = false;
 
   @override
   void initState() {
@@ -117,7 +118,7 @@ class _SolitaireScreenState extends State<SolitaireScreen> {
   void _startTimer() {
     _timer?.cancel();
     _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
-      if (!isGameWon) {
+      if (!isGameWon && !_isPaused) {
         setState(() {
           _elapsedSeconds++;
         });
@@ -127,6 +128,12 @@ class _SolitaireScreenState extends State<SolitaireScreen> {
 
   void _stopTimer() {
     _timer?.cancel();
+  }
+
+  void _togglePause() {
+    setState(() {
+      _isPaused = !_isPaused;
+    });
   }
 
   String _formatTime(int seconds) {
@@ -950,11 +957,25 @@ class _SolitaireScreenState extends State<SolitaireScreen> {
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(Icons.timer, color: Colors.white70, size: 18),
-                  const SizedBox(width: 4),
-                  Text(
-                    _formatTime(_elapsedSeconds),
-                    style: const TextStyle(color: Colors.white, fontSize: 14),
+                  GestureDetector(
+                    onTap: _togglePause,
+                    child: Row(
+                      children: [
+                        Icon(
+                          _isPaused ? Icons.play_arrow : Icons.timer,
+                          color: _isPaused ? Colors.amber : Colors.white70,
+                          size: 18,
+                        ),
+                        const SizedBox(width: 4),
+                        Text(
+                          _isPaused ? '일시정지' : _formatTime(_elapsedSeconds),
+                          style: TextStyle(
+                            color: _isPaused ? Colors.amber : Colors.white,
+                            fontSize: 14,
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
                   const SizedBox(width: 16),
                   Icon(Icons.swap_horiz, color: Colors.white70, size: 18),
@@ -1036,17 +1057,31 @@ class _SolitaireScreenState extends State<SolitaireScreen> {
                     const SizedBox(height: 4),
                     Padding(
                       padding: const EdgeInsets.only(left: 50),
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-                        decoration: BoxDecoration(
-                          color: Colors.black.withValues(alpha: 0.3),
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: Text(
-                          '${_formatTime(_elapsedSeconds)} | 이동: $moves (${drawCount}장)',
-                          style: const TextStyle(
-                            color: Colors.white70,
-                            fontSize: 12,
+                      child: GestureDetector(
+                        onTap: _togglePause,
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                          decoration: BoxDecoration(
+                            color: Colors.black.withValues(alpha: 0.3),
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(
+                                _isPaused ? Icons.play_arrow : Icons.timer,
+                                color: _isPaused ? Colors.amber : Colors.white70,
+                                size: 14,
+                              ),
+                              const SizedBox(width: 4),
+                              Text(
+                                _isPaused ? '일시정지' : '${_formatTime(_elapsedSeconds)} | 이동: $moves (${drawCount}장)',
+                                style: TextStyle(
+                                  color: _isPaused ? Colors.amber : Colors.white70,
+                                  fontSize: 12,
+                                ),
+                              ),
+                            ],
                           ),
                         ),
                       ),
