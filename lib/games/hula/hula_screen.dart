@@ -544,12 +544,21 @@ class _HulaScreenState extends State<HulaScreen> with TickerProviderStateMixin {
     else if (waitingForNextTurn) {
       _startNextTurnTimer();
     }
-    // 컴퓨터 턴이고 대기 상태 아니면 컴퓨터 턴 시작
+    // 컴퓨터 턴이고 드로우 전이면 대기 상태로 만들고 타이머 시작
     else if (!hasDrawn) {
       setState(() {
         waitingForNextTurn = true;
       });
       _startNextTurnTimer();
+    }
+    // 컴퓨터 턴이고 드로우 후면 버리기 단계로 진행
+    else {
+      final computerIndex = currentTurn - 1;
+      _computerActionTimer = Timer(const Duration(milliseconds: 500), () {
+        if (mounted && !gameOver) {
+          _computerTurnDiscard(computerIndex);
+        }
+      });
     }
   }
 
