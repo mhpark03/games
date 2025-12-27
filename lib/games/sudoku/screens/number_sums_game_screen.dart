@@ -151,6 +151,13 @@ class _NumberSumsGameScreenState extends State<NumberSumsGameScreen>
               _gameState.markedCorrectCells.map((r) => List<bool>.from(r)).toList();
           newMarkedCorrect[row][col] = true;
           _gameState = _gameState.copyWith(markedCorrectCells: newMarkedCorrect);
+
+          // 완성 체크 (모든 셀이 결정되어야 함)
+          if (_gameState.checkCompletion()) {
+            _gameState = _gameState.copyWith(isCompleted: true);
+            _timer?.cancel();
+            _showCompletionDialog();
+          }
         } else {
           // 틀린 수를 올바른 수로 선택 -> 실패!
           _failureCount++;
@@ -166,19 +173,11 @@ class _NumberSumsGameScreenState extends State<NumberSumsGameScreen>
               _gameState.currentBoard.map((r) => List<int>.from(r)).toList();
           newBoard[row][col] = 0;
 
-          // 완성 체크
-          bool isComplete = NumberSumsGenerator.isBoardComplete(
-            newBoard,
-            _gameState.solution,
-            _gameState.gridSize,
-          );
+          _gameState = _gameState.copyWith(currentBoard: newBoard);
 
-          _gameState = _gameState.copyWith(
-            currentBoard: newBoard,
-            isCompleted: isComplete,
-          );
-
-          if (isComplete) {
+          // 완성 체크 (모든 셀이 결정되어야 함)
+          if (_gameState.checkCompletion()) {
+            _gameState = _gameState.copyWith(isCompleted: true);
             _timer?.cancel();
             _showCompletionDialog();
           }
@@ -197,18 +196,11 @@ class _NumberSumsGameScreenState extends State<NumberSumsGameScreen>
               _gameState.currentBoard.map((r) => List<int>.from(r)).toList();
           newBoard[row][col] = 0;
 
-          bool isComplete = NumberSumsGenerator.isBoardComplete(
-            newBoard,
-            _gameState.solution,
-            _gameState.gridSize,
-          );
+          _gameState = _gameState.copyWith(currentBoard: newBoard);
 
-          _gameState = _gameState.copyWith(
-            currentBoard: newBoard,
-            isCompleted: isComplete,
-          );
-
-          if (isComplete) {
+          // 완성 체크 (모든 셀이 결정되어야 함)
+          if (_gameState.checkCompletion()) {
+            _gameState = _gameState.copyWith(isCompleted: true);
             _timer?.cancel();
             _showCompletionDialog();
           }
@@ -218,6 +210,13 @@ class _NumberSumsGameScreenState extends State<NumberSumsGameScreen>
               _gameState.markedCorrectCells.map((r) => List<bool>.from(r)).toList();
           newMarkedCorrect[row][col] = true;
           _gameState = _gameState.copyWith(markedCorrectCells: newMarkedCorrect);
+
+          // 완성 체크 (모든 셀이 결정되어야 함)
+          if (_gameState.checkCompletion()) {
+            _gameState = _gameState.copyWith(isCompleted: true);
+            _timer?.cancel();
+            _showCompletionDialog();
+          }
         }
       }
     });
