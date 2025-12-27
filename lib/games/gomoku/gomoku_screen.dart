@@ -1017,6 +1017,11 @@ class _GomokuScreenState extends State<GomokuScreen> {
         backgroundColor: Colors.brown.shade800,
         foregroundColor: Colors.white,
         actions: [
+          IconButton(
+            icon: const Icon(Icons.help_outline),
+            onPressed: _showRulesDialog,
+            tooltip: '게임 규칙',
+          ),
           Opacity(
             opacity: moveHistory.isNotEmpty && !gameOver ? 1.0 : 0.3,
             child: IconButton(
@@ -1480,6 +1485,93 @@ class _GomokuScreenState extends State<GomokuScreen> {
           style: const TextStyle(fontSize: 16, color: Colors.white),
         ),
       ],
+    );
+  }
+
+  void _showRulesDialog() {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: Colors.grey.shade900,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+        ),
+        title: const Text(
+          '오목 게임 규칙',
+          style: TextStyle(color: Colors.amber),
+        ),
+        content: SingleChildScrollView(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: const [
+              Text(
+                '🎯 게임 목표',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              SizedBox(height: 4),
+              Text(
+                '가로, 세로, 대각선 중 한 방향으로\n'
+                '자신의 돌 5개를 먼저 연속으로 놓으면 승리!',
+                style: TextStyle(color: Colors.white70, fontSize: 13),
+              ),
+              SizedBox(height: 12),
+              Text(
+                '🎮 게임 방법',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              SizedBox(height: 4),
+              Text(
+                '• 흑이 먼저 시작합니다\n'
+                '• 번갈아가며 빈 곳에 돌을 놓습니다\n'
+                '• 한 번 놓은 돌은 움직일 수 없습니다',
+                style: TextStyle(color: Colors.white70, fontSize: 13),
+              ),
+              SizedBox(height: 12),
+              Text(
+                '⚫ 금수 규칙 (흑만 적용)',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              SizedBox(height: 4),
+              Text(
+                '• 삼삼 금지: 동시에 열린 3이 2개 생기는 수\n'
+                '• 사사 금지: 동시에 4가 2개 생기는 수\n'
+                '• 장목 금지: 6개 이상 연속으로 놓는 수',
+                style: TextStyle(color: Colors.white70, fontSize: 13),
+              ),
+              SizedBox(height: 12),
+              Text(
+                '💡 팁',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              SizedBox(height: 4),
+              Text(
+                '열린 4(양쪽이 막히지 않은 4)를 만들면\n'
+                '상대가 막을 수 없어 승리합니다!',
+                style: TextStyle(color: Colors.white70, fontSize: 13),
+              ),
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('확인'),
+          ),
+        ],
+      ),
     );
   }
 }

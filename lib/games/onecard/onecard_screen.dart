@@ -996,6 +996,11 @@ class _OneCardScreenState extends State<OneCardScreen> with TickerProviderStateM
         centerTitle: true,
         actions: [
           IconButton(
+            icon: const Icon(Icons.help_outline),
+            onPressed: _showRulesDialog,
+            tooltip: '게임 규칙',
+          ),
+          IconButton(
             icon: const Icon(Icons.refresh),
             onPressed: _restartGame,
             tooltip: '다시 시작',
@@ -2495,6 +2500,98 @@ class _OneCardScreenState extends State<OneCardScreen> with TickerProviderStateM
             ],
           ),
         ),
+      ),
+    );
+  }
+
+  void _showRulesDialog() {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: Colors.grey.shade900,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+        ),
+        title: const Text(
+          '원카드 게임 규칙',
+          style: TextStyle(color: Colors.purple),
+        ),
+        content: SingleChildScrollView(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: const [
+              Text(
+                '🎯 게임 목표',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              SizedBox(height: 4),
+              Text(
+                '손에 든 카드를 먼저 모두 버리면 승리!\n'
+                '마지막 1장일 때 "원카드"를 외쳐야 합니다.',
+                style: TextStyle(color: Colors.white70, fontSize: 13),
+              ),
+              SizedBox(height: 12),
+              Text(
+                '🎮 게임 방법',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              SizedBox(height: 4),
+              Text(
+                '• 같은 숫자 또는 같은 무늬 카드를 낼 수 있음\n'
+                '• 낼 카드가 없으면 덱에서 1장 뽑기\n'
+                '• 반시계 방향으로 차례가 돌아감',
+                style: TextStyle(color: Colors.white70, fontSize: 13),
+              ),
+              SizedBox(height: 12),
+              Text(
+                '⚡ 특수 카드',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              SizedBox(height: 4),
+              Text(
+                '• A: 다음 사람 1장 뽑기\n'
+                '• 2: 다음 사람 2장 뽑기 (중첩 가능)\n'
+                '• 3: 방어 카드 (공격 무효화)\n'
+                '• J: 다음 사람 건너뛰기\n'
+                '• Q: 진행 방향 바꾸기\n'
+                '• K: 무늬 상관없이 낼 수 있음\n'
+                '• 7: 무늬 변경 가능',
+                style: TextStyle(color: Colors.white70, fontSize: 13),
+              ),
+              SizedBox(height: 12),
+              Text(
+                '💡 팁',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              SizedBox(height: 4),
+              Text(
+                '• 특수 카드를 전략적으로 사용하세요\n'
+                '• 공격이 오면 방어 카드(3)로 막으세요\n'
+                '• 마지막 1장에서 원카드를 놓치면 벌칙!',
+                style: TextStyle(color: Colors.white70, fontSize: 13),
+              ),
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('확인'),
+          ),
+        ],
       ),
     );
   }

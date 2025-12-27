@@ -421,6 +421,11 @@ class _MinesweeperScreenState extends State<MinesweeperScreen> {
         ),
         centerTitle: true,
         actions: [
+          IconButton(
+            icon: const Icon(Icons.help_outline),
+            onPressed: _showRulesDialog,
+            tooltip: '게임 규칙',
+          ),
           Stack(
             children: [
               IconButton(
@@ -969,5 +974,93 @@ class _MinesweeperScreenState extends State<MinesweeperScreen> {
     }
 
     return null;
+  }
+
+  void _showRulesDialog() {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: Colors.grey.shade900,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+        ),
+        title: const Text(
+          '지뢰찾기 게임 규칙',
+          style: TextStyle(color: Colors.blueGrey),
+        ),
+        content: SingleChildScrollView(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: const [
+              Text(
+                '🎯 게임 목표',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              SizedBox(height: 4),
+              Text(
+                '지뢰가 없는 모든 칸을 열면 승리!\n'
+                '지뢰를 밟으면 게임 오버!',
+                style: TextStyle(color: Colors.white70, fontSize: 13),
+              ),
+              SizedBox(height: 12),
+              Text(
+                '🎮 조작 방법',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              SizedBox(height: 4),
+              Text(
+                '• 탭: 칸 열기\n'
+                '• 길게 누르기: 깃발 꽂기/제거\n'
+                '• 숫자 칸 길게 누르기: 주변 한번에 열기',
+                style: TextStyle(color: Colors.white70, fontSize: 13),
+              ),
+              SizedBox(height: 12),
+              Text(
+                '🔢 숫자의 의미',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              SizedBox(height: 4),
+              Text(
+                '숫자는 주변 8칸에 있는\n'
+                '지뢰의 개수를 나타냅니다.\n'
+                '예: "3"이면 주변에 지뢰 3개',
+                style: TextStyle(color: Colors.white70, fontSize: 13),
+              ),
+              SizedBox(height: 12),
+              Text(
+                '💡 팁',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              SizedBox(height: 4),
+              Text(
+                '• 첫 클릭은 절대 지뢰가 아닙니다\n'
+                '• 깃발로 지뢰 위치를 표시하세요\n'
+                '• 힌트를 사용해 막힐 때 도움받기',
+                style: TextStyle(color: Colors.white70, fontSize: 13),
+              ),
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('확인'),
+          ),
+        ],
+      ),
+    );
   }
 }

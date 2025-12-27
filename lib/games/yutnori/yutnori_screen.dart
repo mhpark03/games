@@ -1055,6 +1055,11 @@ class _YutnoriScreenState extends State<YutnoriScreen>
         centerTitle: true,
         actions: [
           IconButton(
+            icon: const Icon(Icons.help_outline),
+            onPressed: _showRulesDialog,
+            tooltip: '게임 규칙',
+          ),
+          IconButton(
             icon: const Icon(Icons.refresh),
             onPressed: _restartGame,
             tooltip: '다시 시작',
@@ -3566,6 +3571,97 @@ class _YutnoriScreenState extends State<YutnoriScreen>
             ],
           ),
         ),
+      ),
+    );
+  }
+
+  void _showRulesDialog() {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: Colors.grey.shade900,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+        ),
+        title: const Text(
+          '윷놀이 게임 규칙',
+          style: TextStyle(color: Color(0xFFDEB887)),
+        ),
+        content: SingleChildScrollView(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: const [
+              Text(
+                '🎯 게임 목표',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              SizedBox(height: 4),
+              Text(
+                '4개의 말을 먼저 모두 골인시키면 승리!',
+                style: TextStyle(color: Colors.white70, fontSize: 13),
+              ),
+              SizedBox(height: 12),
+              Text(
+                '🎲 윷 결과',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              SizedBox(height: 4),
+              Text(
+                '• 도: 1칸 이동\n'
+                '• 개: 2칸 이동\n'
+                '• 걸: 3칸 이동\n'
+                '• 윷: 4칸 이동 + 한 번 더\n'
+                '• 모: 5칸 이동 + 한 번 더\n'
+                '• 백도: 1칸 뒤로 (-1)',
+                style: TextStyle(color: Colors.white70, fontSize: 13),
+              ),
+              SizedBox(height: 12),
+              Text(
+                '🛤️ 특수 규칙',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              SizedBox(height: 4),
+              Text(
+                '• 코너(모서리)에서 멈추면 지름길 이용\n'
+                '• 상대 말을 잡으면 한 번 더 던지기\n'
+                '• 내 말끼리 업기 가능 (함께 이동)\n'
+                '• 업힌 말이 잡히면 모두 처음으로',
+                style: TextStyle(color: Colors.white70, fontSize: 13),
+              ),
+              SizedBox(height: 12),
+              Text(
+                '💡 팁',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              SizedBox(height: 4),
+              Text(
+                '• 코너 지름길을 적극 활용하세요\n'
+                '• 업기로 안전하게 이동하세요\n'
+                '• 상대 말 잡기로 추가 턴 획득!',
+                style: TextStyle(color: Colors.white70, fontSize: 13),
+              ),
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('확인'),
+          ),
+        ],
       ),
     );
   }

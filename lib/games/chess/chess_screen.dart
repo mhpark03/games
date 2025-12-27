@@ -956,6 +956,11 @@ class _ChessScreenState extends State<ChessScreen> {
         backgroundColor: Colors.brown.shade700,
         foregroundColor: Colors.white,
         actions: [
+          IconButton(
+            icon: const Icon(Icons.help_outline),
+            onPressed: _showRulesDialog,
+            tooltip: '게임 규칙',
+          ),
           Opacity(
             opacity: moveHistory.isNotEmpty && !gameOver ? 1.0 : 0.3,
             child: IconButton(
@@ -1503,6 +1508,96 @@ class _ChessScreenState extends State<ChessScreen> {
           style: const TextStyle(fontSize: 16, color: Colors.white),
         ),
       ],
+    );
+  }
+
+  void _showRulesDialog() {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: Colors.grey.shade900,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+        ),
+        title: const Text(
+          '체스 게임 규칙',
+          style: TextStyle(color: Colors.brown),
+        ),
+        content: SingleChildScrollView(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: const [
+              Text(
+                '🎯 게임 목표',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              SizedBox(height: 4),
+              Text(
+                '상대방의 킹을 체크메이트하면 승리!\n'
+                '(킹이 잡히는 것을 피할 수 없는 상태)',
+                style: TextStyle(color: Colors.white70, fontSize: 13),
+              ),
+              SizedBox(height: 12),
+              Text(
+                '♟️ 기물 이동',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              SizedBox(height: 4),
+              Text(
+                '• 킹(K): 모든 방향 1칸\n'
+                '• 퀸(Q): 모든 방향 무제한\n'
+                '• 룩(R): 가로/세로 무제한\n'
+                '• 비숍(B): 대각선 무제한\n'
+                '• 나이트(N): L자 이동 (다른 기물 뛰어넘기 가능)\n'
+                '• 폰(P): 전진 1칸, 첫 이동 시 2칸 가능',
+                style: TextStyle(color: Colors.white70, fontSize: 13),
+              ),
+              SizedBox(height: 12),
+              Text(
+                '⚔️ 특수 규칙',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              SizedBox(height: 4),
+              Text(
+                '• 캐슬링: 킹과 룩의 특수 이동\n'
+                '• 앙파상: 폰의 특수 잡기\n'
+                '• 프로모션: 폰이 끝에 도달하면 승격',
+                style: TextStyle(color: Colors.white70, fontSize: 13),
+              ),
+              SizedBox(height: 12),
+              Text(
+                '🤝 무승부 조건',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              SizedBox(height: 4),
+              Text(
+                '• 스테일메이트: 이동할 수 없지만 체크가 아닌 상태\n'
+                '• 기물 부족: 체크메이트 불가능한 기물만 남음',
+                style: TextStyle(color: Colors.white70, fontSize: 13),
+              ),
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('확인'),
+          ),
+        ],
+      ),
     );
   }
 }

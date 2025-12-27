@@ -335,6 +335,11 @@ class _BaseballScreenState extends State<BaseballScreen> {
         ),
         centerTitle: true,
         actions: [
+          IconButton(
+            icon: const Icon(Icons.help_outline),
+            onPressed: _showRulesDialog,
+            tooltip: '게임 규칙',
+          ),
           Stack(
             children: [
               IconButton(
@@ -1220,6 +1225,95 @@ class _BaseballScreenState extends State<BaseballScreen> {
         // 숫자 패드
         _buildNumberPad(),
       ],
+    );
+  }
+
+  void _showRulesDialog() {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: Colors.grey.shade900,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+        ),
+        title: const Text(
+          '숫자야구 게임 규칙',
+          style: TextStyle(color: Colors.deepOrange),
+        ),
+        content: SingleChildScrollView(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: const [
+              Text(
+                '🎯 게임 목표',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              SizedBox(height: 4),
+              Text(
+                '컴퓨터가 정한 3자리 숫자를 맞추세요!\n'
+                '각 숫자는 0~9 중 서로 다른 숫자입니다.',
+                style: TextStyle(color: Colors.white70, fontSize: 13),
+              ),
+              SizedBox(height: 12),
+              Text(
+                '⚾ 스트라이크 & 볼',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              SizedBox(height: 4),
+              Text(
+                '• 스트라이크(S): 숫자와 위치 모두 맞음\n'
+                '• 볼(B): 숫자는 맞지만 위치가 다름\n'
+                '• 아웃: 맞는 숫자가 하나도 없음',
+                style: TextStyle(color: Colors.white70, fontSize: 13),
+              ),
+              SizedBox(height: 12),
+              Text(
+                '📝 예시',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              SizedBox(height: 4),
+              Text(
+                '정답이 "123"일 때:\n'
+                '• 123 → 3S 0B (정답!)\n'
+                '• 132 → 1S 2B\n'
+                '• 456 → 0S 0B (아웃)',
+                style: TextStyle(color: Colors.white70, fontSize: 13),
+              ),
+              SizedBox(height: 12),
+              Text(
+                '💡 팁',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              SizedBox(height: 4),
+              Text(
+                '• 볼 힌트로 숫자를 먼저 찾으세요\n'
+                '• 찾은 숫자의 위치를 바꿔보세요\n'
+                '• 힌트를 사용해 도움을 받으세요',
+                style: TextStyle(color: Colors.white70, fontSize: 13),
+              ),
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('확인'),
+          ),
+        ],
+      ),
     );
   }
 }

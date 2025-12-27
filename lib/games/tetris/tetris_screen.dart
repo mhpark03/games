@@ -270,6 +270,10 @@ class _TetrisScreenState extends State<TetrisScreen> {
         centerTitle: true,
         actions: [
           IconButton(
+            icon: const Icon(Icons.help_outline, color: Colors.white),
+            onPressed: _showRulesDialog,
+          ),
+          IconButton(
             icon: const Icon(Icons.settings, color: Colors.white),
             onPressed: _showLevelSelectDialog,
           ),
@@ -671,6 +675,94 @@ class _TetrisScreenState extends State<TetrisScreen> {
               fontSize: 20,
               fontWeight: FontWeight.bold,
             ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showRulesDialog() {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: Colors.grey.shade900,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+        ),
+        title: const Text(
+          '테트리스 게임 규칙',
+          style: TextStyle(color: Colors.cyan),
+        ),
+        content: SingleChildScrollView(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: const [
+              Text(
+                '🎯 게임 목표',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              SizedBox(height: 4),
+              Text(
+                '떨어지는 블록을 배치하여 가로줄을 완성하세요.\n'
+                '완성된 줄은 사라지고 점수를 얻습니다.',
+                style: TextStyle(color: Colors.white70, fontSize: 13),
+              ),
+              SizedBox(height: 12),
+              Text(
+                '🎮 조작 방법',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              SizedBox(height: 4),
+              Text(
+                '• ←→ : 블록 좌우 이동\n'
+                '• ↓ : 블록 빠르게 내리기\n'
+                '• 회전 버튼 : 블록 90° 회전\n'
+                '• 드롭 버튼 : 블록 즉시 떨어뜨리기',
+                style: TextStyle(color: Colors.white70, fontSize: 13),
+              ),
+              SizedBox(height: 12),
+              Text(
+                '💯 점수 시스템',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              SizedBox(height: 4),
+              Text(
+                '• 1줄 완성: 100점\n'
+                '• 2줄 동시: 300점\n'
+                '• 3줄 동시: 500점\n'
+                '• 4줄 동시 (테트리스): 800점',
+                style: TextStyle(color: Colors.white70, fontSize: 13),
+              ),
+              SizedBox(height: 12),
+              Text(
+                '⚠️ 게임 오버',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              SizedBox(height: 4),
+              Text(
+                '블록이 천장에 닿으면 게임이 끝납니다.',
+                style: TextStyle(color: Colors.white70, fontSize: 13),
+              ),
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('확인'),
           ),
         ],
       ),

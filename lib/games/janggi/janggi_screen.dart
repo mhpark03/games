@@ -2779,6 +2779,11 @@ class _JanggiScreenState extends State<JanggiScreen> {
         backgroundColor: const Color(0xFFD2691E),
         foregroundColor: Colors.white,
         actions: [
+          IconButton(
+            icon: const Icon(Icons.help_outline),
+            onPressed: _showRulesDialog,
+            tooltip: '게임 규칙',
+          ),
           // 무승부 선언 버튼 (반복 장군/장군 불가 상황에서만 표시)
           if (_canDeclareDraw())
             IconButton(
@@ -3377,6 +3382,99 @@ class _JanggiScreenState extends State<JanggiScreen> {
           style: const TextStyle(fontSize: 14),
         ),
       ],
+    );
+  }
+
+  void _showRulesDialog() {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: Colors.grey.shade900,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+        ),
+        title: const Text(
+          '장기 게임 규칙',
+          style: TextStyle(color: Color(0xFFD2691E)),
+        ),
+        content: SingleChildScrollView(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: const [
+              Text(
+                '🎯 게임 목표',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              SizedBox(height: 4),
+              Text(
+                '상대방의 궁(왕)을 외통수로 잡으면 승리!\n'
+                '(궁이 장군을 피할 수 없는 상태)',
+                style: TextStyle(color: Colors.white70, fontSize: 13),
+              ),
+              SizedBox(height: 12),
+              Text(
+                '🏰 기물 이동',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              SizedBox(height: 4),
+              Text(
+                '• 궁: 궁성 안에서 1칸 이동\n'
+                '• 차: 가로/세로 무제한\n'
+                '• 포: 가로/세로로 다른 기물 뛰어넘어 이동\n'
+                '• 마: 가로/세로 1칸 + 대각선 1칸\n'
+                '• 상: 가로/세로 1칸 + 대각선 2칸\n'
+                '• 사: 궁성 안에서 1칸 이동\n'
+                '• 졸/병: 앞/좌/우로 1칸',
+                style: TextStyle(color: Colors.white70, fontSize: 13),
+              ),
+              SizedBox(height: 12),
+              Text(
+                '⚔️ 특수 규칙',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              SizedBox(height: 4),
+              Text(
+                '• 장군: 상대 궁을 공격하는 상태\n'
+                '• 외통수: 장군을 피할 수 없는 상태\n'
+                '• 빅장: 양측 궁이 마주보면 먼저 비킨 쪽이 불리\n'
+                '• 포는 포를 뛰어넘거나 잡을 수 없음',
+                style: TextStyle(color: Colors.white70, fontSize: 13),
+              ),
+              SizedBox(height: 12),
+              Text(
+                '💡 팁',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              SizedBox(height: 4),
+              Text(
+                '• 차가 가장 강력한 기물입니다\n'
+                '• 포는 다른 기물이 있어야 공격 가능\n'
+                '• 마와 상의 경로에 기물이 있으면 이동 불가',
+                style: TextStyle(color: Colors.white70, fontSize: 13),
+              ),
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('확인'),
+          ),
+        ],
+      ),
     );
   }
 }

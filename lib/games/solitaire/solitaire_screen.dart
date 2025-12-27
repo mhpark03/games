@@ -884,6 +884,11 @@ class _SolitaireScreenState extends State<SolitaireScreen> {
         backgroundColor: Colors.green.shade800,
         foregroundColor: Colors.white,
         actions: [
+          IconButton(
+            icon: const Icon(Icons.help_outline),
+            onPressed: _showRulesDialog,
+            tooltip: '게임 규칙',
+          ),
           Center(
             child: Padding(
               padding: const EdgeInsets.symmetric(horizontal: 8),
@@ -1712,5 +1717,94 @@ class _SolitaireScreenState extends State<SolitaireScreen> {
       default:
         return [];
     }
+  }
+
+  void _showRulesDialog() {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: Colors.grey.shade900,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+        ),
+        title: Text(
+          '솔리테어 게임 규칙',
+          style: TextStyle(color: Colors.green.shade400),
+        ),
+        content: SingleChildScrollView(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: const [
+              Text(
+                '🎯 게임 목표',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              SizedBox(height: 4),
+              Text(
+                '4개의 에이스 파일에 무늬별로\n'
+                'A부터 K까지 순서대로 카드를 쌓으세요!',
+                style: TextStyle(color: Colors.white70, fontSize: 13),
+              ),
+              SizedBox(height: 12),
+              Text(
+                '🎮 게임 방법',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              SizedBox(height: 4),
+              Text(
+                '• 테이블: 빨강↔검정 교대로 내림차순 쌓기\n'
+                '• 에이스 파일: 같은 무늬로 오름차순 쌓기\n'
+                '• 덱을 탭하여 새 카드 뒤집기\n'
+                '• K만 빈 테이블 칸에 놓을 수 있음',
+                style: TextStyle(color: Colors.white70, fontSize: 13),
+              ),
+              SizedBox(height: 12),
+              Text(
+                '🃏 카드 이동',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              SizedBox(height: 4),
+              Text(
+                '• 앞면 카드를 드래그하여 이동\n'
+                '• 여러 장을 한 번에 이동 가능\n'
+                '• 더블탭으로 자동 이동 (에이스 파일)',
+                style: TextStyle(color: Colors.white70, fontSize: 13),
+              ),
+              SizedBox(height: 12),
+              Text(
+                '💡 팁',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              SizedBox(height: 4),
+              Text(
+                '• 에이스가 나오면 바로 위로 올리세요\n'
+                '• 뒷면 카드를 빨리 뒤집는 것이 중요\n'
+                '• 1장/3장 모드로 난이도 조절 가능',
+                style: TextStyle(color: Colors.white70, fontSize: 13),
+              ),
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('확인'),
+          ),
+        ],
+      ),
+    );
   }
 }
