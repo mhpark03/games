@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import '../models/samurai_game_state.dart';
 import '../models/samurai_sudoku_generator.dart';
 import '../widgets/game_control_panel.dart';
@@ -104,6 +105,8 @@ class _ExpandedBoardScreenState extends State<ExpandedBoardScreen> {
     _timer?.cancel();
     // 화면 종료 시 부모에게 현재 시간 전달
     widget.onElapsedSecondsUpdate(_localElapsedSeconds);
+    // 화면을 나갈 때 상태바 복원
+    SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
     super.dispose();
   }
 
@@ -182,9 +185,35 @@ class _ExpandedBoardScreenState extends State<ExpandedBoardScreen> {
     final board = widget.gameState.currentBoards[widget.boardIndex];
     final isFixed = widget.gameState.isFixed[widget.boardIndex];
     final notes = widget.gameState.notes[widget.boardIndex];
-    final isLandscape =
-        MediaQuery.of(context).orientation == Orientation.landscape;
 
+    return OrientationBuilder(
+      builder: (context, orientation) {
+        if (orientation == Orientation.landscape) {
+          // 가로 모드: 상태바 숨김 (몰입 모드)
+          SystemChrome.setEnabledSystemUIMode(
+            SystemUiMode.immersiveSticky,
+            overlays: [],
+          );
+          return _buildLandscapeLayout(context, board, isFixed, notes);
+        } else {
+          // 세로 모드: 상태바 표시
+          SystemChrome.setEnabledSystemUIMode(
+            SystemUiMode.edgeToEdge,
+            overlays: SystemUiOverlay.values,
+          );
+          return _buildPortraitLayout(context, board, isFixed, notes);
+        }
+      },
+    );
+  }
+
+  // 세로 모드 레이아웃
+  Widget _buildPortraitLayout(
+    BuildContext context,
+    List<List<int>> board,
+    List<List<bool>> isFixed,
+    List<List<Set<int>>> notes,
+  ) {
     return PopScope(
       canPop: false,
       onPopInvokedWithResult: (didPop, result) {
@@ -197,178 +226,290 @@ class _ExpandedBoardScreenState extends State<ExpandedBoardScreen> {
           title: Text('보드 ${widget.boardIndex + 1}'),
           backgroundColor: Colors.deepPurple,
           foregroundColor: Colors.white,
-          toolbarHeight: isLandscape ? 45 : kToolbarHeight,
           leading: IconButton(
             icon: const Icon(Icons.arrow_back),
             onPressed: _popWithResult,
           ),
         ),
         body: SafeArea(
-          child: isLandscape
-              ? _buildLandscapeLayout(board, isFixed, notes)
-              : _buildPortraitLayout(board, isFixed, notes),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildPortraitLayout(
-    List<List<int>> board,
-    List<List<bool>> isFixed,
-    List<List<Set<int>>> notes,
-  ) {
-    return Padding(
-      padding: const EdgeInsets.all(16),
-      child: Column(
-        children: [
-          // 게임 상태 표시 바
-          GameStatusBar(
-            elapsedSeconds: _localElapsedSeconds,
-            failureCount: _localFailureCount,
-            isPaused: _localIsPaused,
-            onPauseToggle: _togglePause,
-          ),
-          const SizedBox(height: 12),
-          // 9x9 보드 또는 일시정지 오버레이
-          Expanded(
-            child: Center(
-              child: AspectRatio(
-                aspectRatio: 1,
-                child: _localIsPaused
-                    ? _buildPausedOverlay()
-                    : Container(
-                        decoration: BoxDecoration(
-                          border: Border.all(color: Colors.black, width: 3),
-                        ),
-                        child: _buildGrid(board, isFixed, notes),
-                      ),
-              ),
-            ),
-          ),
-          const SizedBox(height: 16),
-          // 공통 게임 컨트롤 패널
-          GameControlPanel(
-            onNumberTap: _onNumberTap,
-            onErase: _onErase,
-            onUndo: _onUndo,
-            canUndo: widget.gameState.canUndo,
-            onHint: _onHint,
-            onFillAllNotes: _onFillAllNotes,
-            onQuickInputModeChanged: (isQuickInput, number) {
-              setState(() {
-                _isQuickInputMode = isQuickInput;
-                _quickInputNumber = number;
-                // 빠른 입력 모드에서 숫자 선택 시 셀 선택 초기화
-                if (isQuickInput && number != null) {
-                  selectedRow = null;
-                  selectedCol = null;
-                }
-              });
-            },
-            onEraseModeChanged: (isErase) {
-              setState(() {
-                _isEraseMode = isErase;
-              });
-            },
-            onNoteModeChanged: (isNote) {
-              setState(() {
-                _isNoteMode = isNote;
-              });
-            },
-            disabledNumbers: widget.gameState.getCompletedNumbers(widget.boardIndex),
-            isCompact: false,
-            initialQuickInputMode: _isQuickInputMode,
-            initialQuickInputNumber: _quickInputNumber,
-            initialNoteMode: _isNoteMode,
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildLandscapeLayout(
-    List<List<int>> board,
-    List<List<bool>> isFixed,
-    List<List<Set<int>>> notes,
-  ) {
-    return Padding(
-      padding: const EdgeInsets.all(8),
-      child: Row(
-        children: [
-          // 9x9 보드 또는 일시정지 오버레이
-          Expanded(
-            flex: 1,
-            child: Center(
-              child: AspectRatio(
-                aspectRatio: 1,
-                child: _localIsPaused
-                    ? _buildPausedOverlay()
-                    : Container(
-                        decoration: BoxDecoration(
-                          border: Border.all(color: Colors.black, width: 3),
-                        ),
-                        child: _buildGrid(board, isFixed, notes),
-                      ),
-              ),
-            ),
-          ),
-          const SizedBox(width: 16),
-          // 오른쪽: 상태 바 + 컨트롤 패널
-          Expanded(
-            flex: 1,
+          child: Padding(
+            padding: const EdgeInsets.all(16),
             child: Column(
               children: [
-                // 게임 상태 표시 바 (컴팩트)
+                // 게임 상태 표시 바
                 GameStatusBar(
                   elapsedSeconds: _localElapsedSeconds,
                   failureCount: _localFailureCount,
                   isPaused: _localIsPaused,
                   onPauseToggle: _togglePause,
-                  isCompact: true,
                 ),
-                const SizedBox(height: 8),
-                // 공통 게임 컨트롤 패널
+                const SizedBox(height: 12),
+                // 9x9 보드 또는 일시정지 오버레이
                 Expanded(
-                  child: GameControlPanel(
-                    onNumberTap: _onNumberTap,
-                    onErase: _onErase,
-                    onUndo: _onUndo,
-                    canUndo: widget.gameState.canUndo,
-                    onHint: _onHint,
-                    onFillAllNotes: _onFillAllNotes,
-                    onQuickInputModeChanged: (isQuickInput, number) {
-                      setState(() {
-                        _isQuickInputMode = isQuickInput;
-                        _quickInputNumber = number;
-                        // 빠른 입력 모드에서 숫자 선택 시 셀 선택 초기화
-                        if (isQuickInput && number != null) {
-                          selectedRow = null;
-                          selectedCol = null;
-                        }
-                      });
-                    },
-                    onEraseModeChanged: (isErase) {
-                      setState(() {
-                        _isEraseMode = isErase;
-                      });
-                    },
-                    onNoteModeChanged: (isNote) {
-                      setState(() {
-                        _isNoteMode = isNote;
-                      });
-                    },
-                    disabledNumbers: widget.gameState.getCompletedNumbers(widget.boardIndex),
-                    isCompact: true,
-                    initialQuickInputMode: _isQuickInputMode,
-                    initialQuickInputNumber: _quickInputNumber,
-                    initialNoteMode: _isNoteMode,
+                  child: Center(
+                    child: AspectRatio(
+                      aspectRatio: 1,
+                      child: _localIsPaused
+                          ? _buildPausedOverlay()
+                          : Container(
+                              decoration: BoxDecoration(
+                                border: Border.all(color: Colors.black, width: 3),
+                              ),
+                              child: _buildGrid(board, isFixed, notes),
+                            ),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 16),
+                // 공통 게임 컨트롤 패널
+                _buildControlPanel(isCompact: false),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  // 가로 모드 레이아웃 (오목 스타일)
+  Widget _buildLandscapeLayout(
+    BuildContext context,
+    List<List<int>> board,
+    List<List<bool>> isFixed,
+    List<List<Set<int>>> notes,
+  ) {
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (didPop, result) {
+        if (!didPop) {
+          _popWithResult();
+        }
+      },
+      child: Scaffold(
+        body: Container(
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+              colors: [
+                Colors.deepPurple.shade700,
+                Colors.deepPurple.shade900,
+              ],
+            ),
+          ),
+          child: SafeArea(
+            child: Stack(
+              children: [
+                // 메인 영역: 보드 + 컨트롤
+                Row(
+                  children: [
+                    // 왼쪽: 게임 보드 (최대 크기)
+                    Expanded(
+                      child: Padding(
+                        padding: const EdgeInsets.all(8.0),
+                        child: Center(
+                          child: AspectRatio(
+                            aspectRatio: 1,
+                            child: _localIsPaused
+                                ? _buildPausedOverlay()
+                                : Container(
+                                    decoration: BoxDecoration(
+                                      border: Border.all(color: Colors.black, width: 3),
+                                    ),
+                                    child: _buildGrid(board, isFixed, notes),
+                                  ),
+                          ),
+                        ),
+                      ),
+                    ),
+                    // 오른쪽: 상태바 + 컨트롤 패널
+                    SizedBox(
+                      width: 200,
+                      child: Container(
+                        margin: const EdgeInsets.symmetric(vertical: 8, horizontal: 4),
+                        decoration: BoxDecoration(
+                          color: Colors.black.withValues(alpha: 0.3),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Column(
+                          children: [
+                            const SizedBox(height: 40), // 상단 버튼 공간
+                            // 상태 정보
+                            _buildLandscapeStatusInfo(),
+                            const SizedBox(height: 8),
+                            // 컨트롤 패널
+                            Expanded(
+                              child: _buildControlPanel(isCompact: true),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                // 왼쪽 상단: 뒤로가기 + 제목
+                Positioned(
+                  top: 4,
+                  left: 4,
+                  child: Row(
+                    children: [
+                      _buildCircleButton(
+                        icon: Icons.arrow_back,
+                        onPressed: _popWithResult,
+                        tooltip: '뒤로가기',
+                      ),
+                      const SizedBox(width: 8),
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+                        decoration: BoxDecoration(
+                          color: Colors.black.withValues(alpha: 0.5),
+                          borderRadius: BorderRadius.circular(20),
+                        ),
+                        child: Text(
+                          '보드 ${widget.boardIndex + 1}',
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
                 ),
               ],
             ),
           ),
+        ),
+      ),
+    );
+  }
+
+  // 원형 버튼 위젯
+  Widget _buildCircleButton({
+    required IconData icon,
+    required VoidCallback? onPressed,
+    required String tooltip,
+  }) {
+    final isEnabled = onPressed != null;
+    return Opacity(
+      opacity: isEnabled ? 1.0 : 0.3,
+      child: Material(
+        color: Colors.black.withValues(alpha: 0.5),
+        shape: const CircleBorder(),
+        child: InkWell(
+          onTap: onPressed,
+          customBorder: const CircleBorder(),
+          child: Tooltip(
+            message: tooltip,
+            child: Container(
+              padding: const EdgeInsets.all(10),
+              child: Icon(
+                icon,
+                color: Colors.white70,
+                size: 22,
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  // 가로 모드용 상태 정보
+  Widget _buildLandscapeStatusInfo() {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      child: Column(
+        children: [
+          // 시간 + 일시정지 버튼
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const Icon(Icons.timer, size: 18, color: Colors.white70),
+              const SizedBox(width: 4),
+              Text(
+                _formatTime(_localElapsedSeconds),
+                style: const TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.white,
+                ),
+              ),
+              const SizedBox(width: 8),
+              GestureDetector(
+                onTap: _togglePause,
+                child: Icon(
+                  _localIsPaused ? Icons.play_arrow : Icons.pause,
+                  size: 20,
+                  color: Colors.white70,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 4),
+          // 실패 횟수
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(Icons.close, size: 16, color: Colors.red.shade300),
+              const SizedBox(width: 4),
+              Text(
+                '$_localFailureCount',
+                style: TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.red.shade300,
+                ),
+              ),
+            ],
+          ),
         ],
       ),
+    );
+  }
+
+  String _formatTime(int seconds) {
+    final minutes = seconds ~/ 60;
+    final secs = seconds % 60;
+    return '${minutes.toString().padLeft(2, '0')}:${secs.toString().padLeft(2, '0')}';
+  }
+
+  // 공통 컨트롤 패널
+  Widget _buildControlPanel({required bool isCompact}) {
+    return GameControlPanel(
+      onNumberTap: _onNumberTap,
+      onErase: _onErase,
+      onUndo: _onUndo,
+      canUndo: widget.gameState.canUndo,
+      onHint: _onHint,
+      onFillAllNotes: _onFillAllNotes,
+      onQuickInputModeChanged: (isQuickInput, number) {
+        setState(() {
+          _isQuickInputMode = isQuickInput;
+          _quickInputNumber = number;
+          // 빠른 입력 모드에서 숫자 선택 시 셀 선택 초기화
+          if (isQuickInput && number != null) {
+            selectedRow = null;
+            selectedCol = null;
+          }
+        });
+      },
+      onEraseModeChanged: (isErase) {
+        setState(() {
+          _isEraseMode = isErase;
+        });
+      },
+      onNoteModeChanged: (isNote) {
+        setState(() {
+          _isNoteMode = isNote;
+        });
+      },
+      disabledNumbers: widget.gameState.getCompletedNumbers(widget.boardIndex),
+      isCompact: isCompact,
+      initialQuickInputMode: _isQuickInputMode,
+      initialQuickInputNumber: _quickInputNumber,
+      initialNoteMode: _isNoteMode,
     );
   }
 
