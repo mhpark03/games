@@ -75,7 +75,7 @@ class GameState {
   int elapsedSeconds;
   int failureCount;
   // Undo 히스토리 (최대 10개)
-  final List<UndoAction> _undoHistory = [];
+  final List<UndoAction> _undoHistory;
   static const int maxUndoCount = 10;
 
   GameState({
@@ -92,7 +92,8 @@ class GameState {
     this.isCompleted = false,
     this.elapsedSeconds = 0,
     this.failureCount = 0,
-  });
+    List<UndoAction>? undoHistory,
+  }) : _undoHistory = undoHistory ?? [];
 
   /// 동기적으로 새 게임 생성 (메인 스레드에서 실행, UI 블로킹 가능)
   factory GameState.newGame(Difficulty difficulty) {
@@ -161,6 +162,7 @@ class GameState {
       isCompleted: isCompleted ?? this.isCompleted,
       elapsedSeconds: elapsedSeconds ?? this.elapsedSeconds,
       failureCount: failureCount ?? this.failureCount,
+      undoHistory: _undoHistory, // Undo 히스토리 유지
     );
   }
 
