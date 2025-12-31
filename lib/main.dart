@@ -22,6 +22,7 @@ import 'games/number_sums/screens/number_sums_game_screen.dart' as number_sums;
 import 'games/number_sums/models/number_sums_generator.dart' as number_sums;
 import 'games/number_sums/services/game_storage.dart' as number_sums;
 import 'services/ad_service.dart';
+import 'package:google_mobile_ads/google_mobile_ads.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -59,8 +60,29 @@ class GameCenterApp extends StatelessWidget {
   }
 }
 
-class HomeScreen extends StatelessWidget {
+class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
+
+  @override
+  State<HomeScreen> createState() => _HomeScreenState();
+}
+
+class _HomeScreenState extends State<HomeScreen> {
+  final AdService _adService = AdService();
+
+  @override
+  void initState() {
+    super.initState();
+    _adService.loadBannerAd(onLoaded: () {
+      if (mounted) setState(() {});
+    });
+  }
+
+  @override
+  void dispose() {
+    _adService.disposeBannerAd();
+    super.dispose();
+  }
 
   Future<void> _showGomokuModeDialog(BuildContext context) async {
     // 저장된 게임이 있는지 확인
@@ -3175,6 +3197,14 @@ class HomeScreen extends StatelessWidget {
           ),
         ),
       ),
+      bottomNavigationBar: _adService.isBannerLoaded && _adService.bannerAd != null
+          ? Container(
+              color: Colors.black,
+              width: _adService.bannerAd!.size.width.toDouble(),
+              height: _adService.bannerAd!.size.height.toDouble(),
+              child: AdWidget(ad: _adService.bannerAd!),
+            )
+          : null,
     );
   }
 
