@@ -5,6 +5,7 @@ import '../models/samurai_game_state.dart';
 import '../models/samurai_sudoku_generator.dart';
 import '../widgets/game_control_panel.dart';
 import '../widgets/game_status_bar.dart';
+import '../../../services/ad_service.dart';
 
 /// 확장 보드 화면에서 반환하는 빠른 입력 모드 상태
 class ExpandedBoardResult {
@@ -937,7 +938,62 @@ class _ExpandedBoardScreenState extends State<ExpandedBoardScreen> {
       return;
     }
 
-    widget.onHint(widget.boardIndex, selectedRow!, selectedCol!);
+    // 광고 시청 확인 다이얼로그 표시
+    _showAdConfirmDialog(selectedRow!, selectedCol!);
+  }
+
+  void _showAdConfirmDialog(int row, int col) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: Colors.grey.shade900,
+        title: const Text('힌트 사용', style: TextStyle(color: Colors.white)),
+        content: const Text(
+          '광고를 시청하고 힌트를 받으시겠습니까?',
+          style: TextStyle(color: Colors.white70),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('취소'),
+          ),
+          ElevatedButton.icon(
+            onPressed: () {
+              Navigator.pop(context);
+              _showAdForHint(row, col);
+            },
+            icon: const Icon(Icons.play_circle_outline),
+            label: const Text('광고 보기'),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.deepOrange,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showAdForHint(int row, int col) {
+    final adService = AdService();
+
+    if (!adService.isAdLoaded) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('광고를 불러오는 중입니다. 힌트를 무료로 제공합니다.')),
+      );
+      _applyHint(row, col);
+      return;
+    }
+
+    adService.showRewardedAd(
+      onUserEarnedReward: (ad, reward) {
+        _applyHint(row, col);
+      },
+      onAdDismissed: () {},
+    );
+  }
+
+  void _applyHint(int row, int col) {
+    widget.onHint(widget.boardIndex, row, col);
     _checkCompletion();
     setState(() {});
   }
