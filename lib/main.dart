@@ -21,9 +21,15 @@ import 'games/sudoku/services/game_storage.dart' as sudoku;
 import 'games/number_sums/screens/number_sums_game_screen.dart' as number_sums;
 import 'games/number_sums/models/number_sums_generator.dart' as number_sums;
 import 'games/number_sums/services/game_storage.dart' as number_sums;
+import 'services/ad_service.dart';
 
-void main() {
+void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  // AdMob 초기화
+  await AdService.initialize();
+  AdService().loadRewardedAd();
+
   SystemChrome.setPreferredOrientations([
     DeviceOrientation.portraitUp,
     DeviceOrientation.portraitDown,

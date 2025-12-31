@@ -8,6 +8,7 @@ import '../services/game_storage.dart';
 import '../widgets/sudoku_board.dart';
 import '../widgets/game_control_panel.dart';
 import '../widgets/game_status_bar.dart';
+import '../../../services/ad_service.dart';
 
 class GameScreen extends StatefulWidget {
   final Difficulty? initialDifficulty;
@@ -353,6 +354,64 @@ class _GameScreenState extends State<GameScreen> with WidgetsBindingObserver {
       return;
     }
 
+    // 광고 시청 확인 다이얼로그 표시
+    _showAdConfirmDialog(row, col);
+  }
+
+  void _showAdConfirmDialog(int row, int col) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: Colors.grey.shade900,
+        title: const Text('힌트 사용', style: TextStyle(color: Colors.white)),
+        content: const Text(
+          '광고를 시청하고 힌트를 받으시겠습니까?',
+          style: TextStyle(color: Colors.white70),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('취소'),
+          ),
+          ElevatedButton.icon(
+            onPressed: () {
+              Navigator.pop(context);
+              _showAdForHint(row, col);
+            },
+            icon: const Icon(Icons.play_circle_outline),
+            label: const Text('광고 보기'),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.deepOrange,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showAdForHint(int row, int col) {
+    final adService = AdService();
+
+    if (!adService.isAdLoaded) {
+      // 광고가 로드되지 않은 경우 바로 힌트 제공
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('광고를 불러오는 중입니다. 힌트를 무료로 제공합니다.')),
+      );
+      _applyHint(row, col);
+      return;
+    }
+
+    adService.showRewardedAd(
+      onUserEarnedReward: (ad, reward) {
+        _applyHint(row, col);
+      },
+      onAdDismissed: () {
+        // 광고가 닫힌 후 처리 (필요시)
+      },
+    );
+  }
+
+  void _applyHint(int row, int col) {
     int correctValue = _gameState.solution[row][col];
 
     setState(() {
