@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'dart:math';
 import 'dart:async';
 import '../../services/game_save_service.dart';
+import '../../services/ad_service.dart';
 
 enum Suit { hearts, diamonds, clubs, spades }
 
@@ -498,6 +499,47 @@ class _SolitaireScreenState extends State<SolitaireScreen> {
     }
   }
 
+  // 되돌리기 광고 확인 다이얼로그
+  void _showUndoAdDialog() {
+    if (_undoHistory.isEmpty) return;
+
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: Colors.grey.shade900,
+        title: const Text('되돌리기', style: TextStyle(color: Colors.white)),
+        content: const Text(
+          '광고를 시청하고 되돌리기를 사용하시겠습니까?',
+          style: TextStyle(color: Colors.white70),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('취소'),
+          ),
+          ElevatedButton(
+            onPressed: () async {
+              Navigator.pop(context);
+              final adService = AdService();
+              final result = await adService.showRewardedAd(
+                onUserEarnedReward: (ad, reward) {
+                  _undo();
+                },
+              );
+              if (!result && mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('광고를 불러올 수 없습니다. 잠시 후 다시 시도해주세요.')),
+                );
+                adService.loadRewardedAd();
+              }
+            },
+            child: const Text('광고 보기'),
+          ),
+        ],
+      ),
+    );
+  }
+
   // Undo 실행
   void _undo() {
     if (_undoHistory.isEmpty) return;
@@ -932,7 +974,7 @@ class _SolitaireScreenState extends State<SolitaireScreen> {
             opacity: _undoHistory.isNotEmpty ? 1.0 : 0.3,
             child: IconButton(
               icon: const Icon(Icons.undo),
-              onPressed: _undoHistory.isEmpty ? null : _undo,
+              onPressed: _undoHistory.isEmpty ? null : _showUndoAdDialog,
               tooltip: '되돌리기',
             ),
           ),
@@ -1163,7 +1205,7 @@ class _SolitaireScreenState extends State<SolitaireScreen> {
                   children: [
                     _buildCircleButton(
                       icon: Icons.undo,
-                      onPressed: _undoHistory.isEmpty ? null : _undo,
+                      onPressed: _undoHistory.isEmpty ? null : _showUndoAdDialog,
                       tooltip: '되돌리기',
                     ),
                     const SizedBox(width: 8),
