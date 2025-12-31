@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_native_splash/flutter_native_splash.dart';
 import 'games/tetris/tetris_screen.dart';
 import 'games/gomoku/gomoku_screen.dart';
 import 'games/othello/othello_screen.dart';
@@ -25,7 +26,8 @@ import 'services/ad_service.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
 
 void main() async {
-  WidgetsFlutterBinding.ensureInitialized();
+  WidgetsBinding widgetsBinding = WidgetsFlutterBinding.ensureInitialized();
+  FlutterNativeSplash.preserve(widgetsBinding: widgetsBinding);
 
   // AdMob 초기화
   await AdService.initialize();
@@ -75,6 +77,10 @@ class _HomeScreenState extends State<HomeScreen> {
     super.initState();
     _adService.loadBannerAd(onLoaded: () {
       if (mounted) setState(() {});
+    });
+    // 스플래시 화면 제거 (1초 후)
+    Future.delayed(const Duration(seconds: 1), () {
+      FlutterNativeSplash.remove();
     });
   }
 
