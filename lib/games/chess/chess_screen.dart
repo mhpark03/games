@@ -2,6 +2,7 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../../services/game_save_service.dart';
+import '../../services/ad_service.dart';
 
 enum PieceType { king, queen, rook, bishop, knight, pawn }
 enum PieceColor { white, black }
@@ -400,6 +401,47 @@ class _ChessScreenState extends State<ChessScreen> {
         if (mounted) _computerMove();
       });
     }
+  }
+
+  // 되돌리기 광고 확인 다이얼로그
+  void _showUndoAdDialog() {
+    if (moveHistory.isEmpty || gameOver) return;
+
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: Colors.grey.shade900,
+        title: const Text('되돌리기', style: TextStyle(color: Colors.white)),
+        content: const Text(
+          '광고를 시청하고 되돌리기를 사용하시겠습니까?',
+          style: TextStyle(color: Colors.white70),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('취소'),
+          ),
+          ElevatedButton(
+            onPressed: () async {
+              Navigator.pop(context);
+              final adService = AdService();
+              final result = await adService.showRewardedAd(
+                onUserEarnedReward: (ad, reward) {
+                  _undoMove();
+                },
+              );
+              if (!result && mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('광고를 불러올 수 없습니다. 잠시 후 다시 시도해주세요.')),
+                );
+                adService.loadRewardedAd();
+              }
+            },
+            child: const Text('광고 보기'),
+          ),
+        ],
+      ),
+    );
   }
 
   // 되돌리기 기능
@@ -965,7 +1007,7 @@ class _ChessScreenState extends State<ChessScreen> {
             opacity: moveHistory.isNotEmpty && !gameOver ? 1.0 : 0.3,
             child: IconButton(
               icon: const Icon(Icons.undo),
-              onPressed: moveHistory.isNotEmpty && !gameOver ? _undoMove : null,
+              onPressed: moveHistory.isNotEmpty && !gameOver ? _showUndoAdDialog : null,
               tooltip: '되돌리기',
             ),
           ),
@@ -1184,7 +1226,7 @@ class _ChessScreenState extends State<ChessScreen> {
                   children: [
                     _buildCircleButton(
                       icon: Icons.undo,
-                      onPressed: moveHistory.isNotEmpty && !gameOver ? _undoMove : null,
+                      onPressed: moveHistory.isNotEmpty && !gameOver ? _showUndoAdDialog : null,
                       tooltip: '되돌리기',
                     ),
                     const SizedBox(width: 8),
