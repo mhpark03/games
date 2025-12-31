@@ -3025,11 +3025,11 @@ class _HomeScreenState extends State<HomeScreen> {
                           final isLandscapeGrid = constraints.maxWidth > constraints.maxHeight;
                           final crossAxisCount = isLandscapeGrid ? 5 : 3;
                           // 배너 광고 공간을 고려하여 aspectRatio 조정
-                          final aspectRatio = isLandscapeGrid ? 1.8 : 1.05;
+                          final aspectRatio = isLandscapeGrid ? 2.3 : 1.05;
                           return GridView.count(
                             crossAxisCount: crossAxisCount,
-                            mainAxisSpacing: 8,
-                            crossAxisSpacing: 8,
+                            mainAxisSpacing: 4,
+                            crossAxisSpacing: 6,
                             childAspectRatio: aspectRatio,
                             padding: EdgeInsets.zero,
                             children: [
