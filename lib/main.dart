@@ -1965,6 +1965,7 @@ class HomeScreen extends StatelessWidget {
   Future<void> _showHulaModeDialog(BuildContext context) async {
     final hasSaved = await HulaScreen.hasSavedGame();
     final savedPlayerCount = hasSaved ? await HulaScreen.getSavedPlayerCount() : null;
+    final savedDifficulty = hasSaved ? await HulaScreen.getSavedDifficulty() : null;
 
     if (!context.mounted) return;
 
@@ -1999,7 +2000,7 @@ class HomeScreen extends StatelessWidget {
                 children: [
                   // 이어하기 버튼 (저장된 게임이 있을 때만)
                   if (hasSaved && savedPlayerCount != null) ...[
-                    _buildHulaResumeButton(context, savedPlayerCount, compact: isLandscape),
+                    _buildHulaResumeButton(context, savedPlayerCount, savedDifficulty, compact: isLandscape),
                     SizedBox(height: isLandscape ? 8 : 16),
                     Divider(color: Colors.grey.shade700, height: 1),
                     SizedBox(height: isLandscape ? 6 : 8),
@@ -2039,7 +2040,22 @@ class HomeScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildHulaResumeButton(BuildContext context, int savedPlayerCount, {bool compact = false}) {
+  Widget _buildHulaResumeButton(BuildContext context, int savedPlayerCount, HulaDifficulty? savedDifficulty, {bool compact = false}) {
+    String difficultyText = '';
+    if (savedDifficulty != null) {
+      switch (savedDifficulty) {
+        case HulaDifficulty.easy:
+          difficultyText = ' - 쉬움';
+          break;
+        case HulaDifficulty.medium:
+          difficultyText = ' - 보통';
+          break;
+        case HulaDifficulty.hard:
+          difficultyText = ' - 어려움';
+          break;
+      }
+    }
+
     return InkWell(
       onTap: () {
         Navigator.pop(context);
@@ -2048,6 +2064,7 @@ class HomeScreen extends StatelessWidget {
           MaterialPageRoute(
             builder: (context) => HulaScreen(
               playerCount: savedPlayerCount,
+              difficulty: savedDifficulty ?? HulaDifficulty.medium,
               resumeGame: true,
             ),
           ),
@@ -2081,7 +2098,7 @@ class HomeScreen extends StatelessWidget {
                   ),
                 ),
                 Text(
-                  '${savedPlayerCount}인 게임',
+                  '${savedPlayerCount}인 게임$difficultyText',
                   style: TextStyle(
                     color: Colors.grey.shade400,
                     fontSize: compact ? 10 : 12,
@@ -2111,12 +2128,7 @@ class HomeScreen extends StatelessWidget {
     return InkWell(
       onTap: () {
         Navigator.pop(context);
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (context) => HulaScreen(playerCount: playerCount),
-          ),
-        );
+        _showHulaDifficultyDialog(context, playerCount);
       },
       borderRadius: BorderRadius.circular(compact ? 8 : 12),
       child: Container(
@@ -2183,6 +2195,136 @@ class HomeScreen extends StatelessWidget {
                   Icon(
                     Icons.arrow_forward_ios,
                     color: Colors.teal.withValues(alpha: 0.7),
+                    size: 16,
+                  ),
+                ],
+              ),
+      ),
+    );
+  }
+
+  // 훌라 난이도 선택 다이얼로그
+  void _showHulaDifficultyDialog(BuildContext context, int playerCount) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return LayoutBuilder(
+          builder: (context, constraints) {
+            final isLandscape = constraints.maxWidth > constraints.maxHeight;
+
+            return AlertDialog(
+              backgroundColor: Colors.grey.shade900,
+              insetPadding: EdgeInsets.symmetric(
+                horizontal: isLandscape ? 100 : 20,
+                vertical: isLandscape ? 20 : 24,
+              ),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16),
+                side: BorderSide(color: Colors.teal.withValues(alpha: 0.5), width: 2),
+              ),
+              title: Text(
+                '훌라 ${playerCount}인 - 난이도 선택',
+                style: const TextStyle(
+                  color: Colors.teal,
+                  fontWeight: FontWeight.bold,
+                ),
+                textAlign: TextAlign.center,
+              ),
+              content: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  if (isLandscape)
+                    Row(
+                      children: [
+                        Expanded(child: _buildHulaDifficultyButton(context, playerCount: playerCount, difficulty: HulaDifficulty.easy, title: '쉬움', icon: Icons.sentiment_satisfied, color: Colors.green, compact: true)),
+                        const SizedBox(width: 8),
+                        Expanded(child: _buildHulaDifficultyButton(context, playerCount: playerCount, difficulty: HulaDifficulty.medium, title: '보통', icon: Icons.sentiment_neutral, color: Colors.orange, compact: true)),
+                        const SizedBox(width: 8),
+                        Expanded(child: _buildHulaDifficultyButton(context, playerCount: playerCount, difficulty: HulaDifficulty.hard, title: '어려움', icon: Icons.sentiment_very_dissatisfied, color: Colors.red, compact: true)),
+                      ],
+                    )
+                  else ...[
+                    _buildHulaDifficultyButton(context, playerCount: playerCount, difficulty: HulaDifficulty.easy, title: '쉬움', icon: Icons.sentiment_satisfied, color: Colors.green),
+                    const SizedBox(height: 12),
+                    _buildHulaDifficultyButton(context, playerCount: playerCount, difficulty: HulaDifficulty.medium, title: '보통', icon: Icons.sentiment_neutral, color: Colors.orange),
+                    const SizedBox(height: 12),
+                    _buildHulaDifficultyButton(context, playerCount: playerCount, difficulty: HulaDifficulty.hard, title: '어려움', icon: Icons.sentiment_very_dissatisfied, color: Colors.red),
+                  ],
+                ],
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+
+  Widget _buildHulaDifficultyButton(
+    BuildContext context, {
+    required int playerCount,
+    required HulaDifficulty difficulty,
+    required String title,
+    required IconData icon,
+    required Color color,
+    bool compact = false,
+  }) {
+    return InkWell(
+      onTap: () {
+        Navigator.pop(context);
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => HulaScreen(
+              playerCount: playerCount,
+              difficulty: difficulty,
+            ),
+          ),
+        );
+      },
+      borderRadius: BorderRadius.circular(compact ? 8 : 12),
+      child: Container(
+        width: double.infinity,
+        padding: EdgeInsets.symmetric(horizontal: compact ? 10 : 16, vertical: compact ? 10 : 14),
+        decoration: BoxDecoration(
+          color: color.withValues(alpha: 0.1),
+          borderRadius: BorderRadius.circular(compact ? 8 : 12),
+          border: Border.all(
+            color: color.withValues(alpha: 0.3),
+            width: 1,
+          ),
+        ),
+        child: compact
+            ? Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(icon, color: color, size: 24),
+                  const SizedBox(height: 4),
+                  Text(
+                    title,
+                    style: TextStyle(
+                      color: color,
+                      fontSize: 14,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ],
+              )
+            : Row(
+                children: [
+                  Icon(icon, color: color, size: 28),
+                  const SizedBox(width: 12),
+                  Text(
+                    title,
+                    style: TextStyle(
+                      color: color,
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  const Spacer(),
+                  Icon(
+                    Icons.arrow_forward_ios,
+                    color: color.withValues(alpha: 0.7),
                     size: 16,
                   ),
                 ],

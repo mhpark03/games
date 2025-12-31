@@ -142,6 +142,9 @@ class ThankYouOption {
   }
 }
 
+// 훌라 난이도
+enum HulaDifficulty { easy, medium, hard }
+
 // 52장 덱 생성
 List<PlayingCard> createDeck() {
   final deck = <PlayingCard>[];
@@ -156,11 +159,13 @@ List<PlayingCard> createDeck() {
 class HulaScreen extends StatefulWidget {
   final int playerCount;
   final bool resumeGame;
+  final HulaDifficulty difficulty;
 
   const HulaScreen({
     super.key,
     this.playerCount = 2,
     this.resumeGame = false,
+    this.difficulty = HulaDifficulty.medium,
   });
 
   static Future<bool> hasSavedGame() async {
@@ -171,6 +176,14 @@ class HulaScreen extends StatefulWidget {
     final gameState = await GameSaveService.loadGame('hula');
     if (gameState == null) return null;
     return gameState['playerCount'] as int?;
+  }
+
+  static Future<HulaDifficulty?> getSavedDifficulty() async {
+    final gameState = await GameSaveService.loadGame('hula');
+    if (gameState == null) return null;
+    final difficultyIndex = gameState['difficulty'] as int?;
+    if (difficultyIndex == null) return null;
+    return HulaDifficulty.values[difficultyIndex];
   }
 
   static Future<void> clearSavedGame() async {
@@ -268,14 +281,11 @@ class _HulaScreenState extends State<HulaScreen> with TickerProviderStateMixin {
     computerMelds = List.generate(playerCount - 1, (_) => []);
     scores = List.generate(playerCount, (_) => 0);
 
-    // 컴퓨터 난이도 랜덤 설정 (쉬움 40%, 보통 40%, 어려움 20%)
+    // 컴퓨터 난이도 설정 (선택된 난이도 적용)
+    final difficultyValue = widget.difficulty.index; // 0=쉬움, 1=보통, 2=어려움
+    computerDifficulties = List.generate(playerCount - 1, (_) => difficultyValue);
+
     final random = Random();
-    computerDifficulties = List.generate(playerCount - 1, (_) {
-      final roll = random.nextInt(100);
-      if (roll < 40) return 0; // 쉬움
-      if (roll < 80) return 1; // 보통
-      return 2; // 어려움
-    });
 
     // 각 플레이어에게 7장씩 배분
     for (int i = 0; i < 7; i++) {
@@ -460,6 +470,7 @@ class _HulaScreenState extends State<HulaScreen> with TickerProviderStateMixin {
 
     final gameState = {
       'playerCount': playerCount,
+      'difficulty': widget.difficulty.index,
       'deck': deck.map(_cardToMap).toList(),
       'discardPile': discardPile.map(_cardToMap).toList(),
       'playerHand': playerHand.map(_cardToMap).toList(),
@@ -531,17 +542,12 @@ class _HulaScreenState extends State<HulaScreen> with TickerProviderStateMixin {
       hasDrawn = gameState['hasDrawn'] as bool;
       scores = List<int>.from(gameState['scores'] as List);
 
-      // 난이도 복원 (저장된 게임에 없으면 랜덤 생성)
+      // 난이도 복원 (저장된 게임에 없으면 선택된 난이도 사용)
       if (gameState.containsKey('computerDifficulties')) {
         computerDifficulties = List<int>.from(gameState['computerDifficulties'] as List);
       } else {
-        final random = Random();
-        computerDifficulties = List.generate(playerCount - 1, (_) {
-          final roll = random.nextInt(100);
-          if (roll < 40) return 0;
-          if (roll < 80) return 1;
-          return 2;
-        });
+        final difficultyValue = widget.difficulty.index;
+        computerDifficulties = List.generate(playerCount - 1, (_) => difficultyValue);
       }
 
       gameOver = false;
