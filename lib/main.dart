@@ -2113,9 +2113,10 @@ class HomeScreen extends StatelessWidget {
 
     if (!context.mounted) return;
 
+    final parentContext = context;
     showDialog(
       context: context,
-      builder: (BuildContext context) {
+      builder: (BuildContext dialogContext) {
         return LayoutBuilder(
           builder: (context, constraints) {
             final isLandscape = constraints.maxWidth > constraints.maxHeight;
@@ -2144,7 +2145,7 @@ class HomeScreen extends StatelessWidget {
                 children: [
                   // 이어하기 버튼 (저장된 게임이 있을 때만)
                   if (hasSaved && savedPlayerCount != null) ...[
-                    _buildHulaResumeButton(context, savedPlayerCount, savedDifficulty, compact: isLandscape),
+                    _buildHulaResumeButton(dialogContext, savedPlayerCount, savedDifficulty, compact: isLandscape),
                     SizedBox(height: isLandscape ? 8 : 16),
                     Divider(color: Colors.grey.shade700, height: 1),
                     SizedBox(height: isLandscape ? 6 : 8),
@@ -2161,19 +2162,19 @@ class HomeScreen extends StatelessWidget {
                   if (isLandscape)
                     Row(
                       children: [
-                        Expanded(child: _buildHulaPlayerCountButton(context, playerCount: 2, subtitle: '1 vs 1', icon: Icons.people, compact: true)),
+                        Expanded(child: _buildHulaPlayerCountButton(parentContext, dialogContext: dialogContext, playerCount: 2, subtitle: '1 vs 1', icon: Icons.people, compact: true)),
                         const SizedBox(width: 8),
-                        Expanded(child: _buildHulaPlayerCountButton(context, playerCount: 3, subtitle: '1 vs 2', icon: Icons.groups, compact: true)),
+                        Expanded(child: _buildHulaPlayerCountButton(parentContext, dialogContext: dialogContext, playerCount: 3, subtitle: '1 vs 2', icon: Icons.groups, compact: true)),
                         const SizedBox(width: 8),
-                        Expanded(child: _buildHulaPlayerCountButton(context, playerCount: 4, subtitle: '1 vs 3', icon: Icons.groups, compact: true)),
+                        Expanded(child: _buildHulaPlayerCountButton(parentContext, dialogContext: dialogContext, playerCount: 4, subtitle: '1 vs 3', icon: Icons.groups, compact: true)),
                       ],
                     )
                   else ...[
-                    _buildHulaPlayerCountButton(context, playerCount: 2, subtitle: '1 vs 1', icon: Icons.people),
+                    _buildHulaPlayerCountButton(parentContext, dialogContext: dialogContext, playerCount: 2, subtitle: '1 vs 1', icon: Icons.people),
                     const SizedBox(height: 12),
-                    _buildHulaPlayerCountButton(context, playerCount: 3, subtitle: '1 vs 2', icon: Icons.groups),
+                    _buildHulaPlayerCountButton(parentContext, dialogContext: dialogContext, playerCount: 3, subtitle: '1 vs 2', icon: Icons.groups),
                     const SizedBox(height: 12),
-                    _buildHulaPlayerCountButton(context, playerCount: 4, subtitle: '1 vs 3', icon: Icons.groups),
+                    _buildHulaPlayerCountButton(parentContext, dialogContext: dialogContext, playerCount: 4, subtitle: '1 vs 3', icon: Icons.groups),
                   ],
                 ],
               ),
@@ -2264,15 +2265,19 @@ class HomeScreen extends StatelessWidget {
 
   Widget _buildHulaPlayerCountButton(
     BuildContext context, {
+    required BuildContext dialogContext,
     required int playerCount,
     required String subtitle,
     required IconData icon,
     bool compact = false,
   }) {
     return InkWell(
-      onTap: () {
-        Navigator.pop(context);
-        _showHulaDifficultyDialog(context, playerCount);
+      onTap: () async {
+        Navigator.pop(dialogContext);
+        await Future.delayed(const Duration(milliseconds: 100));
+        if (context.mounted) {
+          _showHulaDifficultyDialog(context, playerCount);
+        }
       },
       borderRadius: BorderRadius.circular(compact ? 8 : 12),
       child: Container(
