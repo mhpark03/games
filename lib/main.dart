@@ -1009,10 +1009,39 @@ class HomeScreen extends StatelessWidget {
   Future<void> _showJanggiContinueDialog(BuildContext context) async {
     final hasSaved = await JanggiScreen.hasSavedGame();
     final savedGameMode = hasSaved ? await JanggiScreen.getSavedGameMode() : null;
+    final savedDifficulty = hasSaved ? await JanggiScreen.getSavedDifficulty() : null;
 
     if (!context.mounted) return;
 
     if (hasSaved && savedGameMode != null) {
+      String modeText;
+      switch (savedGameMode) {
+        case JanggiGameMode.vsHan:
+          modeText = '컴퓨터 (한)';
+          break;
+        case JanggiGameMode.vsCho:
+          modeText = '컴퓨터 (초)';
+          break;
+        case JanggiGameMode.vsHuman:
+          modeText = '2인 플레이';
+          break;
+      }
+
+      String difficultyText = '';
+      if (savedGameMode != JanggiGameMode.vsHuman && savedDifficulty != null) {
+        switch (savedDifficulty) {
+          case JanggiDifficulty.easy:
+            difficultyText = ' - 쉬움';
+            break;
+          case JanggiDifficulty.normal:
+            difficultyText = ' - 보통';
+            break;
+          case JanggiDifficulty.hard:
+            difficultyText = ' - 어려움';
+            break;
+        }
+      }
+
       showDialog(
         context: context,
         builder: (BuildContext context) {
@@ -1030,10 +1059,24 @@ class HomeScreen extends StatelessWidget {
               ),
               textAlign: TextAlign.center,
             ),
-            content: const Text(
-              '이전에 플레이하던 게임이 있습니다.\n이어서 하시겠습니까?',
-              style: TextStyle(color: Colors.white70),
-              textAlign: TextAlign.center,
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Text(
+                  '이전에 플레이하던 게임이 있습니다.\n이어서 하시겠습니까?',
+                  style: TextStyle(color: Colors.white70),
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  '$modeText$difficultyText',
+                  style: TextStyle(
+                    color: Colors.grey.shade400,
+                    fontSize: 12,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+              ],
             ),
             actions: [
               TextButton(
@@ -1059,6 +1102,7 @@ class HomeScreen extends StatelessWidget {
                     MaterialPageRoute(
                       builder: (context) => JanggiScreen(
                         gameMode: savedGameMode,
+                        difficulty: savedDifficulty ?? JanggiDifficulty.normal,
                         resumeGame: true,
                       ),
                     ),
@@ -1141,12 +1185,18 @@ class HomeScreen extends StatelessWidget {
     return InkWell(
       onTap: () {
         Navigator.pop(context);
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (context) => JanggiScreen(gameMode: mode),
-          ),
-        );
+        if (mode == JanggiGameMode.vsHuman) {
+          // 2인 플레이는 난이도 선택 없이 바로 게임 시작
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => JanggiScreen(gameMode: mode),
+            ),
+          );
+        } else {
+          // 컴퓨터 대전은 난이도 선택 다이얼로그 표시
+          _showJanggiDifficultyDialog(context, mode);
+        }
       },
       borderRadius: BorderRadius.circular(12),
       child: Container(
@@ -1188,6 +1238,100 @@ class HomeScreen extends StatelessWidget {
             Icon(
               Icons.arrow_forward_ios,
               color: const Color(0xFFD2691E).withValues(alpha: 0.7),
+              size: 16,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // 장기 난이도 선택 다이얼로그
+  void _showJanggiDifficultyDialog(BuildContext context, JanggiGameMode mode) {
+    String modeText = mode == JanggiGameMode.vsHan ? '컴퓨터 (한)' : '컴퓨터 (초)';
+
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          backgroundColor: Colors.grey.shade900,
+          insetPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+            side: BorderSide(color: const Color(0xFFD2691E).withValues(alpha: 0.5), width: 2),
+          ),
+          title: Text(
+            '$modeText - 난이도 선택',
+            style: const TextStyle(
+              color: Color(0xFFD2691E),
+              fontWeight: FontWeight.bold,
+            ),
+            textAlign: TextAlign.center,
+          ),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              _buildJanggiDifficultyButton(context, mode: mode, difficulty: JanggiDifficulty.easy, title: '쉬움', icon: Icons.sentiment_satisfied, color: Colors.green),
+              const SizedBox(height: 12),
+              _buildJanggiDifficultyButton(context, mode: mode, difficulty: JanggiDifficulty.normal, title: '보통', icon: Icons.sentiment_neutral, color: Colors.orange),
+              const SizedBox(height: 12),
+              _buildJanggiDifficultyButton(context, mode: mode, difficulty: JanggiDifficulty.hard, title: '어려움', icon: Icons.sentiment_very_dissatisfied, color: Colors.red),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildJanggiDifficultyButton(
+    BuildContext context, {
+    required JanggiGameMode mode,
+    required JanggiDifficulty difficulty,
+    required String title,
+    required IconData icon,
+    required Color color,
+  }) {
+    return InkWell(
+      onTap: () {
+        Navigator.pop(context);
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => JanggiScreen(
+              gameMode: mode,
+              difficulty: difficulty,
+            ),
+          ),
+        );
+      },
+      borderRadius: BorderRadius.circular(12),
+      child: Container(
+        width: double.infinity,
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        decoration: BoxDecoration(
+          color: color.withValues(alpha: 0.1),
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(
+            color: color.withValues(alpha: 0.3),
+            width: 1,
+          ),
+        ),
+        child: Row(
+          children: [
+            Icon(icon, color: color, size: 28),
+            const SizedBox(width: 12),
+            Text(
+              title,
+              style: TextStyle(
+                color: color,
+                fontSize: 16,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            const Spacer(),
+            Icon(
+              Icons.arrow_forward_ios,
+              color: color.withValues(alpha: 0.7),
               size: 16,
             ),
           ],
