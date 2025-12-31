@@ -50,6 +50,11 @@ app.*.map.json
 secrets.json
 api_keys.json
 
+# Android signing (IMPORTANT: Never commit these!)
+*.jks
+*.keystore
+android/key.properties
+
 # Build scripts with API keys
 build_apk.bat
 build_apk.sh
