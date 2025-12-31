@@ -64,11 +64,13 @@ enum JanggiDifficulty {
 class JanggiScreen extends StatefulWidget {
   final JanggiGameMode gameMode;
   final bool resumeGame;
+  final JanggiDifficulty difficulty;
 
   const JanggiScreen({
     super.key,
     required this.gameMode,
     this.resumeGame = false,
+    this.difficulty = JanggiDifficulty.normal,
   });
 
   static Future<bool> hasSavedGame() async {
@@ -81,6 +83,14 @@ class JanggiScreen extends StatefulWidget {
     final modeIndex = gameState['gameMode'] as int?;
     if (modeIndex == null) return null;
     return JanggiGameMode.values[modeIndex];
+  }
+
+  static Future<JanggiDifficulty?> getSavedDifficulty() async {
+    final gameState = await GameSaveService.loadGame('janggi');
+    if (gameState == null) return null;
+    final difficultyIndex = gameState['difficulty'] as int?;
+    if (difficultyIndex == null) return null;
+    return JanggiDifficulty.values[difficultyIndex];
   }
 
   static Future<void> clearSavedGame() async {
@@ -432,9 +442,9 @@ class _JanggiScreenState extends State<JanggiScreen> {
   }
 
   void _showSetupDialog() {
-    // 컴퓨터 대전 시 난이도 랜덤 설정
+    // 컴퓨터 대전 시 난이도 설정 (선택된 난이도 적용)
     if (widget.gameMode != JanggiGameMode.vsHuman) {
-      _randomizeDifficulty();
+      _difficulty = widget.difficulty;
     }
 
     // 컴퓨터의 마상 배치는 랜덤으로 설정 (4가지 조합 중 하나)
