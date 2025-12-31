@@ -906,6 +906,61 @@ class _ExpandedBoardScreenState extends State<ExpandedBoardScreen> {
     // 일시정지 상태에서는 입력 차단
     if (_localIsPaused) return;
 
+    // 광고 시청 확인 다이얼로그 표시
+    _showFillNotesAdDialog();
+  }
+
+  void _showFillNotesAdDialog() {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: Colors.grey.shade900,
+        title: const Text('모든 메모 채우기', style: TextStyle(color: Colors.white)),
+        content: const Text(
+          '광고를 시청하고 모든 메모를 채우시겠습니까?',
+          style: TextStyle(color: Colors.white70),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('취소'),
+          ),
+          ElevatedButton.icon(
+            onPressed: () {
+              Navigator.pop(context);
+              _showAdForFillNotes();
+            },
+            icon: const Icon(Icons.play_circle_outline),
+            label: const Text('광고 보기'),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.deepOrange,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showAdForFillNotes() {
+    final adService = AdService();
+
+    if (!adService.isAdLoaded) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('광고를 불러오는 중입니다. 무료로 제공합니다.')),
+      );
+      _applyFillAllNotes();
+      return;
+    }
+
+    adService.showRewardedAd(
+      onUserEarnedReward: (ad, reward) {
+        _applyFillAllNotes();
+      },
+      onAdDismissed: () {},
+    );
+  }
+
+  void _applyFillAllNotes() {
     setState(() {
       widget.gameState.fillAllNotes(widget.boardIndex);
     });
