@@ -3024,17 +3024,19 @@ class _HomeScreenState extends State<HomeScreen> {
                         builder: (context, constraints) {
                           final isLandscapeGrid = constraints.maxWidth > constraints.maxHeight;
                           final crossAxisCount = isLandscapeGrid ? 5 : 3;
-                          final aspectRatio = isLandscapeGrid ? 1.8 : 0.9;
+                          // 배너 광고 공간을 고려하여 aspectRatio 조정
+                          final aspectRatio = isLandscapeGrid ? 1.8 : 1.05;
                           return GridView.count(
                             crossAxisCount: crossAxisCount,
-                            mainAxisSpacing: 12,
-                            crossAxisSpacing: 12,
+                            mainAxisSpacing: 8,
+                            crossAxisSpacing: 8,
                             childAspectRatio: aspectRatio,
+                            padding: EdgeInsets.zero,
                             children: [
                               _buildGameTile(
                                 context,
-                                title: 'TETRIS',
-                                subtitle: '테트리스',
+                                title: '테트리스',
+                                subtitle: 'Tetris',
                                 icon: Icons.grid_view_rounded,
                                 color: Colors.cyan,
                                 description: '떨어지는 블록을 회전하고 배치하여 가로줄을 완성하면 줄이 사라집니다. 블록이 천장에 닿으면 게임 오버!',
@@ -3047,8 +3049,8 @@ class _HomeScreenState extends State<HomeScreen> {
                               ),
                               _buildGameTile(
                                 context,
-                                title: 'OMOK',
-                                subtitle: '오목',
+                                title: '오목',
+                                subtitle: 'Omok',
                                 icon: Icons.circle_outlined,
                                 color: Colors.amber,
                                 description: '흑과 백이 번갈아 돌을 놓아 가로, 세로, 대각선으로 5개를 먼저 연속으로 놓으면 승리합니다.',
@@ -3056,8 +3058,8 @@ class _HomeScreenState extends State<HomeScreen> {
                               ),
                               _buildGameTile(
                                 context,
-                                title: 'OTHELLO',
-                                subtitle: '오델로',
+                                title: '오델로',
+                                subtitle: 'Othello',
                                 icon: Icons.blur_circular,
                                 color: Colors.green,
                                 description: '상대 돌을 자신의 돌 사이에 끼워 뒤집어 더 많은 돌을 차지하면 승리합니다. 리버시라고도 불립니다.',
@@ -3065,8 +3067,8 @@ class _HomeScreenState extends State<HomeScreen> {
                               ),
                               _buildGameTile(
                                 context,
-                                title: 'CHESS',
-                                subtitle: '체스',
+                                title: '체스',
+                                subtitle: 'Chess',
                                 icon: Icons.castle,
                                 color: Colors.brown,
                                 description: '각 기물의 고유한 움직임을 활용하여 상대 킹을 체크메이트하면 승리하는 전략 게임입니다.',
@@ -3074,8 +3076,8 @@ class _HomeScreenState extends State<HomeScreen> {
                               ),
                               _buildGameTile(
                                 context,
-                                title: 'JANGGI',
-                                subtitle: '장기',
+                                title: '장기',
+                                subtitle: 'Janggi',
                                 icon: Icons.apps,
                                 color: const Color(0xFFD2691E),
                                 description: '한국 전통 보드 게임으로, 상대방의 궁(왕)을 외통수로 잡으면 승리합니다.',
@@ -3083,8 +3085,8 @@ class _HomeScreenState extends State<HomeScreen> {
                               ),
                               _buildGameTile(
                                 context,
-                                title: 'SOLITAIRE',
-                                subtitle: '솔리테어',
+                                title: '솔리테어',
+                                subtitle: 'Solitaire',
                                 icon: Icons.style,
                                 color: Colors.green.shade700,
                                 description: '카드를 정렬하여 에이스부터 킹까지 무늬별로 쌓아 올리는 1인용 카드 게임입니다.',
@@ -3327,41 +3329,52 @@ class _HomeScreenState extends State<HomeScreen> {
                       ),
                     ],
                   )
-                // 세로모드: 기존 세로 배치
-                : Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Container(
-                        padding: const EdgeInsets.all(10),
-                        decoration: BoxDecoration(
-                          color: color.withValues(alpha: 0.2),
-                          shape: BoxShape.circle,
+                // 세로모드: 아이콘+한글 가로배치, 영어 아래 배치
+                : Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Container(
+                              padding: const EdgeInsets.all(6),
+                              decoration: BoxDecoration(
+                                color: color.withValues(alpha: 0.2),
+                                shape: BoxShape.circle,
+                              ),
+                              child: Icon(
+                                icon,
+                                size: 20,
+                                color: color,
+                              ),
+                            ),
+                            const SizedBox(width: 6),
+                            Flexible(
+                              child: Text(
+                                title, // 한글 이름
+                                style: TextStyle(
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.bold,
+                                  color: color,
+                                ),
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                          ],
                         ),
-                        child: Icon(
-                          icon,
-                          size: 28,
-                          color: color,
+                        const SizedBox(height: 4),
+                        Text(
+                          subtitle, // 영어 이름
+                          style: TextStyle(
+                            fontSize: 10,
+                            color: Colors.grey.shade400,
+                          ),
+                          overflow: TextOverflow.ellipsis,
                         ),
-                      ),
-                      const SizedBox(height: 12),
-                      Text(
-                        title,
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
-                          color: color,
-                          letterSpacing: 2,
-                        ),
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        subtitle,
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: Colors.grey.shade400,
-                        ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
           );
         },
