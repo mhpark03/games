@@ -2,6 +2,7 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../../services/game_save_service.dart';
+import '../../services/ad_service.dart';
 
 enum CellState { hidden, revealed, flagged }
 
@@ -72,7 +73,6 @@ class _MinesweeperScreenState extends State<MinesweeperScreen> {
   bool firstClick = true;
   int flagCount = 0;
   int revealedCount = 0;
-  int hintCount = 3; // 힌트 사용 가능 횟수
 
   // 타이머
   int elapsedSeconds = 0;
@@ -119,14 +119,54 @@ class _MinesweeperScreenState extends State<MinesweeperScreen> {
     firstClick = true;
     flagCount = 0;
     revealedCount = 0;
-    hintCount = 3;
     elapsedSeconds = 0;
     startTime = null;
   }
 
+  // 힌트 광고 확인 다이얼로그
+  void _showHintAdDialog() {
+    if (gameOver || gameWon || firstClick) return;
+
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: Colors.grey.shade900,
+        title: const Text('힌트', style: TextStyle(color: Colors.white)),
+        content: const Text(
+          '광고를 시청하고 힌트를 사용하시겠습니까?',
+          style: TextStyle(color: Colors.white70),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('취소'),
+          ),
+          ElevatedButton(
+            onPressed: () async {
+              Navigator.pop(context);
+              final adService = AdService();
+              final result = await adService.showRewardedAd(
+                onUserEarnedReward: (ad, reward) {
+                  _useHint();
+                },
+              );
+              if (!result && mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('광고를 불러올 수 없습니다. 잠시 후 다시 시도해주세요.')),
+                );
+                adService.loadRewardedAd();
+              }
+            },
+            child: const Text('광고 보기'),
+          ),
+        ],
+      ),
+    );
+  }
+
   // 힌트 사용: 안전한 셀 하나를 자동으로 열기
   void _useHint() {
-    if (gameOver || gameWon || hintCount <= 0 || firstClick) return;
+    if (gameOver || gameWon || firstClick) return;
 
     // 안전한 숨겨진 셀 찾기
     List<List<int>> safeCells = [];
@@ -143,10 +183,6 @@ class _MinesweeperScreenState extends State<MinesweeperScreen> {
     // 랜덤으로 하나 선택하여 열기
     final random = Random();
     final selected = safeCells[random.nextInt(safeCells.length)];
-
-    setState(() {
-      hintCount--;
-    });
 
     _revealCell(selected[0], selected[1]);
     _saveGame();
@@ -296,7 +332,6 @@ class _MinesweeperScreenState extends State<MinesweeperScreen> {
       'difficulty': widget.difficulty.index,
       'flagCount': flagCount,
       'revealedCount': revealedCount,
-      'hintCount': hintCount,
       'elapsedSeconds': elapsedSeconds,
     };
 
@@ -326,7 +361,6 @@ class _MinesweeperScreenState extends State<MinesweeperScreen> {
     setState(() {
       flagCount = gameState['flagCount'] as int? ?? 0;
       revealedCount = gameState['revealedCount'] as int? ?? 0;
-      hintCount = gameState['hintCount'] as int? ?? 3;
       elapsedSeconds = gameState['elapsedSeconds'] as int? ?? 0;
       firstClick = false;
       gameOver = false;
@@ -426,34 +460,10 @@ class _MinesweeperScreenState extends State<MinesweeperScreen> {
             onPressed: _showRulesDialog,
             tooltip: '게임 규칙',
           ),
-          Stack(
-            children: [
-              IconButton(
-                icon: const Icon(Icons.lightbulb_outline),
-                onPressed: (hintCount > 0 && !firstClick && !gameOver && !gameWon) ? _useHint : null,
-                tooltip: '힌트 ($hintCount)',
-              ),
-              if (hintCount > 0)
-                Positioned(
-                  right: 6,
-                  top: 6,
-                  child: Container(
-                    padding: const EdgeInsets.all(4),
-                    decoration: const BoxDecoration(
-                      color: Colors.amber,
-                      shape: BoxShape.circle,
-                    ),
-                    child: Text(
-                      '$hintCount',
-                      style: const TextStyle(
-                        color: Colors.black,
-                        fontSize: 10,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ),
-                ),
-            ],
+          IconButton(
+            icon: const Icon(Icons.lightbulb_outline),
+            onPressed: (!firstClick && !gameOver && !gameWon) ? _showHintAdDialog : null,
+            tooltip: '힌트',
           ),
           IconButton(
             icon: const Icon(Icons.refresh),
@@ -559,37 +569,13 @@ class _MinesweeperScreenState extends State<MinesweeperScreen> {
   }
 
   Widget _buildHintButton() {
-    final isEnabled = hintCount > 0 && !firstClick && !gameOver && !gameWon;
-    return Stack(
-      children: [
-        IconButton(
-          icon: Icon(
-            Icons.lightbulb_outline,
-            color: isEnabled ? Colors.amber : Colors.white30,
-          ),
-          onPressed: isEnabled ? _useHint : null,
-        ),
-        if (hintCount > 0)
-          Positioned(
-            right: 6,
-            top: 6,
-            child: Container(
-              padding: const EdgeInsets.all(4),
-              decoration: const BoxDecoration(
-                color: Colors.amber,
-                shape: BoxShape.circle,
-              ),
-              child: Text(
-                '$hintCount',
-                style: const TextStyle(
-                  color: Colors.black,
-                  fontSize: 10,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-            ),
-          ),
-      ],
+    final isEnabled = !firstClick && !gameOver && !gameWon;
+    return IconButton(
+      icon: Icon(
+        Icons.lightbulb_outline,
+        color: isEnabled ? Colors.amber : Colors.white30,
+      ),
+      onPressed: isEnabled ? _showHintAdDialog : null,
     );
   }
 
