@@ -1,6 +1,7 @@
 import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import '../../services/ad_service.dart';
 
 enum BaseballDifficulty {
   easy,   // 3자리
@@ -48,7 +49,6 @@ class _BaseballScreenState extends State<BaseballScreen> {
   String? errorMessage;
 
   // 힌트 기능
-  int hintCount = 2;
   Set<int> revealedPositions = {};
 
   // 제외된 숫자
@@ -221,7 +221,6 @@ class _BaseballScreenState extends State<BaseballScreen> {
       gameOver = false;
       gameWon = false;
       errorMessage = null;
-      hintCount = 2;
       revealedPositions.clear();
       excludedNumbers.clear();
     });
@@ -241,8 +240,59 @@ class _BaseballScreenState extends State<BaseballScreen> {
     HapticFeedback.selectionClick();
   }
 
+  // 힌트 광고 확인 다이얼로그
+  void _showHintAdDialog() {
+    if (gameOver) return;
+
+    // 아직 공개되지 않은 위치들 찾기
+    List<int> hiddenPositions = [];
+    for (int i = 0; i < digitCount; i++) {
+      if (!revealedPositions.contains(i)) {
+        hiddenPositions.add(i);
+      }
+    }
+
+    if (hiddenPositions.isEmpty) return;
+
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: Colors.grey.shade900,
+        title: const Text('힌트', style: TextStyle(color: Colors.white)),
+        content: const Text(
+          '광고를 시청하고 힌트를 사용하시겠습니까?',
+          style: TextStyle(color: Colors.white70),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('취소'),
+          ),
+          ElevatedButton(
+            onPressed: () async {
+              Navigator.pop(context);
+              final adService = AdService();
+              final result = await adService.showRewardedAd(
+                onUserEarnedReward: (ad, reward) {
+                  _useHint();
+                },
+              );
+              if (!result && mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('광고를 불러올 수 없습니다. 잠시 후 다시 시도해주세요.')),
+                );
+                adService.loadRewardedAd();
+              }
+            },
+            child: const Text('광고 보기'),
+          ),
+        ],
+      ),
+    );
+  }
+
   void _useHint() {
-    if (hintCount <= 0 || gameOver) return;
+    if (gameOver) return;
 
     // 아직 공개되지 않은 위치들 찾기
     List<int> hiddenPositions = [];
@@ -262,7 +312,6 @@ class _BaseballScreenState extends State<BaseballScreen> {
 
     setState(() {
       revealedPositions.add(positionToReveal);
-      hintCount--;
       // 입력 박스에 자동 입력
       inputDigits[positionToReveal] = revealedDigit;
       // 해당 숫자 버튼 제외 처리
@@ -340,34 +389,10 @@ class _BaseballScreenState extends State<BaseballScreen> {
             onPressed: _showRulesDialog,
             tooltip: '게임 규칙',
           ),
-          Stack(
-            children: [
-              IconButton(
-                icon: const Icon(Icons.lightbulb_outline),
-                onPressed: (hintCount > 0 && !gameOver) ? _useHint : null,
-                tooltip: '힌트 ($hintCount)',
-              ),
-              if (hintCount > 0)
-                Positioned(
-                  right: 6,
-                  top: 6,
-                  child: Container(
-                    padding: const EdgeInsets.all(4),
-                    decoration: const BoxDecoration(
-                      color: Colors.amber,
-                      shape: BoxShape.circle,
-                    ),
-                    child: Text(
-                      '$hintCount',
-                      style: const TextStyle(
-                        color: Colors.black,
-                        fontSize: 10,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ),
-                ),
-            ],
+          IconButton(
+            icon: const Icon(Icons.lightbulb_outline),
+            onPressed: !gameOver ? _showHintAdDialog : null,
+            tooltip: '힌트',
           ),
           IconButton(
             icon: const Icon(Icons.refresh),
@@ -437,34 +462,30 @@ class _BaseballScreenState extends State<BaseballScreen> {
                     // 힌트 버튼
                     if (!gameOver)
                       GestureDetector(
-                        onTap: hintCount > 0 ? _useHint : null,
+                        onTap: _showHintAdDialog,
                         child: Container(
                           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                           margin: const EdgeInsets.symmetric(horizontal: 8),
                           decoration: BoxDecoration(
-                            color: hintCount > 0
-                                ? Colors.amber.withValues(alpha: 0.2)
-                                : Colors.grey.withValues(alpha: 0.2),
+                            color: Colors.amber.withValues(alpha: 0.2),
                             borderRadius: BorderRadius.circular(8),
                             border: Border.all(
-                              color: hintCount > 0
-                                  ? Colors.amber.withValues(alpha: 0.5)
-                                  : Colors.grey.withValues(alpha: 0.3),
+                              color: Colors.amber.withValues(alpha: 0.5),
                             ),
                           ),
-                          child: Row(
+                          child: const Row(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
                               Icon(
                                 Icons.lightbulb_outline,
-                                color: hintCount > 0 ? Colors.amber : Colors.grey,
+                                color: Colors.amber,
                                 size: 18,
                               ),
-                              const SizedBox(width: 6),
+                              SizedBox(width: 6),
                               Text(
-                                '힌트 $hintCount',
+                                '힌트',
                                 style: TextStyle(
-                                  color: hintCount > 0 ? Colors.amber : Colors.grey,
+                                  color: Colors.amber,
                                   fontWeight: FontWeight.bold,
                                   fontSize: 13,
                                 ),
