@@ -157,15 +157,30 @@ class _GameCenterAppState extends State<GameCenterApp> {
         return Scaffold(
           body: child,
           bottomNavigationBar: (bannerLoaded && showBanner)
-              ? Container(
-                  color: Colors.black,
-                  height: _adService.bannerAd!.size.height.toDouble(),
-                  alignment: Alignment.center,
-                  child: SizedBox(
-                    width: _adService.bannerAd!.size.width.toDouble(),
-                    height: _adService.bannerAd!.size.height.toDouble(),
-                    child: AdWidget(ad: _adService.bannerAd!),
-                  ),
+              ? Builder(
+                  builder: (context) {
+                    WidgetsBinding.instance.addPostFrameCallback((_) {
+                      final RenderBox? box = context.findRenderObject() as RenderBox?;
+                      if (box != null && box.hasSize) {
+                        final position = box.localToGlobal(Offset.zero);
+                        final size = box.size;
+                        debugPrint('=== 배너 위치/크기 ===');
+                        debugPrint('위치: x=${position.dx}, y=${position.dy}');
+                        debugPrint('크기: ${size.width} x ${size.height}');
+                        debugPrint('화면높이: ${MediaQuery.of(context).size.height}');
+                      }
+                    });
+                    return Container(
+                      color: Colors.black,
+                      height: _adService.bannerAd!.size.height.toDouble(),
+                      alignment: Alignment.center,
+                      child: SizedBox(
+                        width: _adService.bannerAd!.size.width.toDouble(),
+                        height: _adService.bannerAd!.size.height.toDouble(),
+                        child: AdWidget(ad: _adService.bannerAd!),
+                      ),
+                    );
+                  },
                 )
               : null,
         );
