@@ -45,13 +45,7 @@ class BannerNavigatorObserver extends NavigatorObserver {
     if (previousRoute != null && previousRoute.isFirst) {
       debugPrint('=== 홈 복귀 (didPop) ===');
       debugPrint('복귀: ${route.settings.name} → ${previousRoute.settings.name}');
-      // 시스템 UI 모드를 기본값으로 리셋 후 배너 표시
-      SystemChrome.setEnabledSystemUIMode(SystemUiMode.manual, overlays: SystemUiOverlay.values).then((_) {
-        // 시스템 UI 업데이트 후 프레임 기다린 후 배너 표시
-        WidgetsBinding.instance.addPostFrameCallback((_) {
-          bannerController.show();
-        });
-      });
+      bannerController.show();
     }
   }
 }
@@ -161,40 +155,39 @@ class _GameCenterAppState extends State<GameCenterApp> {
           _loadBannerAd(MediaQuery.of(context).size.width);
         });
 
-        final isPortrait = MediaQuery.of(context).orientation == Orientation.portrait;
+        final mediaQuery = MediaQuery.of(context);
+        final isPortrait = mediaQuery.orientation == Orientation.portrait;
         final bannerLoaded = _adService.isBannerLoaded && _adService.bannerAd != null;
         final showBanner = isPortrait && bannerController.isVisible && bannerLoaded;
+        final bannerHeight = bannerLoaded ? _adService.bannerAd!.size.height.toDouble() : 0.0;
+        // 시스템 네비게이션 바 높이 (edgeToEdge 모드에서도 정확한 위치)
+        final bottomPadding = mediaQuery.viewPadding.bottom;
 
-        // Scaffold의 bottomNavigationBar로 배너를 항상 하단에 고정
-        return Scaffold(
-          body: child,
-          bottomNavigationBar: (bannerLoaded && showBanner)
-              ? Builder(
-                  builder: (context) {
-                    WidgetsBinding.instance.addPostFrameCallback((_) {
-                      final RenderBox? box = context.findRenderObject() as RenderBox?;
-                      if (box != null && box.hasSize) {
-                        final position = box.localToGlobal(Offset.zero);
-                        final size = box.size;
-                        debugPrint('=== 배너 위치/크기 ===');
-                        debugPrint('위치: x=${position.dx}, y=${position.dy}');
-                        debugPrint('크기: ${size.width} x ${size.height}');
-                        debugPrint('화면높이: ${MediaQuery.of(context).size.height}');
-                      }
-                    });
-                    return Container(
-                      color: Colors.black,
-                      height: _adService.bannerAd!.size.height.toDouble(),
-                      alignment: Alignment.center,
-                      child: SizedBox(
-                        width: _adService.bannerAd!.size.width.toDouble(),
-                        height: _adService.bannerAd!.size.height.toDouble(),
-                        child: AdWidget(ad: _adService.bannerAd!),
-                      ),
-                    );
-                  },
-                )
-              : null,
+        return Stack(
+          children: [
+            // 메인 컨텐츠
+            Positioned.fill(
+              bottom: showBanner ? bannerHeight + bottomPadding : 0,
+              child: child ?? const SizedBox(),
+            ),
+            // 배너 광고 (viewPadding.bottom 위에 배치)
+            if (bannerLoaded && showBanner)
+              Positioned(
+                left: 0,
+                right: 0,
+                bottom: bottomPadding,
+                child: Container(
+                  color: Colors.black,
+                  height: bannerHeight,
+                  alignment: Alignment.center,
+                  child: SizedBox(
+                    width: _adService.bannerAd!.size.width.toDouble(),
+                    height: bannerHeight,
+                    child: AdWidget(ad: _adService.bannerAd!),
+                  ),
+                ),
+              ),
+          ],
         );
       },
       home: const HomeScreen(),
