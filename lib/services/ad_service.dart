@@ -94,10 +94,23 @@ class AdService {
   }
 
   // 배너 광고 로드
-  void loadBannerAd({Function()? onLoaded}) {
+  void loadBannerAd({Function()? onLoaded, bool forceReload = false}) {
     // 모바일 플랫폼이 아닌 경우 배너 광고 로드하지 않음
     if (!Platform.isAndroid && !Platform.isIOS) {
       return;
+    }
+
+    // 이미 로드된 광고가 있고 강제 새로고침이 아니면 콜백만 호출
+    if (_isBannerLoaded && _bannerAd != null && !forceReload) {
+      onLoaded?.call();
+      return;
+    }
+
+    // 기존 광고 정리
+    if (_bannerAd != null) {
+      _bannerAd!.dispose();
+      _bannerAd = null;
+      _isBannerLoaded = false;
     }
 
     _bannerAd = BannerAd(
