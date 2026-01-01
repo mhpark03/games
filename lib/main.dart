@@ -76,7 +76,6 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> with RouteAware {
   final AdService _adService = AdService();
   bool _bannerLoaded = false;
-  int _bannerRebuildKey = 0; // 배너 위젯 강제 재생성용
 
   @override
   void initState() {
@@ -117,27 +116,8 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
 
   @override
   void didPopNext() {
-    // 게임 화면에서 돌아올 때 배너 숨기고 새로 로드
-    if (mounted) {
-      // 1. 먼저 배너 숨기기 (기존 AdWidget 제거)
-      _adService.disposeBannerAd();
-      setState(() {
-        _bannerRebuildKey++;
-      });
-
-      // 2. 다음 프레임에서 새 배너 로드
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (mounted) {
-          final screenWidth = MediaQuery.of(context).size.width;
-          _adService.loadBannerAd(
-            screenWidth: screenWidth,
-            onLoaded: () {
-              if (mounted) setState(() {});
-            },
-          );
-        }
-      });
-    }
+    // 게임 화면에서 돌아올 때 아무것도 하지 않음
+    // 배너 위젯을 그대로 유지하여 위치 문제 방지
   }
 
   Future<void> _showGomokuModeDialog(BuildContext context) async {
@@ -3264,7 +3244,6 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
           // 배너 광고 (세로 모드에서만 표시)
           if (isPortrait && _adService.isBannerLoaded && _adService.bannerAd != null)
             Container(
-              key: ValueKey('banner_container_$_bannerRebuildKey'),
               color: Colors.black,
               width: double.infinity,
               height: _adService.bannerAd!.size.height.toDouble(),
@@ -3272,10 +3251,7 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
               child: SizedBox(
                 width: _adService.bannerAd!.size.width.toDouble(),
                 height: _adService.bannerAd!.size.height.toDouble(),
-                child: AdWidget(
-                  key: ValueKey('banner_ad_$_bannerRebuildKey'),
-                  ad: _adService.bannerAd!,
-                ),
+                child: AdWidget(ad: _adService.bannerAd!),
               ),
             ),
         ],
