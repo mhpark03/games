@@ -75,6 +75,7 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> with RouteAware {
   final AdService _adService = AdService();
+  int _bannerAdKey = 0; // AdWidget 강제 리빌드용
 
   @override
   void initState() {
@@ -108,7 +109,11 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
       _adService.loadBannerAd(
         forceReload: true,
         onLoaded: () {
-          if (mounted) setState(() {});
+          if (mounted) {
+            setState(() {
+              _bannerAdKey++; // 키 변경으로 AdWidget 강제 리빌드
+            });
+          }
         },
       );
     }
@@ -3231,6 +3236,7 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
       ),
       bottomNavigationBar: _adService.isBannerLoaded && _adService.bannerAd != null
           ? Container(
+              key: ValueKey('banner_$_bannerAdKey'),
               color: Colors.black,
               width: _adService.bannerAd!.size.width.toDouble(),
               height: _adService.bannerAd!.size.height.toDouble(),
