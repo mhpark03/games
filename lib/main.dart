@@ -152,37 +152,22 @@ class _GameCenterAppState extends State<GameCenterApp> {
         final isPortrait = MediaQuery.of(context).orientation == Orientation.portrait;
         final bannerLoaded = _adService.isBannerLoaded && _adService.bannerAd != null;
         final showBanner = isPortrait && bannerController.isVisible && bannerLoaded;
-        final bannerHeight = bannerLoaded ? _adService.bannerAd!.size.height.toDouble() : 0.0;
 
-        // Stack으로 배너를 절대 위치에 배치
-        return Stack(
-          children: [
-            // 메인 컨텐츠 (배너 높이만큼 하단 여백)
-            Positioned.fill(
-              bottom: showBanner ? bannerHeight : 0,
-              child: child ?? const SizedBox(),
-            ),
-            // 배너 광고 (항상 화면 하단에 고정)
-            if (bannerLoaded)
-              Positioned(
-                left: 0,
-                right: 0,
-                bottom: 0,
-                child: Offstage(
-                  offstage: !showBanner,
-                  child: Container(
-                    color: Colors.black,
-                    height: bannerHeight,
-                    alignment: Alignment.center,
-                    child: SizedBox(
-                      width: _adService.bannerAd!.size.width.toDouble(),
-                      height: bannerHeight,
-                      child: AdWidget(ad: _adService.bannerAd!),
-                    ),
+        // Scaffold의 bottomNavigationBar로 배너를 항상 하단에 고정
+        return Scaffold(
+          body: child,
+          bottomNavigationBar: (bannerLoaded && showBanner)
+              ? Container(
+                  color: Colors.black,
+                  height: _adService.bannerAd!.size.height.toDouble(),
+                  alignment: Alignment.center,
+                  child: SizedBox(
+                    width: _adService.bannerAd!.size.width.toDouble(),
+                    height: _adService.bannerAd!.size.height.toDouble(),
+                    child: AdWidget(ad: _adService.bannerAd!),
                   ),
-                ),
-              ),
-          ],
+                )
+              : null,
         );
       },
       home: const HomeScreen(),
