@@ -2980,7 +2980,6 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
   @override
   Widget build(BuildContext context) {
     final isPortrait = MediaQuery.of(context).orientation == Orientation.portrait;
-    final showBanner = isPortrait && _adService.isBannerLoaded && _adService.bannerAd != null;
 
     return Scaffold(
       body: Column(
@@ -3242,13 +3241,15 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
             ),
           ),
           // 배너 광고 (세로 모드에서만 표시)
-          if (showBanner)
+          if (isPortrait)
             Container(
               color: Colors.black,
               width: double.infinity,
               height: 100,
               alignment: Alignment.center,
-              child: AdWidget(ad: _adService.bannerAd!),
+              child: _adService.isBannerLoaded && _adService.bannerAd != null
+                  ? AdWidget(ad: _adService.bannerAd!)
+                  : const SizedBox(), // 광고 로드 전에도 공간 유지
             ),
         ],
       ),
