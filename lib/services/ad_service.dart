@@ -122,6 +122,10 @@ class AdService {
       request: const AdRequest(),
       listener: BannerAdListener(
         onAdLoaded: (ad) {
+          final bannerAd = ad as BannerAd;
+          debugPrint('=== 배너 광고 로드 완료 ===');
+          debugPrint('광고 크기: ${bannerAd.size.width} x ${bannerAd.size.height}');
+          debugPrint('요청 크기: ${adSize.width} x ${adSize.height}');
           _isBannerLoaded = true;
           onLoaded?.call();
         },
