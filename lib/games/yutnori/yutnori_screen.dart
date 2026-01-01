@@ -875,11 +875,11 @@ class _YutnoriScreenState extends State<YutnoriScreen>
     // 위험에 처한 말 확인 (다른 플레이어가 잡을 수 있는 위치)
     Set<int> dangerPositions = _getDangerPositions();
 
-    // 시작점 근처(1-7)에 말이 있는지 확인
+    // 위험 지역(1-7, 21)에 말이 있는지 확인
     bool hasPieceInDangerousZone = false;
     for (int i = 0; i < 4; i++) {
       final pos = playerPieces[currentPlayer][i].position;
-      if (pos >= 1 && pos <= 7) {
+      if ((pos >= 1 && pos <= 7) || pos == 21) {
         hasPieceInDangerousZone = true;
         break;
       }
@@ -954,11 +954,12 @@ class _YutnoriScreenState extends State<YutnoriScreen>
   ) {
     int score = 0;
 
-    // 안전 지역 확인
-    bool isCurrentSafe = (currentPos == 21 || currentPos == 28 || currentPos == 15 || currentPos == 34 || currentPos == -1);
-    bool isNewSafe = (newPos == 21 || newPos == 28 || newPos == 15 || newPos == 34 || newPos == finishPosition);
-    bool isCurrentDangerousZone = (currentPos >= 1 && currentPos <= 7);
-    bool isNewDangerousZone = (newPos >= 1 && newPos <= 7);
+    // 안전 지역 확인 (21은 위험 지역으로 분류)
+    bool isCurrentSafe = (currentPos == 28 || currentPos == 15 || currentPos == 34 || currentPos == -1);
+    bool isNewSafe = (newPos == 28 || newPos == 15 || newPos == 34 || newPos == finishPosition);
+    // 위험 지역: 1-7 및 21(우상단 코너)
+    bool isCurrentDangerousZone = (currentPos >= 1 && currentPos <= 7) || currentPos == 21;
+    bool isNewDangerousZone = (newPos >= 1 && newPos <= 7) || newPos == 21;
 
     // 위험에 처한 말이 이동하여 탈출하면 높은 점수
     bool isInDanger = !isCurrentSafe && currentPos >= 0 && dangerPositions.contains(currentPos);
