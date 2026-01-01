@@ -624,4 +624,37 @@ class SamuraiGameState {
     }
     return completed;
   }
+
+  /// 모든 겹치는 영역의 값을 동기화 (보드 2 기준)
+  /// 저장된 게임 로드 후 불일치 해결용
+  void syncAllOverlappingRegions() {
+    // 보드 2 좌상단 -> 보드 0 우하단
+    for (int i = 0; i < 3; i++) {
+      for (int j = 0; j < 3; j++) {
+        currentBoards[0][6 + i][6 + j] = currentBoards[2][i][j];
+        notes[0][6 + i][6 + j] = Set.from(notes[2][i][j]);
+      }
+    }
+    // 보드 2 우상단 -> 보드 1 좌하단
+    for (int i = 0; i < 3; i++) {
+      for (int j = 0; j < 3; j++) {
+        currentBoards[1][6 + i][j] = currentBoards[2][i][6 + j];
+        notes[1][6 + i][j] = Set.from(notes[2][i][6 + j]);
+      }
+    }
+    // 보드 2 좌하단 -> 보드 3 우상단
+    for (int i = 0; i < 3; i++) {
+      for (int j = 0; j < 3; j++) {
+        currentBoards[3][i][6 + j] = currentBoards[2][6 + i][j];
+        notes[3][i][6 + j] = Set.from(notes[2][6 + i][j]);
+      }
+    }
+    // 보드 2 우하단 -> 보드 4 좌상단
+    for (int i = 0; i < 3; i++) {
+      for (int j = 0; j < 3; j++) {
+        currentBoards[4][i][j] = currentBoards[2][6 + i][6 + j];
+        notes[4][i][j] = Set.from(notes[2][6 + i][6 + j]);
+      }
+    }
+  }
 }
