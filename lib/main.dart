@@ -45,6 +45,8 @@ class BannerNavigatorObserver extends NavigatorObserver {
     if (previousRoute != null && previousRoute.isFirst) {
       debugPrint('=== 홈 복귀 (didPop) ===');
       debugPrint('복귀: ${route.settings.name} → ${previousRoute.settings.name}');
+      // 시스템 UI 모드를 기본값으로 리셋 (게임에서 edgeToEdge로 변경했을 수 있음)
+      SystemChrome.setEnabledSystemUIMode(SystemUiMode.manual, overlays: SystemUiOverlay.values);
       bannerController.show();
     }
   }
