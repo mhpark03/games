@@ -76,13 +76,11 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> with RouteAware {
   final AdService _adService = AdService();
   int _bannerAdKey = 0; // AdWidget 강제 리빌드용
+  bool _bannerLoaded = false;
 
   @override
   void initState() {
     super.initState();
-    _adService.loadBannerAd(onLoaded: () {
-      if (mounted) setState(() {});
-    });
     // 스플래시 화면 제거 (1초 후)
     Future.delayed(const Duration(seconds: 1), () {
       FlutterNativeSplash.remove();
@@ -93,6 +91,26 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
   void didChangeDependencies() {
     super.didChangeDependencies();
     routeObserver.subscribe(this, ModalRoute.of(context) as PageRoute);
+    // 배너 광고 로드 (화면 너비 필요)
+    if (!_bannerLoaded) {
+      _bannerLoaded = true;
+      _loadBannerAd();
+    }
+  }
+
+  void _loadBannerAd({bool forceReload = false}) {
+    final screenWidth = MediaQuery.of(context).size.width;
+    _adService.loadBannerAd(
+      screenWidth: screenWidth,
+      forceReload: forceReload,
+      onLoaded: () {
+        if (mounted) {
+          setState(() {
+            if (forceReload) _bannerAdKey++;
+          });
+        }
+      },
+    );
   }
 
   @override
@@ -106,16 +124,7 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
   void didPopNext() {
     // 게임 화면에서 돌아올 때 배너 광고 강제 새로고침
     if (mounted) {
-      _adService.loadBannerAd(
-        forceReload: true,
-        onLoaded: () {
-          if (mounted) {
-            setState(() {
-              _bannerAdKey++; // 키 변경으로 AdWidget 강제 리빌드
-            });
-          }
-        },
-      );
+      _loadBannerAd(forceReload: true);
     }
   }
 

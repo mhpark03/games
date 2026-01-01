@@ -1,4 +1,5 @@
 import 'package:flutter/foundation.dart';
+import 'package:flutter/widgets.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'dart:io';
 
@@ -93,8 +94,8 @@ class AdService {
     return true;
   }
 
-  // 배너 광고 로드
-  void loadBannerAd({Function()? onLoaded, bool forceReload = false}) {
+  // 배너 광고 로드 (적응형)
+  Future<void> loadBannerAd({Function()? onLoaded, bool forceReload = false, double? screenWidth}) async {
     // 모바일 플랫폼이 아닌 경우 배너 광고 로드하지 않음
     if (!Platform.isAndroid && !Platform.isIOS) {
       return;
@@ -113,9 +114,21 @@ class AdService {
       _isBannerLoaded = false;
     }
 
+    // 적응형 배너 크기 계산
+    AdSize adSize;
+    if (screenWidth != null && screenWidth > 0) {
+      final adaptiveSize = await AdSize.getAnchoredAdaptiveBannerAdSize(
+        Orientation.portrait,
+        screenWidth.toInt(),
+      );
+      adSize = adaptiveSize ?? AdSize.banner;
+    } else {
+      adSize = AdSize.banner;
+    }
+
     _bannerAd = BannerAd(
       adUnitId: bannerAdUnitId,
-      size: AdSize.banner,
+      size: adSize,
       request: const AdRequest(),
       listener: BannerAdListener(
         onAdLoaded: (ad) {
@@ -129,7 +142,7 @@ class AdService {
           _isBannerLoaded = false;
           // 30초 후 재시도
           Future.delayed(const Duration(seconds: 30), () {
-            loadBannerAd(onLoaded: onLoaded);
+            loadBannerAd(onLoaded: onLoaded, screenWidth: screenWidth);
           });
         },
       ),
