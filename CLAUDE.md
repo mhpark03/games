@@ -36,6 +36,41 @@ flutter analyze
 - 한 번에 하나의 게임만 저장 가능
 - 각 게임 화면에서 `hasSavedGame()`, `loadGame()`, `saveGame()`, `clearSavedGame()` 정적 메서드 구현
 
+### 광고 시스템
+`AdService` (`lib/services/ad_service.dart`) 싱글톤으로 Google AdMob 광고 관리
+- 보상형 광고: 힌트/되돌리기 기능에 연동
+- 배너 광고: 홈 화면 하단
+- 네트워크 미연결 시에도 기능 사용 가능 (광고 없이 실행)
+- 광고 다이얼로그 패턴:
+```dart
+void _showAdDialog() {
+  showDialog(
+    context: context,
+    builder: (context) => AlertDialog(
+      // ... 다이얼로그 내용
+      actions: [
+        ElevatedButton(
+          onPressed: () async {
+            Navigator.pop(context);
+            final adService = AdService();
+            final result = await adService.showRewardedAd(
+              onUserEarnedReward: (ad, reward) {
+                _executeFeature(); // 기능 실행
+              },
+            );
+            if (!result && mounted) {
+              _executeFeature(); // 광고 없어도 기능 실행
+              adService.loadRewardedAd();
+            }
+          },
+          child: const Text('광고 보기'),
+        ),
+      ],
+    ),
+  );
+}
+```
+
 ### 게임 화면 패턴
 각 게임은 `lib/games/{game_name}/{game_name}_screen.dart` 형식으로 구성됩니다.
 - `resumeGame` 파라미터로 이어하기 지원
@@ -45,18 +80,19 @@ flutter analyze
 ### 주요 게임
 | 게임 | 폴더 | 특징 |
 |------|------|------|
-| 오목 | `gomoku/` | vs 컴퓨터(흑/백), 2인 플레이, 난이도 선택 |
-| 오델로 | `othello/` | vs 컴퓨터(흑/백), 2인 플레이, 난이도 선택 |
-| 체스 | `chess/` | vs 컴퓨터(흑/백), 2인 플레이 |
+| 오목 | `gomoku/` | vs 컴퓨터(흑/백), 2인 플레이, 난이도 선택, 되돌리기(광고) |
+| 오델로 | `othello/` | vs 컴퓨터(흑/백), 2인 플레이, 난이도 선택, 되돌리기(광고) |
+| 체스 | `chess/` | vs 컴퓨터(흑/백), 2인 플레이, 되돌리기(광고) |
 | 장기 | `janggi/` | vs 컴퓨터(초/한), 2인 플레이 |
 | 원카드 | `onecard/` | 2~4인, 컴퓨터 AI |
 | 윷놀이 | `yutnori/` | 2~4인, 컴퓨터 AI |
 | 훌라 | `hula/` | 2~4인, 컴퓨터 AI (땡큐, 멜드 등록) |
 | 테트리스 | `tetris/` | 싱글 플레이 |
-| 지뢰찾기 | `minesweeper/` | 난이도 선택 |
-| 솔리테어 | `solitaire/` | 클론다이크 |
-| 숫자야구 | `baseball/` | vs 컴퓨터 |
-| 스도쿠 | `sudoku/` | 일반/사무라이/킬러/넘버썸즈 (별도 저장 시스템) |
+| 지뢰찾기 | `minesweeper/` | 난이도 선택, 힌트(광고) |
+| 솔리테어 | `solitaire/` | 클론다이크, 되돌리기(광고) |
+| 숫자야구 | `baseball/` | vs 컴퓨터, 힌트(광고) |
+| 스도쿠 | `sudoku/` | 일반/사무라이/킬러 (별도 저장 시스템) |
+| 넘버 썸즈 | `number_sums/` | 5x5/6x6/7x7 합계 힌트, 힌트 모드(광고) |
 
 ## 윷놀이 말판 구조
 
@@ -174,12 +210,11 @@ flutter analyze
 ### 게임 종류
 | 게임 | 화면 | 설명 |
 |------|------|------|
-| 일반 스도쿠 | `game_screen.dart` | 9x9 클래식, 쉬움/보통/어려움/달인 |
-| 사무라이 스도쿠 | `samurai_game_screen.dart` | 5개 보드 겹침 |
-| 킬러 스도쿠 | `killer_game_screen.dart` | 케이지 합계 맞추기 |
-| 넘버 썸즈 | `number_sums_game_screen.dart` | 5x5/6x6/7x7 합계 힌트 |
+| 일반 스도쿠 | `sudoku/screens/game_screen.dart` | 9x9 클래식, 쉬움/보통/어려움/달인 |
+| 사무라이 스도쿠 | `sudoku/screens/samurai_game_screen.dart` | 5개 보드 겹침 |
+| 킬러 스도쿠 | `sudoku/screens/killer_game_screen.dart` | 케이지 합계 맞추기 |
 
 ### 저장 시스템
 스도쿠는 `sudoku/services/game_storage.dart`에서 별도 저장 관리
-- 게임 종류별 독립 저장 (일반, 사무라이, 킬러, 넘버썸즈)
+- 게임 종류별 독립 저장 (일반, 사무라이, 킬러)
 - main.dart에서 `sudoku.` prefix로 import
