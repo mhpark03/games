@@ -114,15 +114,9 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
 
   @override
   void didPopNext() {
-    // 게임 화면에서 돌아올 때 배너 새로 로드
+    // 게임 화면에서 돌아올 때 화면 갱신
     if (mounted) {
-      _adService.disposeBannerAd();
-      setState(() {}); // 일단 배너 숨김
-      Future.delayed(const Duration(milliseconds: 100), () {
-        if (mounted) {
-          _loadBannerAd();
-        }
-      });
+      setState(() {});
     }
   }
 
@@ -3248,8 +3242,12 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
               height: 100,
               alignment: Alignment.center,
               child: _adService.isBannerLoaded && _adService.bannerAd != null
-                  ? AdWidget(ad: _adService.bannerAd!)
-                  : const SizedBox(), // 광고 로드 전에도 공간 유지
+                  ? SizedBox(
+                      width: 320,
+                      height: 100,
+                      child: AdWidget(ad: _adService.bannerAd!),
+                    )
+                  : const SizedBox(),
             ),
         ],
       ),
