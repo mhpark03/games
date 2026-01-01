@@ -25,8 +25,28 @@ import 'games/number_sums/services/game_storage.dart' as number_sums;
 import 'services/ad_service.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
 
-// 라우트 옵저버 (게임 화면에서 돌아올 때 배너 광고 상태 갱신용)
-final RouteObserver<PageRoute> routeObserver = RouteObserver<PageRoute>();
+// 배너 표시/숨김을 위한 NavigatorObserver
+class BannerNavigatorObserver extends NavigatorObserver {
+  @override
+  void didPush(Route<dynamic> route, Route<dynamic>? previousRoute) {
+    super.didPush(route, previousRoute);
+    // 홈 화면이 아닌 다른 화면으로 이동하면 배너 숨김
+    if (previousRoute != null) {
+      bannerController.hide();
+    }
+  }
+
+  @override
+  void didPop(Route<dynamic> route, Route<dynamic>? previousRoute) {
+    super.didPop(route, previousRoute);
+    // 홈 화면으로 돌아오면 배너 표시
+    if (previousRoute != null && previousRoute.isFirst) {
+      bannerController.show();
+    }
+  }
+}
+
+final bannerNavigatorObserver = BannerNavigatorObserver();
 
 // 전역 배너 표시 상태 관리
 class BannerController extends ChangeNotifier {
@@ -115,7 +135,7 @@ class _GameCenterAppState extends State<GameCenterApp> {
     return MaterialApp(
       title: 'Game Center',
       debugShowCheckedModeBanner: false,
-      navigatorObservers: [routeObserver],
+      navigatorObservers: [bannerNavigatorObserver],
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(
           seedColor: Colors.indigo,
