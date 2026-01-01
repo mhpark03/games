@@ -78,6 +78,9 @@ class _MinesweeperScreenState extends State<MinesweeperScreen> {
   int elapsedSeconds = 0;
   DateTime? startTime;
 
+  // 부활 (한 게임당 1번만)
+  bool _hasRevived = false;
+
   @override
   void initState() {
     super.initState();
@@ -121,6 +124,75 @@ class _MinesweeperScreenState extends State<MinesweeperScreen> {
     revealedCount = 0;
     elapsedSeconds = 0;
     startTime = null;
+    _hasRevived = false;
+  }
+
+  // 부활 광고 다이얼로그 (폭탄 터트렸을 때)
+  void _showReviveAdDialog(int row, int col) {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => AlertDialog(
+        backgroundColor: Colors.grey.shade900,
+        title: const Row(
+          children: [
+            Icon(Icons.warning_amber, color: Colors.redAccent, size: 28),
+            SizedBox(width: 8),
+            Text('폭탄을 밟았습니다!', style: TextStyle(color: Colors.redAccent)),
+          ],
+        ),
+        content: const Text(
+          '광고를 시청하면 부활할 수 있습니다.\n(한 게임당 1번만 가능)',
+          style: TextStyle(color: Colors.white70),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () {
+              Navigator.pop(context);
+              // 게임 오버 처리
+              setState(() {
+                gameOver = true;
+                _revealAllMines();
+              });
+              _saveGame();
+            },
+            child: const Text('포기', style: TextStyle(color: Colors.grey)),
+          ),
+          ElevatedButton.icon(
+            onPressed: () async {
+              Navigator.pop(context);
+              final adService = AdService();
+              final result = await adService.showRewardedAd(
+                onUserEarnedReward: (ad, reward) {
+                  // 부활: 해당 셀을 깃발로 표시
+                  setState(() {
+                    board[row][col].state = CellState.flagged;
+                    flagCount++;
+                    _hasRevived = true;
+                  });
+                  _saveGame();
+                },
+              );
+              if (!result && mounted) {
+                // 광고가 없어도 부활
+                setState(() {
+                  board[row][col].state = CellState.flagged;
+                  flagCount++;
+                  _hasRevived = true;
+                });
+                adService.loadRewardedAd();
+                _saveGame();
+              }
+            },
+            icon: const Icon(Icons.play_circle_outline),
+            label: const Text('광고 보고 부활'),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.deepOrange,
+            ),
+          ),
+        ],
+      ),
+    );
   }
 
   // 힌트 광고 확인 다이얼로그
@@ -254,9 +326,20 @@ class _MinesweeperScreenState extends State<MinesweeperScreen> {
       revealedCount++;
 
       if (board[row][col].hasMine) {
+        HapticFeedback.heavyImpact();
+        // 아직 부활하지 않았다면 부활 기회 제공
+        if (!_hasRevived) {
+          // revealed를 취소하고 다이얼로그 표시
+          board[row][col].state = CellState.hidden;
+          revealedCount--;
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            _showReviveAdDialog(row, col);
+          });
+          return;
+        }
+        // 이미 부활했다면 게임 오버
         gameOver = true;
         _revealAllMines();
-        HapticFeedback.heavyImpact();
         return;
       }
 
