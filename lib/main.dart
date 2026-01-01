@@ -114,9 +114,14 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
 
   @override
   void didPopNext() {
-    // 게임 화면에서 돌아올 때 화면 갱신
+    // 게임 화면에서 돌아올 때 배너 광고 새로 로드
     if (mounted) {
-      setState(() {});
+      _adService.loadBannerAd(
+        forceReload: true,
+        onLoaded: () {
+          if (mounted) setState(() {});
+        },
+      );
     }
   }
 
