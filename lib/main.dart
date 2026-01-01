@@ -91,7 +91,7 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
   void didChangeDependencies() {
     super.didChangeDependencies();
     routeObserver.subscribe(this, ModalRoute.of(context) as PageRoute);
-    // 배너 광고 로드 (화면 너비 필요)
+    // 배너 광고 로드
     if (!_bannerLoaded) {
       _bannerLoaded = true;
       _loadBannerAd();
@@ -99,9 +99,7 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
   }
 
   void _loadBannerAd({bool forceReload = false}) {
-    final screenWidth = MediaQuery.of(context).size.width;
     _adService.loadBannerAd(
-      screenWidth: screenWidth,
       forceReload: forceReload,
       onLoaded: () {
         if (mounted) {
