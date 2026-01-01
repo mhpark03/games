@@ -55,7 +55,10 @@ class GameStorage {
 
     try {
       final json = jsonDecode(jsonString) as Map<String, dynamic>;
-      return _samuraiGameStateFromJson(json);
+      final gameState = _samuraiGameStateFromJson(json);
+      // 겹치는 영역 동기화 (저장된 게임의 불일치 해결)
+      gameState.syncAllOverlappingRegions();
+      return gameState;
     } catch (e) {
       // 파싱 실패 시 저장된 데이터 삭제
       await prefs.remove(_samuraiGameKey);
