@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import '../../../services/ad_service.dart';
 import '../models/number_sums_game_state.dart';
 import '../models/number_sums_generator.dart';
 import '../services/game_storage.dart';
@@ -227,6 +228,47 @@ class _NumberSumsGameScreenState extends State<NumberSumsGameScreen>
     setState(() {
       _gameMode = mode;
     });
+  }
+
+  // 힌트 모드 광고 확인 다이얼로그
+  void _showHintAdDialog() {
+    if (_gameState.isCompleted) return;
+
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: Colors.grey.shade900,
+        title: const Text('힌트 모드', style: TextStyle(color: Colors.white)),
+        content: const Text(
+          '광고를 시청하고 힌트 모드를 사용하시겠습니까?',
+          style: TextStyle(color: Colors.white70),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('취소'),
+          ),
+          ElevatedButton(
+            onPressed: () async {
+              Navigator.pop(context);
+              final adService = AdService();
+              final result = await adService.showRewardedAd(
+                onUserEarnedReward: (ad, reward) {
+                  _setGameMode(NumberSumsGameMode.hint);
+                },
+              );
+              if (!result && mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('광고를 불러올 수 없습니다. 잠시 후 다시 시도해주세요.')),
+                );
+                adService.loadRewardedAd();
+              }
+            },
+            child: const Text('광고 보기'),
+          ),
+        ],
+      ),
+    );
   }
 
   void _showCompletionDialog() {
@@ -781,7 +823,7 @@ class _NumberSumsGameScreenState extends State<NumberSumsGameScreen>
             icon: Icons.lightbulb_outline,
             label: '힌트',
             isSelected: _gameMode == NumberSumsGameMode.hint,
-            onTap: () => _setGameMode(NumberSumsGameMode.hint),
+            onTap: _showHintAdDialog,
           ),
         ],
       ),
@@ -957,7 +999,7 @@ class _NumberSumsGameScreenState extends State<NumberSumsGameScreen>
             icon: Icons.lightbulb_outline,
             label: '힌트',
             isSelected: _gameMode == NumberSumsGameMode.hint,
-            onTap: () => _setGameMode(NumberSumsGameMode.hint),
+            onTap: _showHintAdDialog,
           ),
         ],
       ),
