@@ -150,25 +150,26 @@ class _GameCenterAppState extends State<GameCenterApp> {
         });
 
         final isPortrait = MediaQuery.of(context).orientation == Orientation.portrait;
-        final showBanner = isPortrait &&
-            bannerController.isVisible &&
-            _adService.isBannerLoaded &&
-            _adService.bannerAd != null;
+        final bannerLoaded = _adService.isBannerLoaded && _adService.bannerAd != null;
+        final showBanner = isPortrait && bannerController.isVisible && bannerLoaded;
 
         return Column(
           children: [
             Expanded(child: child ?? const SizedBox()),
-            // 배너 광고 (앱 레벨에서 관리)
-            if (showBanner)
-              Container(
-                color: Colors.black,
-                width: double.infinity,
-                height: _adService.bannerAd!.size.height.toDouble(),
-                alignment: Alignment.center,
-                child: SizedBox(
-                  width: _adService.bannerAd!.size.width.toDouble(),
+            // 배너 광고 (앱 레벨에서 관리, Offstage로 숨겨도 위젯 유지)
+            if (bannerLoaded)
+              Offstage(
+                offstage: !showBanner,
+                child: Container(
+                  color: Colors.black,
+                  width: double.infinity,
                   height: _adService.bannerAd!.size.height.toDouble(),
-                  child: AdWidget(ad: _adService.bannerAd!),
+                  alignment: Alignment.center,
+                  child: SizedBox(
+                    width: _adService.bannerAd!.size.width.toDouble(),
+                    height: _adService.bannerAd!.size.height.toDouble(),
+                    child: AdWidget(ad: _adService.bannerAd!),
+                  ),
                 ),
               ),
           ],
