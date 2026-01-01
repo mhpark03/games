@@ -872,27 +872,6 @@ class _YutnoriScreenState extends State<YutnoriScreen>
     if (currentPlayer == 0 || gameOver) return;
     if (pendingMoves.isEmpty) return;
 
-    final move = pendingMoves.first;
-
-    // 이동 가능한 말 찾기
-    List<int> movablePieces = [];
-    for (int i = 0; i < 4; i++) {
-      if (_canMovePiece(i, move)) {
-        movablePieces.add(i);
-      }
-    }
-
-    if (movablePieces.isEmpty) {
-      // 이동 가능한 말이 없으면 스킵
-      setState(() {
-        pendingMoves.removeAt(0);
-        if (pendingMoves.isEmpty && !canThrowYut) {
-          _nextTurn();
-        }
-      });
-      return;
-    }
-
     // 위험에 처한 말 확인 (다른 플레이어가 잡을 수 있는 위치)
     Set<int> dangerPositions = _getDangerPositions();
 
@@ -906,108 +885,152 @@ class _YutnoriScreenState extends State<YutnoriScreen>
       }
     }
 
-    // 전략적 선택: 위험 회피 > 잡기 > 골인 > 진행
-    int bestPiece = movablePieces.first;
-    int bestScore = -1000;
+    // 모든 (이동결과, 말) 조합 평가
+    int bestMoveIndex = 0;
+    int bestPiece = -1;
+    int bestScore = -10000;
 
-    for (var pieceIndex in movablePieces) {
-      final piece = playerPieces[currentPlayer][pieceIndex];
-      final currentPos = piece.position;
-      final newPos = _calculateNewPosition(currentPos, move.moveCount);
+    for (int moveIdx = 0; moveIdx < pendingMoves.length; moveIdx++) {
+      final move = pendingMoves[moveIdx];
 
-      int score = 0;
+      for (int pieceIndex = 0; pieceIndex < 4; pieceIndex++) {
+        if (!_canMovePiece(pieceIndex, move)) continue;
 
-      // 안전 지역 확인
-      bool isCurrentSafe = (currentPos == 21 || currentPos == 28 || currentPos == 15 || currentPos == 34 || currentPos == -1);
-      bool isNewSafe = (newPos == 21 || newPos == 28 || newPos == 15 || newPos == 34 || newPos == finishPosition);
-      bool isCurrentDangerousZone = (currentPos >= 1 && currentPos <= 7);
+        final piece = playerPieces[currentPlayer][pieceIndex];
+        final currentPos = piece.position;
+        final newPos = _calculateNewPosition(currentPos, move.moveCount);
 
-      // 위험에 처한 말이 이동하여 탈출하면 높은 점수
-      bool isInDanger = !isCurrentSafe && currentPos >= 0 && dangerPositions.contains(currentPos);
-      bool willBeSafe = isNewSafe || !dangerPositions.contains(newPos);
+        int score = _evaluateMove(
+          pieceIndex, piece, currentPos, newPos, move,
+          dangerPositions, hasPieceInDangerousZone,
+        );
 
-      if (isInDanger && willBeSafe) {
-        // 위험 탈출 보너스 (업힌 말이 많을수록 더 높은 점수)
-        score += 80 + piece.stackedPieces.length * 40;
-      } else if (isInDanger && !willBeSafe) {
-        // 위험에서 위험으로 이동 (그래도 현재보다는 나음)
-        score += 20 + piece.stackedPieces.length * 10;
-      }
-
-      // 시작점 근처(1-7)에 있는 말은 우선 이동 (업힌 말 포함)
-      if (isCurrentDangerousZone) {
-        score += 35 + piece.stackedPieces.length * 20;
-      }
-
-      // 골인 가능하면 높은 점수
-      if (newPos == finishPosition) {
-        score += 50 + piece.stackedPieces.length * 20;
-      }
-
-      // 잡을 수 있으면 높은 점수
-      for (int p = 0; p < playerCount; p++) {
-        if (p == currentPlayer) continue;
-
-        // 상대방의 말판 위 말 개수 확인
-        int enemyPiecesOnBoard = 0;
-        for (var ep in playerPieces[p]) {
-          if (!ep.isWaiting && !ep.isFinished) {
-            enemyPiecesOnBoard++;
+        // 코너(대각선 진입점) 도달 보너스 - 추가 이동이 남아있을 때
+        // 5→21, 10→28에 도달하면 다음 이동으로 대각선(지름길) 사용 가능
+        if (pendingMoves.length > 1 && moveIdx < pendingMoves.length) {
+          if (newPos == 21 || newPos == 28) {
+            // 남은 이동으로 대각선을 탈 수 있으면 보너스
+            score += 25;
           }
         }
 
-        for (var enemyPiece in playerPieces[p]) {
-          if (enemyPiece.position == newPos && !enemyPiece.isFinished) {
-            score += 30 + enemyPiece.stackedPieces.length * 15;
-
-            // 상대방의 마지막 말이면 추가 점수 (잡으면 상대 진행 크게 지연)
-            if (enemyPiecesOnBoard == 1) {
-              score += 60;
-            }
-          }
+        if (score > bestScore) {
+          bestScore = score;
+          bestMoveIndex = moveIdx;
+          bestPiece = pieceIndex;
         }
-      }
-
-      // 업을 수 있으면 점수 (안전 지역에서만)
-      // 위치 1-7은 시작점 근처라 특히 위험
-      bool isNewDangerousZone = (newPos >= 1 && newPos <= 7);
-      for (int i = 0; i < 4; i++) {
-        if (i == pieceIndex) continue;
-        if (playerPieces[currentPlayer][i].position == newPos) {
-          if (isNewSafe) {
-            score += 10; // 안전 지역에서 업기
-          } else if (isNewDangerousZone) {
-            score -= 20; // 시작점 근처(1-7)에서 업기는 큰 감점
-          } else {
-            score -= 5; // 일반 위험 지역에서 업기는 감점
-          }
-        }
-      }
-
-      // 새로 출발하는 말 감점
-      if (currentPos == -1) {
-        // 1-7에 말이 있으면 새로 달기보다 기존 말 우선
-        if (hasPieceInDangerousZone) {
-          score -= 40;
-        }
-        // 위험 지역으로 가면 추가 감점
-        if (!isNewSafe && dangerPositions.contains(newPos)) {
-          score -= 15;
-        }
-      }
-
-      // 진행도
-      if (newPos >= 0) {
-        score += newPos;
-      }
-
-      if (score > bestScore) {
-        bestScore = score;
-        bestPiece = pieceIndex;
       }
     }
 
-    _movePiece(bestPiece, move);
+    if (bestPiece == -1) {
+      // 이동 가능한 말이 없으면 첫 번째 결과 스킵
+      setState(() {
+        pendingMoves.removeAt(0);
+        if (pendingMoves.isEmpty && !canThrowYut) {
+          _nextTurn();
+        }
+      });
+      return;
+    }
+
+    // 선택된 이동 결과를 리스트 앞으로 이동 후 실행
+    if (bestMoveIndex > 0) {
+      final selectedMove = pendingMoves.removeAt(bestMoveIndex);
+      pendingMoves.insert(0, selectedMove);
+    }
+
+    _movePiece(bestPiece, pendingMoves.first);
+  }
+
+  // 이동 평가 점수 계산
+  int _evaluateMove(
+    int pieceIndex,
+    Piece piece,
+    int currentPos,
+    int newPos,
+    YutResult move,
+    Set<int> dangerPositions,
+    bool hasPieceInDangerousZone,
+  ) {
+    int score = 0;
+
+    // 안전 지역 확인
+    bool isCurrentSafe = (currentPos == 21 || currentPos == 28 || currentPos == 15 || currentPos == 34 || currentPos == -1);
+    bool isNewSafe = (newPos == 21 || newPos == 28 || newPos == 15 || newPos == 34 || newPos == finishPosition);
+    bool isCurrentDangerousZone = (currentPos >= 1 && currentPos <= 7);
+
+    // 위험에 처한 말이 이동하여 탈출하면 높은 점수
+    bool isInDanger = !isCurrentSafe && currentPos >= 0 && dangerPositions.contains(currentPos);
+    bool willBeSafe = isNewSafe || !dangerPositions.contains(newPos);
+
+    if (isInDanger && willBeSafe) {
+      score += 80 + piece.stackedPieces.length * 40;
+    } else if (isInDanger && !willBeSafe) {
+      score += 20 + piece.stackedPieces.length * 10;
+    }
+
+    // 시작점 근처(1-7)에 있는 말은 우선 이동
+    if (isCurrentDangerousZone) {
+      score += 35 + piece.stackedPieces.length * 20;
+    }
+
+    // 골인 가능하면 높은 점수
+    if (newPos == finishPosition) {
+      score += 50 + piece.stackedPieces.length * 20;
+    }
+
+    // 잡을 수 있으면 높은 점수
+    for (int p = 0; p < playerCount; p++) {
+      if (p == currentPlayer) continue;
+
+      int enemyPiecesOnBoard = 0;
+      for (var ep in playerPieces[p]) {
+        if (!ep.isWaiting && !ep.isFinished) {
+          enemyPiecesOnBoard++;
+        }
+      }
+
+      for (var enemyPiece in playerPieces[p]) {
+        if (enemyPiece.position == newPos && !enemyPiece.isFinished) {
+          score += 30 + enemyPiece.stackedPieces.length * 15;
+          if (enemyPiecesOnBoard == 1) {
+            score += 60;
+          }
+        }
+      }
+    }
+
+    // 업기 점수 (안전 지역에서만)
+    bool isNewDangerousZone = (newPos >= 1 && newPos <= 7);
+    for (int i = 0; i < 4; i++) {
+      if (i == pieceIndex) continue;
+      if (playerPieces[currentPlayer][i].position == newPos) {
+        if (isNewSafe) {
+          score += 10;
+        } else if (isNewDangerousZone) {
+          score -= 20;
+        } else {
+          score -= 5;
+        }
+      }
+    }
+
+    // 새로 출발하는 말 감점
+    if (currentPos == -1) {
+      if (hasPieceInDangerousZone) {
+        score -= 40;
+      }
+      if (!isNewSafe && dangerPositions.contains(newPos)) {
+        score -= 15;
+      }
+    }
+
+    // 진행도
+    if (newPos >= 0) {
+      score += newPos;
+    }
+
+    return score;
   }
 
   void _restartGame() {
