@@ -539,6 +539,46 @@ class _KillerGameScreenState extends State<KillerGameScreen>
     _saveGame();
   }
 
+  // 취소 버튼 광고 다이얼로그
+  void _showUndoAdDialog() {
+    if (_isPaused || !_gameState.canUndo) return;
+
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: Colors.grey.shade900,
+        title: const Text('되돌리기', style: TextStyle(color: Colors.white)),
+        content: const Text(
+          '광고를 시청하고 되돌리기를 사용하시겠습니까?',
+          style: TextStyle(color: Colors.white70),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('취소'),
+          ),
+          ElevatedButton(
+            onPressed: () async {
+              Navigator.pop(context);
+              final adService = AdService();
+              final result = await adService.showRewardedAd(
+                onUserEarnedReward: (ad, reward) {
+                  _onUndo();
+                },
+              );
+              if (!result && mounted) {
+                // 광고가 없어도 기능 실행
+                _onUndo();
+                adService.loadRewardedAd();
+              }
+            },
+            child: const Text('광고 보기'),
+          ),
+        ],
+      ),
+    );
+  }
+
   void _onFillAllNotes() {
     if (_isPaused) return;
 
@@ -607,7 +647,7 @@ class _KillerGameScreenState extends State<KillerGameScreen>
       key: _controlPanelKey,
       onNumberTap: _onNumberTap,
       onErase: _onErase,
-      onUndo: _onUndo,
+      onUndo: _showUndoAdDialog,
       canUndo: _gameState.canUndo,
       onHint: _showHint,
       onFillAllNotes: _onFillAllNotes,
@@ -845,7 +885,7 @@ class _KillerGameScreenState extends State<KillerGameScreen>
                   children: [
                     _buildCircleButton(
                       icon: Icons.undo,
-                      onPressed: _gameState.canUndo ? _onUndo : null,
+                      onPressed: _gameState.canUndo ? _showUndoAdDialog : null,
                       tooltip: '취소',
                     ),
                     const SizedBox(width: 8),
