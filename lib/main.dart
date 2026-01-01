@@ -32,6 +32,8 @@ class BannerNavigatorObserver extends NavigatorObserver {
     super.didPush(route, previousRoute);
     // 홈 화면이 아닌 다른 화면으로 이동하면 배너 숨김
     if (previousRoute != null) {
+      debugPrint('=== 게임 시작 (didPush) ===');
+      debugPrint('이동: ${previousRoute.settings.name} → ${route.settings.name}');
       bannerController.hide();
     }
   }
@@ -41,6 +43,8 @@ class BannerNavigatorObserver extends NavigatorObserver {
     super.didPop(route, previousRoute);
     // 홈 화면으로 돌아오면 배너 표시
     if (previousRoute != null && previousRoute.isFirst) {
+      debugPrint('=== 홈 복귀 (didPop) ===');
+      debugPrint('복귀: ${route.settings.name} → ${previousRoute.settings.name}');
       bannerController.show();
     }
   }
@@ -59,6 +63,7 @@ class BannerController extends ChangeNotifier {
 
   void show() {
     if (!_isVisible) {
+      debugPrint('배너 show() 호출');
       _isVisible = true;
       notifyListeners();
     }
@@ -66,6 +71,7 @@ class BannerController extends ChangeNotifier {
 
   void hide() {
     if (_isVisible) {
+      debugPrint('배너 hide() 호출');
       _isVisible = false;
       notifyListeners();
     }
