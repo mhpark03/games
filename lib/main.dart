@@ -98,7 +98,9 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
   }
 
   void _loadBannerAd() {
+    final screenWidth = MediaQuery.of(context).size.width;
     _adService.loadBannerAd(
+      screenWidth: screenWidth,
       onLoaded: () {
         if (mounted) setState(() {});
       },
@@ -116,7 +118,9 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
   void didPopNext() {
     // 게임 화면에서 돌아올 때 배너 광고 새로 로드
     if (mounted) {
+      final screenWidth = MediaQuery.of(context).size.width;
       _adService.loadBannerAd(
+        screenWidth: screenWidth,
         forceReload: true,
         onLoaded: () {
           if (mounted) setState(() {});
@@ -3247,23 +3251,20 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
             ),
           ),
           // 배너 광고 (세로 모드에서만 표시)
-          if (isPortrait)
+          if (isPortrait && _adService.isBannerLoaded && _adService.bannerAd != null)
             Container(
               color: Colors.black,
               width: double.infinity,
-              height: 100,
-              child: Center(
-                child: _adService.isBannerLoaded && _adService.bannerAd != null
-                    ? SizedBox(
-                        key: ValueKey(_adService.bannerAd.hashCode),
-                        width: _adService.bannerAd!.size.width.toDouble(),
-                        height: _adService.bannerAd!.size.height.toDouble(),
-                        child: AdWidget(
-                          key: ValueKey('banner_${_adService.bannerAd.hashCode}'),
-                          ad: _adService.bannerAd!,
-                        ),
-                      )
-                    : const SizedBox(),
+              height: _adService.bannerAd!.size.height.toDouble(),
+              alignment: Alignment.center,
+              child: SizedBox(
+                key: ValueKey(_adService.bannerAd.hashCode),
+                width: _adService.bannerAd!.size.width.toDouble(),
+                height: _adService.bannerAd!.size.height.toDouble(),
+                child: AdWidget(
+                  key: ValueKey('banner_${_adService.bannerAd.hashCode}'),
+                  ad: _adService.bannerAd!,
+                ),
               ),
             ),
         ],

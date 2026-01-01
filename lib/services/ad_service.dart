@@ -93,8 +93,12 @@ class AdService {
     return true;
   }
 
-  // 배너 광고 로드
-  void loadBannerAd({Function()? onLoaded, bool forceReload = false}) {
+  // 배너 광고 로드 (적응형 배너)
+  Future<void> loadBannerAd({
+    Function()? onLoaded,
+    bool forceReload = false,
+    double? screenWidth,
+  }) async {
     // 모바일 플랫폼이 아닌 경우 배너 광고 로드하지 않음
     if (!Platform.isAndroid && !Platform.isIOS) {
       return;
@@ -113,8 +117,17 @@ class AdService {
       _isBannerLoaded = false;
     }
 
-    // 큰 배너 크기 사용 (320x100)
-    const AdSize adSize = AdSize.largeBanner;
+    // 적응형 배너 크기 (화면 너비에 맞춤)
+    final int width = (screenWidth ?? 320).toInt();
+    final AdSize? adSize = await AdSize.getAnchoredAdaptiveBannerAdSize(
+      Orientation.portrait,
+      width,
+    );
+
+    if (adSize == null) {
+      debugPrint('적응형 배너 크기를 가져올 수 없음');
+      return;
+    }
 
     _bannerAd = BannerAd(
       adUnitId: bannerAdUnitId,
@@ -132,7 +145,7 @@ class AdService {
           _isBannerLoaded = false;
           // 30초 후 재시도
           Future.delayed(const Duration(seconds: 30), () {
-            loadBannerAd(onLoaded: onLoaded);
+            loadBannerAd(onLoaded: onLoaded, screenWidth: screenWidth);
           });
         },
       ),
