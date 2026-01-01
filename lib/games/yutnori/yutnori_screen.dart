@@ -1009,6 +1009,23 @@ class _YutnoriScreenState extends State<YutnoriScreen>
       }
     }
 
+    // 상대가 걸(3칸)로 잡을 수 있는 위치면 탈출 우선
+    if (currentPos >= 0 && !isCurrentSafe) {
+      for (int p = 0; p < playerCount; p++) {
+        if (p == currentPlayer) continue;
+        for (var enemyPiece in playerPieces[p]) {
+          if (enemyPiece.isFinished || enemyPiece.position < 0) continue;
+          // 상대가 걸(3)로 내 현재 위치에 도달할 수 있는지 확인
+          final enemyTargetPos = _calculateNewPosition(enemyPiece.position, 3);
+          if (enemyTargetPos == currentPos) {
+            // 걸로 잡힐 수 있는 위험 - 탈출 보너스
+            score += 45 + piece.stackedPieces.length * 25;
+            break;
+          }
+        }
+      }
+    }
+
     // 업기 점수 (안전 지역에서만, 위험 지역에 말이 있으면 업기 회피)
     for (int i = 0; i < 4; i++) {
       if (i == pieceIndex) continue;
