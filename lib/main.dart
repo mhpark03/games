@@ -76,6 +76,7 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> with RouteAware {
   final AdService _adService = AdService();
   bool _bannerLoaded = false;
+  int _bannerRebuildKey = 0; // 배너 위젯 강제 재생성용
 
   @override
   void initState() {
@@ -116,13 +117,10 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
 
   @override
   void didPopNext() {
-    // 게임 화면에서 돌아올 때 지연된 리빌드로 배너 위치 수정
+    // 게임 화면에서 돌아올 때 배너 위젯 강제 재생성
     if (mounted) {
-      // 즉시 리빌드
-      setState(() {});
-      // 프레임 후 다시 리빌드하여 PlatformView 위치 보정
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (mounted) setState(() {});
+      setState(() {
+        _bannerRebuildKey++; // key 변경으로 AdWidget 새로 생성
       });
     }
   }
@@ -3251,16 +3249,16 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
           // 배너 광고 (세로 모드에서만 표시)
           if (isPortrait && _adService.isBannerLoaded && _adService.bannerAd != null)
             Container(
+              key: ValueKey('banner_container_$_bannerRebuildKey'),
               color: Colors.black,
               width: double.infinity,
               height: _adService.bannerAd!.size.height.toDouble(),
               alignment: Alignment.center,
               child: SizedBox(
-                key: ValueKey(_adService.bannerAd.hashCode),
                 width: _adService.bannerAd!.size.width.toDouble(),
                 height: _adService.bannerAd!.size.height.toDouble(),
                 child: AdWidget(
-                  key: ValueKey('banner_${_adService.bannerAd.hashCode}'),
+                  key: ValueKey('banner_ad_$_bannerRebuildKey'),
                   ad: _adService.bannerAd!,
                 ),
               ),
