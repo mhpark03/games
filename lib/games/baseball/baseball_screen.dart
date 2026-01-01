@@ -700,7 +700,7 @@ class _BaseballScreenState extends State<BaseballScreen> {
           ),
           const SizedBox(height: 8),
           Text(
-            'S = Strike  |  B = Ball',
+            'S : 숫자 O 위치 O  |  B : 숫자 O 위치 X',
             style: TextStyle(
               color: Colors.grey.shade500,
               fontSize: 12,
