@@ -28,6 +28,32 @@ import 'package:google_mobile_ads/google_mobile_ads.dart';
 // 라우트 옵저버 (게임 화면에서 돌아올 때 배너 광고 상태 갱신용)
 final RouteObserver<PageRoute> routeObserver = RouteObserver<PageRoute>();
 
+// 전역 배너 표시 상태 관리
+class BannerController extends ChangeNotifier {
+  static final BannerController _instance = BannerController._internal();
+  factory BannerController() => _instance;
+  BannerController._internal();
+
+  bool _isVisible = true;
+  bool get isVisible => _isVisible;
+
+  void show() {
+    if (!_isVisible) {
+      _isVisible = true;
+      notifyListeners();
+    }
+  }
+
+  void hide() {
+    if (_isVisible) {
+      _isVisible = false;
+      notifyListeners();
+    }
+  }
+}
+
+final bannerController = BannerController();
+
 void main() async {
   WidgetsBinding widgetsBinding = WidgetsFlutterBinding.ensureInitialized();
   FlutterNativeSplash.preserve(widgetsBinding: widgetsBinding);
@@ -45,8 +71,44 @@ void main() async {
   runApp(const GameCenterApp());
 }
 
-class GameCenterApp extends StatelessWidget {
+class GameCenterApp extends StatefulWidget {
   const GameCenterApp({super.key});
+
+  @override
+  State<GameCenterApp> createState() => _GameCenterAppState();
+}
+
+class _GameCenterAppState extends State<GameCenterApp> {
+  final AdService _adService = AdService();
+  bool _bannerLoaded = false;
+
+  @override
+  void initState() {
+    super.initState();
+    bannerController.addListener(_onBannerVisibilityChanged);
+  }
+
+  @override
+  void dispose() {
+    bannerController.removeListener(_onBannerVisibilityChanged);
+    _adService.disposeBannerAd();
+    super.dispose();
+  }
+
+  void _onBannerVisibilityChanged() {
+    setState(() {});
+  }
+
+  void _loadBannerAd(double screenWidth) {
+    if (_bannerLoaded) return;
+    _bannerLoaded = true;
+    _adService.loadBannerAd(
+      screenWidth: screenWidth,
+      onLoaded: () {
+        if (mounted) setState(() {});
+      },
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -61,6 +123,37 @@ class GameCenterApp extends StatelessWidget {
         ),
         useMaterial3: true,
       ),
+      builder: (context, child) {
+        // 배너 로드 (첫 빌드 시)
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          _loadBannerAd(MediaQuery.of(context).size.width);
+        });
+
+        final isPortrait = MediaQuery.of(context).orientation == Orientation.portrait;
+        final showBanner = isPortrait &&
+            bannerController.isVisible &&
+            _adService.isBannerLoaded &&
+            _adService.bannerAd != null;
+
+        return Column(
+          children: [
+            Expanded(child: child ?? const SizedBox()),
+            // 배너 광고 (앱 레벨에서 관리)
+            if (showBanner)
+              Container(
+                color: Colors.black,
+                width: double.infinity,
+                height: _adService.bannerAd!.size.height.toDouble(),
+                alignment: Alignment.center,
+                child: SizedBox(
+                  width: _adService.bannerAd!.size.width.toDouble(),
+                  height: _adService.bannerAd!.size.height.toDouble(),
+                  child: AdWidget(ad: _adService.bannerAd!),
+                ),
+              ),
+          ],
+        );
+      },
       home: const HomeScreen(),
     );
   }
@@ -73,10 +166,7 @@ class HomeScreen extends StatefulWidget {
   State<HomeScreen> createState() => _HomeScreenState();
 }
 
-class _HomeScreenState extends State<HomeScreen> with RouteAware {
-  final AdService _adService = AdService();
-  bool _bannerLoaded = false;
-
+class _HomeScreenState extends State<HomeScreen> {
   @override
   void initState() {
     super.initState();
@@ -84,40 +174,6 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
     Future.delayed(const Duration(seconds: 1), () {
       FlutterNativeSplash.remove();
     });
-  }
-
-  @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    routeObserver.subscribe(this, ModalRoute.of(context) as PageRoute);
-    // 배너 광고 로드
-    if (!_bannerLoaded) {
-      _bannerLoaded = true;
-      _loadBannerAd();
-    }
-  }
-
-  void _loadBannerAd() {
-    final screenWidth = MediaQuery.of(context).size.width;
-    _adService.loadBannerAd(
-      screenWidth: screenWidth,
-      onLoaded: () {
-        if (mounted) setState(() {});
-      },
-    );
-  }
-
-  @override
-  void dispose() {
-    routeObserver.unsubscribe(this);
-    _adService.disposeBannerAd();
-    super.dispose();
-  }
-
-  @override
-  void didPopNext() {
-    // 게임 화면에서 돌아올 때 아무것도 하지 않음
-    // 배너 위젯을 그대로 유지하여 위치 문제 방지
   }
 
   Future<void> _showGomokuModeDialog(BuildContext context) async {
@@ -2973,15 +3029,6 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
 
   @override
   Widget build(BuildContext context) {
-    final isPortrait = MediaQuery.of(context).orientation == Orientation.portrait;
-
-    // 배너 광고 디버그 로그
-    if (_adService.bannerAd != null) {
-      debugPrint('=== build() 호출 ===');
-      debugPrint('배너 로드 상태: ${_adService.isBannerLoaded}');
-      debugPrint('배너 크기: ${_adService.bannerAd!.size.width} x ${_adService.bannerAd!.size.height}');
-    }
-
     return Scaffold(
       body: Column(
         children: [
@@ -3241,19 +3288,6 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
         ),
             ),
           ),
-          // 배너 광고 (세로 모드에서만 표시)
-          if (isPortrait && _adService.isBannerLoaded && _adService.bannerAd != null)
-            Container(
-              color: Colors.black,
-              width: double.infinity,
-              height: _adService.bannerAd!.size.height.toDouble(),
-              alignment: Alignment.center,
-              child: SizedBox(
-                width: _adService.bannerAd!.size.width.toDouble(),
-                height: _adService.bannerAd!.size.height.toDouble(),
-                child: AdWidget(ad: _adService.bannerAd!),
-              ),
-            ),
         ],
       ),
     );
