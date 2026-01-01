@@ -116,16 +116,14 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
 
   @override
   void didPopNext() {
-    // 게임 화면에서 돌아올 때 배너 광고 새로 로드
+    // 게임 화면에서 돌아올 때 지연된 리빌드로 배너 위치 수정
     if (mounted) {
-      final screenWidth = MediaQuery.of(context).size.width;
-      _adService.loadBannerAd(
-        screenWidth: screenWidth,
-        forceReload: true,
-        onLoaded: () {
-          if (mounted) setState(() {});
-        },
-      );
+      // 즉시 리빌드
+      setState(() {});
+      // 프레임 후 다시 리빌드하여 PlatformView 위치 보정
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) setState(() {});
+      });
     }
   }
 
