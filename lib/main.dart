@@ -3243,8 +3243,8 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
               alignment: Alignment.center,
               child: _adService.isBannerLoaded && _adService.bannerAd != null
                   ? SizedBox(
-                      width: 320,
-                      height: 100,
+                      width: _adService.bannerAd!.size.width.toDouble(),
+                      height: _adService.bannerAd!.size.height.toDouble(),
                       child: AdWidget(ad: _adService.bannerAd!),
                     )
                   : const SizedBox(),
