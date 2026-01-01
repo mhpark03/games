@@ -3222,29 +3222,20 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
                       ),
                     ),
                   ),
-                  Padding(
-                    padding: const EdgeInsets.all(8),
-                    child: Text(
-                      'v1.0.0',
-                      style: TextStyle(color: Colors.grey.shade600, fontSize: 12),
-                    ),
-                  ),
                 ],
               );
             },
           ),
         ),
       ),
-      // 배너 광고 (가로 모드에서는 숨김 - Visibility 사용으로 위젯 트리 유지)
+      // 배너 광고 (세로 모드에서만 표시)
       bottomNavigationBar: _adService.isBannerLoaded && _adService.bannerAd != null
-          ? Visibility(
-              visible: MediaQuery.of(context).orientation == Orientation.portrait,
-              maintainState: true,
-              maintainSize: false,
+          ? Offstage(
+              offstage: MediaQuery.of(context).orientation != Orientation.portrait,
               child: Container(
                 color: Colors.black,
                 width: double.infinity,
-                height: 100, // largeBanner 고정 높이
+                height: 100,
                 alignment: Alignment.center,
                 child: AdWidget(ad: _adService.bannerAd!),
               ),
