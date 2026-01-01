@@ -958,6 +958,7 @@ class _YutnoriScreenState extends State<YutnoriScreen>
     bool isCurrentSafe = (currentPos == 21 || currentPos == 28 || currentPos == 15 || currentPos == 34 || currentPos == -1);
     bool isNewSafe = (newPos == 21 || newPos == 28 || newPos == 15 || newPos == 34 || newPos == finishPosition);
     bool isCurrentDangerousZone = (currentPos >= 1 && currentPos <= 7);
+    bool isNewDangerousZone = (newPos >= 1 && newPos <= 7);
 
     // 위험에 처한 말이 이동하여 탈출하면 높은 점수
     bool isInDanger = !isCurrentSafe && currentPos >= 0 && dangerPositions.contains(currentPos);
@@ -969,9 +970,16 @@ class _YutnoriScreenState extends State<YutnoriScreen>
       score += 20 + piece.stackedPieces.length * 10;
     }
 
-    // 시작점 근처(1-7)에 있는 말은 우선 이동
+    // 시작점 근처(1-7)에 있는 말은 최우선 이동 (업힌 말이 많을수록 더 높은 점수)
     if (isCurrentDangerousZone) {
-      score += 35 + piece.stackedPieces.length * 20;
+      // 위험 지역 탈출 보너스 대폭 증가
+      score += 100 + piece.stackedPieces.length * 50;
+      // 안전 지역으로 탈출하면 추가 보너스
+      if (isNewSafe) {
+        score += 30;
+      } else if (!isNewDangerousZone) {
+        score += 15; // 위험 지역을 벗어나면 약간의 보너스
+      }
     }
 
     // 골인 가능하면 높은 점수
@@ -1000,15 +1008,19 @@ class _YutnoriScreenState extends State<YutnoriScreen>
       }
     }
 
-    // 업기 점수 (안전 지역에서만)
-    bool isNewDangerousZone = (newPos >= 1 && newPos <= 7);
+    // 업기 점수 (안전 지역에서만, 위험 지역에 말이 있으면 업기 회피)
     for (int i = 0; i < 4; i++) {
       if (i == pieceIndex) continue;
       if (playerPieces[currentPlayer][i].position == newPos) {
         if (isNewSafe) {
-          score += 10;
+          // 위험 지역에 다른 말이 있으면 업기보다 그 말 먼저 이동
+          if (hasPieceInDangerousZone && !isCurrentDangerousZone) {
+            score -= 30; // 위험 지역 말 구출이 우선
+          } else {
+            score += 10;
+          }
         } else if (isNewDangerousZone) {
-          score -= 20;
+          score -= 30; // 위험 지역에서 업기는 큰 감점
         } else {
           score -= 5;
         }
@@ -1018,7 +1030,7 @@ class _YutnoriScreenState extends State<YutnoriScreen>
     // 새로 출발하는 말 감점
     if (currentPos == -1) {
       if (hasPieceInDangerousZone) {
-        score -= 40;
+        score -= 60; // 위험 지역에 말이 있으면 새로 달기 대폭 감점
       }
       if (!isNewSafe && dangerPositions.contains(newPos)) {
         score -= 15;
