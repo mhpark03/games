@@ -875,11 +875,11 @@ class _YutnoriScreenState extends State<YutnoriScreen>
     // 위험에 처한 말 확인 (다른 플레이어가 잡을 수 있는 위치)
     Set<int> dangerPositions = _getDangerPositions();
 
-    // 시작점 근처(1-7)에 말이 있는지 확인
+    // 위험 지역(1-7, 21)에 말이 있는지 확인
     bool hasPieceInDangerousZone = false;
     for (int i = 0; i < 4; i++) {
       final pos = playerPieces[currentPlayer][i].position;
-      if (pos >= 1 && pos <= 7) {
+      if ((pos >= 1 && pos <= 7) || pos == 21) {
         hasPieceInDangerousZone = true;
         break;
       }
@@ -954,10 +954,12 @@ class _YutnoriScreenState extends State<YutnoriScreen>
   ) {
     int score = 0;
 
-    // 안전 지역 확인
-    bool isCurrentSafe = (currentPos == 21 || currentPos == 28 || currentPos == 15 || currentPos == 34 || currentPos == -1);
-    bool isNewSafe = (newPos == 21 || newPos == 28 || newPos == 15 || newPos == 34 || newPos == finishPosition);
-    bool isCurrentDangerousZone = (currentPos >= 1 && currentPos <= 7);
+    // 안전 지역 확인 (21은 위험 지역으로 분류)
+    bool isCurrentSafe = (currentPos == 28 || currentPos == 15 || currentPos == 34 || currentPos == -1);
+    bool isNewSafe = (newPos == 28 || newPos == 15 || newPos == 34 || newPos == finishPosition);
+    // 위험 지역: 1-7 및 21(우상단 코너)
+    bool isCurrentDangerousZone = (currentPos >= 1 && currentPos <= 7) || currentPos == 21;
+    bool isNewDangerousZone = (newPos >= 1 && newPos <= 7) || newPos == 21;
 
     // 위험에 처한 말이 이동하여 탈출하면 높은 점수
     bool isInDanger = !isCurrentSafe && currentPos >= 0 && dangerPositions.contains(currentPos);
@@ -969,9 +971,16 @@ class _YutnoriScreenState extends State<YutnoriScreen>
       score += 20 + piece.stackedPieces.length * 10;
     }
 
-    // 시작점 근처(1-7)에 있는 말은 우선 이동
+    // 시작점 근처(1-7)에 있는 말은 최우선 이동 (업힌 말이 많을수록 더 높은 점수)
     if (isCurrentDangerousZone) {
-      score += 35 + piece.stackedPieces.length * 20;
+      // 위험 지역 탈출 보너스 대폭 증가
+      score += 100 + piece.stackedPieces.length * 50;
+      // 안전 지역으로 탈출하면 추가 보너스
+      if (isNewSafe) {
+        score += 30;
+      } else if (!isNewDangerousZone) {
+        score += 15; // 위험 지역을 벗어나면 약간의 보너스
+      }
     }
 
     // 골인 가능하면 높은 점수
@@ -1000,15 +1009,44 @@ class _YutnoriScreenState extends State<YutnoriScreen>
       }
     }
 
-    // 업기 점수 (안전 지역에서만)
-    bool isNewDangerousZone = (newPos >= 1 && newPos <= 7);
+    // 상대가 도/개/걸(1-3칸)로 잡을 수 있는 위치면 탈출 우선
+    if (currentPos >= 0 && !isCurrentSafe) {
+      bool canBeCaught = false;
+      for (int p = 0; p < playerCount; p++) {
+        if (p == currentPlayer) continue;
+        for (var enemyPiece in playerPieces[p]) {
+          if (enemyPiece.isFinished || enemyPiece.position < 0) continue;
+          // 상대가 도(1), 개(2), 걸(3)로 내 현재 위치에 도달할 수 있는지 확인
+          for (int moveCount = 1; moveCount <= 3; moveCount++) {
+            final enemyTargetPos = _calculateNewPosition(enemyPiece.position, moveCount);
+            if (enemyTargetPos == currentPos) {
+              canBeCaught = true;
+              break;
+            }
+          }
+          if (canBeCaught) break;
+        }
+        if (canBeCaught) break;
+      }
+      if (canBeCaught) {
+        // 도/개/걸로 잡힐 수 있는 위험 - 탈출 보너스
+        score += 45 + piece.stackedPieces.length * 25;
+      }
+    }
+
+    // 업기 점수 (안전 지역에서만, 위험 지역에 말이 있으면 업기 회피)
     for (int i = 0; i < 4; i++) {
       if (i == pieceIndex) continue;
       if (playerPieces[currentPlayer][i].position == newPos) {
         if (isNewSafe) {
-          score += 10;
+          // 위험 지역에 다른 말이 있으면 업기보다 그 말 먼저 이동
+          if (hasPieceInDangerousZone && !isCurrentDangerousZone) {
+            score -= 30; // 위험 지역 말 구출이 우선
+          } else {
+            score += 10;
+          }
         } else if (isNewDangerousZone) {
-          score -= 20;
+          score -= 30; // 위험 지역에서 업기는 큰 감점
         } else {
           score -= 5;
         }
@@ -1018,7 +1056,7 @@ class _YutnoriScreenState extends State<YutnoriScreen>
     // 새로 출발하는 말 감점
     if (currentPos == -1) {
       if (hasPieceInDangerousZone) {
-        score -= 40;
+        score -= 60; // 위험 지역에 말이 있으면 새로 달기 대폭 감점
       }
       if (!isNewSafe && dangerPositions.contains(newPos)) {
         score -= 15;
