@@ -117,11 +117,20 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
 
   @override
   void didPopNext() {
-    // 게임 화면에서 돌아올 때 배너 위젯 강제 재생성
+    // 게임 화면에서 돌아올 때 배너 광고 새로 로드 (새 객체 생성)
     if (mounted) {
-      setState(() {
-        _bannerRebuildKey++; // key 변경으로 AdWidget 새로 생성
-      });
+      final screenWidth = MediaQuery.of(context).size.width;
+      _adService.loadBannerAd(
+        screenWidth: screenWidth,
+        forceReload: true,
+        onLoaded: () {
+          if (mounted) {
+            setState(() {
+              _bannerRebuildKey++;
+            });
+          }
+        },
+      );
     }
   }
 
