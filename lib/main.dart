@@ -2975,6 +2975,13 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
   Widget build(BuildContext context) {
     final isPortrait = MediaQuery.of(context).orientation == Orientation.portrait;
 
+    // 배너 광고 디버그 로그
+    if (_adService.bannerAd != null) {
+      debugPrint('=== build() 호출 ===');
+      debugPrint('배너 로드 상태: ${_adService.isBannerLoaded}');
+      debugPrint('배너 크기: ${_adService.bannerAd!.size.width} x ${_adService.bannerAd!.size.height}');
+    }
+
     return Scaffold(
       body: Column(
         children: [
