@@ -3243,18 +3243,38 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
           ),
           // 배너 광고 (세로 모드에서만 표시)
           if (isPortrait)
-            Container(
-              color: Colors.black,
-              width: double.infinity,
-              height: 100,
-              alignment: Alignment.center,
-              child: _adService.isBannerLoaded && _adService.bannerAd != null
-                  ? SizedBox(
-                      width: _adService.bannerAd!.size.width.toDouble(),
-                      height: _adService.bannerAd!.size.height.toDouble(),
-                      child: AdWidget(ad: _adService.bannerAd!),
-                    )
-                  : const SizedBox(),
+            LayoutBuilder(
+              builder: (context, constraints) {
+                debugPrint('=== 배너 컨테이너 레이아웃 ===');
+                debugPrint('제약조건: maxWidth=${constraints.maxWidth}, maxHeight=${constraints.maxHeight}');
+                return Container(
+                  color: Colors.black,
+                  width: double.infinity,
+                  height: 100,
+                  alignment: Alignment.center,
+                  child: _adService.isBannerLoaded && _adService.bannerAd != null
+                      ? Builder(
+                          builder: (context) {
+                            WidgetsBinding.instance.addPostFrameCallback((_) {
+                              final RenderBox? box = context.findRenderObject() as RenderBox?;
+                              if (box != null) {
+                                final size = box.size;
+                                final position = box.localToGlobal(Offset.zero);
+                                debugPrint('=== AdWidget 실제 렌더링 ===');
+                                debugPrint('실제 크기: ${size.width} x ${size.height}');
+                                debugPrint('위치: x=${position.dx}, y=${position.dy}');
+                              }
+                            });
+                            return SizedBox(
+                              width: _adService.bannerAd!.size.width.toDouble(),
+                              height: _adService.bannerAd!.size.height.toDouble(),
+                              child: AdWidget(ad: _adService.bannerAd!),
+                            );
+                          },
+                        )
+                      : const SizedBox(),
+                );
+              },
             ),
         ],
       ),
