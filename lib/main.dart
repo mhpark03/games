@@ -120,9 +120,9 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
 
   @override
   void didPopNext() {
-    // 게임 화면에서 돌아올 때 배너 광고 강제 새로고침
+    // 게임 화면에서 돌아올 때 화면 갱신 (기존 배너 유지)
     if (mounted) {
-      _loadBannerAd(forceReload: true);
+      setState(() {});
     }
   }
 
@@ -3241,7 +3241,9 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
           ),
         ),
       ),
-      bottomNavigationBar: _adService.isBannerLoaded && _adService.bannerAd != null
+      // 가로 모드에서는 배너 숨김
+      bottomNavigationBar: MediaQuery.of(context).orientation == Orientation.portrait &&
+              _adService.isBannerLoaded && _adService.bannerAd != null
           ? Container(
               key: ValueKey('banner_$_bannerAdKey'),
               color: Colors.black,
