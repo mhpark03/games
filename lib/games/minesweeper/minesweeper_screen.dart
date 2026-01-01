@@ -151,9 +151,8 @@ class _MinesweeperScreenState extends State<MinesweeperScreen> {
                 },
               );
               if (!result && mounted) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('광고를 불러올 수 없습니다. 잠시 후 다시 시도해주세요.')),
-                );
+                // 광고가 없어도 기능 실행
+                _useHint();
                 adService.loadRewardedAd();
               }
             },
