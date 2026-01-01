@@ -201,6 +201,11 @@ class _GameScreenState extends State<GameScreen> with WidgetsBindingObserver {
             // 정답 확인
             if (number != correctValue) {
               _failureCount++;
+              if (_failureCount >= 4) {
+                WidgetsBinding.instance.addPostFrameCallback((_) {
+                  _showFailureAdDialog();
+                });
+              }
             }
 
             List<List<int>> newBoard =
@@ -282,6 +287,11 @@ class _GameScreenState extends State<GameScreen> with WidgetsBindingObserver {
       int correctValue = _gameState.solution[row][col];
       if (number != correctValue) {
         _failureCount++;
+        if (_failureCount >= 4) {
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            _showFailureAdDialog();
+          });
+        }
       }
 
       List<List<int>> newBoard =
@@ -575,6 +585,39 @@ class _GameScreenState extends State<GameScreen> with WidgetsBindingObserver {
       _gameState.undo();
     });
     _saveGame();
+  }
+
+  // 오답 시 광고 다이얼로그 (4번째 오답부터)
+  void _showFailureAdDialog() {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => AlertDialog(
+        backgroundColor: Colors.grey.shade900,
+        title: const Text('오답입니다', style: TextStyle(color: Colors.redAccent)),
+        content: Text(
+          '실패 횟수: $_failureCount회\n광고를 시청하고 계속 진행하시겠습니까?',
+          style: const TextStyle(color: Colors.white70),
+        ),
+        actions: [
+          ElevatedButton(
+            onPressed: () async {
+              Navigator.pop(context);
+              final adService = AdService();
+              final result = await adService.showRewardedAd(
+                onUserEarnedReward: (ad, reward) {
+                  // 광고 시청 완료
+                },
+              );
+              if (!result) {
+                adService.loadRewardedAd();
+              }
+            },
+            child: const Text('광고 보기'),
+          ),
+        ],
+      ),
+    );
   }
 
   // 취소 버튼 광고 다이얼로그
