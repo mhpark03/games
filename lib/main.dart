@@ -2973,19 +2973,25 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
 
   @override
   Widget build(BuildContext context) {
+    final isPortrait = MediaQuery.of(context).orientation == Orientation.portrait;
+    final showBanner = isPortrait && _adService.isBannerLoaded && _adService.bannerAd != null;
+
     return Scaffold(
-      body: Container(
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: [
-              Colors.indigo.shade900,
-              Colors.black,
-            ],
-          ),
-        ),
-        child: SafeArea(
+      body: Column(
+        children: [
+          Expanded(
+            child: Container(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors: [
+                    Colors.indigo.shade900,
+                    Colors.black,
+                  ],
+                ),
+              ),
+              child: SafeArea(
           child: LayoutBuilder(
             builder: (context, constraints) {
               final isLandscape = constraints.maxWidth > constraints.maxHeight;
@@ -3227,20 +3233,19 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
             },
           ),
         ),
+            ),
+          ),
+          // 배너 광고 (세로 모드에서만 표시)
+          if (showBanner)
+            Container(
+              color: Colors.black,
+              width: double.infinity,
+              height: 100,
+              alignment: Alignment.center,
+              child: AdWidget(ad: _adService.bannerAd!),
+            ),
+        ],
       ),
-      // 배너 광고 (세로 모드에서만 표시)
-      bottomNavigationBar: _adService.isBannerLoaded && _adService.bannerAd != null
-          ? Offstage(
-              offstage: MediaQuery.of(context).orientation != Orientation.portrait,
-              child: Container(
-                color: Colors.black,
-                width: double.infinity,
-                height: 100,
-                alignment: Alignment.center,
-                child: AdWidget(ad: _adService.bannerAd!),
-              ),
-            )
-          : null,
     );
   }
 
