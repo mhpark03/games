@@ -203,11 +203,17 @@ class _BaseballScreenState extends State<BaseballScreen> {
       if (result.isCorrect) {
         gameOver = true;
         gameWon = true;
-      } else if (guessHistory.length >= maxAttempts) {
-        gameOver = true;
-        gameWon = false;
       }
     });
+
+    // 시도 횟수 소진 시 추가 시도 다이얼로그 표시
+    if (!result.isCorrect && guessHistory.length >= maxAttempts) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) {
+          _showExtendAdDialog();
+        }
+      });
+    }
 
     HapticFeedback.mediumImpact();
   }
@@ -223,6 +229,7 @@ class _BaseballScreenState extends State<BaseballScreen> {
       errorMessage = null;
       revealedPositions.clear();
       excludedNumbers.clear();
+      maxAttempts = 10;
     });
     HapticFeedback.mediumImpact();
   }
@@ -324,6 +331,71 @@ class _BaseballScreenState extends State<BaseballScreen> {
           }
         }
       }
+    });
+    HapticFeedback.mediumImpact();
+  }
+
+  // 추가 시도 광고 다이얼로그
+  void _showExtendAdDialog() {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => AlertDialog(
+        backgroundColor: Colors.grey.shade900,
+        title: const Row(
+          children: [
+            Icon(Icons.sports_baseball, color: Colors.deepOrange, size: 28),
+            SizedBox(width: 8),
+            Text(
+              '시도 횟수 소진!',
+              style: TextStyle(color: Colors.deepOrange),
+            ),
+          ],
+        ),
+        content: const Text(
+          '광고를 시청하면 5회 추가 시도할 수 있습니다.',
+          style: TextStyle(color: Colors.white70),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () {
+              Navigator.pop(context);
+              setState(() {
+                gameOver = true;
+                gameWon = false;
+              });
+            },
+            child: const Text('포기'),
+          ),
+          ElevatedButton.icon(
+            onPressed: () async {
+              Navigator.pop(context);
+              final adService = AdService();
+              final result = await adService.showRewardedAd(
+                onUserEarnedReward: (ad, reward) {
+                  _extendAttempts();
+                },
+              );
+              if (!result && mounted) {
+                // 광고가 없어도 기능 실행
+                _extendAttempts();
+                adService.loadRewardedAd();
+              }
+            },
+            icon: const Icon(Icons.play_circle_outline, size: 18),
+            label: const Text('광고 보고 계속하기'),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.deepOrange,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _extendAttempts() {
+    setState(() {
+      maxAttempts += 5;
     });
     HapticFeedback.mediumImpact();
   }

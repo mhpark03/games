@@ -78,9 +78,6 @@ class _MinesweeperScreenState extends State<MinesweeperScreen> {
   int elapsedSeconds = 0;
   DateTime? startTime;
 
-  // 부활 (한 게임당 1번만)
-  bool _hasRevived = false;
-
   @override
   void initState() {
     super.initState();
@@ -124,7 +121,6 @@ class _MinesweeperScreenState extends State<MinesweeperScreen> {
     revealedCount = 0;
     elapsedSeconds = 0;
     startTime = null;
-    _hasRevived = false;
   }
 
   // 부활 광고 다이얼로그 (폭탄 터트렸을 때)
@@ -142,7 +138,7 @@ class _MinesweeperScreenState extends State<MinesweeperScreen> {
           ],
         ),
         content: const Text(
-          '광고를 시청하면 부활할 수 있습니다.\n(한 게임당 1번만 가능)',
+          '광고를 시청하면 부활할 수 있습니다.',
           style: TextStyle(color: Colors.white70),
         ),
         actions: [
@@ -168,7 +164,6 @@ class _MinesweeperScreenState extends State<MinesweeperScreen> {
                   setState(() {
                     board[row][col].state = CellState.flagged;
                     flagCount++;
-                    _hasRevived = true;
                   });
                   _saveGame();
                 },
@@ -178,7 +173,6 @@ class _MinesweeperScreenState extends State<MinesweeperScreen> {
                 setState(() {
                   board[row][col].state = CellState.flagged;
                   flagCount++;
-                  _hasRevived = true;
                 });
                 adService.loadRewardedAd();
                 _saveGame();
@@ -327,19 +321,12 @@ class _MinesweeperScreenState extends State<MinesweeperScreen> {
 
       if (board[row][col].hasMine) {
         HapticFeedback.heavyImpact();
-        // 아직 부활하지 않았다면 부활 기회 제공
-        if (!_hasRevived) {
-          // revealed를 취소하고 다이얼로그 표시
-          board[row][col].state = CellState.hidden;
-          revealedCount--;
-          WidgetsBinding.instance.addPostFrameCallback((_) {
-            _showReviveAdDialog(row, col);
-          });
-          return;
-        }
-        // 이미 부활했다면 게임 오버
-        gameOver = true;
-        _revealAllMines();
+        // 부활 기회 제공
+        board[row][col].state = CellState.hidden;
+        revealedCount--;
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          _showReviveAdDialog(row, col);
+        });
         return;
       }
 
