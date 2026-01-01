@@ -25,6 +25,9 @@ import 'games/number_sums/services/game_storage.dart' as number_sums;
 import 'services/ad_service.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
 
+// 라우트 옵저버 (게임 화면에서 돌아올 때 배너 광고 상태 갱신용)
+final RouteObserver<PageRoute> routeObserver = RouteObserver<PageRoute>();
+
 void main() async {
   WidgetsBinding widgetsBinding = WidgetsFlutterBinding.ensureInitialized();
   FlutterNativeSplash.preserve(widgetsBinding: widgetsBinding);
@@ -50,6 +53,7 @@ class GameCenterApp extends StatelessWidget {
     return MaterialApp(
       title: 'Game Center',
       debugShowCheckedModeBanner: false,
+      navigatorObservers: [routeObserver],
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(
           seedColor: Colors.indigo,
@@ -69,7 +73,7 @@ class HomeScreen extends StatefulWidget {
   State<HomeScreen> createState() => _HomeScreenState();
 }
 
-class _HomeScreenState extends State<HomeScreen> {
+class _HomeScreenState extends State<HomeScreen> with RouteAware {
   final AdService _adService = AdService();
 
   @override
@@ -85,9 +89,30 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    routeObserver.subscribe(this, ModalRoute.of(context) as PageRoute);
+  }
+
+  @override
   void dispose() {
+    routeObserver.unsubscribe(this);
     _adService.disposeBannerAd();
     super.dispose();
+  }
+
+  @override
+  void didPopNext() {
+    // 게임 화면에서 돌아올 때 배너 광고 상태 갱신
+    if (mounted) {
+      if (!_adService.isBannerLoaded || _adService.bannerAd == null) {
+        _adService.loadBannerAd(onLoaded: () {
+          if (mounted) setState(() {});
+        });
+      } else {
+        setState(() {});
+      }
+    }
   }
 
   Future<void> _showGomokuModeDialog(BuildContext context) async {
