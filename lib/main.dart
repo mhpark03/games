@@ -117,20 +117,26 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
 
   @override
   void didPopNext() {
-    // 게임 화면에서 돌아올 때 배너 광고 새로 로드 (새 객체 생성)
+    // 게임 화면에서 돌아올 때 배너 숨기고 새로 로드
     if (mounted) {
-      final screenWidth = MediaQuery.of(context).size.width;
-      _adService.loadBannerAd(
-        screenWidth: screenWidth,
-        forceReload: true,
-        onLoaded: () {
-          if (mounted) {
-            setState(() {
-              _bannerRebuildKey++;
-            });
-          }
-        },
-      );
+      // 1. 먼저 배너 숨기기 (기존 AdWidget 제거)
+      _adService.disposeBannerAd();
+      setState(() {
+        _bannerRebuildKey++;
+      });
+
+      // 2. 다음 프레임에서 새 배너 로드
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) {
+          final screenWidth = MediaQuery.of(context).size.width;
+          _adService.loadBannerAd(
+            screenWidth: screenWidth,
+            onLoaded: () {
+              if (mounted) setState(() {});
+            },
+          );
+        }
+      });
     }
   }
 
