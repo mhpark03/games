@@ -5,6 +5,7 @@ import 'package:flutter/services.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../services/gemini_service.dart';
 import '../../services/game_save_service.dart';
+import '../../services/ad_service.dart';
 
 enum JanggiPieceType { gung, cha, po, ma, sang, sa, byung }
 
@@ -49,6 +50,49 @@ class JanggiPiece {
   factory JanggiPiece.fromJson(Map<String, dynamic> json) => JanggiPiece(
     JanggiPieceType.values[json['type'] as int],
     JanggiColor.values[json['color'] as int],
+  );
+}
+
+// 이동 기록 (취소 기능용)
+class MoveRecord {
+  final int fromRow;
+  final int fromCol;
+  final int toRow;
+  final int toCol;
+  final JanggiPiece? capturedPiece;
+  final bool wasInCheck;
+  final int previousCheckCount;
+
+  MoveRecord({
+    required this.fromRow,
+    required this.fromCol,
+    required this.toRow,
+    required this.toCol,
+    this.capturedPiece,
+    required this.wasInCheck,
+    required this.previousCheckCount,
+  });
+
+  Map<String, dynamic> toJson() => {
+    'fromRow': fromRow,
+    'fromCol': fromCol,
+    'toRow': toRow,
+    'toCol': toCol,
+    'capturedPiece': capturedPiece?.toJson(),
+    'wasInCheck': wasInCheck,
+    'previousCheckCount': previousCheckCount,
+  };
+
+  factory MoveRecord.fromJson(Map<String, dynamic> json) => MoveRecord(
+    fromRow: json['fromRow'] as int,
+    fromCol: json['fromCol'] as int,
+    toRow: json['toRow'] as int,
+    toCol: json['toCol'] as int,
+    capturedPiece: json['capturedPiece'] != null
+        ? JanggiPiece.fromJson(json['capturedPiece'] as Map<String, dynamic>)
+        : null,
+    wasInCheck: json['wasInCheck'] as bool? ?? false,
+    previousCheckCount: json['previousCheckCount'] as int? ?? 0,
   );
 }
 
@@ -122,6 +166,9 @@ class _JanggiScreenState extends State<JanggiScreen> {
   // 보드 상태 히스토리 (반복 검출용)
   List<String> _boardHistory = [];
   int _consecutiveCheckCount = 0; // 연속 장군 횟수
+
+  // 이동 기록 (취소 기능용)
+  List<MoveRecord> _moveHistory = [];
 
   // AI 난이도 설정
   JanggiDifficulty _difficulty = JanggiDifficulty.normal;
@@ -218,6 +265,7 @@ class _JanggiScreenState extends State<JanggiScreen> {
       'boardHistory': _boardHistory,
       'consecutiveCheckCount': _consecutiveCheckCount,
       'difficulty': _difficulty.index,
+      'moveHistory': _moveHistory.map((m) => m.toJson()).toList(),
     };
 
     await GameSaveService.saveGame('janggi', gameState);
@@ -268,6 +316,16 @@ class _JanggiScreenState extends State<JanggiScreen> {
       _difficulty = JanggiDifficulty.values[savedDifficulty];
     } else {
       _difficulty = JanggiDifficulty.normal;
+    }
+
+    // 이동 기록 복원
+    final savedMoveHistory = gameState['moveHistory'];
+    if (savedMoveHistory != null && savedMoveHistory is List) {
+      _moveHistory = savedMoveHistory
+          .map((m) => MoveRecord.fromJson(m as Map<String, dynamic>))
+          .toList();
+    } else {
+      _moveHistory = [];
     }
 
     setState(() {
@@ -1594,6 +1652,17 @@ class _JanggiScreenState extends State<JanggiScreen> {
   void _movePiece(int fromRow, int fromCol, int toRow, int toCol) {
     final capturedPiece = board[toRow][toCol];
 
+    // 이동 기록 저장 (취소 기능용)
+    _moveHistory.add(MoveRecord(
+      fromRow: fromRow,
+      fromCol: fromCol,
+      toRow: toRow,
+      toCol: toCol,
+      capturedPiece: capturedPiece,
+      wasInCheck: isInCheck,
+      previousCheckCount: _consecutiveCheckCount,
+    ));
+
     board[toRow][toCol] = board[fromRow][fromCol];
     board[fromRow][fromCol] = null;
 
@@ -1651,6 +1720,123 @@ class _JanggiScreenState extends State<JanggiScreen> {
 
     // 게임 저장
     _saveGame();
+  }
+
+  // 취소 광고 다이얼로그
+  void _showUndoAdDialog() {
+    if (_moveHistory.isEmpty || isGameOver || isThinking) return;
+
+    // vs 컴퓨터 모드에서는 플레이어 턴일 때만 취소 가능
+    if (widget.gameMode != JanggiGameMode.vsHuman) {
+      final playerColor = widget.gameMode == JanggiGameMode.vsCho
+          ? JanggiColor.han
+          : JanggiColor.cho;
+      if (currentTurn != playerColor) return;
+    }
+
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: const Color(0xFFF5DEB3),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+          side: const BorderSide(color: Color(0xFF8B4513), width: 3),
+        ),
+        title: const Row(
+          children: [
+            Icon(Icons.undo, color: Color(0xFF8B4513), size: 28),
+            SizedBox(width: 8),
+            Text('한 수 취소', style: TextStyle(color: Color(0xFF8B4513))),
+          ],
+        ),
+        content: const Text(
+          '광고를 시청하고 마지막 수를 취소하시겠습니까?',
+          style: TextStyle(color: Colors.black87),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('취소', style: TextStyle(color: Color(0xFF8B4513))),
+          ),
+          ElevatedButton.icon(
+            onPressed: () async {
+              Navigator.pop(context);
+              final adService = AdService();
+              final result = await adService.showRewardedAd(
+                onUserEarnedReward: (ad, reward) {
+                  _undoMove();
+                },
+              );
+              if (!result && mounted) {
+                // 광고가 없어도 기능 실행
+                _undoMove();
+                adService.loadRewardedAd();
+              }
+            },
+            icon: const Icon(Icons.play_circle_outline, size: 18),
+            label: const Text('광고 보고 취소'),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFF8B4513),
+              foregroundColor: Colors.white,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _undoMove() {
+    if (_moveHistory.isEmpty) return;
+
+    setState(() {
+      // vs 컴퓨터 모드에서는 컴퓨터의 수도 함께 취소 (2수 취소)
+      int undoCount = 1;
+      if (widget.gameMode != JanggiGameMode.vsHuman && _moveHistory.length >= 2) {
+        undoCount = 2;
+      }
+
+      for (int i = 0; i < undoCount && _moveHistory.isNotEmpty; i++) {
+        final lastMove = _moveHistory.removeLast();
+
+        // 말 되돌리기
+        board[lastMove.fromRow][lastMove.fromCol] = board[lastMove.toRow][lastMove.toCol];
+        board[lastMove.toRow][lastMove.toCol] = lastMove.capturedPiece;
+
+        // 턴 되돌리기
+        currentTurn = currentTurn == JanggiColor.cho ? JanggiColor.han : JanggiColor.cho;
+
+        // 장군 상태 복원
+        isInCheck = lastMove.wasInCheck;
+        _consecutiveCheckCount = lastMove.previousCheckCount;
+
+        // 보드 히스토리에서 마지막 항목 제거
+        if (_boardHistory.isNotEmpty) {
+          _boardHistory.removeLast();
+        }
+      }
+
+      // 마지막 이동 표시 업데이트
+      if (_moveHistory.isNotEmpty) {
+        final prevMove = _moveHistory.last;
+        lastMoveFromRow = prevMove.fromRow;
+        lastMoveFromCol = prevMove.fromCol;
+        lastMoveToRow = prevMove.toRow;
+        lastMoveToCol = prevMove.toCol;
+      } else {
+        lastMoveFromRow = null;
+        lastMoveFromCol = null;
+        lastMoveToRow = null;
+        lastMoveToCol = null;
+      }
+
+      // 선택 초기화
+      selectedRow = null;
+      selectedCol = null;
+      validMoves = null;
+    });
+
+    _saveGame();
+    HapticFeedback.mediumImpact();
   }
 
   void _makeComputerMove() async {
@@ -2749,6 +2935,7 @@ class _JanggiScreenState extends State<JanggiScreen> {
       lastMoveToCol = null;
       _boardHistory = [];
       _consecutiveCheckCount = 0;
+      _moveHistory = [];
     });
 
     // 마상 배치 선택 다이얼로그 다시 표시
@@ -2811,6 +2998,19 @@ class _JanggiScreenState extends State<JanggiScreen> {
               onPressed: _showAISettingsDialog,
               tooltip: geminiService != null ? 'Gemini AI 활성화됨' : 'AI 설정',
             ),
+          // 취소 버튼
+          IconButton(
+            icon: Icon(
+              Icons.undo,
+              color: _moveHistory.isNotEmpty && !isGameOver && !isThinking
+                  ? Colors.white
+                  : Colors.white38,
+            ),
+            onPressed: _moveHistory.isNotEmpty && !isGameOver && !isThinking
+                ? _showUndoAdDialog
+                : null,
+            tooltip: '한 수 취소',
+          ),
           IconButton(
             icon: const Icon(Icons.refresh),
             onPressed: _resetGame,
@@ -2953,6 +3153,15 @@ class _JanggiScreenState extends State<JanggiScreen> {
                       ),
                     if (widget.gameMode != JanggiGameMode.vsHuman)
                       const SizedBox(width: 8),
+                    // 취소 버튼
+                    _buildCircleButton(
+                      icon: Icons.undo,
+                      onPressed: _moveHistory.isNotEmpty && !isGameOver && !isThinking
+                          ? _showUndoAdDialog
+                          : null,
+                      tooltip: '한 수 취소',
+                    ),
+                    const SizedBox(width: 8),
                     _buildCircleButton(
                       icon: Icons.refresh,
                       onPressed: _resetGame,
