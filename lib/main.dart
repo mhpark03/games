@@ -3245,8 +3245,9 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
           ? Container(
               key: ValueKey('banner_$_bannerAdKey'),
               color: Colors.black,
-              width: _adService.bannerAd!.size.width.toDouble(),
-              height: _adService.bannerAd!.size.height.toDouble(),
+              width: double.infinity,
+              height: 100, // largeBanner 고정 높이
+              alignment: Alignment.center,
               child: AdWidget(ad: _adService.bannerAd!),
             )
           : null,
