@@ -55,3 +55,7 @@ android {
 flutter {
     source = "../.."
 }
+
+dependencies {
+    implementation("androidx.core:core-splashscreen:1.0.1")
+}
