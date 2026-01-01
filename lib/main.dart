@@ -75,7 +75,6 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> with RouteAware {
   final AdService _adService = AdService();
-  int _bannerAdKey = 0; // AdWidget 강제 리빌드용
   bool _bannerLoaded = false;
 
   @override
@@ -98,15 +97,10 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
     }
   }
 
-  void _loadBannerAd({bool forceReload = false}) {
+  void _loadBannerAd() {
     _adService.loadBannerAd(
-      forceReload: forceReload,
       onLoaded: () {
-        if (mounted) {
-          setState(() {
-            if (forceReload) _bannerAdKey++;
-          });
-        }
+        if (mounted) setState(() {});
       },
     );
   }
@@ -3241,16 +3235,19 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
           ),
         ),
       ),
-      // 가로 모드에서는 배너 숨김
-      bottomNavigationBar: MediaQuery.of(context).orientation == Orientation.portrait &&
-              _adService.isBannerLoaded && _adService.bannerAd != null
-          ? Container(
-              key: ValueKey('banner_$_bannerAdKey'),
-              color: Colors.black,
-              width: double.infinity,
-              height: 100, // largeBanner 고정 높이
-              alignment: Alignment.center,
-              child: AdWidget(ad: _adService.bannerAd!),
+      // 배너 광고 (가로 모드에서는 숨김 - Visibility 사용으로 위젯 트리 유지)
+      bottomNavigationBar: _adService.isBannerLoaded && _adService.bannerAd != null
+          ? Visibility(
+              visible: MediaQuery.of(context).orientation == Orientation.portrait,
+              maintainState: true,
+              maintainSize: false,
+              child: Container(
+                color: Colors.black,
+                width: double.infinity,
+                height: 100, // largeBanner 고정 높이
+                alignment: Alignment.center,
+                child: AdWidget(ad: _adService.bannerAd!),
+              ),
             )
           : null,
     );
