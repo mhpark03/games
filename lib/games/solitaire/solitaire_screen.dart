@@ -98,10 +98,10 @@ class _SolitaireScreenState extends State<SolitaireScreen> {
   // 카드 크기 모드 (true: 크게, false: 작게)
   bool _largeCardMode = false;
 
-  // 카드 크기 (모드에 따라 변경)
-  double get cardWidth => _largeCardMode ? 62 : 50;
-  double get cardHeight => _largeCardMode ? 87 : 70;
-  double get cardOverlap => _largeCardMode ? 26 : 20;  // 테이블 카드 겹침 간격
+  // 카드 크기 (모드에 따라 변경) - 표준 카드 비율 5:7 (0.714)
+  double get cardWidth => _largeCardMode ? 56 : 50;
+  double get cardHeight => _largeCardMode ? 78 : 70;
+  double get cardOverlap => _largeCardMode ? 24 : 20;  // 테이블 카드 겹침 간격
 
   // Undo 히스토리
   List<Map<String, dynamic>> _undoHistory = [];
@@ -1259,14 +1259,14 @@ class _SolitaireScreenState extends State<SolitaireScreen> {
             children: [
               // 스톡
               _buildStock(),
-              const SizedBox(width: 8),
+              SizedBox(width: _largeCardMode ? 6 : 8),
               // 웨이스트
               _buildWaste(),
               const Spacer(),
               // 파운데이션 4개 (드래그 타겟 인식 영역 확대)
               ...List.generate(4, (index) {
                 return Padding(
-                  padding: const EdgeInsets.only(left: 6),
+                  padding: EdgeInsets.only(left: _largeCardMode ? 4 : 6),
                   child: SizedBox(
                     width: cardWidth + 4,
                     height: cardHeight + 4,
@@ -1353,7 +1353,7 @@ class _SolitaireScreenState extends State<SolitaireScreen> {
           final visibleCount = min(3, waste.length);
           final startIndex = waste.length - visibleCount;
           final topCard = waste.last;
-          final wasteSpacing = _largeCardMode ? 18.0 : 15.0;
+          final wasteSpacing = _largeCardMode ? 16.0 : 15.0;
 
           return SizedBox(
             width: cardWidth + (visibleCount - 1) * wasteSpacing,
@@ -1723,7 +1723,7 @@ class _SolitaireScreenState extends State<SolitaireScreen> {
                 '${card.rankString}${card.suitString}',
                 style: TextStyle(
                   color: card.suitColor,
-                  fontSize: _largeCardMode ? 15 : 11,
+                  fontSize: _largeCardMode ? 14 : 11,
                   fontWeight: FontWeight.bold,
                 ),
               ),
@@ -1775,7 +1775,7 @@ class _SolitaireScreenState extends State<SolitaireScreen> {
               '${card.rankString}${card.suitString}',
               style: TextStyle(
                 color: card.suitColor,
-                fontSize: 16,
+                fontSize: 15,
                 fontWeight: FontWeight.bold,
                 height: 1.0,
               ),
@@ -1788,7 +1788,7 @@ class _SolitaireScreenState extends State<SolitaireScreen> {
                 card.suitString,
                 style: TextStyle(
                   color: card.suitColor,
-                  fontSize: 32,
+                  fontSize: 28,
                 ),
               ),
             ),
