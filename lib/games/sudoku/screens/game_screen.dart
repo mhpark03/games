@@ -547,7 +547,7 @@ class _GameScreenState extends State<GameScreen> with WidgetsBindingObserver {
     }
   }
 
-  Widget _buildControls({required bool isLandscape}) {
+  Widget _buildControls({required bool isLandscape, bool isSmallScreen = false}) {
     return GameControlPanel(
       key: _controlPanelKey,
       onNumberTap: _onNumberTap,
@@ -572,7 +572,7 @@ class _GameScreenState extends State<GameScreen> with WidgetsBindingObserver {
         });
       },
       disabledNumbers: _gameState.getCompletedNumbers(),
-      isCompact: isLandscape,
+      isCompact: isLandscape || isSmallScreen,
     );
   }
 
@@ -740,11 +740,21 @@ class _GameScreenState extends State<GameScreen> with WidgetsBindingObserver {
 
   // 세로 모드 레이아웃
   Widget _buildPortraitLayout(BuildContext context) {
+    // 화면 크기에 따라 패딩과 간격 동적 조정
+    final screenHeight = MediaQuery.of(context).size.height;
+    final isSmallScreen = screenHeight < 700;
+    final isMediumScreen = screenHeight < 800;
+
+    final padding = isSmallScreen ? 8.0 : (isMediumScreen ? 12.0 : 16.0);
+    final statusBoardGap = isSmallScreen ? 6.0 : (isMediumScreen ? 8.0 : 12.0);
+    final boardControlGap = isSmallScreen ? 10.0 : (isMediumScreen ? 14.0 : 20.0);
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('스도쿠'),
         backgroundColor: Colors.blue,
         foregroundColor: Colors.white,
+        toolbarHeight: isSmallScreen ? 48 : 56,
         actions: [
           IconButton(
             onPressed: _showRulesDialog,
@@ -774,7 +784,7 @@ class _GameScreenState extends State<GameScreen> with WidgetsBindingObserver {
             )
           : SafeArea(
               child: Padding(
-                padding: const EdgeInsets.all(16.0),
+                padding: EdgeInsets.all(padding),
                 child: Column(
                   children: [
                     GameStatusBar(
@@ -782,24 +792,26 @@ class _GameScreenState extends State<GameScreen> with WidgetsBindingObserver {
                       failureCount: _failureCount,
                       isPaused: _isPaused,
                       onPauseToggle: _togglePause,
-                      isCompact: false,
+                      isCompact: isSmallScreen,
                       difficultyText: _getDifficultyText(),
                       themeColor: Colors.blue,
                     ),
-                    const SizedBox(height: 12),
-                    _isPaused
-                        ? AspectRatio(
-                            aspectRatio: 1,
-                            child: _buildPausedOverlay(),
-                          )
-                        : SudokuBoard(
-                            gameState: _gameState,
-                            onCellTap: _onCellTap,
-                            isQuickInputMode: _isQuickInputMode,
-                            quickInputNumber: _quickInputNumber,
-                          ),
-                    const SizedBox(height: 20),
-                    _buildControls(isLandscape: false),
+                    SizedBox(height: statusBoardGap),
+                    Expanded(
+                      child: _isPaused
+                          ? AspectRatio(
+                              aspectRatio: 1,
+                              child: _buildPausedOverlay(),
+                            )
+                          : SudokuBoard(
+                              gameState: _gameState,
+                              onCellTap: _onCellTap,
+                              isQuickInputMode: _isQuickInputMode,
+                              quickInputNumber: _quickInputNumber,
+                            ),
+                    ),
+                    SizedBox(height: boardControlGap),
+                    _buildControls(isLandscape: false, isSmallScreen: isSmallScreen),
                   ],
                 ),
               ),

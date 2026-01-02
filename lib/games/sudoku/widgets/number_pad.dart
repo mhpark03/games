@@ -26,10 +26,10 @@ class NumberPad extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final buttonSize = isCompact ? 48.0 : 60.0;
-    final fontSize = isCompact ? 20.0 : 24.0;
-    final iconSize = isCompact ? 20.0 : 24.0;
-    final spacing = isCompact ? 6.0 : 10.0;
+    final buttonSize = isCompact ? 44.0 : 56.0;
+    final fontSize = isCompact ? 18.0 : 22.0;
+    final iconSize = isCompact ? 18.0 : 22.0;
+    final spacing = isCompact ? 5.0 : 8.0;
 
     if (isCompact) {
       // 가로 모드: 3x3 + 지우기 버튼 그리드

@@ -240,12 +240,12 @@ class GameControlPanelState extends State<GameControlPanel> {
       children: [
         if (_isQuickInputMode || _isEraseMode) _buildModeGuide(),
         _buildControlButtons(),
-        const SizedBox(height: 16),
+        SizedBox(height: widget.isCompact ? 10 : 14),
         NumberPad(
           onNumberTap: _onNumberTap,
           onUndo: widget.onUndo,
           canUndo: widget.canUndo,
-          isCompact: false,
+          isCompact: widget.isCompact,
           quickInputNumber: _isQuickInputMode ? _quickInputNumber : null,
           onQuickInputToggle: null,
           disabledNumbers: widget.disabledNumbers,
@@ -282,8 +282,11 @@ class GameControlPanelState extends State<GameControlPanel> {
     }
 
     return Container(
-      margin: const EdgeInsets.only(bottom: 8),
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+      margin: EdgeInsets.only(bottom: widget.isCompact ? 4 : 8),
+      padding: EdgeInsets.symmetric(
+        horizontal: widget.isCompact ? 10 : 12,
+        vertical: widget.isCompact ? 4 : 6,
+      ),
       decoration: BoxDecoration(
         color: bgColor,
         borderRadius: BorderRadius.circular(8),
@@ -294,15 +297,15 @@ class GameControlPanelState extends State<GameControlPanel> {
         children: [
           Icon(
             _isEraseMode ? Icons.cleaning_services : Icons.info_outline,
-            size: 16,
+            size: widget.isCompact ? 14 : 16,
             color: textColor,
           ),
-          const SizedBox(width: 6),
+          SizedBox(width: widget.isCompact ? 4 : 6),
           Flexible(
             child: Text(
               guideText,
               style: TextStyle(
-                fontSize: 12,
+                fontSize: widget.isCompact ? 11 : 12,
                 color: textColor,
                 fontWeight: FontWeight.w500,
               ),
@@ -316,8 +319,8 @@ class GameControlPanelState extends State<GameControlPanel> {
 
   Widget _buildControlButtons() {
     return Wrap(
-      spacing: widget.isCompact ? 6 : 8,
-      runSpacing: widget.isCompact ? 6 : 8,
+      spacing: widget.isCompact ? 5 : 8,
+      runSpacing: widget.isCompact ? 5 : 8,
       alignment: WrapAlignment.center,
       children: [
         _buildToggleButton(
@@ -367,8 +370,8 @@ class GameControlPanelState extends State<GameControlPanel> {
       onTap: onTap,
       child: Container(
         padding: EdgeInsets.symmetric(
-          horizontal: widget.isCompact ? 12 : 16,
-          vertical: widget.isCompact ? 6 : 8,
+          horizontal: widget.isCompact ? 10 : 14,
+          vertical: widget.isCompact ? 5 : 7,
         ),
         decoration: BoxDecoration(
           color: isActive ? activeColor : Colors.grey.shade200,
@@ -379,16 +382,16 @@ class GameControlPanelState extends State<GameControlPanel> {
           children: [
             Icon(
               icon,
-              size: widget.isCompact ? 16 : 18,
+              size: widget.isCompact ? 14 : 17,
               color: isActive ? Colors.white : Colors.grey.shade600,
             ),
-            const SizedBox(width: 6),
+            SizedBox(width: widget.isCompact ? 4 : 6),
             Text(
               label,
               style: TextStyle(
                 color: isActive ? Colors.white : Colors.grey.shade600,
                 fontWeight: FontWeight.w500,
-                fontSize: widget.isCompact ? 12 : 14,
+                fontSize: widget.isCompact ? 11 : 13,
               ),
             ),
           ],
@@ -407,8 +410,8 @@ class GameControlPanelState extends State<GameControlPanel> {
       onTap: onTap,
       child: Container(
         padding: EdgeInsets.symmetric(
-          horizontal: widget.isCompact ? 12 : 16,
-          vertical: widget.isCompact ? 6 : 8,
+          horizontal: widget.isCompact ? 10 : 14,
+          vertical: widget.isCompact ? 5 : 7,
         ),
         decoration: BoxDecoration(
           color: (color ?? Colors.blue).withValues(alpha: 0.1),
@@ -417,14 +420,14 @@ class GameControlPanelState extends State<GameControlPanel> {
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(icon, size: widget.isCompact ? 16 : 18, color: color ?? Colors.blue),
-            const SizedBox(width: 6),
+            Icon(icon, size: widget.isCompact ? 14 : 17, color: color ?? Colors.blue),
+            SizedBox(width: widget.isCompact ? 4 : 6),
             Text(
               label,
               style: TextStyle(
                 color: color ?? Colors.blue,
                 fontWeight: FontWeight.w500,
-                fontSize: widget.isCompact ? 12 : 14,
+                fontSize: widget.isCompact ? 11 : 13,
               ),
             ),
           ],
