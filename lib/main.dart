@@ -86,6 +86,13 @@ void main() async {
     DeviceOrientation.landscapeLeft,
     DeviceOrientation.landscapeRight,
   ]);
+
+  // 전체 화면 모드 (상태바 숨김)
+  SystemChrome.setEnabledSystemUIMode(
+    SystemUiMode.immersiveSticky,
+    overlays: [],
+  );
+
   runApp(const GameCenterApp());
 }
 
