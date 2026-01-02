@@ -1093,8 +1093,8 @@ class _YutnoriScreenState extends State<YutnoriScreen>
             return _buildLandscapeLayout();
           } else {
             SystemChrome.setEnabledSystemUIMode(
-              SystemUiMode.edgeToEdge,
-              overlays: SystemUiOverlay.values,
+              SystemUiMode.immersiveSticky,
+              overlays: [],
             );
             return _buildPortraitLayout();
           }

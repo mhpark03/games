@@ -490,10 +490,10 @@ class _MinesweeperScreenState extends State<MinesweeperScreen> {
           );
           return _buildLandscapeLayout();
         } else {
-          // 세로 모드: 상태바 표시
+          // 세로 모드: 전체 화면
           SystemChrome.setEnabledSystemUIMode(
-            SystemUiMode.edgeToEdge,
-            overlays: SystemUiOverlay.values,
+            SystemUiMode.immersiveSticky,
+            overlays: [],
           );
           return _buildPortraitLayout();
         }

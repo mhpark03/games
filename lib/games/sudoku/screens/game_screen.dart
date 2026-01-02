@@ -375,7 +375,7 @@ class _GameScreenState extends State<GameScreen> with WidgetsBindingObserver {
         backgroundColor: Colors.grey.shade900,
         title: const Text('힌트 사용', style: TextStyle(color: Colors.white)),
         content: const Text(
-          '광고를 시청하고 힌트를 받으시겠습니까?',
+          '광고를 시청하고 힌트를 받으시겠습니까?\n\n※ 광고는 끝까지 시청해야 합니다.',
           style: TextStyle(color: Colors.white70),
         ),
         actions: [
@@ -600,6 +600,10 @@ class _GameScreenState extends State<GameScreen> with WidgetsBindingObserver {
           style: const TextStyle(color: Colors.white70),
         ),
         actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('취소'),
+          ),
           ElevatedButton(
             onPressed: () async {
               Navigator.pop(context);
@@ -735,10 +739,10 @@ class _GameScreenState extends State<GameScreen> with WidgetsBindingObserver {
           );
           return _buildLandscapeLayout(context);
         } else {
-          // 세로 모드: 상태바 표시
+          // 세로 모드: 전체 화면
           SystemChrome.setEnabledSystemUIMode(
-            SystemUiMode.edgeToEdge,
-            overlays: SystemUiOverlay.values,
+            SystemUiMode.immersiveSticky,
+            overlays: [],
           );
           return _buildPortraitLayout(context);
         }

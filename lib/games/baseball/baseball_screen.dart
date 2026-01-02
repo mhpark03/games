@@ -430,8 +430,8 @@ class _BaseballScreenState extends State<BaseballScreen> {
           return _buildLandscapeLayout();
         } else {
           SystemChrome.setEnabledSystemUIMode(
-            SystemUiMode.edgeToEdge,
-            overlays: SystemUiOverlay.values,
+            SystemUiMode.immersiveSticky,
+            overlays: [],
           );
           return _buildPortraitLayout();
         }

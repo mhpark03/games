@@ -562,6 +562,10 @@ class _KillerGameScreenState extends State<KillerGameScreen>
           style: const TextStyle(color: Colors.white70),
         ),
         actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('취소'),
+          ),
           ElevatedButton(
             onPressed: () async {
               Navigator.pop(context);
@@ -725,10 +729,10 @@ class _KillerGameScreenState extends State<KillerGameScreen>
           );
           return _buildLandscapeLayout(context);
         } else {
-          // 세로 모드: 상태바 표시
+          // 세로 모드: 전체 화면
           SystemChrome.setEnabledSystemUIMode(
-            SystemUiMode.edgeToEdge,
-            overlays: SystemUiOverlay.values,
+            SystemUiMode.immersiveSticky,
+            overlays: [],
           );
           return _buildPortraitLayout(context);
         }

@@ -350,8 +350,8 @@ class _SamuraiGameScreenState extends State<SamuraiGameScreen>
               );
             } else {
               SystemChrome.setEnabledSystemUIMode(
-                SystemUiMode.edgeToEdge,
-                overlays: SystemUiOverlay.values,
+                SystemUiMode.immersiveSticky,
+                overlays: [],
               );
             }
           });

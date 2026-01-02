@@ -202,8 +202,8 @@ class _ExpandedBoardScreenState extends State<ExpandedBoardScreen> {
               );
             } else {
               SystemChrome.setEnabledSystemUIMode(
-                SystemUiMode.edgeToEdge,
-                overlays: SystemUiOverlay.values,
+                SystemUiMode.immersiveSticky,
+                overlays: [],
               );
             }
           });
@@ -998,6 +998,10 @@ class _ExpandedBoardScreenState extends State<ExpandedBoardScreen> {
           style: const TextStyle(color: Colors.white70),
         ),
         actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('취소'),
+          ),
           ElevatedButton(
             onPressed: () async {
               Navigator.pop(context);
