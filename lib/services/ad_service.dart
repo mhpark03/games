@@ -79,12 +79,14 @@ class AdService {
     _rewardedAd!.fullScreenContentCallback = FullScreenContentCallback(
       onAdShowedFullScreenContent: (ad) {
         debugPrint('광고 노출됨: ${ad.adUnitId}');
+        // 광고가 뜨는 순간 하단 네비게이션 바 숨김
+        SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersiveSticky);
       },
       onAdDismissedFullScreenContent: (ad) {
         debugPrint('사용자가 광고를 닫음');
         ad.dispose();
         _rewardedAd = null;
-        // 광고 종료 후 전체 화면 모드 복원
+        // 앱 복귀 시 몰입 모드 유지
         SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersiveSticky);
         onAdDismissed?.call();
         // 다음 광고 미리 로드
@@ -94,6 +96,8 @@ class AdService {
         debugPrint('광고 노출 실패: $error');
         ad.dispose();
         _rewardedAd = null;
+        // 실패 시에도 몰입 모드 유지
+        SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersiveSticky);
         loadRewardedAd();
       },
     );
