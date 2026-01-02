@@ -14,12 +14,10 @@ class AdService {
   BannerAd? _bannerAd;
   bool _isBannerLoaded = false;
 
-  // 테스트 광고 단위 ID (실제 배포시 변경 필요)
+  // 광고 단위 ID
   String get rewardedAdUnitId {
     if (Platform.isAndroid) {
-      // 테스트 광고 ID (X 버튼 문제 확인용)
-      return 'ca-app-pub-3940256099942544/5224354917'; // Android 테스트 ID
-      // return 'ca-app-pub-8361977398389047/3216947358'; // Android 보상형 (실제)
+      return 'ca-app-pub-8361977398389047/3216947358'; // Android 보상형
     } else if (Platform.isIOS) {
       return 'ca-app-pub-3940256099942544/1712485313'; // iOS 테스트 ID
     }
