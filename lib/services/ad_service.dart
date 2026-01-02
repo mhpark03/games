@@ -1,5 +1,5 @@
 import 'package:flutter/foundation.dart';
-import 'package:flutter/widgets.dart';
+import 'package:flutter/services.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'dart:io';
 
@@ -16,7 +16,9 @@ class AdService {
   // 테스트 광고 단위 ID (실제 배포시 변경 필요)
   String get rewardedAdUnitId {
     if (Platform.isAndroid) {
-      return 'ca-app-pub-8361977398389047/3216947358'; // Android 보상형
+      // 테스트 광고 ID (X 버튼 문제 확인용)
+      return 'ca-app-pub-3940256099942544/5224354917'; // Android 테스트 ID
+      // return 'ca-app-pub-8361977398389047/3216947358'; // Android 보상형 (실제)
     } else if (Platform.isIOS) {
       return 'ca-app-pub-3940256099942544/1712485313'; // iOS 테스트 ID
     }
@@ -75,8 +77,18 @@ class AdService {
       return false;
     }
 
+    // 광고 표시 전에 시스템 UI 완전히 표시 (X 버튼이 가려지지 않도록)
+    await SystemChrome.setEnabledSystemUIMode(
+      SystemUiMode.manual,
+      overlays: SystemUiOverlay.values,
+    );
+
     _rewardedAd!.fullScreenContentCallback = FullScreenContentCallback(
+      onAdShowedFullScreenContent: (ad) {
+        debugPrint('광고 노출됨: ${ad.adUnitId}');
+      },
       onAdDismissedFullScreenContent: (ad) {
+        debugPrint('사용자가 광고를 닫음');
         ad.dispose();
         _rewardedAd = null;
         onAdDismissed?.call();
@@ -84,6 +96,7 @@ class AdService {
         loadRewardedAd();
       },
       onAdFailedToShowFullScreenContent: (ad, error) {
+        debugPrint('광고 노출 실패: $error');
         ad.dispose();
         _rewardedAd = null;
         loadRewardedAd();
