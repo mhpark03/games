@@ -68,8 +68,6 @@ class _SamuraiGameScreenState extends State<SamuraiGameScreen>
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
     _timer?.cancel();
-    // 화면을 나갈 때 상태바 복원
-    SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
     super.dispose();
   }
 
@@ -339,24 +337,6 @@ class _SamuraiGameScreenState extends State<SamuraiGameScreen>
   Widget build(BuildContext context) {
     return OrientationBuilder(
       builder: (context, orientation) {
-        // 방향이 바뀔 때만 SystemChrome 호출 (깜박임 방지)
-        if (_lastOrientation != orientation) {
-          _lastOrientation = orientation;
-          WidgetsBinding.instance.addPostFrameCallback((_) {
-            if (orientation == Orientation.landscape) {
-              SystemChrome.setEnabledSystemUIMode(
-                SystemUiMode.immersiveSticky,
-                overlays: [],
-              );
-            } else {
-              SystemChrome.setEnabledSystemUIMode(
-                SystemUiMode.immersiveSticky,
-                overlays: [],
-              );
-            }
-          });
-        }
-
         if (orientation == Orientation.landscape) {
           return _buildLandscapeLayout(context);
         } else {

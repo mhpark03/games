@@ -204,7 +204,6 @@ class _JanggiScreenState extends State<JanggiScreen> {
 
   @override
   void dispose() {
-    SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
     super.dispose();
   }
 
@@ -2950,18 +2949,8 @@ class _JanggiScreenState extends State<JanggiScreen> {
       body: OrientationBuilder(
         builder: (context, orientation) {
           if (orientation == Orientation.landscape) {
-            // 가로 모드: 상태바 숨김 (몰입 모드)
-            SystemChrome.setEnabledSystemUIMode(
-              SystemUiMode.immersiveSticky,
-              overlays: [],
-            );
             return _buildLandscapeLayout();
           } else {
-            // 세로 모드: 전체 화면
-            SystemChrome.setEnabledSystemUIMode(
-              SystemUiMode.immersiveSticky,
-              overlays: [],
-            );
             return _buildPortraitLayout();
           }
         },

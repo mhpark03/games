@@ -191,24 +191,6 @@ class _ExpandedBoardScreenState extends State<ExpandedBoardScreen> {
 
     return OrientationBuilder(
       builder: (context, orientation) {
-        // 방향이 바뀔 때만 SystemChrome 호출 (깜박임 방지)
-        if (_lastOrientation != orientation) {
-          _lastOrientation = orientation;
-          WidgetsBinding.instance.addPostFrameCallback((_) {
-            if (orientation == Orientation.landscape) {
-              SystemChrome.setEnabledSystemUIMode(
-                SystemUiMode.immersiveSticky,
-                overlays: [],
-              );
-            } else {
-              SystemChrome.setEnabledSystemUIMode(
-                SystemUiMode.immersiveSticky,
-                overlays: [],
-              );
-            }
-          });
-        }
-
         if (orientation == Orientation.landscape) {
           return _buildLandscapeLayout(context, board, isFixed, notes);
         } else {

@@ -59,8 +59,6 @@ class _NumberSumsGameScreenState extends State<NumberSumsGameScreen>
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
     _timer?.cancel();
-    // 화면을 나갈 때 상태바 복원
-    SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
     super.dispose();
   }
 
@@ -391,18 +389,8 @@ class _NumberSumsGameScreenState extends State<NumberSumsGameScreen>
     return OrientationBuilder(
       builder: (context, orientation) {
         if (orientation == Orientation.landscape) {
-          // 가로 모드: 상태바 숨김 (몰입 모드)
-          SystemChrome.setEnabledSystemUIMode(
-            SystemUiMode.immersiveSticky,
-            overlays: [],
-          );
           return _buildLandscapeLayout(context);
         } else {
-          // 세로 모드: 전체 화면
-          SystemChrome.setEnabledSystemUIMode(
-            SystemUiMode.immersiveSticky,
-            overlays: [],
-          );
           return _buildPortraitLayout(context);
         }
       },

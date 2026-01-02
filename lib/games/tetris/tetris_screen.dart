@@ -34,8 +34,6 @@ class _TetrisScreenState extends State<TetrisScreen> {
     _gameBoard.removeListener(_onGameUpdate);
     _gameBoard.dispose();
     _focusNode.dispose();
-    // 화면을 나갈 때 상태바 복원
-    SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
     super.dispose();
   }
 
@@ -229,18 +227,8 @@ class _TetrisScreenState extends State<TetrisScreen> {
         body: OrientationBuilder(
           builder: (context, orientation) {
             if (orientation == Orientation.landscape) {
-              // 가로 모드: 상태바 숨김
-              SystemChrome.setEnabledSystemUIMode(
-                SystemUiMode.immersiveSticky,
-                overlays: [],
-              );
               return _buildLandscapeLayout();
             } else {
-              // 세로 모드: 전체 화면
-              SystemChrome.setEnabledSystemUIMode(
-                SystemUiMode.immersiveSticky,
-                overlays: [],
-              );
               return _buildPortraitLayout();
             }
           },

@@ -1086,16 +1086,8 @@ class _YutnoriScreenState extends State<YutnoriScreen>
       body: OrientationBuilder(
         builder: (context, orientation) {
           if (orientation == Orientation.landscape) {
-            SystemChrome.setEnabledSystemUIMode(
-              SystemUiMode.immersiveSticky,
-              overlays: [],
-            );
             return _buildLandscapeLayout();
           } else {
-            SystemChrome.setEnabledSystemUIMode(
-              SystemUiMode.immersiveSticky,
-              overlays: [],
-            );
             return _buildPortraitLayout();
           }
         },
