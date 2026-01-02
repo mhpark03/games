@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'dart:math';
 import 'dart:async';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../../services/game_save_service.dart';
 import '../../services/ad_service.dart';
 
@@ -94,6 +95,9 @@ class _SolitaireScreenState extends State<SolitaireScreen> {
   // 카드 뽑기 수 (1장 또는 3장)
   int drawCount = 1;
 
+  // 카드 크기 모드 (true: 크게, false: 작게)
+  bool _largeCardMode = false;
+
   // Undo 히스토리
   List<Map<String, dynamic>> _undoHistory = [];
 
@@ -105,7 +109,22 @@ class _SolitaireScreenState extends State<SolitaireScreen> {
   @override
   void initState() {
     super.initState();
+    _loadCardSizeSetting();
     _checkSavedGame();
+  }
+
+  // 카드 크기 설정 불러오기
+  Future<void> _loadCardSizeSetting() async {
+    final prefs = await SharedPreferences.getInstance();
+    setState(() {
+      _largeCardMode = prefs.getBool('solitaire_large_card') ?? false;
+    });
+  }
+
+  // 카드 크기 설정 저장
+  Future<void> _saveCardSizeSetting(bool value) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool('solitaire_large_card', value);
   }
 
   @override
@@ -953,6 +972,11 @@ class _SolitaireScreenState extends State<SolitaireScreen> {
         foregroundColor: Colors.white,
         actions: [
           IconButton(
+            icon: const Icon(Icons.settings),
+            onPressed: _showSettingsDialog,
+            tooltip: '카드 설정',
+          ),
+          IconButton(
             icon: const Icon(Icons.help_outline),
             onPressed: _showRulesDialog,
             tooltip: '게임 규칙',
@@ -1184,12 +1208,18 @@ class _SolitaireScreenState extends State<SolitaireScreen> {
                   ],
                 ),
               ),
-              // 오른쪽 상단: 되돌리기 + 새 게임 버튼
+              // 오른쪽 상단: 설정 + 되돌리기 + 새 게임 버튼
               Positioned(
                 top: 4,
                 right: 4,
                 child: Row(
                   children: [
+                    _buildCircleButton(
+                      icon: Icons.settings,
+                      onPressed: _showSettingsDialog,
+                      tooltip: '카드 설정',
+                    ),
+                    const SizedBox(width: 8),
                     _buildCircleButton(
                       icon: Icons.undo,
                       onPressed: _undoHistory.isEmpty ? null : _showUndoAdDialog,
@@ -1687,35 +1717,78 @@ class _SolitaireScreenState extends State<SolitaireScreen> {
                 '${card.rankString}${card.suitString}',
                 style: TextStyle(
                   color: card.suitColor,
-                  fontSize: 11,
+                  fontSize: _largeCardMode ? 13 : 11,
                   fontWeight: FontWeight.bold,
                 ),
               ),
             )
-          : Padding(
-              padding: const EdgeInsets.all(2),
-              child: Column(
-                children: [
-                  // 상단: 랭크만 표시 (왼쪽 정렬)
-                  Align(
-                    alignment: Alignment.topLeft,
-                    child: Text(
-                      card.rankString,
-                      style: TextStyle(
-                        color: card.suitColor,
-                        fontSize: 10,
-                        fontWeight: FontWeight.bold,
-                        height: 1.0,
-                      ),
-                    ),
-                  ),
-                  // 중앙 영역: 숫자에 맞는 무늬 배열
-                  Expanded(
-                    child: _buildPipPattern(card),
-                  ),
-                ],
+          : _largeCardMode
+              ? _buildLargeCardContent(card)
+              : _buildSmallCardContent(card),
+    );
+  }
+
+  // 작은 카드 레이아웃 (기존)
+  Widget _buildSmallCardContent(PlayingCard card) {
+    return Padding(
+      padding: const EdgeInsets.all(2),
+      child: Column(
+        children: [
+          // 상단: 랭크만 표시 (왼쪽 정렬)
+          Align(
+            alignment: Alignment.topLeft,
+            child: Text(
+              card.rankString,
+              style: TextStyle(
+                color: card.suitColor,
+                fontSize: 10,
+                fontWeight: FontWeight.bold,
+                height: 1.0,
               ),
             ),
+          ),
+          // 중앙 영역: 숫자에 맞는 무늬 배열
+          Expanded(
+            child: _buildPipPattern(card),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // 큰 카드 레이아웃 (새로운)
+  Widget _buildLargeCardContent(PlayingCard card) {
+    return Padding(
+      padding: const EdgeInsets.all(2),
+      child: Column(
+        children: [
+          // 상단: 숫자 + 무늬 (크게 표시)
+          Align(
+            alignment: Alignment.topLeft,
+            child: Text(
+              '${card.rankString}${card.suitString}',
+              style: TextStyle(
+                color: card.suitColor,
+                fontSize: 14,
+                fontWeight: FontWeight.bold,
+                height: 1.0,
+              ),
+            ),
+          ),
+          // 중앙: 큰 무늬 하나
+          Expanded(
+            child: Center(
+              child: Text(
+                card.suitString,
+                style: TextStyle(
+                  color: card.suitColor,
+                  fontSize: 28,
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
     );
   }
 
@@ -1904,6 +1977,200 @@ class _SolitaireScreenState extends State<SolitaireScreen> {
       default:
         return [];
     }
+  }
+
+  // 설정 다이얼로그
+  void _showSettingsDialog() {
+    showDialog(
+      context: context,
+      builder: (context) => StatefulBuilder(
+        builder: (context, setDialogState) => AlertDialog(
+          backgroundColor: Colors.grey.shade900,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
+          title: Text(
+            '카드 표시 설정',
+            style: TextStyle(color: Colors.green.shade400),
+          ),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Text(
+                '카드 글자 크기를 선택하세요',
+                style: TextStyle(color: Colors.white70, fontSize: 14),
+              ),
+              const SizedBox(height: 16),
+              Row(
+                children: [
+                  Expanded(
+                    child: GestureDetector(
+                      onTap: () {
+                        setDialogState(() {});
+                        setState(() {
+                          _largeCardMode = false;
+                        });
+                        _saveCardSizeSetting(false);
+                      },
+                      child: Container(
+                        padding: const EdgeInsets.all(8),
+                        decoration: BoxDecoration(
+                          color: !_largeCardMode
+                              ? Colors.green.shade700
+                              : Colors.grey.shade800,
+                          borderRadius: BorderRadius.circular(8),
+                          border: Border.all(
+                            color: !_largeCardMode
+                                ? Colors.green.shade400
+                                : Colors.grey.shade600,
+                            width: 2,
+                          ),
+                        ),
+                        child: Column(
+                          children: [
+                            Container(
+                              width: 50,
+                              height: 70,
+                              decoration: BoxDecoration(
+                                color: Colors.white,
+                                borderRadius: BorderRadius.circular(6),
+                              ),
+                              child: Column(
+                                children: [
+                                  const Padding(
+                                    padding: EdgeInsets.only(left: 3, top: 2),
+                                    child: Align(
+                                      alignment: Alignment.topLeft,
+                                      child: Text(
+                                        'A',
+                                        style: TextStyle(
+                                          color: Colors.red,
+                                          fontSize: 10,
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                  const Expanded(
+                                    child: Center(
+                                      child: Text(
+                                        '♥',
+                                        style: TextStyle(
+                                          color: Colors.red,
+                                          fontSize: 20,
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            const SizedBox(height: 8),
+                            Text(
+                              '작게',
+                              style: TextStyle(
+                                color: !_largeCardMode
+                                    ? Colors.white
+                                    : Colors.grey,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: GestureDetector(
+                      onTap: () {
+                        setDialogState(() {});
+                        setState(() {
+                          _largeCardMode = true;
+                        });
+                        _saveCardSizeSetting(true);
+                      },
+                      child: Container(
+                        padding: const EdgeInsets.all(8),
+                        decoration: BoxDecoration(
+                          color: _largeCardMode
+                              ? Colors.green.shade700
+                              : Colors.grey.shade800,
+                          borderRadius: BorderRadius.circular(8),
+                          border: Border.all(
+                            color: _largeCardMode
+                                ? Colors.green.shade400
+                                : Colors.grey.shade600,
+                            width: 2,
+                          ),
+                        ),
+                        child: Column(
+                          children: [
+                            Container(
+                              width: 50,
+                              height: 70,
+                              decoration: BoxDecoration(
+                                color: Colors.white,
+                                borderRadius: BorderRadius.circular(6),
+                              ),
+                              child: const Column(
+                                children: [
+                                  Padding(
+                                    padding: EdgeInsets.only(left: 3, top: 2),
+                                    child: Align(
+                                      alignment: Alignment.topLeft,
+                                      child: Text(
+                                        'A♥',
+                                        style: TextStyle(
+                                          color: Colors.red,
+                                          fontSize: 14,
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                  Expanded(
+                                    child: Center(
+                                      child: Text(
+                                        '♥',
+                                        style: TextStyle(
+                                          color: Colors.red,
+                                          fontSize: 28,
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            const SizedBox(height: 8),
+                            Text(
+                              '크게',
+                              style: TextStyle(
+                                color: _largeCardMode
+                                    ? Colors.white
+                                    : Colors.grey,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('확인'),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 
   void _showRulesDialog() {
