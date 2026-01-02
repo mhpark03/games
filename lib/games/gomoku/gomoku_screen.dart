@@ -347,12 +347,14 @@ class _GomokuScreenState extends State<GomokuScreen> {
         gameOver = true;
         _setWinMessage(stone);
         _saveGame(); // 게임 종료 시 저장 데이터 삭제
+        Future.microtask(() => _showGameOverDialog());
         return;
       }
       if (_isDraw()) {
         gameOver = true;
         gameMessage = '무승부입니다!';
         _saveGame(); // 게임 종료 시 저장 데이터 삭제
+        Future.microtask(() => _showGameOverDialog());
         return;
       }
       isBlackTurn = !isBlackTurn;
@@ -390,6 +392,63 @@ class _GomokuScreenState extends State<GomokuScreen> {
     }
   }
 
+  // 게임 종료 팝업
+  void _showGameOverDialog() {
+    final isWin = gameMessage.contains('축하');
+    final isDraw = gameMessage.contains('무승부');
+
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => AlertDialog(
+        backgroundColor: Colors.grey.shade900,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+        ),
+        title: Row(
+          children: [
+            Icon(
+              isDraw ? Icons.handshake : (isWin ? Icons.emoji_events : Icons.sentiment_dissatisfied),
+              color: isDraw ? Colors.grey : (isWin ? Colors.amber : Colors.red),
+              size: 28,
+            ),
+            const SizedBox(width: 8),
+            Text(
+              isDraw ? '무승부' : (isWin ? '승리!' : '패배'),
+              style: TextStyle(
+                color: isDraw ? Colors.grey : (isWin ? Colors.amber : Colors.red),
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ],
+        ),
+        content: Text(
+          gameMessage,
+          style: const TextStyle(color: Colors.white70, fontSize: 16),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () {
+              Navigator.pop(context);
+              Navigator.pop(context);
+            },
+            child: const Text('나가기'),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              Navigator.pop(context);
+              _resetGame();
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.brown.shade700,
+            ),
+            child: const Text('새 게임'),
+          ),
+        ],
+      ),
+    );
+  }
+
   void _computerMove() {
     if (gameOver) return;
 
@@ -407,12 +466,14 @@ class _GomokuScreenState extends State<GomokuScreen> {
           gameOver = true;
           _setWinMessage(computerStone);
           _saveGame(); // 게임 종료 시 저장 데이터 삭제
+          Future.microtask(() => _showGameOverDialog());
           return;
         }
         if (_isDraw()) {
           gameOver = true;
           gameMessage = '무승부입니다!';
           _saveGame(); // 게임 종료 시 저장 데이터 삭제
+          Future.microtask(() => _showGameOverDialog());
           return;
         }
         isBlackTurn = !isBlackTurn;
