@@ -98,6 +98,11 @@ class _SolitaireScreenState extends State<SolitaireScreen> {
   // 카드 크기 모드 (true: 크게, false: 작게)
   bool _largeCardMode = false;
 
+  // 카드 크기 (모드에 따라 변경)
+  double get cardWidth => _largeCardMode ? 58 : 50;
+  double get cardHeight => _largeCardMode ? 82 : 70;
+  double get cardOverlap => _largeCardMode ? 24 : 20;  // 테이블 카드 겹침 간격
+
   // Undo 히스토리
   List<Map<String, dynamic>> _undoHistory = [];
 
@@ -1263,8 +1268,8 @@ class _SolitaireScreenState extends State<SolitaireScreen> {
                 return Padding(
                   padding: const EdgeInsets.only(left: 6),
                   child: SizedBox(
-                    width: 54,
-                    height: 74,
+                    width: cardWidth + 4,
+                    height: cardHeight + 4,
                     child: _buildFoundation(index),
                   ),
                 );
@@ -1348,28 +1353,29 @@ class _SolitaireScreenState extends State<SolitaireScreen> {
           final visibleCount = min(3, waste.length);
           final startIndex = waste.length - visibleCount;
           final topCard = waste.last;
+          final wasteSpacing = _largeCardMode ? 18.0 : 15.0;
 
           return SizedBox(
-            width: 50 + (visibleCount - 1) * 15.0,
-            height: 70,
+            width: cardWidth + (visibleCount - 1) * wasteSpacing,
+            height: cardHeight,
             child: Stack(
               children: List.generate(visibleCount, (i) {
                 final cardIndex = startIndex + i;
                 final card = waste[cardIndex];
                 final isTop = i == visibleCount - 1;
 
-                final cardWidget = _buildCard(card, width: 50, height: 70);
+                final cardWidget = _buildCard(card, width: cardWidth, height: cardHeight);
 
                 if (isTop) {
                   // 맨 위 카드만 드래그 가능
                   return Positioned(
-                    left: i * 15.0,
+                    left: i * wasteSpacing,
                     child: Draggable<Map<String, dynamic>>(
                       data: {'cards': [topCard], 'source': 'waste', 'index': null},
-                      feedback: _buildCard(topCard, width: 50, height: 70),
+                      feedback: _buildCard(topCard, width: cardWidth, height: cardHeight),
                       childWhenDragging: i > 0
-                          ? _buildCard(waste[cardIndex - 1], width: 50, height: 70)
-                          : const SizedBox(width: 50, height: 70),
+                          ? _buildCard(waste[cardIndex - 1], width: cardWidth, height: cardHeight)
+                          : SizedBox(width: cardWidth, height: cardHeight),
                       onDragStarted: () => _onCardDragStart([topCard], 'waste', null),
                       onDragEnd: (_) => _onCardDragEnd(),
                       child: GestureDetector(
@@ -1380,7 +1386,7 @@ class _SolitaireScreenState extends State<SolitaireScreen> {
                   );
                 } else {
                   return Positioned(
-                    left: i * 15.0,
+                    left: i * wasteSpacing,
                     child: cardWidget,
                   );
                 }
@@ -1393,15 +1399,15 @@ class _SolitaireScreenState extends State<SolitaireScreen> {
         final card = waste.last;
         return Draggable<Map<String, dynamic>>(
           data: {'cards': [card], 'source': 'waste', 'index': null},
-          feedback: _buildCard(card, width: 50, height: 70),
+          feedback: _buildCard(card, width: cardWidth, height: cardHeight),
           childWhenDragging: waste.length > 1
-              ? _buildCard(waste[waste.length - 2], width: 50, height: 70)
+              ? _buildCard(waste[waste.length - 2], width: cardWidth, height: cardHeight)
               : _buildCardPlaceholder(),
           onDragStarted: () => _onCardDragStart([card], 'waste', null),
           onDragEnd: (_) => _onCardDragEnd(),
           child: GestureDetector(
             onDoubleTap: () => _autoMoveCard(card, 'waste', null),
-            child: _buildCard(card, width: 50, height: 70),
+            child: _buildCard(card, width: cardWidth, height: cardHeight),
           ),
         );
       },
@@ -1428,7 +1434,7 @@ class _SolitaireScreenState extends State<SolitaireScreen> {
             child: Text(
               ['♠', '♥', '♣', '♦'][index],
               style: TextStyle(
-                fontSize: 24,
+                fontSize: _largeCardMode ? 28 : 24,
                 color: Colors.white.withAlpha(77),
               ),
             ),
@@ -1437,21 +1443,21 @@ class _SolitaireScreenState extends State<SolitaireScreen> {
           final card = pile.last;
           cardWidget = Draggable<Map<String, dynamic>>(
             data: {'cards': [card], 'source': 'foundation_$index', 'index': index},
-            feedback: _buildCard(card, width: 50, height: 70),
+            feedback: _buildCard(card, width: cardWidth, height: cardHeight),
             childWhenDragging: pile.length > 1
-                ? _buildCard(pile[pile.length - 2], width: 50, height: 70)
+                ? _buildCard(pile[pile.length - 2], width: cardWidth, height: cardHeight)
                 : _buildCardPlaceholder(
                     child: Text(
                       ['♠', '♥', '♣', '♦'][index],
                       style: TextStyle(
-                        fontSize: 24,
+                        fontSize: _largeCardMode ? 28 : 24,
                         color: Colors.white.withAlpha(77),
                       ),
                     ),
                   ),
             onDragStarted: () => _onCardDragStart([card], 'foundation_$index', index),
             onDragEnd: (_) => _onCardDragEnd(),
-            child: _buildCard(card, width: 50, height: 70),
+            child: _buildCard(card, width: cardWidth, height: cardHeight),
           );
         }
 
@@ -1489,7 +1495,7 @@ class _SolitaireScreenState extends State<SolitaireScreen> {
           return Padding(
             padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 8),
             child: Container(
-              height: 70,
+              height: cardHeight,
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(6),
                 border: Border.all(
@@ -1497,11 +1503,11 @@ class _SolitaireScreenState extends State<SolitaireScreen> {
                   width: isHighlighted ? 3 : 2,
                 ),
               ),
-              child: const Center(
+              child: Center(
                 child: Text(
                   'K',
                   style: TextStyle(
-                    fontSize: 20,
+                    fontSize: _largeCardMode ? 24 : 20,
                     color: Colors.white24,
                     fontWeight: FontWeight.bold,
                   ),
@@ -1543,7 +1549,7 @@ class _SolitaireScreenState extends State<SolitaireScreen> {
                 // 드래그 중인 카드는 숨김 (첫 번째 카드 제외)
                 if (isDragging) {
                   return SizedBox(
-                    height: isLast ? 70 : 20,
+                    height: isLast ? cardHeight : cardOverlap,
                   );
                 }
 
@@ -1558,24 +1564,24 @@ class _SolitaireScreenState extends State<SolitaireScreen> {
                     feedback: Material(
                       color: Colors.transparent,
                       child: SizedBox(
-                        width: 50,
-                        height: 70 + (dragCards.length - 1) * 20.0,
+                        width: cardWidth,
+                        height: cardHeight + (dragCards.length - 1) * cardOverlap,
                         child: Stack(
                           children: dragCards
                               .asMap()
                               .entries
                               .map((entry) => Positioned(
-                                    top: entry.key * 20.0,
+                                    top: entry.key * cardOverlap,
                                     left: 0,
                                     child: _buildCard(entry.value,
-                                        width: 50, height: 70),
+                                        width: cardWidth, height: cardHeight),
                                   ))
                               .toList(),
                         ),
                       ),
                     ),
                     childWhenDragging: SizedBox(
-                      height: isLast ? 70 : 20,
+                      height: isLast ? cardHeight : cardOverlap,
                     ),
                     onDragStarted: () => _onCardDragStart(
                         dragCards, 'tableau_$columnIndex', columnIndex),
@@ -1591,12 +1597,12 @@ class _SolitaireScreenState extends State<SolitaireScreen> {
                         }
                       },
                       child: SizedBox(
-                        height: isEffectivelyLast ? 70 : 20,
+                        height: isEffectivelyLast ? cardHeight : cardOverlap,
                         child: Align(
                           alignment: Alignment.topCenter,
                           child: _buildCard(card,
                               width: double.infinity,
-                              height: 70,
+                              height: cardHeight,
                               showPartial: !isEffectivelyLast),
                         ),
                       ),
@@ -1606,12 +1612,12 @@ class _SolitaireScreenState extends State<SolitaireScreen> {
               } else {
                 // 뒷면 카드
                 return SizedBox(
-                  height: isEffectivelyLast ? 70 : 20,
+                  height: isEffectivelyLast ? cardHeight : cardOverlap,
                   child: Align(
                     alignment: Alignment.topCenter,
                     child: _buildCardBack(
                         width: double.infinity,
-                        height: 70,
+                        height: cardHeight,
                         showPartial: !isEffectivelyLast),
                   ),
                 );
@@ -1626,8 +1632,8 @@ class _SolitaireScreenState extends State<SolitaireScreen> {
 
   Widget _buildCardPlaceholder({Widget? child}) {
     return Container(
-      width: 50,
-      height: 70,
+      width: cardWidth,
+      height: cardHeight,
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(6),
         border: Border.all(color: Colors.white30, width: 2),
