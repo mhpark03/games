@@ -78,12 +78,6 @@ class AdService {
       return false;
     }
 
-    // 광고 표시 전에 시스템 UI 완전히 표시 (X 버튼이 가려지지 않도록)
-    await SystemChrome.setEnabledSystemUIMode(
-      SystemUiMode.manual,
-      overlays: SystemUiOverlay.values,
-    );
-
     _rewardedAd!.fullScreenContentCallback = FullScreenContentCallback(
       onAdShowedFullScreenContent: (ad) {
         debugPrint('광고 노출됨: ${ad.adUnitId}');
@@ -92,6 +86,11 @@ class AdService {
         debugPrint('사용자가 광고를 닫음');
         ad.dispose();
         _rewardedAd = null;
+        // 광고 종료 후 전체 화면 모드 복원
+        SystemChrome.setEnabledSystemUIMode(
+          SystemUiMode.immersiveSticky,
+          overlays: [],
+        );
         onAdDismissed?.call();
         // 다음 광고 미리 로드
         loadRewardedAd();
