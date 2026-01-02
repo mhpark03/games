@@ -81,8 +81,10 @@ class AdService {
     _rewardedAd!.fullScreenContentCallback = FullScreenContentCallback(
       onAdShowedFullScreenContent: (ad) {
         debugPrint('광고 노출됨: ${ad.adUnitId}');
-        // 광고 시작 시 하단 네비게이션 바 숨김
-        SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersiveSticky);
+        // 광고 액티비티가 뜬 직후 약간의 지연 시간을 주어 몰입 모드 재요청
+        Future.delayed(const Duration(milliseconds: 300), () {
+          SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersiveSticky);
+        });
       },
       onAdDismissedFullScreenContent: (ad) {
         debugPrint('사용자가 광고를 닫음');
