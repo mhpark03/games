@@ -99,9 +99,9 @@ class _SolitaireScreenState extends State<SolitaireScreen> {
   bool _largeCardMode = false;
 
   // 카드 크기 (모드에 따라 변경)
-  double get cardWidth => _largeCardMode ? 58 : 50;
-  double get cardHeight => _largeCardMode ? 82 : 70;
-  double get cardOverlap => _largeCardMode ? 24 : 20;  // 테이블 카드 겹침 간격
+  double get cardWidth => _largeCardMode ? 62 : 50;
+  double get cardHeight => _largeCardMode ? 87 : 70;
+  double get cardOverlap => _largeCardMode ? 26 : 20;  // 테이블 카드 겹침 간격
 
   // Undo 히스토리
   List<Map<String, dynamic>> _undoHistory = [];
@@ -1723,7 +1723,7 @@ class _SolitaireScreenState extends State<SolitaireScreen> {
                 '${card.rankString}${card.suitString}',
                 style: TextStyle(
                   color: card.suitColor,
-                  fontSize: _largeCardMode ? 13 : 11,
+                  fontSize: _largeCardMode ? 15 : 11,
                   fontWeight: FontWeight.bold,
                 ),
               ),
@@ -1765,7 +1765,7 @@ class _SolitaireScreenState extends State<SolitaireScreen> {
   // 큰 카드 레이아웃 (새로운)
   Widget _buildLargeCardContent(PlayingCard card) {
     return Padding(
-      padding: const EdgeInsets.all(2),
+      padding: const EdgeInsets.all(3),
       child: Column(
         children: [
           // 상단: 숫자 + 무늬 (크게 표시)
@@ -1775,7 +1775,7 @@ class _SolitaireScreenState extends State<SolitaireScreen> {
               '${card.rankString}${card.suitString}',
               style: TextStyle(
                 color: card.suitColor,
-                fontSize: 14,
+                fontSize: 16,
                 fontWeight: FontWeight.bold,
                 height: 1.0,
               ),
@@ -1788,7 +1788,7 @@ class _SolitaireScreenState extends State<SolitaireScreen> {
                 card.suitString,
                 style: TextStyle(
                   color: card.suitColor,
-                  fontSize: 28,
+                  fontSize: 32,
                 ),
               ),
             ),
