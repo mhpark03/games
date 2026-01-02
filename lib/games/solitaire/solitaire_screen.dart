@@ -98,10 +98,22 @@ class _SolitaireScreenState extends State<SolitaireScreen> {
   // 카드 크기 모드 (true: 크게, false: 작게)
   bool _largeCardMode = false;
 
-  // 카드 크기 (모드에 따라 변경) - 표준 카드 비율 5:7 (0.714)
-  double get cardWidth => _largeCardMode ? 56 : 50;
-  double get cardHeight => _largeCardMode ? 78 : 70;
-  double get cardOverlap => _largeCardMode ? 24 : 20;  // 테이블 카드 겹침 간격
+  // 화면 너비 저장 (동적 카드 크기 계산용)
+  double _screenWidth = 0;
+
+  // 카드 크기 (화면 너비와 모드에 따라 동적 계산) - 표준 카드 비율 5:7 (0.714)
+  double get cardWidth {
+    if (_screenWidth == 0) return _largeCardMode ? 56 : 50;
+    // 7열 + 패딩(16) + 열간격(7*4=28) 고려하여 계산
+    final baseWidth = (_screenWidth - 16 - 28) / 7;
+    if (_largeCardMode) {
+      return baseWidth.clamp(50.0, 62.0);  // 크게 모드: 50~62
+    } else {
+      return baseWidth.clamp(42.0, 50.0);  // 작게 모드: 42~50
+    }
+  }
+  double get cardHeight => cardWidth * 1.4;  // 비율 5:7
+  double get cardOverlap => _largeCardMode ? (cardWidth * 0.43) : (cardWidth * 0.4);  // 테이블 카드 겹침 간격
 
   // Undo 히스토리
   List<Map<String, dynamic>> _undoHistory = [];
@@ -947,6 +959,9 @@ class _SolitaireScreenState extends State<SolitaireScreen> {
 
   @override
   Widget build(BuildContext context) {
+    // 화면 너비 저장 (동적 카드 크기 계산용)
+    _screenWidth = MediaQuery.of(context).size.width;
+
     if (isLoading) {
       return Scaffold(
         backgroundColor: Colors.green.shade700,
@@ -1434,7 +1449,7 @@ class _SolitaireScreenState extends State<SolitaireScreen> {
             child: Text(
               ['♠', '♥', '♣', '♦'][index],
               style: TextStyle(
-                fontSize: _largeCardMode ? 28 : 24,
+                fontSize: cardWidth * 0.48,
                 color: Colors.white.withAlpha(77),
               ),
             ),
@@ -1450,7 +1465,7 @@ class _SolitaireScreenState extends State<SolitaireScreen> {
                     child: Text(
                       ['♠', '♥', '♣', '♦'][index],
                       style: TextStyle(
-                        fontSize: _largeCardMode ? 28 : 24,
+                        fontSize: cardWidth * 0.48,
                         color: Colors.white.withAlpha(77),
                       ),
                     ),
@@ -1507,7 +1522,7 @@ class _SolitaireScreenState extends State<SolitaireScreen> {
                 child: Text(
                   'K',
                   style: TextStyle(
-                    fontSize: _largeCardMode ? 24 : 20,
+                    fontSize: cardWidth * 0.4,
                     color: Colors.white24,
                     fontWeight: FontWeight.bold,
                   ),
@@ -1723,7 +1738,7 @@ class _SolitaireScreenState extends State<SolitaireScreen> {
                 '${card.rankString}${card.suitString}',
                 style: TextStyle(
                   color: card.suitColor,
-                  fontSize: _largeCardMode ? 14 : 11,
+                  fontSize: _largeCardMode ? (cardWidth * 0.25) : (cardWidth * 0.22),
                   fontWeight: FontWeight.bold,
                 ),
               ),
@@ -1747,7 +1762,7 @@ class _SolitaireScreenState extends State<SolitaireScreen> {
               card.rankString,
               style: TextStyle(
                 color: card.suitColor,
-                fontSize: 10,
+                fontSize: cardWidth * 0.2,  // 동적 글자 크기
                 fontWeight: FontWeight.bold,
                 height: 1.0,
               ),
@@ -1775,7 +1790,7 @@ class _SolitaireScreenState extends State<SolitaireScreen> {
               '${card.rankString}${card.suitString}',
               style: TextStyle(
                 color: card.suitColor,
-                fontSize: 15,
+                fontSize: cardWidth * 0.27,  // 동적 글자 크기
                 fontWeight: FontWeight.bold,
                 height: 1.0,
               ),
@@ -1788,7 +1803,7 @@ class _SolitaireScreenState extends State<SolitaireScreen> {
                 card.suitString,
                 style: TextStyle(
                   color: card.suitColor,
-                  fontSize: 28,
+                  fontSize: cardWidth * 0.5,  // 동적 무늬 크기
                 ),
               ),
             ),
