@@ -1940,14 +1940,8 @@ class _SolitaireScreenState extends State<SolitaireScreen> {
       );
     }
 
-    // 2-10은 큰 무늬 하나로 단순화
-    return Text(
-      suit,
-      style: TextStyle(
-        color: color,
-        fontSize: cardWidth * 0.4,
-      ),
-    );
+    // 2-10은 무늬 갯수 만큼 표시
+    return _buildSimplePipPattern(card);
   }
 
   // 단순화된 무늬 패턴 (2-10)
