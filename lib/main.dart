@@ -3151,14 +3151,16 @@ class _HomeScreenState extends State<HomeScreen> {
       context: context,
       builder: (dialogContext) => AlertDialog(
         title: Text('app.selectLanguage'.tr()),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            _buildLanguageOption(context, '한국어', const Locale('ko')),
-            _buildLanguageOption(context, 'English', const Locale('en')),
-            _buildLanguageOption(context, '日本語', const Locale('ja')),
-            _buildLanguageOption(context, '简体中文', const Locale('zh')),
-          ],
+        content: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              _buildLanguageOption(context, '한국어', const Locale('ko')),
+              _buildLanguageOption(context, 'English', const Locale('en')),
+              _buildLanguageOption(context, '日本語', const Locale('ja')),
+              _buildLanguageOption(context, '简体中文', const Locale('zh')),
+            ],
+          ),
         ),
         actions: [
           TextButton(
