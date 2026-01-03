@@ -3624,69 +3624,57 @@ class _JanggiScreenState extends State<JanggiScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             mainAxisSize: MainAxisSize.min,
-            children: const [
+            children: [
               Text(
-                '🎯 게임 목표',
-                style: TextStyle(
+                'games.janggi.rulesObjective'.tr(),
+                style: const TextStyle(
                   color: Colors.white,
                   fontWeight: FontWeight.bold,
                 ),
               ),
-              SizedBox(height: 4),
+              const SizedBox(height: 4),
               Text(
-                '상대방의 궁(왕)을 외통수로 잡으면 승리!\n'
-                '(궁이 장군을 피할 수 없는 상태)',
-                style: TextStyle(color: Colors.white70, fontSize: 13),
+                'games.janggi.rulesObjectiveDesc'.tr(),
+                style: const TextStyle(color: Colors.white70, fontSize: 13),
               ),
-              SizedBox(height: 12),
+              const SizedBox(height: 12),
               Text(
-                '🏰 기물 이동',
-                style: TextStyle(
+                'games.janggi.rulesPieceMovement'.tr(),
+                style: const TextStyle(
                   color: Colors.white,
                   fontWeight: FontWeight.bold,
                 ),
               ),
-              SizedBox(height: 4),
+              const SizedBox(height: 4),
               Text(
-                '• 궁: 궁성 안에서 1칸 이동\n'
-                '• 차: 가로/세로 무제한\n'
-                '• 포: 가로/세로로 다른 기물 뛰어넘어 이동\n'
-                '• 마: 가로/세로 1칸 + 대각선 1칸\n'
-                '• 상: 가로/세로 1칸 + 대각선 2칸\n'
-                '• 사: 궁성 안에서 1칸 이동\n'
-                '• 졸/병: 앞/좌/우로 1칸',
-                style: TextStyle(color: Colors.white70, fontSize: 13),
+                'games.janggi.rulesPieceMovementDesc'.tr(),
+                style: const TextStyle(color: Colors.white70, fontSize: 13),
               ),
-              SizedBox(height: 12),
+              const SizedBox(height: 12),
               Text(
-                '⚔️ 특수 규칙',
-                style: TextStyle(
+                'games.janggi.rulesSpecial'.tr(),
+                style: const TextStyle(
                   color: Colors.white,
                   fontWeight: FontWeight.bold,
                 ),
               ),
-              SizedBox(height: 4),
+              const SizedBox(height: 4),
               Text(
-                '• 장군: 상대 궁을 공격하는 상태\n'
-                '• 외통수: 장군을 피할 수 없는 상태\n'
-                '• 빅장: 양측 궁이 마주보면 먼저 비킨 쪽이 불리\n'
-                '• 포는 포를 뛰어넘거나 잡을 수 없음',
-                style: TextStyle(color: Colors.white70, fontSize: 13),
+                'games.janggi.rulesSpecialDesc'.tr(),
+                style: const TextStyle(color: Colors.white70, fontSize: 13),
               ),
-              SizedBox(height: 12),
+              const SizedBox(height: 12),
               Text(
-                '💡 팁',
-                style: TextStyle(
+                'games.janggi.rulesTips'.tr(),
+                style: const TextStyle(
                   color: Colors.white,
                   fontWeight: FontWeight.bold,
                 ),
               ),
-              SizedBox(height: 4),
+              const SizedBox(height: 4),
               Text(
-                '• 차가 가장 강력한 기물입니다\n'
-                '• 포는 다른 기물이 있어야 공격 가능\n'
-                '• 마와 상의 경로에 기물이 있으면 이동 불가',
-                style: TextStyle(color: Colors.white70, fontSize: 13),
+                'games.janggi.rulesTipsDesc'.tr(),
+                style: const TextStyle(color: Colors.white70, fontSize: 13),
               ),
             ],
           ),

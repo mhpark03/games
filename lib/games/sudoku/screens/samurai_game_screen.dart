@@ -729,63 +729,57 @@ class _SamuraiGameScreenState extends State<SamuraiGameScreen>
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             mainAxisSize: MainAxisSize.min,
-            children: const [
+            children: [
               Text(
-                '🎯 게임 목표',
-                style: TextStyle(
+                'games.sudoku.rulesObjective'.tr(),
+                style: const TextStyle(
                   color: Colors.white,
                   fontWeight: FontWeight.bold,
                 ),
               ),
-              SizedBox(height: 4),
+              const SizedBox(height: 4),
               Text(
-                '5개의 겹치는 스도쿠 보드를 모두 완성하세요!',
-                style: TextStyle(color: Colors.white70, fontSize: 13),
+                'games.sudoku.samuraiRulesObjectiveDesc'.tr(),
+                style: const TextStyle(color: Colors.white70, fontSize: 13),
               ),
-              SizedBox(height: 12),
+              const SizedBox(height: 12),
               Text(
-                '📏 기본 규칙',
-                style: TextStyle(
+                'games.sudoku.rulesBasic'.tr(),
+                style: const TextStyle(
                   color: Colors.white,
                   fontWeight: FontWeight.bold,
                 ),
               ),
-              SizedBox(height: 4),
+              const SizedBox(height: 4),
               Text(
-                '• 일반 스도쿠와 동일한 규칙\n'
-                '• 각 9x9 보드에 1~9가 한 번씩\n'
-                '• 행, 열, 3x3 박스 규칙 적용',
-                style: TextStyle(color: Colors.white70, fontSize: 13),
+                'games.sudoku.samuraiRulesBasicDesc'.tr(),
+                style: const TextStyle(color: Colors.white70, fontSize: 13),
               ),
-              SizedBox(height: 12),
+              const SizedBox(height: 12),
               Text(
-                '🔗 겹침 규칙',
-                style: TextStyle(
+                'games.sudoku.samuraiRulesOverlap'.tr(),
+                style: const TextStyle(
                   color: Colors.white,
                   fontWeight: FontWeight.bold,
                 ),
               ),
-              SizedBox(height: 4),
+              const SizedBox(height: 4),
               Text(
-                '• 중앙 보드는 4개의 모서리 보드와 겹침\n'
-                '• 겹치는 영역의 숫자는 양쪽 보드 모두에서 유효해야 함\n'
-                '• 겹침을 활용하여 힌트를 얻으세요',
-                style: TextStyle(color: Colors.white70, fontSize: 13),
+                'games.sudoku.samuraiRulesOverlapDesc'.tr(),
+                style: const TextStyle(color: Colors.white70, fontSize: 13),
               ),
-              SizedBox(height: 12),
+              const SizedBox(height: 12),
               Text(
-                '💡 팁',
-                style: TextStyle(
+                'games.sudoku.rulesTips'.tr(),
+                style: const TextStyle(
                   color: Colors.white,
                   fontWeight: FontWeight.bold,
                 ),
               ),
-              SizedBox(height: 4),
+              const SizedBox(height: 4),
               Text(
-                '• 겹치는 영역부터 풀면 쉬워집니다\n'
-                '• 한 보드에서 막히면 다른 보드 확인\n'
-                '• 핀치로 확대하여 자세히 보세요',
-                style: TextStyle(color: Colors.white70, fontSize: 13),
+                'games.sudoku.samuraiRulesTipsDesc'.tr(),
+                style: const TextStyle(color: Colors.white70, fontSize: 13),
               ),
             ],
           ),

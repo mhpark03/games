@@ -1145,64 +1145,57 @@ class _GameScreenState extends State<GameScreen> with WidgetsBindingObserver {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             mainAxisSize: MainAxisSize.min,
-            children: const [
+            children: [
               Text(
-                '🎯 게임 목표',
-                style: TextStyle(
+                'games.sudoku.rulesObjective'.tr(),
+                style: const TextStyle(
                   color: Colors.white,
                   fontWeight: FontWeight.bold,
                 ),
               ),
-              SizedBox(height: 4),
+              const SizedBox(height: 4),
               Text(
-                '9x9 격자의 모든 빈 칸을 1~9 숫자로 채우세요!',
-                style: TextStyle(color: Colors.white70, fontSize: 13),
+                'games.sudoku.rulesObjectiveDesc'.tr(),
+                style: const TextStyle(color: Colors.white70, fontSize: 13),
               ),
-              SizedBox(height: 12),
+              const SizedBox(height: 12),
               Text(
-                '📏 기본 규칙',
-                style: TextStyle(
+                'games.sudoku.rulesBasic'.tr(),
+                style: const TextStyle(
                   color: Colors.white,
                   fontWeight: FontWeight.bold,
                 ),
               ),
-              SizedBox(height: 4),
+              const SizedBox(height: 4),
               Text(
-                '• 각 가로줄에 1~9가 한 번씩만\n'
-                '• 각 세로줄에 1~9가 한 번씩만\n'
-                '• 각 3x3 박스에 1~9가 한 번씩만',
-                style: TextStyle(color: Colors.white70, fontSize: 13),
+                'games.sudoku.rulesBasicDesc'.tr(),
+                style: const TextStyle(color: Colors.white70, fontSize: 13),
               ),
-              SizedBox(height: 12),
+              const SizedBox(height: 12),
               Text(
-                '🎮 조작 방법',
-                style: TextStyle(
+                'games.sudoku.rulesControls'.tr(),
+                style: const TextStyle(
                   color: Colors.white,
                   fontWeight: FontWeight.bold,
                 ),
               ),
-              SizedBox(height: 4),
+              const SizedBox(height: 4),
               Text(
-                '• 빈 칸을 탭 → 숫자 패드로 입력\n'
-                '• 빠른 입력: 숫자 먼저 선택 → 셀 탭\n'
-                '• 메모: 후보 숫자를 작게 기록\n'
-                '• 빠른+메모: 셀 탭으로 메모 입력',
-                style: TextStyle(color: Colors.white70, fontSize: 13),
+                'games.sudoku.rulesControlsDesc'.tr(),
+                style: const TextStyle(color: Colors.white70, fontSize: 13),
               ),
-              SizedBox(height: 12),
+              const SizedBox(height: 12),
               Text(
-                '💡 팁',
-                style: TextStyle(
+                'games.sudoku.rulesTips'.tr(),
+                style: const TextStyle(
                   color: Colors.white,
                   fontWeight: FontWeight.bold,
                 ),
               ),
-              SizedBox(height: 4),
+              const SizedBox(height: 4),
               Text(
-                '• 확실한 숫자부터 채우세요\n'
-                '• 모든 메모로 후보 자동 채우기\n'
-                '• 실패 횟수가 기록됩니다',
-                style: TextStyle(color: Colors.white70, fontSize: 13),
+                'games.sudoku.rulesTipsDesc'.tr(),
+                style: const TextStyle(color: Colors.white70, fontSize: 13),
               ),
             ],
           ),

@@ -1125,62 +1125,57 @@ class _KillerGameScreenState extends State<KillerGameScreen>
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             mainAxisSize: MainAxisSize.min,
-            children: const [
+            children: [
               Text(
-                '🎯 게임 목표',
-                style: TextStyle(
+                'games.sudoku.rulesObjective'.tr(),
+                style: const TextStyle(
                   color: Colors.white,
                   fontWeight: FontWeight.bold,
                 ),
               ),
-              SizedBox(height: 4),
+              const SizedBox(height: 4),
               Text(
-                '일반 스도쿠 규칙 + 케이지 합계 조건을 만족시키세요!',
-                style: TextStyle(color: Colors.white70, fontSize: 13),
+                'games.sudoku.killerRulesObjectiveDesc'.tr(),
+                style: const TextStyle(color: Colors.white70, fontSize: 13),
               ),
-              SizedBox(height: 12),
+              const SizedBox(height: 12),
               Text(
-                '📏 기본 규칙',
-                style: TextStyle(
+                'games.sudoku.rulesBasic'.tr(),
+                style: const TextStyle(
                   color: Colors.white,
                   fontWeight: FontWeight.bold,
                 ),
               ),
-              SizedBox(height: 4),
+              const SizedBox(height: 4),
               Text(
-                '• 각 행, 열, 3x3 박스에 1~9가 한 번씩\n'
-                '• 일반 스도쿠와 동일한 규칙 적용',
-                style: TextStyle(color: Colors.white70, fontSize: 13),
+                'games.sudoku.killerRulesBasicDesc'.tr(),
+                style: const TextStyle(color: Colors.white70, fontSize: 13),
               ),
-              SizedBox(height: 12),
+              const SizedBox(height: 12),
               Text(
-                '🔲 케이지 규칙',
-                style: TextStyle(
+                'games.sudoku.killerRulesCage'.tr(),
+                style: const TextStyle(
                   color: Colors.white,
                   fontWeight: FontWeight.bold,
                 ),
               ),
-              SizedBox(height: 4),
+              const SizedBox(height: 4),
               Text(
-                '• 점선으로 묶인 영역이 케이지\n'
-                '• 케이지 안 숫자들의 합 = 왼쪽 상단 숫자\n'
-                '• 케이지 안에서 같은 숫자 사용 불가',
-                style: TextStyle(color: Colors.white70, fontSize: 13),
+                'games.sudoku.killerRulesCageDesc'.tr(),
+                style: const TextStyle(color: Colors.white70, fontSize: 13),
               ),
-              SizedBox(height: 12),
+              const SizedBox(height: 12),
               Text(
-                '💡 팁',
-                style: TextStyle(
+                'games.sudoku.rulesTips'.tr(),
+                style: const TextStyle(
                   color: Colors.white,
                   fontWeight: FontWeight.bold,
                 ),
               ),
-              SizedBox(height: 4),
+              const SizedBox(height: 4),
               Text(
-                '• 작은 합의 케이지는 가능한 숫자가 한정됨\n'
-                '• 예: 2칸 합 3 → 무조건 1+2\n'
-                '• 케이지와 스도쿠 규칙을 함께 활용!',
-                style: TextStyle(color: Colors.white70, fontSize: 13),
+                'games.sudoku.killerRulesTipsDesc'.tr(),
+                style: const TextStyle(color: Colors.white70, fontSize: 13),
               ),
             ],
           ),

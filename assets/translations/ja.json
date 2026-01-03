@@ -289,7 +289,15 @@
       "throw": "投げる",
       "selectPiece": "駒を選択",
       "goal": "ゴール",
-      "rulesTitle": "ユンノリ ルール"
+      "rulesTitle": "ユンノリ ルール",
+      "rulesObjective": "ゲーム目標",
+      "rulesObjectiveDesc": "4つの駒を最初にすべてゴールさせれば勝利！",
+      "rulesYutResults": "ユッの結果",
+      "rulesYutResultsDesc": "• ト: 1マス移動\n• ケ: 2マス移動\n• コル: 3マス移動\n• ユッ: 4マス移動 + もう一度\n• モ: 5マス移動 + もう一度\n• バックト: 1マス戻る (-1)",
+      "rulesSpecial": "特殊ルール",
+      "rulesSpecialDesc": "• 角で止まると近道を利用\n• 相手の駒を取るともう一度投げる\n• 自分の駒を重ねる（一緒に移動）\n• 重ねた駒が取られると全部最初に戻る",
+      "rulesTips": "ヒント",
+      "rulesTipsDesc": "• 角の近道を積極的に活用しよう\n• 駒を重ねて安全に移動しよう\n• 相手の駒を取って追加ターンを獲得！"
     },
     "hula": {
       "name": "フラ",
@@ -298,7 +306,21 @@
       "meld": "メルド",
       "thankYou": "テンキュー",
       "declare": "宣言",
-      "rulesTitle": "フラ ルール"
+      "rulesTitle": "フラ ルール",
+      "rulesObjective": "ゲーム目標",
+      "rulesObjectiveDesc": "手札のカードの合計を最小化して勝利しましょう。\n7枚一度に出すと「フラ」！",
+      "rulesProgress": "進行方法",
+      "rulesProgressDesc": "1. デッキから1枚引く\n2. メルド登録 (ラン、グループ、7) またはつける\n3. カード1枚捨てる\n• 反時計回りで進行",
+      "rulesMeldTypes": "メルドの種類",
+      "rulesMeldTypesDesc": "• ラン: 同じスート連続3枚+\n  (例: ♠3-♠4-♠5)\n• グループ: 同じ数字3〜4枚\n  (例: ♠5-♥5-♦5)",
+      "rulesSeven": "7カード特別ルール",
+      "rulesSevenDesc": "• 7は単独で登録可能！\n• ラン/グループに含めても登録可能\n• 単独登録後はランでのみ拡張可能\n  (同じスートの6または8をつける)",
+      "rulesThankYouMeld": "テンキュー＆つける",
+      "rulesThankYouMeldDesc": "• テンキュー: 捨てたカードを取ってすぐ登録\n• つける: 自分のメルドがあれば可能\n  (自分/相手のメルドに追加可能)",
+      "rulesStop": "ストップ",
+      "rulesStopDesc": "• いつでもストップ宣言可能\n• ストップ時、手札の点数が最も低い人が勝利\n• 手札が少ない時に宣言すると有利！",
+      "rulesScoring": "点数計算",
+      "rulesScoringDesc": "• A = 1点\n• 2〜9 = 数字通り\n• J = 10点、Q = 11点、K = 12点"
     },
     "sudoku": {
       "name": "数独",

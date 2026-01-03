@@ -1322,65 +1322,57 @@ class _BaseballScreenState extends State<BaseballScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             mainAxisSize: MainAxisSize.min,
-            children: const [
+            children: [
               Text(
-                '🎯 게임 목표',
-                style: TextStyle(
+                'games.baseball.rulesObjective'.tr(),
+                style: const TextStyle(
                   color: Colors.white,
                   fontWeight: FontWeight.bold,
                 ),
               ),
-              SizedBox(height: 4),
+              const SizedBox(height: 4),
               Text(
-                '컴퓨터가 정한 3자리 숫자를 맞추세요!\n'
-                '각 숫자는 0~9 중 서로 다른 숫자입니다.',
-                style: TextStyle(color: Colors.white70, fontSize: 13),
+                'games.baseball.rulesObjectiveDesc'.tr(),
+                style: const TextStyle(color: Colors.white70, fontSize: 13),
               ),
-              SizedBox(height: 12),
+              const SizedBox(height: 12),
               Text(
-                '⚾ 스트라이크 & 볼',
-                style: TextStyle(
+                'games.baseball.rulesStrikeBall'.tr(),
+                style: const TextStyle(
                   color: Colors.white,
                   fontWeight: FontWeight.bold,
                 ),
               ),
-              SizedBox(height: 4),
+              const SizedBox(height: 4),
               Text(
-                '• 스트라이크(S): 숫자와 위치 모두 맞음\n'
-                '• 볼(B): 숫자는 맞지만 위치가 다름\n'
-                '• 아웃: 맞는 숫자가 하나도 없음',
-                style: TextStyle(color: Colors.white70, fontSize: 13),
+                'games.baseball.rulesStrikeBallDesc'.tr(),
+                style: const TextStyle(color: Colors.white70, fontSize: 13),
               ),
-              SizedBox(height: 12),
+              const SizedBox(height: 12),
               Text(
-                '📝 예시',
-                style: TextStyle(
+                'games.baseball.rulesExample'.tr(),
+                style: const TextStyle(
                   color: Colors.white,
                   fontWeight: FontWeight.bold,
                 ),
               ),
-              SizedBox(height: 4),
+              const SizedBox(height: 4),
               Text(
-                '정답이 "123"일 때:\n'
-                '• 123 → 3S 0B (정답!)\n'
-                '• 132 → 1S 2B\n'
-                '• 456 → 0S 0B (아웃)',
-                style: TextStyle(color: Colors.white70, fontSize: 13),
+                'games.baseball.rulesExampleDesc'.tr(),
+                style: const TextStyle(color: Colors.white70, fontSize: 13),
               ),
-              SizedBox(height: 12),
+              const SizedBox(height: 12),
               Text(
-                '💡 팁',
-                style: TextStyle(
+                'games.baseball.rulesTips'.tr(),
+                style: const TextStyle(
                   color: Colors.white,
                   fontWeight: FontWeight.bold,
                 ),
               ),
-              SizedBox(height: 4),
+              const SizedBox(height: 4),
               Text(
-                '• 볼 힌트로 숫자를 먼저 찾으세요\n'
-                '• 찾은 숫자의 위치를 바꿔보세요\n'
-                '• 힌트를 사용해 도움을 받으세요',
-                style: TextStyle(color: Colors.white70, fontSize: 13),
+                'games.baseball.rulesTipsDesc'.tr(),
+                style: const TextStyle(color: Colors.white70, fontSize: 13),
               ),
             ],
           ),

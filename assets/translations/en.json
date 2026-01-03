@@ -297,7 +297,15 @@
       "throw": "Throw",
       "selectPiece": "Select Piece",
       "goal": "Goal",
-      "rulesTitle": "Yutnori Rules"
+      "rulesTitle": "Yutnori Rules",
+      "rulesObjective": "Objective",
+      "rulesObjectiveDesc": "Be the first to move all 4 pieces to the goal!",
+      "rulesYutResults": "Yut Results",
+      "rulesYutResultsDesc": "• Do: Move 1 space\n• Gae: Move 2 spaces\n• Geol: Move 3 spaces\n• Yut: Move 4 spaces + throw again\n• Mo: Move 5 spaces + throw again\n• Back Do: Move 1 space backward (-1)",
+      "rulesSpecial": "Special Rules",
+      "rulesSpecialDesc": "• Stop at corners to take shortcuts\n• Capture opponent's piece to throw again\n• Stack your pieces (move together)\n• If stacked pieces are captured, all go back",
+      "rulesTips": "Tips",
+      "rulesTipsDesc": "• Use corner shortcuts actively\n• Stack pieces for safety\n• Capture opponents for extra turns!"
     },
     "hula": {
       "name": "Hula",
@@ -306,7 +314,21 @@
       "meld": "Meld",
       "thankYou": "Thank You",
       "declare": "Declare",
-      "rulesTitle": "Hula Rules"
+      "rulesTitle": "Hula Rules",
+      "rulesObjective": "Objective",
+      "rulesObjectiveDesc": "Minimize your hand's card points to win.\nPlay all 7 cards at once for \"Hula\"!",
+      "rulesProgress": "How to Play",
+      "rulesProgressDesc": "1. Draw 1 card from deck\n2. Register melds (Run, Group, 7) or attach\n3. Discard 1 card\n• Play counterclockwise",
+      "rulesMeldTypes": "Meld Types",
+      "rulesMeldTypesDesc": "• Run: 3+ consecutive same suit\n  (e.g., ♠3-♠4-♠5)\n• Group: 3-4 same numbers\n  (e.g., ♠5-♥5-♦5)",
+      "rulesSeven": "7 Card Special Rules",
+      "rulesSevenDesc": "• 7 can be registered alone!\n• Can also be part of Run/Group\n• After solo registration, only extend as Run\n  (attach same suit 6 or 8)",
+      "rulesThankYouMeld": "Thank You & Attach",
+      "rulesThankYouMeldDesc": "• Thank You: Take discarded card and register immediately\n• Attach: Only if you have melds\n  (can add to own or opponent's melds)",
+      "rulesStop": "Stop",
+      "rulesStopDesc": "• Can declare Stop anytime\n• Player with lowest hand points wins on Stop\n• Advantageous when you have few cards!",
+      "rulesScoring": "Scoring",
+      "rulesScoringDesc": "• A = 1 point\n• 2-9 = face value\n• J = 10, Q = 11, K = 12 points"
     },
     "sudoku": {
       "name": "Sudoku",

@@ -3714,112 +3714,96 @@ class _HulaScreenState extends State<HulaScreen> with TickerProviderStateMixin {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             mainAxisSize: MainAxisSize.min,
-            children: const [
+            children: [
               Text(
-                '🎯 게임 목표',
-                style: TextStyle(
+                'games.hula.rulesObjective'.tr(),
+                style: const TextStyle(
                   color: Colors.white,
                   fontWeight: FontWeight.bold,
                 ),
               ),
-              SizedBox(height: 4),
+              const SizedBox(height: 4),
               Text(
-                '손패의 카드 합을 최소화하여 승리하세요.\n'
-                '한 번에 7장 모두 내면 "훌라"!',
-                style: TextStyle(color: Colors.white70, fontSize: 13),
+                'games.hula.rulesObjectiveDesc'.tr(),
+                style: const TextStyle(color: Colors.white70, fontSize: 13),
               ),
-              SizedBox(height: 12),
+              const SizedBox(height: 12),
               Text(
-                '🃏 진행 방법',
-                style: TextStyle(
+                'games.hula.rulesProgress'.tr(),
+                style: const TextStyle(
                   color: Colors.white,
                   fontWeight: FontWeight.bold,
                 ),
               ),
-              SizedBox(height: 4),
+              const SizedBox(height: 4),
               Text(
-                '1. 덱에서 1장 가져오기\n'
-                '2. 멜드 등록 (Run, Group, 7) 또는 붙여놓기\n'
-                '3. 카드 1장 버리기\n'
-                '• 반시계 방향으로 진행',
-                style: TextStyle(color: Colors.white70, fontSize: 13),
+                'games.hula.rulesProgressDesc'.tr(),
+                style: const TextStyle(color: Colors.white70, fontSize: 13),
               ),
-              SizedBox(height: 12),
+              const SizedBox(height: 12),
               Text(
-                '📋 멜드 종류',
-                style: TextStyle(
+                'games.hula.rulesMeldTypes'.tr(),
+                style: const TextStyle(
                   color: Colors.white,
                   fontWeight: FontWeight.bold,
                 ),
               ),
-              SizedBox(height: 4),
+              const SizedBox(height: 4),
               Text(
-                '• Run: 같은 무늬 연속 3장+\n'
-                '  (예: ♠3-♠4-♠5)\n'
-                '• Group: 같은 숫자 3~4장\n'
-                '  (예: ♠5-♥5-♦5)',
-                style: TextStyle(color: Colors.white70, fontSize: 13),
+                'games.hula.rulesMeldTypesDesc'.tr(),
+                style: const TextStyle(color: Colors.white70, fontSize: 13),
               ),
-              SizedBox(height: 12),
+              const SizedBox(height: 12),
               Text(
-                '⭐ 7 카드 특별 규칙',
-                style: TextStyle(
+                'games.hula.rulesSeven'.tr(),
+                style: const TextStyle(
                   color: Colors.amber,
                   fontWeight: FontWeight.bold,
                 ),
               ),
-              SizedBox(height: 4),
+              const SizedBox(height: 4),
               Text(
-                '• 7은 단독으로 등록 가능!\n'
-                '• Run/Group에 포함해서도 등록 가능\n'
-                '• 단독 등록 후 Run으로만 확장 가능\n'
-                '  (같은 무늬 6 또는 8 붙이기)',
-                style: TextStyle(color: Colors.white70, fontSize: 13),
+                'games.hula.rulesSevenDesc'.tr(),
+                style: const TextStyle(color: Colors.white70, fontSize: 13),
               ),
-              SizedBox(height: 12),
+              const SizedBox(height: 12),
               Text(
-                '🙏 땡큐 & 붙이기',
-                style: TextStyle(
+                'games.hula.rulesThankYouMeld'.tr(),
+                style: const TextStyle(
                   color: Colors.cyan,
                   fontWeight: FontWeight.bold,
                 ),
               ),
-              SizedBox(height: 4),
+              const SizedBox(height: 4),
               Text(
-                '• 땡큐: 버린 카드를 가져와 바로 등록\n'
-                '• 붙이기: 본인 멜드가 있어야 가능\n'
-                '  (자신/상대 멜드 모두에 추가 가능)',
-                style: TextStyle(color: Colors.white70, fontSize: 13),
+                'games.hula.rulesThankYouMeldDesc'.tr(),
+                style: const TextStyle(color: Colors.white70, fontSize: 13),
               ),
-              SizedBox(height: 12),
+              const SizedBox(height: 12),
               Text(
-                '🛑 스톱',
-                style: TextStyle(
+                'games.hula.rulesStop'.tr(),
+                style: const TextStyle(
                   color: Colors.red,
                   fontWeight: FontWeight.bold,
                 ),
               ),
-              SizedBox(height: 4),
+              const SizedBox(height: 4),
               Text(
-                '• 언제든 스톱 선언 가능\n'
-                '• 스톱 시 손패 점수가 가장 낮은 사람 승리\n'
-                '• 손패가 적을 때 선언하면 유리!',
-                style: TextStyle(color: Colors.white70, fontSize: 13),
+                'games.hula.rulesStopDesc'.tr(),
+                style: const TextStyle(color: Colors.white70, fontSize: 13),
               ),
-              SizedBox(height: 12),
+              const SizedBox(height: 12),
               Text(
-                '💯 점수 계산',
-                style: TextStyle(
+                'games.hula.rulesScoring'.tr(),
+                style: const TextStyle(
                   color: Colors.white,
                   fontWeight: FontWeight.bold,
                 ),
               ),
-              SizedBox(height: 4),
+              const SizedBox(height: 4),
               Text(
-                '• A = 1점\n'
-                '• 2~9 = 숫자 그대로\n'
-                '• J = 10점, Q = 11점, K = 12점',
-                style: TextStyle(color: Colors.white70, fontSize: 13),
+                'games.hula.rulesScoringDesc'.tr(),
+                style: const TextStyle(color: Colors.white70, fontSize: 13),
               ),
             ],
           ),

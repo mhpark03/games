@@ -297,7 +297,15 @@
       "throw": "던지기",
       "selectPiece": "말 선택",
       "goal": "골인",
-      "rulesTitle": "윷놀이 게임 규칙"
+      "rulesTitle": "윷놀이 게임 규칙",
+      "rulesObjective": "게임 목표",
+      "rulesObjectiveDesc": "4개의 말을 먼저 모두 골인시키면 승리!",
+      "rulesYutResults": "윷 결과",
+      "rulesYutResultsDesc": "• 도: 1칸 이동\n• 개: 2칸 이동\n• 걸: 3칸 이동\n• 윷: 4칸 이동 + 한 번 더\n• 모: 5칸 이동 + 한 번 더\n• 백도: 1칸 뒤로 (-1)",
+      "rulesSpecial": "특수 규칙",
+      "rulesSpecialDesc": "• 코너(모서리)에서 멈추면 지름길 이용\n• 상대 말을 잡으면 한 번 더 던지기\n• 내 말끼리 업기 가능 (함께 이동)\n• 업힌 말이 잡히면 모두 처음으로",
+      "rulesTips": "팁",
+      "rulesTipsDesc": "• 코너 지름길을 적극 활용하세요\n• 업기로 안전하게 이동하세요\n• 상대 말 잡기로 추가 턴 획득!"
     },
     "hula": {
       "name": "훌라",
@@ -306,7 +314,21 @@
       "meld": "멜드",
       "thankYou": "땡큐",
       "declare": "선언",
-      "rulesTitle": "훌라 게임 규칙"
+      "rulesTitle": "훌라 게임 규칙",
+      "rulesObjective": "게임 목표",
+      "rulesObjectiveDesc": "손패의 카드 합을 최소화하여 승리하세요.\n한 번에 7장 모두 내면 \"훌라\"!",
+      "rulesProgress": "진행 방법",
+      "rulesProgressDesc": "1. 덱에서 1장 가져오기\n2. 멜드 등록 (Run, Group, 7) 또는 붙여놓기\n3. 카드 1장 버리기\n• 반시계 방향으로 진행",
+      "rulesMeldTypes": "멜드 종류",
+      "rulesMeldTypesDesc": "• Run: 같은 무늬 연속 3장+\n  (예: ♠3-♠4-♠5)\n• Group: 같은 숫자 3~4장\n  (예: ♠5-♥5-♦5)",
+      "rulesSeven": "7 카드 특별 규칙",
+      "rulesSevenDesc": "• 7은 단독으로 등록 가능!\n• Run/Group에 포함해서도 등록 가능\n• 단독 등록 후 Run으로만 확장 가능\n  (같은 무늬 6 또는 8 붙이기)",
+      "rulesThankYouMeld": "땡큐 & 붙이기",
+      "rulesThankYouMeldDesc": "• 땡큐: 버린 카드를 가져와 바로 등록\n• 붙이기: 본인 멜드가 있어야 가능\n  (자신/상대 멜드 모두에 추가 가능)",
+      "rulesStop": "스톱",
+      "rulesStopDesc": "• 언제든 스톱 선언 가능\n• 스톱 시 손패 점수가 가장 낮은 사람 승리\n• 손패가 적을 때 선언하면 유리!",
+      "rulesScoring": "점수 계산",
+      "rulesScoringDesc": "• A = 1점\n• 2~9 = 숫자 그대로\n• J = 10점, Q = 11점, K = 12점"
     },
     "sudoku": {
       "name": "스도쿠",

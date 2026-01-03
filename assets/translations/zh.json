@@ -288,7 +288,21 @@
       "meld": "组牌",
       "thankYou": "谢谢",
       "declare": "宣告",
-      "rulesTitle": "花图游戏规则"
+      "rulesTitle": "花图游戏规则",
+      "rulesObjective": "游戏目标",
+      "rulesObjectiveDesc": "使手牌点数总和最小化获胜。\n一次打出7张牌即为「花图」！",
+      "rulesProgress": "游戏流程",
+      "rulesProgressDesc": "1. 从牌堆抽1张牌\n2. 登记组牌 (顺子、刻子、7) 或贴牌\n3. 弃1张牌\n• 逆时针方向进行",
+      "rulesMeldTypes": "组牌类型",
+      "rulesMeldTypesDesc": "• 顺子：同花色连续3张以上\n  (例：♠3-♠4-♠5)\n• 刻子：同数字3~4张\n  (例：♠5-♥5-♦5)",
+      "rulesSeven": "7牌特殊规则",
+      "rulesSevenDesc": "• 7可以单独登记！\n• 也可以包含在顺子/刻子中登记\n• 单独登记后只能扩展为顺子\n  (贴同花色的6或8)",
+      "rulesThankYouMeld": "谢谢 & 贴牌",
+      "rulesThankYouMeldDesc": "• 谢谢：拿取弃牌并立即登记\n• 贴牌：必须有自己的组牌才能进行\n  (可添加到自己或对方的组牌)",
+      "rulesStop": "停止",
+      "rulesStopDesc": "• 随时可以宣告停止\n• 停止时手牌点数最低的玩家获胜\n• 手牌少时宣告更有利！",
+      "rulesScoring": "计分",
+      "rulesScoringDesc": "• A = 1分\n• 2~9 = 面值\n• J = 10分、Q = 11分、K = 12分"
     },
     "sudoku": {
       "name": "数独",
