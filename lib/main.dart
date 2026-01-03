@@ -1192,13 +1192,13 @@ class _HomeScreenState extends State<HomeScreen> {
       String modeText;
       switch (savedGameMode) {
         case JanggiGameMode.vsHan:
-          modeText = '컴퓨터 (한)';
+          modeText = '漢 (${'common.computer'.tr()})';
           break;
         case JanggiGameMode.vsCho:
-          modeText = '컴퓨터 (초)';
+          modeText = '楚 (${'common.computer'.tr()})';
           break;
         case JanggiGameMode.vsHuman:
-          modeText = '2인 플레이';
+          modeText = 'vs.twoPlayer'.tr();
           break;
       }
 
@@ -1206,13 +1206,13 @@ class _HomeScreenState extends State<HomeScreen> {
       if (savedGameMode != JanggiGameMode.vsHuman && savedDifficulty != null) {
         switch (savedDifficulty) {
           case JanggiDifficulty.easy:
-            difficultyText = ' - 쉬움';
+            difficultyText = ' - ${'common.easy'.tr()}';
             break;
           case JanggiDifficulty.normal:
-            difficultyText = ' - 보통';
+            difficultyText = ' - ${'common.normal'.tr()}';
             break;
           case JanggiDifficulty.hard:
-            difficultyText = ' - 어려움';
+            difficultyText = ' - ${'common.hard'.tr()}';
             break;
         }
       }
@@ -1226,9 +1226,9 @@ class _HomeScreenState extends State<HomeScreen> {
               borderRadius: BorderRadius.circular(16),
               side: BorderSide(color: const Color(0xFFD2691E).withValues(alpha: 0.5), width: 2),
             ),
-            title: const Text(
-              '저장된 게임',
-              style: TextStyle(
+            title: Text(
+              'dialog.savedGame'.tr(),
+              style: const TextStyle(
                 color: Color(0xFFD2691E),
                 fontWeight: FontWeight.bold,
               ),
@@ -1237,9 +1237,9 @@ class _HomeScreenState extends State<HomeScreen> {
             content: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                const Text(
-                  '이전에 플레이하던 게임이 있습니다.\n이어서 하시겠습니까?',
-                  style: TextStyle(color: Colors.white70),
+                Text(
+                  'dialog.savedGameMessage'.tr(),
+                  style: const TextStyle(color: Colors.white70),
                   textAlign: TextAlign.center,
                 ),
                 const SizedBox(height: 8),
@@ -1260,9 +1260,9 @@ class _HomeScreenState extends State<HomeScreen> {
                   JanggiScreen.clearSavedGame();
                   _showJanggiModeDialog(context);
                 },
-                child: const Text(
-                  '새 게임',
-                  style: TextStyle(color: Colors.white70),
+                child: Text(
+                  'app.newGame'.tr(),
+                  style: const TextStyle(color: Colors.white70),
                 ),
               ),
               ElevatedButton(
@@ -1283,7 +1283,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     ),
                   );
                 },
-                child: const Text('이어하기'),
+                child: Text('app.continue'.tr()),
               ),
             ],
           );
@@ -1423,7 +1423,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
   // 장기 난이도 선택 다이얼로그
   void _showJanggiDifficultyDialog(BuildContext context, JanggiGameMode mode) {
-    String modeText = mode == JanggiGameMode.vsHan ? '컴퓨터 (한)' : '컴퓨터 (초)';
+    String modeText = mode == JanggiGameMode.vsHan ? '漢 (${'common.computer'.tr()})' : '楚 (${'common.computer'.tr()})';
 
     showDialog(
       context: context,
@@ -1436,7 +1436,7 @@ class _HomeScreenState extends State<HomeScreen> {
             side: BorderSide(color: const Color(0xFFD2691E).withValues(alpha: 0.5), width: 2),
           ),
           title: Text(
-            '$modeText - 난이도 선택',
+            '$modeText - ${'dialog.selectDifficulty'.tr()}',
             style: const TextStyle(
               color: Color(0xFFD2691E),
               fontWeight: FontWeight.bold,
@@ -1446,11 +1446,11 @@ class _HomeScreenState extends State<HomeScreen> {
           content: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              _buildJanggiDifficultyButton(context, mode: mode, difficulty: JanggiDifficulty.easy, title: '쉬움', icon: Icons.sentiment_satisfied, color: Colors.green),
+              _buildJanggiDifficultyButton(context, mode: mode, difficulty: JanggiDifficulty.easy, title: 'common.easy'.tr(), icon: Icons.sentiment_satisfied, color: Colors.green),
               const SizedBox(height: 12),
-              _buildJanggiDifficultyButton(context, mode: mode, difficulty: JanggiDifficulty.normal, title: '보통', icon: Icons.sentiment_neutral, color: Colors.orange),
+              _buildJanggiDifficultyButton(context, mode: mode, difficulty: JanggiDifficulty.normal, title: 'common.normal'.tr(), icon: Icons.sentiment_neutral, color: Colors.orange),
               const SizedBox(height: 12),
-              _buildJanggiDifficultyButton(context, mode: mode, difficulty: JanggiDifficulty.hard, title: '어려움', icon: Icons.sentiment_very_dissatisfied, color: Colors.red),
+              _buildJanggiDifficultyButton(context, mode: mode, difficulty: JanggiDifficulty.hard, title: 'common.hard'.tr(), icon: Icons.sentiment_very_dissatisfied, color: Colors.red),
             ],
           ),
         );
