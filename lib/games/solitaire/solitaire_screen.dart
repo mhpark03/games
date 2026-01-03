@@ -1886,17 +1886,30 @@ class _SolitaireScreenState extends State<SolitaireScreen> {
       padding: const EdgeInsets.all(2),
       child: Column(
         children: [
-          // 상단: 랭크만 표시 (왼쪽 정렬)
+          // 상단: 랭크 + 무늬 표시 (왼쪽 정렬)
           Align(
             alignment: Alignment.topLeft,
-            child: Text(
-              card.rankString,
-              style: TextStyle(
-                color: card.suitColor,
-                fontSize: cardWidth * 0.2,  // 동적 글자 크기
-                fontWeight: FontWeight.bold,
-                height: 1.0,
-              ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  card.rankString,
+                  style: TextStyle(
+                    color: card.suitColor,
+                    fontSize: cardWidth * 0.2,  // 동적 글자 크기
+                    fontWeight: FontWeight.bold,
+                    height: 1.0,
+                  ),
+                ),
+                Text(
+                  card.suitString,
+                  style: TextStyle(
+                    color: card.suitColor,
+                    fontSize: cardWidth * 0.16,
+                    height: 1.0,
+                  ),
+                ),
+              ],
             ),
           ),
           // 중앙 영역: 숫자에 맞는 무늬 배열
