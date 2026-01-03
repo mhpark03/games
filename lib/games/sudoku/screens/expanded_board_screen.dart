@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:easy_localization/easy_localization.dart';
 import '../models/samurai_game_state.dart';
 import '../models/samurai_sudoku_generator.dart';
 import '../widgets/game_control_panel.dart';
@@ -148,7 +149,7 @@ class _ExpandedBoardScreenState extends State<ExpandedBoardScreen> {
             ),
             const SizedBox(height: 16),
             Text(
-              '일시정지',
+              'common.pause'.tr(),
               style: TextStyle(
                 fontSize: 24,
                 fontWeight: FontWeight.bold,
@@ -157,7 +158,7 @@ class _ExpandedBoardScreenState extends State<ExpandedBoardScreen> {
             ),
             const SizedBox(height: 8),
             Text(
-              '재개 버튼을 눌러 계속하세요',
+              'common.resumeMessage'.tr(),
               style: TextStyle(
                 fontSize: 14,
                 color: Colors.grey.shade600,
@@ -216,7 +217,7 @@ class _ExpandedBoardScreenState extends State<ExpandedBoardScreen> {
       },
       child: Scaffold(
         appBar: AppBar(
-          title: Text('보드 ${widget.boardIndex + 1}'),
+          title: Text('games.sudoku.boardNum'.tr(namedArgs: {'num': '${widget.boardIndex + 1}'})),
           backgroundColor: Colors.deepPurple,
           foregroundColor: Colors.white,
           leading: IconButton(
@@ -354,7 +355,7 @@ class _ExpandedBoardScreenState extends State<ExpandedBoardScreen> {
                           _buildCircleButton(
                             icon: Icons.arrow_back,
                             onPressed: _popWithResult,
-                            tooltip: '뒤로가기',
+                            tooltip: 'common.back'.tr(),
                           ),
                           const SizedBox(width: 8),
                           Container(
@@ -364,7 +365,7 @@ class _ExpandedBoardScreenState extends State<ExpandedBoardScreen> {
                               borderRadius: BorderRadius.circular(20),
                             ),
                             child: Text(
-                              '보드 ${widget.boardIndex + 1}',
+                              'games.sudoku.boardNum'.tr(namedArgs: {'num': '${widget.boardIndex + 1}'}),
                               style: const TextStyle(
                                 color: Colors.white,
                                 fontSize: 16,
@@ -387,7 +388,7 @@ class _ExpandedBoardScreenState extends State<ExpandedBoardScreen> {
                   child: _buildCircleButton(
                     icon: Icons.undo,
                     onPressed: widget.gameState.canUndo ? _showUndoAdDialog : null,
-                    tooltip: '취소',
+                    tooltip: 'dialog.undoTitle'.tr(),
                   ),
                 ),
               ],
@@ -913,15 +914,15 @@ class _ExpandedBoardScreenState extends State<ExpandedBoardScreen> {
       context: context,
       builder: (context) => AlertDialog(
         backgroundColor: Colors.grey.shade900,
-        title: const Text('모든 메모 채우기', style: TextStyle(color: Colors.white)),
-        content: const Text(
-          '광고를 시청하고 모든 메모를 채우시겠습니까?',
-          style: TextStyle(color: Colors.white70),
+        title: Text('dialog.fillNotesTitle'.tr(), style: const TextStyle(color: Colors.white)),
+        content: Text(
+          'dialog.fillNotesMessage'.tr(),
+          style: const TextStyle(color: Colors.white70),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('취소'),
+            child: Text('app.cancel'.tr()),
           ),
           ElevatedButton.icon(
             onPressed: () {
@@ -929,7 +930,7 @@ class _ExpandedBoardScreenState extends State<ExpandedBoardScreen> {
               _showAdForFillNotes();
             },
             icon: const Icon(Icons.play_circle_outline),
-            label: const Text('광고 보기'),
+            label: Text('common.watchAd'.tr()),
             style: ElevatedButton.styleFrom(
               backgroundColor: Colors.deepOrange,
             ),
@@ -944,7 +945,7 @@ class _ExpandedBoardScreenState extends State<ExpandedBoardScreen> {
 
     if (!adService.isAdLoaded) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('광고를 불러오는 중입니다. 무료로 제공합니다.')),
+        SnackBar(content: Text('common.adLoadingFreeHint'.tr())),
       );
       _applyFillAllNotes();
       return;
@@ -985,15 +986,15 @@ class _ExpandedBoardScreenState extends State<ExpandedBoardScreen> {
       barrierDismissible: false,
       builder: (context) => AlertDialog(
         backgroundColor: Colors.grey.shade900,
-        title: const Text('오답입니다', style: TextStyle(color: Colors.redAccent)),
+        title: Text('dialog.wrongAnswer'.tr(), style: const TextStyle(color: Colors.redAccent)),
         content: Text(
-          '실패 횟수: $_localFailureCount회\n광고를 시청하고 계속 진행하시겠습니까?',
+          '${'common.failureCount'.tr(namedArgs: {'count': '$_localFailureCount'})}\n${'dialog.adWatchContinue'.tr()}',
           style: const TextStyle(color: Colors.white70),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('취소'),
+            child: Text('app.cancel'.tr()),
           ),
           ElevatedButton(
             onPressed: () async {
@@ -1008,7 +1009,7 @@ class _ExpandedBoardScreenState extends State<ExpandedBoardScreen> {
                 adService.loadRewardedAd();
               }
             },
-            child: const Text('광고 보기'),
+            child: Text('common.watchAd'.tr()),
           ),
         ],
       ),
@@ -1023,15 +1024,15 @@ class _ExpandedBoardScreenState extends State<ExpandedBoardScreen> {
       context: context,
       builder: (context) => AlertDialog(
         backgroundColor: Colors.grey.shade900,
-        title: const Text('되돌리기', style: TextStyle(color: Colors.white)),
-        content: const Text(
-          '광고를 시청하고 되돌리기를 사용하시겠습니까?',
-          style: TextStyle(color: Colors.white70),
+        title: Text('dialog.undoTitle'.tr(), style: const TextStyle(color: Colors.white)),
+        content: Text(
+          'dialog.undoMessage'.tr(),
+          style: const TextStyle(color: Colors.white70),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('취소'),
+            child: Text('app.cancel'.tr()),
           ),
           ElevatedButton(
             onPressed: () async {
@@ -1054,7 +1055,7 @@ class _ExpandedBoardScreenState extends State<ExpandedBoardScreen> {
                 adService.loadRewardedAd();
               }
             },
-            child: const Text('광고 보기'),
+            child: Text('common.watchAd'.tr()),
           ),
         ],
       ),
@@ -1067,14 +1068,14 @@ class _ExpandedBoardScreenState extends State<ExpandedBoardScreen> {
 
     if (selectedRow == null || selectedCol == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('셀을 먼저 선택하세요')),
+        SnackBar(content: Text('games.sudoku.selectCell'.tr())),
       );
       return;
     }
 
     if (widget.gameState.isFixed[widget.boardIndex][selectedRow!][selectedCol!]) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('이미 채워진 칸입니다')),
+        SnackBar(content: Text('common.alreadyFilled'.tr())),
       );
       return;
     }
@@ -1088,15 +1089,15 @@ class _ExpandedBoardScreenState extends State<ExpandedBoardScreen> {
       context: context,
       builder: (context) => AlertDialog(
         backgroundColor: Colors.grey.shade900,
-        title: const Text('힌트 사용', style: TextStyle(color: Colors.white)),
-        content: const Text(
-          '광고를 시청하고 힌트를 받으시겠습니까?',
-          style: TextStyle(color: Colors.white70),
+        title: Text('dialog.hintTitle'.tr(), style: const TextStyle(color: Colors.white)),
+        content: Text(
+          'common.hintWatchAdFull'.tr(),
+          style: const TextStyle(color: Colors.white70),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('취소'),
+            child: Text('app.cancel'.tr()),
           ),
           ElevatedButton.icon(
             onPressed: () {
@@ -1104,7 +1105,7 @@ class _ExpandedBoardScreenState extends State<ExpandedBoardScreen> {
               _showAdForHint(row, col);
             },
             icon: const Icon(Icons.play_circle_outline),
-            label: const Text('광고 보기'),
+            label: Text('common.watchAd'.tr()),
             style: ElevatedButton.styleFrom(
               backgroundColor: Colors.deepOrange,
             ),
@@ -1119,7 +1120,7 @@ class _ExpandedBoardScreenState extends State<ExpandedBoardScreen> {
 
     if (!adService.isAdLoaded) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('광고를 불러오는 중입니다. 힌트를 무료로 제공합니다.')),
+        SnackBar(content: Text('common.adLoadingFreeHint'.tr())),
       );
       _applyHint(row, col);
       return;

@@ -348,7 +348,7 @@ class _GameScreenState extends State<GameScreen> with WidgetsBindingObserver {
 
     if (!_gameState.hasSelection) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('셀을 먼저 선택하세요')),
+        SnackBar(content: Text('games.sudoku.selectCell'.tr())),
       );
       return;
     }
@@ -358,7 +358,7 @@ class _GameScreenState extends State<GameScreen> with WidgetsBindingObserver {
 
     if (_gameState.isFixed[row][col]) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('이미 채워진 칸입니다')),
+        SnackBar(content: Text('common.alreadyFilled'.tr())),
       );
       return;
     }
@@ -372,15 +372,15 @@ class _GameScreenState extends State<GameScreen> with WidgetsBindingObserver {
       context: context,
       builder: (context) => AlertDialog(
         backgroundColor: Colors.grey.shade900,
-        title: const Text('힌트 사용', style: TextStyle(color: Colors.white)),
-        content: const Text(
-          '광고를 시청하고 힌트를 받으시겠습니까?\n\n※ 광고는 끝까지 시청해야 합니다.',
-          style: TextStyle(color: Colors.white70),
+        title: Text('dialog.hintTitle'.tr(), style: const TextStyle(color: Colors.white)),
+        content: Text(
+          'common.hintWatchAdFull'.tr(),
+          style: const TextStyle(color: Colors.white70),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('취소'),
+            child: Text('app.cancel'.tr()),
           ),
           ElevatedButton.icon(
             onPressed: () {
@@ -388,7 +388,7 @@ class _GameScreenState extends State<GameScreen> with WidgetsBindingObserver {
               _showAdForHint(row, col);
             },
             icon: const Icon(Icons.play_circle_outline),
-            label: const Text('광고 보기'),
+            label: Text('common.watchAd'.tr()),
             style: ElevatedButton.styleFrom(
               backgroundColor: Colors.deepOrange,
             ),
@@ -404,7 +404,7 @@ class _GameScreenState extends State<GameScreen> with WidgetsBindingObserver {
     if (!adService.isAdLoaded) {
       // 광고가 로드되지 않은 경우 바로 힌트 제공
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('광고를 불러오는 중입니다. 힌트를 무료로 제공합니다.')),
+        SnackBar(content: Text('common.adLoadingFreeHint'.tr())),
       );
       _applyHint(row, col);
       return;
@@ -458,15 +458,15 @@ class _GameScreenState extends State<GameScreen> with WidgetsBindingObserver {
       context: context,
       barrierDismissible: false,
       builder: (context) => AlertDialog(
-        title: const Text('축하합니다! 🎉'),
+        title: Text('${'common.congratulations'.tr()} 🎉'),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text('스도쿠를 완성했습니다!'),
+            Text('games.sudoku.completedMessage'.tr()),
             const SizedBox(height: 16),
-            Text('소요 시간: $timeStr'),
-            Text('실패 횟수: $_failureCount회'),
+            Text('common.elapsedTime'.tr(namedArgs: {'time': timeStr})),
+            Text('common.failureCount'.tr(namedArgs: {'count': '$_failureCount'})),
           ],
         ),
         actions: [
@@ -497,23 +497,23 @@ class _GameScreenState extends State<GameScreen> with WidgetsBindingObserver {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('난이도 선택'),
+        title: Text('dialog.selectDifficulty'.tr()),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: Difficulty.values.map((difficulty) {
             String label;
             switch (difficulty) {
               case Difficulty.easy:
-                label = '쉬움';
+                label = 'common.easy'.tr();
                 break;
               case Difficulty.medium:
-                label = '보통';
+                label = 'common.normal'.tr();
                 break;
               case Difficulty.hard:
-                label = '어려움';
+                label = 'common.hard'.tr();
                 break;
               case Difficulty.expert:
-                label = '달인';
+                label = 'common.expert'.tr();
                 break;
             }
             return ListTile(
@@ -541,13 +541,13 @@ class _GameScreenState extends State<GameScreen> with WidgetsBindingObserver {
   String _getDifficultyText() {
     switch (_selectedDifficulty) {
       case Difficulty.easy:
-        return '쉬움';
+        return 'common.easy'.tr();
       case Difficulty.medium:
-        return '보통';
+        return 'common.normal'.tr();
       case Difficulty.hard:
-        return '어려움';
+        return 'common.hard'.tr();
       case Difficulty.expert:
-        return '달인';
+        return 'common.expert'.tr();
     }
   }
 
@@ -597,15 +597,15 @@ class _GameScreenState extends State<GameScreen> with WidgetsBindingObserver {
       barrierDismissible: false,
       builder: (context) => AlertDialog(
         backgroundColor: Colors.grey.shade900,
-        title: const Text('오답입니다', style: TextStyle(color: Colors.redAccent)),
+        title: Text('dialog.wrongAnswer'.tr(), style: const TextStyle(color: Colors.redAccent)),
         content: Text(
-          '실패 횟수: $_failureCount회\n광고를 시청하고 계속 진행하시겠습니까?',
+          '${'common.failureCount'.tr(namedArgs: {'count': '$_failureCount'})}\n${'dialog.adWatchContinue'.tr()}',
           style: const TextStyle(color: Colors.white70),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('취소'),
+            child: Text('app.cancel'.tr()),
           ),
           ElevatedButton(
             onPressed: () async {
@@ -620,7 +620,7 @@ class _GameScreenState extends State<GameScreen> with WidgetsBindingObserver {
                 adService.loadRewardedAd();
               }
             },
-            child: const Text('광고 보기'),
+            child: Text('common.watchAd'.tr()),
           ),
         ],
       ),
@@ -635,15 +635,15 @@ class _GameScreenState extends State<GameScreen> with WidgetsBindingObserver {
       context: context,
       builder: (context) => AlertDialog(
         backgroundColor: Colors.grey.shade900,
-        title: const Text('되돌리기', style: TextStyle(color: Colors.white)),
-        content: const Text(
-          '광고를 시청하고 되돌리기를 사용하시겠습니까?',
-          style: TextStyle(color: Colors.white70),
+        title: Text('dialog.undoTitle'.tr(), style: const TextStyle(color: Colors.white)),
+        content: Text(
+          'dialog.undoMessage'.tr(),
+          style: const TextStyle(color: Colors.white70),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('취소'),
+            child: Text('app.cancel'.tr()),
           ),
           ElevatedButton(
             onPressed: () async {
@@ -666,7 +666,7 @@ class _GameScreenState extends State<GameScreen> with WidgetsBindingObserver {
                 adService.loadRewardedAd();
               }
             },
-            child: const Text('광고 보기'),
+            child: Text('common.watchAd'.tr()),
           ),
         ],
       ),
@@ -685,15 +685,15 @@ class _GameScreenState extends State<GameScreen> with WidgetsBindingObserver {
       context: context,
       builder: (context) => AlertDialog(
         backgroundColor: Colors.grey.shade900,
-        title: const Text('모든 메모 채우기', style: TextStyle(color: Colors.white)),
-        content: const Text(
-          '광고를 시청하고 모든 메모를 채우시겠습니까?',
-          style: TextStyle(color: Colors.white70),
+        title: Text('dialog.fillNotesTitle'.tr(), style: const TextStyle(color: Colors.white)),
+        content: Text(
+          'dialog.fillNotesMessage'.tr(),
+          style: const TextStyle(color: Colors.white70),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('취소'),
+            child: Text('app.cancel'.tr()),
           ),
           ElevatedButton.icon(
             onPressed: () {
@@ -701,7 +701,7 @@ class _GameScreenState extends State<GameScreen> with WidgetsBindingObserver {
               _showAdForFillNotes();
             },
             icon: const Icon(Icons.play_circle_outline),
-            label: const Text('광고 보기'),
+            label: Text('common.watchAd'.tr()),
             style: ElevatedButton.styleFrom(
               backgroundColor: Colors.deepOrange,
             ),
@@ -716,7 +716,7 @@ class _GameScreenState extends State<GameScreen> with WidgetsBindingObserver {
 
     if (!adService.isAdLoaded) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('광고를 불러오는 중입니다. 무료로 제공합니다.')),
+        SnackBar(content: Text('common.adLoadingFree'.tr())),
       );
       _applyFillAllNotes();
       return;
@@ -767,7 +767,7 @@ class _GameScreenState extends State<GameScreen> with WidgetsBindingObserver {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('스도쿠'),
+        title: Text('games.sudoku.name'.tr()),
         backgroundColor: Colors.blue,
         foregroundColor: Colors.white,
         toolbarHeight: isSmallScreen ? 48 : 56,
@@ -780,21 +780,21 @@ class _GameScreenState extends State<GameScreen> with WidgetsBindingObserver {
           TextButton.icon(
             onPressed: _showDifficultyDialog,
             icon: const Icon(Icons.refresh, color: Colors.white, size: 20),
-            label: const Text(
-              '새 게임',
-              style: TextStyle(color: Colors.white),
+            label: Text(
+              'app.newGame'.tr(),
+              style: const TextStyle(color: Colors.white),
             ),
           ),
         ],
       ),
       body: _isLoading
-          ? const Center(
+          ? Center(
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  CircularProgressIndicator(),
-                  SizedBox(height: 16),
-                  Text('퍼즐 생성 중...'),
+                  const CircularProgressIndicator(),
+                  const SizedBox(height: 16),
+                  Text('common.generatingPuzzle'.tr()),
                 ],
               ),
             )
@@ -840,13 +840,13 @@ class _GameScreenState extends State<GameScreen> with WidgetsBindingObserver {
     if (_isLoading) {
       return Scaffold(
         backgroundColor: Colors.blue.shade900,
-        body: const Center(
+        body: Center(
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              CircularProgressIndicator(color: Colors.white),
-              SizedBox(height: 16),
-              Text('퍼즐 생성 중...', style: TextStyle(color: Colors.white)),
+              const CircularProgressIndicator(color: Colors.white),
+              const SizedBox(height: 16),
+              Text('common.generatingPuzzle'.tr(), style: const TextStyle(color: Colors.white)),
             ],
           ),
         ),
@@ -929,7 +929,7 @@ class _GameScreenState extends State<GameScreen> with WidgetsBindingObserver {
                         _buildCircleButton(
                           icon: Icons.arrow_back,
                           onPressed: () => Navigator.pop(context),
-                          tooltip: '뒤로가기',
+                          tooltip: 'common.back'.tr(),
                         ),
                         const SizedBox(width: 8),
                         Container(
@@ -938,9 +938,9 @@ class _GameScreenState extends State<GameScreen> with WidgetsBindingObserver {
                             color: Colors.black.withValues(alpha: 0.5),
                             borderRadius: BorderRadius.circular(20),
                           ),
-                          child: const Text(
-                            '스도쿠',
-                            style: TextStyle(
+                          child: Text(
+                            'games.sudoku.name'.tr(),
+                            style: const TextStyle(
                               color: Colors.white,
                               fontSize: 16,
                               fontWeight: FontWeight.bold,
@@ -964,13 +964,13 @@ class _GameScreenState extends State<GameScreen> with WidgetsBindingObserver {
                     _buildCircleButton(
                       icon: Icons.undo,
                       onPressed: _gameState.canUndo ? _showUndoAdDialog : null,
-                      tooltip: '취소',
+                      tooltip: 'common.undo'.tr(),
                     ),
                     const SizedBox(width: 8),
                     _buildCircleButton(
                       icon: Icons.refresh,
                       onPressed: _showDifficultyDialog,
-                      tooltip: '새 게임',
+                      tooltip: 'app.newGame'.tr(),
                     ),
                   ],
                 ),
@@ -1108,7 +1108,7 @@ class _GameScreenState extends State<GameScreen> with WidgetsBindingObserver {
             ),
             const SizedBox(height: 16),
             Text(
-              '일시정지',
+              'common.pause'.tr(),
               style: TextStyle(
                 fontSize: 24,
                 fontWeight: FontWeight.bold,
@@ -1117,7 +1117,7 @@ class _GameScreenState extends State<GameScreen> with WidgetsBindingObserver {
             ),
             const SizedBox(height: 8),
             Text(
-              '재개 버튼을 눌러 계속하세요',
+              'common.resumeMessage'.tr(),
               style: TextStyle(
                 fontSize: 14,
                 color: Colors.grey.shade500,

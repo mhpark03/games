@@ -2673,9 +2673,9 @@ class _HomeScreenState extends State<HomeScreen> {
             borderRadius: BorderRadius.circular(16),
             side: BorderSide(color: Colors.blue.withValues(alpha: 0.5), width: 2),
           ),
-          title: const Text(
-            '스도쿠',
-            style: TextStyle(
+          title: Text(
+            'games.sudoku.name'.tr(),
+            style: const TextStyle(
               color: Colors.blue,
               fontWeight: FontWeight.bold,
             ),
@@ -2783,9 +2783,9 @@ class _HomeScreenState extends State<HomeScreen> {
             borderRadius: BorderRadius.circular(16),
             side: BorderSide(color: Colors.deepPurple.withValues(alpha: 0.5), width: 2),
           ),
-          title: const Text(
-            '사무라이 스도쿠',
-            style: TextStyle(color: Colors.deepPurple, fontWeight: FontWeight.bold),
+          title: Text(
+            'games.sudoku.samurai'.tr(),
+            style: const TextStyle(color: Colors.deepPurple, fontWeight: FontWeight.bold),
             textAlign: TextAlign.center,
           ),
           content: SingleChildScrollView(
@@ -2889,7 +2889,7 @@ class _HomeScreenState extends State<HomeScreen> {
             side: BorderSide(color: Colors.teal.shade700.withValues(alpha: 0.5), width: 2),
           ),
           title: Text(
-            '킬러 스도쿠',
+            'games.sudoku.killer'.tr(),
             style: TextStyle(color: Colors.teal.shade700, fontWeight: FontWeight.bold),
             textAlign: TextAlign.center,
           ),

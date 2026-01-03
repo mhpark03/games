@@ -237,15 +237,15 @@ class _NumberSumsGameScreenState extends State<NumberSumsGameScreen>
       context: context,
       builder: (context) => AlertDialog(
         backgroundColor: Colors.grey.shade900,
-        title: const Text('힌트 모드', style: TextStyle(color: Colors.white)),
-        content: const Text(
-          '광고를 시청하고 힌트 모드를 사용하시겠습니까?',
-          style: TextStyle(color: Colors.white70),
+        title: Text('dialog.hintModeTitle'.tr(), style: const TextStyle(color: Colors.white)),
+        content: Text(
+          'dialog.hintModeMessage'.tr(),
+          style: const TextStyle(color: Colors.white70),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('취소'),
+            child: Text('app.cancel'.tr()),
           ),
           ElevatedButton(
             onPressed: () async {
@@ -262,7 +262,7 @@ class _NumberSumsGameScreenState extends State<NumberSumsGameScreen>
                 adService.loadRewardedAd();
               }
             },
-            child: const Text('광고 보기'),
+            child: Text('common.watchAd'.tr()),
           ),
         ],
       ),
@@ -277,24 +277,24 @@ class _NumberSumsGameScreenState extends State<NumberSumsGameScreen>
       barrierDismissible: false,
       builder: (context) => AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: const Row(
+        title: Row(
           children: [
-            Icon(Icons.celebration, color: Colors.amber, size: 28),
-            SizedBox(width: 8),
-            Text('축하합니다!'),
+            const Icon(Icons.celebration, color: Colors.amber, size: 28),
+            const SizedBox(width: 8),
+            Text('common.congratulations'.tr()),
           ],
         ),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text('모든 틀린 숫자를 제거했습니다!'),
+            Text('games.numberSums.completedMessage'.tr()),
             const SizedBox(height: 16),
             Row(
               children: [
                 const Icon(Icons.timer_outlined, size: 18),
                 const SizedBox(width: 8),
-                Text('소요 시간: $timeStr'),
+                Text('common.elapsedTime'.tr(namedArgs: {'time': timeStr})),
               ],
             ),
             const SizedBox(height: 8),
@@ -302,7 +302,7 @@ class _NumberSumsGameScreenState extends State<NumberSumsGameScreen>
               children: [
                 Icon(Icons.close, size: 18, color: Colors.red.shade400),
                 const SizedBox(width: 8),
-                Text('실패 횟수: $_failureCount회'),
+                Text('common.failureCount'.tr(namedArgs: {'count': '$_failureCount'})),
               ],
             ),
           ],
@@ -313,7 +313,7 @@ class _NumberSumsGameScreenState extends State<NumberSumsGameScreen>
               Navigator.pop(context);
               _showDifficultyDialog();
             },
-            child: const Text('새 게임'),
+            child: Text('app.newGame'.tr()),
           ),
           ElevatedButton(
             onPressed: () {
@@ -347,20 +347,20 @@ class _NumberSumsGameScreenState extends State<NumberSumsGameScreen>
       context: context,
       builder: (context) => AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: const Text('난이도 선택'),
+        title: Text('dialog.selectDifficulty'.tr()),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: NumberSumsDifficulty.values.map((difficulty) {
             String label;
             switch (difficulty) {
               case NumberSumsDifficulty.easy:
-                label = '쉬움 (5x5)';
+                label = 'games.numberSums.easyWithSize'.tr();
                 break;
               case NumberSumsDifficulty.medium:
-                label = '보통 (6x6)';
+                label = 'games.numberSums.normalWithSize'.tr();
                 break;
               case NumberSumsDifficulty.hard:
-                label = '어려움 (7x7)';
+                label = 'games.numberSums.hardWithSize'.tr();
                 break;
             }
             return ListTile(
@@ -403,9 +403,9 @@ class _NumberSumsGameScreenState extends State<NumberSumsGameScreen>
     return Scaffold(
       backgroundColor: const Color(0xFF1A1A2E),
       appBar: AppBar(
-        title: const Text(
-          '넘버 썸즈',
-          style: TextStyle(fontWeight: FontWeight.bold),
+        title: Text(
+          'games.numberSums.name'.tr(),
+          style: const TextStyle(fontWeight: FontWeight.bold),
         ),
         backgroundColor: const Color(0xFF16213E),
         foregroundColor: Colors.white,
@@ -419,20 +419,20 @@ class _NumberSumsGameScreenState extends State<NumberSumsGameScreen>
           IconButton(
             onPressed: _showDifficultyDialog,
             icon: const Icon(Icons.refresh),
-            tooltip: '새 게임',
+            tooltip: 'app.newGame'.tr(),
           ),
         ],
       ),
       body: _isLoading
-          ? const Center(
+          ? Center(
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  CircularProgressIndicator(color: Colors.deepOrange),
-                  SizedBox(height: 16),
+                  const CircularProgressIndicator(color: Colors.deepOrange),
+                  const SizedBox(height: 16),
                   Text(
-                    '퍼즐 생성 중...',
-                    style: TextStyle(color: Colors.white70),
+                    'common.generatingPuzzle'.tr(),
+                    style: const TextStyle(color: Colors.white70),
                   ),
                 ],
               ),
@@ -471,13 +471,13 @@ class _NumberSumsGameScreenState extends State<NumberSumsGameScreen>
     if (_isLoading) {
       return Scaffold(
         backgroundColor: const Color(0xFF1A1A2E),
-        body: const Center(
+        body: Center(
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              CircularProgressIndicator(color: Colors.deepOrange),
-              SizedBox(height: 16),
-              Text('퍼즐 생성 중...', style: TextStyle(color: Colors.white70)),
+              const CircularProgressIndicator(color: Colors.deepOrange),
+              const SizedBox(height: 16),
+              Text('common.generatingPuzzle'.tr(), style: const TextStyle(color: Colors.white70)),
             ],
           ),
         ),
@@ -559,7 +559,7 @@ class _NumberSumsGameScreenState extends State<NumberSumsGameScreen>
                         _buildCircleButton(
                           icon: Icons.arrow_back,
                           onPressed: () => Navigator.pop(context),
-                          tooltip: '뒤로가기',
+                          tooltip: 'common.back'.tr(),
                         ),
                         const SizedBox(width: 8),
                         Container(
@@ -568,9 +568,9 @@ class _NumberSumsGameScreenState extends State<NumberSumsGameScreen>
                             color: Colors.black.withValues(alpha: 0.5),
                             borderRadius: BorderRadius.circular(20),
                           ),
-                          child: const Text(
-                            '넘버 썸즈',
-                            style: TextStyle(
+                          child: Text(
+                            'games.numberSums.name'.tr(),
+                            style: const TextStyle(
                               color: Colors.white,
                               fontSize: 16,
                               fontWeight: FontWeight.bold,
@@ -592,7 +592,7 @@ class _NumberSumsGameScreenState extends State<NumberSumsGameScreen>
                 child: _buildCircleButton(
                   icon: Icons.refresh,
                   onPressed: _showDifficultyDialog,
-                  tooltip: '새 게임',
+                  tooltip: 'app.newGame'.tr(),
                 ),
               ),
             ],
@@ -795,21 +795,21 @@ class _NumberSumsGameScreenState extends State<NumberSumsGameScreen>
         children: [
           _buildCompactModeButton(
             icon: Icons.check_circle_outline,
-            label: '선택',
+            label: 'common.select'.tr(),
             isSelected: _gameMode == NumberSumsGameMode.select,
             onTap: () => _setGameMode(NumberSumsGameMode.select),
           ),
           const SizedBox(height: 6),
           _buildCompactModeButton(
             icon: Icons.remove_circle_outline,
-            label: '제거',
+            label: 'common.remove'.tr(),
             isSelected: _gameMode == NumberSumsGameMode.remove,
             onTap: () => _setGameMode(NumberSumsGameMode.remove),
           ),
           const SizedBox(height: 6),
           _buildCompactModeButton(
             icon: Icons.lightbulb_outline,
-            label: '힌트',
+            label: 'common.hint'.tr(),
             isSelected: _gameMode == NumberSumsGameMode.hint,
             onTap: _showHintAdDialog,
           ),
@@ -935,11 +935,11 @@ class _NumberSumsGameScreenState extends State<NumberSumsGameScreen>
     final remainingWrong = _gameState.remainingWrongCount;
     String helpMessage;
     if (_gameMode == NumberSumsGameMode.select) {
-      helpMessage = '올바른 숫자를 선택하세요! (남은 틀린 숫자: $remainingWrong)';
+      helpMessage = 'games.numberSums.helpSelect'.tr(namedArgs: {'count': '$remainingWrong'});
     } else if (_gameMode == NumberSumsGameMode.remove) {
-      helpMessage = '틀린 숫자를 제거하세요! (남은 개수: $remainingWrong)';
+      helpMessage = 'games.numberSums.helpRemove'.tr(namedArgs: {'count': '$remainingWrong'});
     } else {
-      helpMessage = '힌트: 셀을 선택하면 자동으로 처리됩니다 (남은 개수: $remainingWrong)';
+      helpMessage = 'games.numberSums.helpHint'.tr(namedArgs: {'count': '$remainingWrong'});
     }
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
@@ -957,11 +957,11 @@ class _NumberSumsGameScreenState extends State<NumberSumsGameScreen>
   String _getDifficultyLabel() {
     switch (_selectedDifficulty) {
       case NumberSumsDifficulty.easy:
-        return '쉬움';
+        return 'common.easy'.tr();
       case NumberSumsDifficulty.medium:
-        return '보통';
+        return 'common.normal'.tr();
       case NumberSumsDifficulty.hard:
-        return '어려움';
+        return 'common.hard'.tr();
     }
   }
 
@@ -973,19 +973,19 @@ class _NumberSumsGameScreenState extends State<NumberSumsGameScreen>
         children: [
           _buildModeButton(
             icon: Icons.check_circle_outline,
-            label: '선택',
+            label: 'common.select'.tr(),
             isSelected: _gameMode == NumberSumsGameMode.select,
             onTap: () => _setGameMode(NumberSumsGameMode.select),
           ),
           _buildModeButton(
             icon: Icons.remove_circle_outline,
-            label: '제거',
+            label: 'common.remove'.tr(),
             isSelected: _gameMode == NumberSumsGameMode.remove,
             onTap: () => _setGameMode(NumberSumsGameMode.remove),
           ),
           _buildModeButton(
             icon: Icons.lightbulb_outline,
-            label: '힌트',
+            label: 'common.hint'.tr(),
             isSelected: _gameMode == NumberSumsGameMode.hint,
             onTap: _showHintAdDialog,
           ),
@@ -1054,7 +1054,7 @@ class _NumberSumsGameScreenState extends State<NumberSumsGameScreen>
               ),
               const SizedBox(height: 16),
               Text(
-                '일시정지',
+                'common.pause'.tr(),
                 style: TextStyle(
                   fontSize: 24,
                   fontWeight: FontWeight.bold,
@@ -1063,7 +1063,7 @@ class _NumberSumsGameScreenState extends State<NumberSumsGameScreen>
               ),
               const SizedBox(height: 8),
               Text(
-                '재개 버튼을 눌러 계속하세요',
+                'common.resumeMessage'.tr(),
                 style: TextStyle(
                   fontSize: 14,
                   color: Colors.white.withValues(alpha: 0.5),
@@ -1092,63 +1092,57 @@ class _NumberSumsGameScreenState extends State<NumberSumsGameScreen>
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             mainAxisSize: MainAxisSize.min,
-            children: const [
+            children: [
               Text(
-                '🎯 게임 목표',
-                style: TextStyle(
+                'games.numberSums.rulesObjective'.tr(),
+                style: const TextStyle(
                   color: Colors.white,
                   fontWeight: FontWeight.bold,
                 ),
               ),
-              SizedBox(height: 4),
+              const SizedBox(height: 4),
               Text(
-                '행과 열의 합계 힌트를 이용하여 빈 칸을 채우세요!',
-                style: TextStyle(color: Colors.white70, fontSize: 13),
+                'games.numberSums.rulesObjectiveDesc'.tr(),
+                style: const TextStyle(color: Colors.white70, fontSize: 13),
               ),
-              SizedBox(height: 12),
+              const SizedBox(height: 12),
               Text(
-                '📏 기본 규칙',
-                style: TextStyle(
+                'games.numberSums.rulesBasic'.tr(),
+                style: const TextStyle(
                   color: Colors.white,
                   fontWeight: FontWeight.bold,
                 ),
               ),
-              SizedBox(height: 4),
+              const SizedBox(height: 4),
               Text(
-                '• 각 행에 1~N이 한 번씩 (N=보드 크기)\n'
-                '• 각 열에 1~N이 한 번씩\n'
-                '• 중복 숫자 사용 불가',
-                style: TextStyle(color: Colors.white70, fontSize: 13),
+                'games.numberSums.rulesBasicDesc'.tr(),
+                style: const TextStyle(color: Colors.white70, fontSize: 13),
               ),
-              SizedBox(height: 12),
+              const SizedBox(height: 12),
               Text(
-                '🔢 합계 힌트',
-                style: TextStyle(
+                'games.numberSums.rulesSumHints'.tr(),
+                style: const TextStyle(
                   color: Colors.white,
                   fontWeight: FontWeight.bold,
                 ),
               ),
-              SizedBox(height: 4),
+              const SizedBox(height: 4),
               Text(
-                '• 행/열 끝에 표시된 숫자가 합계 힌트\n'
-                '• 해당 행/열의 특정 칸들의 합계를 나타냄\n'
-                '• 힌트가 없는 칸은 합계에 포함 안 됨',
-                style: TextStyle(color: Colors.white70, fontSize: 13),
+                'games.numberSums.rulesSumHintsDesc'.tr(),
+                style: const TextStyle(color: Colors.white70, fontSize: 13),
               ),
-              SizedBox(height: 12),
+              const SizedBox(height: 12),
               Text(
-                '💡 팁',
-                style: TextStyle(
+                'games.numberSums.rulesTips'.tr(),
+                style: const TextStyle(
                   color: Colors.white,
                   fontWeight: FontWeight.bold,
                 ),
               ),
-              SizedBox(height: 4),
+              const SizedBox(height: 4),
               Text(
-                '• 작은 합계부터 풀어보세요\n'
-                '• 행과 열 힌트를 함께 활용하세요\n'
-                '• 소거법으로 가능한 숫자를 줄이세요',
-                style: TextStyle(color: Colors.white70, fontSize: 13),
+                'games.numberSums.rulesTipsDesc'.tr(),
+                style: const TextStyle(color: Colors.white70, fontSize: 13),
               ),
             ],
           ),

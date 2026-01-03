@@ -2513,98 +2513,83 @@ class _OneCardScreenState extends State<OneCardScreen> with TickerProviderStateM
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             mainAxisSize: MainAxisSize.min,
-            children: const [
+            children: [
               Text(
-                '🎯 게임 목표',
-                style: TextStyle(
+                'games.onecard.rulesObjective'.tr(),
+                style: const TextStyle(
                   color: Colors.white,
                   fontWeight: FontWeight.bold,
                 ),
               ),
-              SizedBox(height: 4),
+              const SizedBox(height: 4),
               Text(
-                '손에 든 카드를 먼저 모두 버리면 승리!\n'
-                '마지막 1장일 때 "원카드"를 외쳐야 합니다.',
-                style: TextStyle(color: Colors.white70, fontSize: 13),
+                'games.onecard.rulesObjectiveDesc'.tr(),
+                style: const TextStyle(color: Colors.white70, fontSize: 13),
               ),
-              SizedBox(height: 12),
+              const SizedBox(height: 12),
               Text(
-                '🎮 게임 방법',
-                style: TextStyle(
+                'games.onecard.rulesHowToPlay'.tr(),
+                style: const TextStyle(
                   color: Colors.white,
                   fontWeight: FontWeight.bold,
                 ),
               ),
-              SizedBox(height: 4),
+              const SizedBox(height: 4),
               Text(
-                '• 같은 숫자 또는 같은 무늬 카드를 낼 수 있음\n'
-                '• 낼 카드가 없으면 덱에서 1장 뽑기\n'
-                '• 반시계 방향으로 차례가 돌아감',
-                style: TextStyle(color: Colors.white70, fontSize: 13),
+                'games.onecard.rulesHowToPlayDesc'.tr(),
+                style: const TextStyle(color: Colors.white70, fontSize: 13),
               ),
-              SizedBox(height: 12),
+              const SizedBox(height: 12),
               Text(
-                '⚔️ 공격 카드',
-                style: TextStyle(
+                'games.onecard.rulesAttackCards'.tr(),
+                style: const TextStyle(
                   color: Colors.red,
                   fontWeight: FontWeight.bold,
                 ),
               ),
-              SizedBox(height: 4),
+              const SizedBox(height: 4),
               Text(
-                '• 2: +2장 뽑기 (중첩 가능)\n'
-                '• A: +3장 뽑기 (♠A는 +5장)\n'
-                '• 흑백조커: +5장 뽑기\n'
-                '• 컬러조커: +7장 뽑기 (방어 불가)',
-                style: TextStyle(color: Colors.white70, fontSize: 13),
+                'games.onecard.rulesAttackCardsDesc'.tr(),
+                style: const TextStyle(color: Colors.white70, fontSize: 13),
               ),
-              SizedBox(height: 12),
+              const SizedBox(height: 12),
               Text(
-                '🛡️ 공격 방어',
-                style: TextStyle(
+                'games.onecard.rulesDefense'.tr(),
+                style: const TextStyle(
                   color: Colors.blue,
                   fontWeight: FontWeight.bold,
                 ),
               ),
-              SizedBox(height: 4),
+              const SizedBox(height: 4),
               Text(
-                '• 2 공격 → 2, 같은무늬 A, 조커로 방어\n'
-                '• A 공격 → A, 조커로 방어\n'
-                '• 흑백조커 → 컬러조커로만 방어\n'
-                '• 컬러조커 → 방어 불가!\n'
-                '• 방어 시 공격이 누적되어 다음 사람에게',
-                style: TextStyle(color: Colors.white70, fontSize: 13),
+                'games.onecard.rulesDefenseDesc'.tr(),
+                style: const TextStyle(color: Colors.white70, fontSize: 13),
               ),
-              SizedBox(height: 12),
+              const SizedBox(height: 12),
               Text(
-                '⚡ 특수 카드',
-                style: TextStyle(
+                'games.onecard.rulesSpecialCards'.tr(),
+                style: const TextStyle(
                   color: Colors.amber,
                   fontWeight: FontWeight.bold,
                 ),
               ),
-              SizedBox(height: 4),
+              const SizedBox(height: 4),
               Text(
-                '• 7: 무늬 변경 가능\n'
-                '• J: 다음 사람 건너뛰기\n'
-                '• Q: 진행 방향 바꾸기\n'
-                '• K: 연속 2턴 건너뛰기',
-                style: TextStyle(color: Colors.white70, fontSize: 13),
+                'games.onecard.rulesSpecialCardsDesc'.tr(),
+                style: const TextStyle(color: Colors.white70, fontSize: 13),
               ),
-              SizedBox(height: 12),
+              const SizedBox(height: 12),
               Text(
-                '💡 팁',
-                style: TextStyle(
+                'games.onecard.rulesTips'.tr(),
+                style: const TextStyle(
                   color: Colors.white,
                   fontWeight: FontWeight.bold,
                 ),
               ),
-              SizedBox(height: 4),
+              const SizedBox(height: 4),
               Text(
-                '• 공격이 오면 같거나 더 강한 공격 카드로 방어\n'
-                '• 조커는 강력하지만 아껴서 사용하세요\n'
-                '• 마지막 1장에서 원카드를 놓치면 벌칙!',
-                style: TextStyle(color: Colors.white70, fontSize: 13),
+                'games.onecard.rulesTipsDesc'.tr(),
+                style: const TextStyle(color: Colors.white70, fontSize: 13),
               ),
             ],
           ),
