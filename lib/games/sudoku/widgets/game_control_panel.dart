@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
+import 'package:easy_localization/easy_localization.dart';
 import 'number_pad.dart';
 
 /// 일반 스도쿠와 사무라이 스도쿠에서 공통으로 사용하는 게임 컨트롤 패널
@@ -276,21 +277,21 @@ class GameControlPanelState extends State<GameControlPanel> {
     Color textColor;
 
     if (_isEraseMode) {
-      guideText = '지우기 모드 - 셀을 탭하여 지우기';
+      guideText = 'games.sudoku.eraseMode'.tr();
       bgColor = Colors.red.shade50;
       borderColor = Colors.red.shade200;
       textColor = Colors.red.shade700;
     } else if (_isQuickInputMode && _isNoteMode) {
       guideText = _quickInputNumber != null
-          ? '숫자 $_quickInputNumber 선택됨 - 셀 탭→메모'
-          : '아래에서 숫자를 먼저 선택하세요';
+          ? 'games.sudoku.quickInputNoteGuide'.tr(namedArgs: {'num': '$_quickInputNumber'})
+          : 'games.sudoku.selectNumber'.tr();
       bgColor = Colors.amber.shade50;
       borderColor = Colors.amber.shade200;
       textColor = Colors.amber.shade700;
     } else {
       guideText = _quickInputNumber != null
-          ? '숫자 $_quickInputNumber 선택됨 - 셀 탭→입력'
-          : '아래에서 숫자를 먼저 선택하세요';
+          ? 'games.sudoku.quickInputGuide'.tr(namedArgs: {'num': '$_quickInputNumber'})
+          : 'games.sudoku.selectNumber'.tr();
       bgColor = Colors.orange.shade50;
       borderColor = Colors.orange.shade200;
       textColor = Colors.orange.shade700;
@@ -349,33 +350,33 @@ class GameControlPanelState extends State<GameControlPanel> {
       children: [
         _buildToggleButton(
           icon: Icons.flash_on,
-          label: '빠른',
+          label: 'games.sudoku.quickInput'.tr(),
           isActive: _isQuickInputMode,
           activeColor: Colors.orange,
           onTap: toggleQuickInputMode,
         ),
         _buildToggleButton(
           icon: Icons.edit_note,
-          label: '메모',
+          label: 'games.sudoku.notes'.tr(),
           isActive: _isNoteMode,
           activeColor: Colors.amber,
           onTap: toggleNoteMode,
         ),
         _buildFeatureButton(
           icon: Icons.grid_on,
-          label: '모든 메모',
+          label: 'games.sudoku.fillNotes'.tr(),
           onTap: widget.onFillAllNotes,
         ),
         _buildToggleButton(
           icon: Icons.cleaning_services,
-          label: '지우기',
+          label: 'games.sudoku.erase'.tr(),
           isActive: _isEraseMode,
           activeColor: Colors.red,
           onTap: toggleEraseMode,
         ),
         _buildFeatureButton(
           icon: Icons.lightbulb_outline,
-          label: '힌트',
+          label: 'common.hint'.tr(),
           onTap: widget.onHint,
           color: Colors.deepOrange,
         ),

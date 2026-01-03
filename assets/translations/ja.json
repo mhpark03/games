@@ -357,6 +357,7 @@
       "fillNotes": "メモ全入力",
       "quickInput": "クイック入力",
       "quickInputGuide": "数字{num}選択中 - セルタップで入力",
+      "quickInputNoteGuide": "数字{num}選択中 - セルタップでメモ",
       "selectNumber": "下から数字を選択してください",
       "selectCell": "セルを先に選択してください",
       "eraseMode": "消去モード - セルをタップして消す",

@@ -365,6 +365,7 @@
       "fillNotes": "Fill Notes",
       "quickInput": "Quick Input",
       "quickInputGuide": "Number {num} selected - Tap cell to input",
+      "quickInputNoteGuide": "Number {num} selected - Tap cell for note",
       "selectNumber": "Select a number below first",
       "selectCell": "Select a cell first",
       "eraseMode": "Erase mode - Tap cell to erase",

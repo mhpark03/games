@@ -339,6 +339,7 @@
       "fillNotes": "填充笔记",
       "quickInput": "快速输入",
       "quickInputGuide": "已选数字{num} - 点击格子输入",
+      "quickInputNoteGuide": "已选数字{num} - 点击格子添加笔记",
       "selectNumber": "请先在下方选择数字",
       "selectCell": "请先选择一个格子",
       "eraseMode": "擦除模式 - 点击格子擦除",
