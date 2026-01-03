@@ -1971,7 +1971,7 @@ class _SolitaireScreenState extends State<SolitaireScreen> {
     if (card.rank >= 11 && card.rank <= 13) {
       IconData faceIcon;
       if (card.rank == 11) {
-        faceIcon = Icons.shield; // Jack (기사)
+        faceIcon = Icons.person; // Jack (기사)
       } else if (card.rank == 12) {
         faceIcon = Icons.face_4; // Queen (여왕)
       } else {
@@ -2022,28 +2022,21 @@ class _SolitaireScreenState extends State<SolitaireScreen> {
       pipSize = 8.0; // 9, 10
     }
 
-    // J, Q, K는 그림으로 표시
+    // J, Q, K는 아이콘만 표시 (무늬 제거)
     if (card.rank >= 11 && card.rank <= 13) {
       IconData icon;
       if (card.rank == 11) {
         // Jack - 기사
-        icon = Icons.security;
+        icon = Icons.person;
       } else if (card.rank == 12) {
         // Queen - 여왕
-        icon = Icons.auto_awesome;
+        icon = Icons.face_4;
       } else {
         // King - 왕관
         icon = Icons.workspace_premium;
       }
-      return Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(icon, color: color, size: 24),
-          Text(
-            suit,
-            style: TextStyle(color: color, fontSize: 12),
-          ),
-        ],
+      return Center(
+        child: Icon(icon, color: color, size: 28),
       );
     }
 
