@@ -2994,7 +2994,7 @@ class _HomeScreenState extends State<HomeScreen> {
             side: BorderSide(color: Colors.deepOrange.shade700.withValues(alpha: 0.5), width: 2),
           ),
           title: Text(
-            '넘버 썸즈',
+            'games.numberSums.name'.tr(),
             style: TextStyle(color: Colors.deepOrange.shade700, fontWeight: FontWeight.bold),
             textAlign: TextAlign.center,
           ),
