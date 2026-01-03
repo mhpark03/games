@@ -1457,6 +1457,10 @@ class _SolitaireScreenState extends State<SolitaireScreen> {
   }
 
   Widget _buildFoundation(int index) {
+    // 크게 모드: 금색 테두리
+    final borderColor = _largeCardMode ? Colors.amber.shade600 : Colors.white30;
+    final suitColor = _largeCardMode ? Colors.amber.shade600 : Colors.white.withAlpha(77);
+
     return DragTarget<Map<String, dynamic>>(
       onWillAcceptWithDetails: (details) {
         final data = details.data;
@@ -1472,15 +1476,40 @@ class _SolitaireScreenState extends State<SolitaireScreen> {
 
         Widget cardWidget;
         if (pile.isEmpty) {
-          cardWidget = _buildCardPlaceholder(
-            child: Text(
-              ['♠', '♥', '♣', '♦'][index],
-              style: TextStyle(
-                fontSize: cardWidth * 0.48,
-                color: Colors.white.withAlpha(77),
+          // 크게 모드: 금색 무늬와 테두리
+          if (_largeCardMode) {
+            cardWidget = Container(
+              width: cardWidth,
+              height: cardHeight,
+              decoration: BoxDecoration(
+                color: Colors.green.shade800.withAlpha(150),
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(
+                  color: isHighlighted ? Colors.yellow : borderColor,
+                  width: isHighlighted ? 3 : 2,
+                ),
               ),
-            ),
-          );
+              child: Center(
+                child: Text(
+                  ['♠', '♥', '♣', '♦'][index],
+                  style: TextStyle(
+                    fontSize: cardWidth * 0.55,
+                    color: suitColor,
+                  ),
+                ),
+              ),
+            );
+          } else {
+            cardWidget = _buildCardPlaceholder(
+              child: Text(
+                ['♠', '♥', '♣', '♦'][index],
+                style: TextStyle(
+                  fontSize: cardWidth * 0.48,
+                  color: suitColor,
+                ),
+              ),
+            );
+          }
         } else {
           final card = pile.last;
           cardWidget = Draggable<Map<String, dynamic>>(
@@ -1488,15 +1517,34 @@ class _SolitaireScreenState extends State<SolitaireScreen> {
             feedback: _buildCard(card, width: cardWidth, height: cardHeight),
             childWhenDragging: pile.length > 1
                 ? _buildCard(pile[pile.length - 2], width: cardWidth, height: cardHeight)
-                : _buildCardPlaceholder(
-                    child: Text(
-                      ['♠', '♥', '♣', '♦'][index],
-                      style: TextStyle(
-                        fontSize: cardWidth * 0.48,
-                        color: Colors.white.withAlpha(77),
+                : _largeCardMode
+                    ? Container(
+                        width: cardWidth,
+                        height: cardHeight,
+                        decoration: BoxDecoration(
+                          color: Colors.green.shade800.withAlpha(150),
+                          borderRadius: BorderRadius.circular(8),
+                          border: Border.all(color: borderColor, width: 2),
+                        ),
+                        child: Center(
+                          child: Text(
+                            ['♠', '♥', '♣', '♦'][index],
+                            style: TextStyle(
+                              fontSize: cardWidth * 0.55,
+                              color: suitColor,
+                            ),
+                          ),
+                        ),
+                      )
+                    : _buildCardPlaceholder(
+                        child: Text(
+                          ['♠', '♥', '♣', '♦'][index],
+                          style: TextStyle(
+                            fontSize: cardWidth * 0.48,
+                            color: suitColor,
+                          ),
+                        ),
                       ),
-                    ),
-                  ),
             onDragStarted: () => _onCardDragStart([card], 'foundation_$index', index),
             onDragEnd: (_) => _onCardDragEnd(),
             child: _buildCard(card, width: cardWidth, height: cardHeight),
@@ -1505,9 +1553,9 @@ class _SolitaireScreenState extends State<SolitaireScreen> {
 
         return Container(
           decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(6),
+            borderRadius: BorderRadius.circular(_largeCardMode ? 8 : 6),
             border: Border.all(
-              color: isHighlighted ? Colors.yellow : Colors.white30,
+              color: isHighlighted ? Colors.yellow : borderColor,
               width: isHighlighted ? 3 : 2,
             ),
           ),
@@ -1689,6 +1737,49 @@ class _SolitaireScreenState extends State<SolitaireScreen> {
     double height = 70,
     bool showPartial = false,
   }) {
+    // 크게 모드: 그라데이션 + 장식 패턴
+    if (_largeCardMode && !showPartial) {
+      return Container(
+        width: width,
+        height: height,
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [Colors.blue.shade600, Colors.blue.shade900],
+          ),
+          borderRadius: BorderRadius.circular(8),
+          border: Border.all(color: Colors.blue.shade300, width: 2),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withAlpha(60),
+              blurRadius: 3,
+              offset: const Offset(1, 2),
+            ),
+          ],
+        ),
+        child: Center(
+          child: Container(
+            width: width * 0.6,
+            height: height * 0.5,
+            decoration: BoxDecoration(
+              color: Colors.blue.shade800.withAlpha(200),
+              borderRadius: BorderRadius.circular(6),
+              border: Border.all(color: Colors.white.withAlpha(100), width: 2),
+            ),
+            child: Center(
+              child: Icon(
+                Icons.auto_awesome,
+                color: Colors.white.withAlpha(150),
+                size: width * 0.35,
+              ),
+            ),
+          ),
+        ),
+      );
+    }
+
+    // 작게 모드 또는 부분 표시: 기존 디자인
     return Container(
       width: width,
       height: height,
@@ -1817,52 +1908,99 @@ class _SolitaireScreenState extends State<SolitaireScreen> {
     );
   }
 
-  // 큰 카드 레이아웃 (새로운)
+  // 큰 카드 레이아웃 (새로운 디자인)
   Widget _buildLargeCardContent(PlayingCard card) {
     return Padding(
       padding: const EdgeInsets.all(3),
       child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           // 상단: 숫자 + 무늬 (크게 표시)
-          Align(
-            alignment: Alignment.topLeft,
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text(
-                  card.rankString,
-                  style: TextStyle(
-                    color: card.suitColor,
-                    fontSize: cardWidth * 0.27,
-                    fontWeight: FontWeight.bold,
-                    height: 1.0,
-                  ),
+          Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                card.rankString,
+                style: TextStyle(
+                  color: card.suitColor,
+                  fontSize: cardWidth * 0.27,
+                  fontWeight: FontWeight.bold,
+                  height: 1.0,
                 ),
-                Text(
-                  card.suitString,
-                  style: TextStyle(
-                    color: card.suitColor,
-                    fontSize: cardWidth * 0.24,
-                    fontWeight: FontWeight.bold,
-                    height: 1.0,
-                  ),
-                ),
-              ],
-            ),
-          ),
-          // 중앙: 큰 무늬 하나
-          Expanded(
-            child: Center(
-              child: Text(
+              ),
+              Text(
                 card.suitString,
                 style: TextStyle(
                   color: card.suitColor,
-                  fontSize: cardWidth * 0.5,  // 동적 무늬 크기
+                  fontSize: cardWidth * 0.22,
+                  height: 1.0,
                 ),
               ),
+            ],
+          ),
+          // 중앙: J/Q/K는 아이콘, 나머지는 무늬
+          Expanded(
+            child: Center(
+              child: _buildLargeCenterContent(card),
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  // 크게 모드 카드 중앙 내용
+  Widget _buildLargeCenterContent(PlayingCard card) {
+    final color = card.suitColor;
+    final suit = card.suitString;
+
+    // J, Q, K는 아이콘 표시
+    if (card.rank >= 11 && card.rank <= 13) {
+      IconData faceIcon;
+      if (card.rank == 11) {
+        faceIcon = Icons.shield; // Jack (기사)
+      } else if (card.rank == 12) {
+        faceIcon = Icons.face_4; // Queen (여왕)
+      } else {
+        faceIcon = Icons.workspace_premium; // King (왕관)
+      }
+      return Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(
+            faceIcon,
+            color: color,
+            size: cardWidth * 0.4,
+          ),
+          Text(
+            suit,
+            style: TextStyle(
+              color: color,
+              fontSize: cardWidth * 0.2,
+              height: 1.0,
+            ),
+          ),
+        ],
+      );
+    }
+
+    // A는 큰 무늬 하나
+    if (card.rank == 1) {
+      return Text(
+        suit,
+        style: TextStyle(
+          color: color,
+          fontSize: cardWidth * 0.55,
+        ),
+      );
+    }
+
+    // 2-10은 큰 무늬 하나
+    return Text(
+      suit,
+      style: TextStyle(
+        color: color,
+        fontSize: cardWidth * 0.45,
       ),
     );
   }
