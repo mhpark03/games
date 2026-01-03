@@ -930,6 +930,7 @@ class _HulaScreenState extends State<HulaScreen> with TickerProviderStateMixin {
   bool _isSeven(PlayingCard card) => card.rank == 7;
 
   // 땡큐 가능 여부 확인 (버린 카드를 가져와서 바로 등록 가능한지)
+  // 주의: 새로운 멜드 등록이 가능할 때만 가져올 수 있음 (붙이기만 가능하면 안됨)
   bool _canThankYou() {
     if (discardPile.isEmpty) return false;
     final card = discardPile.last;
@@ -937,13 +938,7 @@ class _HulaScreenState extends State<HulaScreen> with TickerProviderStateMixin {
     // 1. 7이면 단독 등록 가능
     if (_isSeven(card)) return true;
 
-    // 2. 기존 멜드에 붙이기 가능
-    if (_canAttachToMeld(card) >= 0) return true;
-    for (final compMelds in computerMelds) {
-      if (_canAttachToMeldList(card, compMelds) >= 0) return true;
-    }
-
-    // 3. 손패와 합쳐서 새로운 멜드 가능한지 확인
+    // 2. 손패와 합쳐서 새로운 멜드 가능한지 확인 (붙이기는 제외)
     final thankYouCards = _findThankYouMeldCards(card);
     if (thankYouCards != null) return true;
 
@@ -1602,7 +1597,7 @@ class _HulaScreenState extends State<HulaScreen> with TickerProviderStateMixin {
   // 컴퓨터가 스톱 선언
   void _computerCallStop(int computerIndex) {
     _showMessage('games.hula.computerStop'.tr(namedArgs: {'num': '${computerIndex + 1}'}));
-    _calculateScoresAndEnd();
+    _calculateScoresAndEnd(stopperIndex: computerIndex + 1); // 컴퓨터 인덱스 + 1
   }
 
   // 멜드 등록 여부 결정 (훌라 가능성 + 스톱 위험도 고려)
@@ -2645,13 +2640,13 @@ class _HulaScreenState extends State<HulaScreen> with TickerProviderStateMixin {
     return null;
   }
 
-  // 스톱 선언
+  // 스톱 선언 (플레이어)
   void _callStop() {
     if (gameOver) return;
-    _calculateScoresAndEnd();
+    _calculateScoresAndEnd(stopperIndex: 0); // 플레이어가 스톱
   }
 
-  void _calculateScoresAndEnd() {
+  void _calculateScoresAndEnd({required int stopperIndex}) {
     // 모든 플레이어 점수 계산
     scores[0] = _calculateHandScore(playerHand);
     for (int i = 0; i < computerHands.length; i++) {
@@ -2660,15 +2655,32 @@ class _HulaScreenState extends State<HulaScreen> with TickerProviderStateMixin {
 
     // 최저 점수 찾기
     int minScore = scores[0];
-    int minIndex = 0;
+    List<int> minIndices = [0]; // 최저 점수를 가진 모든 플레이어 인덱스
+
     for (int i = 1; i < scores.length; i++) {
       if (scores[i] < minScore) {
         minScore = scores[i];
-        minIndex = i;
+        minIndices = [i];
+      } else if (scores[i] == minScore) {
+        minIndices.add(i);
       }
     }
 
-    _endGame(minIndex);
+    // 동점자가 여러 명인 경우
+    if (minIndices.length > 1) {
+      // 스톱한 사람이 동점자에 포함되어 있으면 스톱한 사람은 패배
+      if (minIndices.contains(stopperIndex)) {
+        // 스톱한 사람을 제외한 동점자 중 첫 번째가 승리
+        minIndices.remove(stopperIndex);
+        _endGame(minIndices.first);
+      } else {
+        // 스톱한 사람이 동점자가 아니면 첫 번째 동점자가 승리
+        _endGame(minIndices.first);
+      }
+    } else {
+      // 단독 최저 점수면 그 사람이 승리
+      _endGame(minIndices.first);
+    }
   }
 
   int _calculateHandScore(List<PlayingCard> hand) {
