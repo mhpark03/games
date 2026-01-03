@@ -56,7 +56,16 @@
       "description": "떨어지는 블록을 회전하고 배치하여 가로줄을 완성하면 줄이 사라집니다. 블록이 천장에 닿으면 게임 오버!",
       "level": "레벨",
       "lines": "줄",
-      "nextBlock": "다음 블록"
+      "nextBlock": "다음 블록",
+      "rulesTitle": "테트리스 게임 규칙",
+      "objective": "게임 목표",
+      "objectiveDesc": "떨어지는 블록을 배치하여 가로줄을 완성하세요.\n완성된 줄은 사라지고 점수를 얻습니다.",
+      "controls": "조작 방법",
+      "controlsDesc": "• ←→ : 블록 좌우 이동\n• ↓ : 블록 빠르게 내리기\n• 회전 버튼 : 블록 90° 회전\n• 드롭 버튼 : 블록 즉시 떨어뜨리기",
+      "scoring": "점수 시스템",
+      "scoringDesc": "• 1줄 완성: 100점\n• 2줄 동시: 300점\n• 3줄 동시: 500점\n• 4줄 동시 (테트리스): 800점",
+      "gameOverTitle": "게임 오버",
+      "gameOverDesc": "블록이 천장에 닿으면 게임이 끝납니다."
     },
     "gomoku": {
       "name": "오목",
@@ -67,7 +76,8 @@
       "blackWins": "흑 승리!",
       "whiteWins": "백 승리!",
       "yourTurn": "당신의 차례",
-      "computerThinking": "컴퓨터가 생각 중..."
+      "computerThinking": "컴퓨터가 생각 중...",
+      "rulesTitle": "오목 게임 규칙"
     },
     "othello": {
       "name": "오델로",
@@ -78,7 +88,8 @@
       "blackCount": "흑: {count}",
       "whiteCount": "백: {count}",
       "noValidMove": "둘 수 있는 곳이 없습니다",
-      "pass": "패스"
+      "pass": "패스",
+      "rulesTitle": "오델로 게임 규칙"
     },
     "chess": {
       "name": "체스",
@@ -88,7 +99,8 @@
       "checkmate": "체크메이트!",
       "stalemate": "스테일메이트",
       "promotion": "프로모션",
-      "selectPiece": "승급할 기물 선택"
+      "selectPiece": "승급할 기물 선택",
+      "rulesTitle": "체스 게임 규칙"
     },
     "janggi": {
       "name": "장기",
@@ -97,7 +109,8 @@
       "cho": "초",
       "han": "한",
       "choWins": "초 승리!",
-      "hanWins": "한 승리!"
+      "hanWins": "한 승리!",
+      "rulesTitle": "장기 게임 규칙"
     },
     "solitaire": {
       "name": "솔리테어",
@@ -115,7 +128,8 @@
       "flipRight": "오른쪽에서 넘기기",
       "youWin": "승리했습니다!",
       "movesCount": "이동: {count}",
-      "timeElapsed": "시간: {time}"
+      "timeElapsed": "시간: {time}",
+      "rulesTitle": "솔리테어 게임 규칙"
     },
     "minesweeper": {
       "name": "지뢰찾기",
@@ -124,7 +138,8 @@
       "mines": "지뢰",
       "flags": "깃발",
       "mineExploded": "지뢰 폭발!",
-      "cleared": "클리어!"
+      "cleared": "클리어!",
+      "rulesTitle": "지뢰찾기 게임 규칙"
     },
     "baseball": {
       "name": "숫자야구",
@@ -135,7 +150,8 @@
       "out": "아웃",
       "guess": "추측",
       "attempts": "시도 횟수",
-      "correct": "정답!"
+      "correct": "정답!",
+      "rulesTitle": "숫자야구 게임 규칙"
     },
     "onecard": {
       "name": "원카드",
@@ -144,7 +160,8 @@
       "yourCards": "내 카드",
       "drawCard": "카드 뽑기",
       "uno": "원카드!",
-      "winner": "{player} 승리!"
+      "winner": "{player} 승리!",
+      "rulesTitle": "원카드 게임 규칙"
     },
     "yutnori": {
       "name": "윷놀이",
@@ -158,7 +175,8 @@
       "backDo": "백도",
       "throw": "던지기",
       "selectPiece": "말 선택",
-      "goal": "골인"
+      "goal": "골인",
+      "rulesTitle": "윷놀이 게임 규칙"
     },
     "hula": {
       "name": "훌라",
@@ -166,7 +184,8 @@
       "description": "화투 카드 게임입니다. 패를 조합하여 먼저 모든 카드를 내려놓으면 승리합니다.",
       "meld": "멜드",
       "thankYou": "땡큐",
-      "declare": "선언"
+      "declare": "선언",
+      "rulesTitle": "훌라 게임 규칙"
     },
     "sudoku": {
       "name": "스도쿠",
@@ -185,7 +204,8 @@
       "wrongAnswer": "오답입니다",
       "failCount": "실패 횟수: {count}회",
       "completed": "완료!",
-      "boardNum": "보드 {num}"
+      "boardNum": "보드 {num}",
+      "rulesTitle": "스도쿠 게임 규칙"
     },
     "numberSums": {
       "name": "넘버 썸즈",
@@ -193,7 +213,8 @@
       "description": "숫자 합계 힌트를 보고 빈 칸에 숫자를 채우는 퍼즐입니다.",
       "sum": "합계",
       "row": "행",
-      "column": "열"
+      "column": "열",
+      "rulesTitle": "넘버 썸즈 게임 규칙"
     }
   },
   "dialog": {

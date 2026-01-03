@@ -56,7 +56,16 @@
       "description": "旋转并放置下落的方块，完成一行即可消除。方块堆到顶部游戏结束！",
       "level": "等级",
       "lines": "行数",
-      "nextBlock": "下一个"
+      "nextBlock": "下一个",
+      "rulesTitle": "俄罗斯方块游戏规则",
+      "objective": "游戏目标",
+      "objectiveDesc": "放置下落的方块完成横行。\n完成的行会消失并获得分数。",
+      "controls": "操作方法",
+      "controlsDesc": "• ←→ : 左右移动方块\n• ↓ : 快速下落方块\n• 旋转按钮 : 旋转方块90°\n• 掉落按钮 : 立即掉落方块",
+      "scoring": "计分系统",
+      "scoringDesc": "• 消除1行: 100分\n• 同时消除2行: 300分\n• 同时消除3行: 500分\n• 同时消除4行 (俄罗斯方块): 800分",
+      "gameOverTitle": "游戏结束",
+      "gameOverDesc": "方块堆到顶部时游戏结束。"
     },
     "gomoku": {
       "name": "五子棋",
@@ -67,7 +76,8 @@
       "blackWins": "黑方胜利！",
       "whiteWins": "白方胜利！",
       "yourTurn": "你的回合",
-      "computerThinking": "电脑思考中..."
+      "computerThinking": "电脑思考中...",
+      "rulesTitle": "五子棋游戏规则"
     },
     "othello": {
       "name": "黑白棋",
@@ -78,7 +88,8 @@
       "blackCount": "黑: {count}",
       "whiteCount": "白: {count}",
       "noValidMove": "没有可落子的位置",
-      "pass": "跳过"
+      "pass": "跳过",
+      "rulesTitle": "黑白棋游戏规则"
     },
     "chess": {
       "name": "国际象棋",
@@ -88,7 +99,8 @@
       "checkmate": "将死！",
       "stalemate": "逼和",
       "promotion": "升变",
-      "selectPiece": "选择升变棋子"
+      "selectPiece": "选择升变棋子",
+      "rulesTitle": "国际象棋游戏规则"
     },
     "janggi": {
       "name": "韩国象棋",
@@ -97,7 +109,8 @@
       "cho": "楚",
       "han": "汉",
       "choWins": "楚方胜利！",
-      "hanWins": "汉方胜利！"
+      "hanWins": "汉方胜利！",
+      "rulesTitle": "韩国象棋游戏规则"
     },
     "solitaire": {
       "name": "纸牌",
@@ -115,7 +128,8 @@
       "flipRight": "从右翻牌",
       "youWin": "你赢了！",
       "movesCount": "步数: {count}",
-      "timeElapsed": "时间: {time}"
+      "timeElapsed": "时间: {time}",
+      "rulesTitle": "纸牌游戏规则"
     },
     "minesweeper": {
       "name": "扫雷",
@@ -124,7 +138,8 @@
       "mines": "地雷",
       "flags": "旗帜",
       "mineExploded": "地雷爆炸！",
-      "cleared": "通关！"
+      "cleared": "通关！",
+      "rulesTitle": "扫雷游戏规则"
     },
     "baseball": {
       "name": "数字棒球",
@@ -135,7 +150,8 @@
       "out": "出局",
       "guess": "猜测",
       "attempts": "尝试次数",
-      "correct": "正确！"
+      "correct": "正确！",
+      "rulesTitle": "数字棒球游戏规则"
     },
     "onecard": {
       "name": "单张牌",
@@ -144,7 +160,8 @@
       "yourCards": "我的手牌",
       "drawCard": "抽牌",
       "uno": "单张牌！",
-      "winner": "{player}获胜！"
+      "winner": "{player}获胜！",
+      "rulesTitle": "单张牌游戏规则"
     },
     "yutnori": {
       "name": "掷柶",
@@ -158,7 +175,8 @@
       "backDo": "后道",
       "throw": "投掷",
       "selectPiece": "选择棋子",
-      "goal": "终点"
+      "goal": "终点",
+      "rulesTitle": "掷柶游戏规则"
     },
     "hula": {
       "name": "花图",
@@ -166,7 +184,8 @@
       "description": "韩国花牌游戏。组合牌型，先出完手牌的玩家获胜。",
       "meld": "组牌",
       "thankYou": "谢谢",
-      "declare": "宣告"
+      "declare": "宣告",
+      "rulesTitle": "花图游戏规则"
     },
     "sudoku": {
       "name": "数独",
@@ -185,7 +204,8 @@
       "wrongAnswer": "答案错误",
       "failCount": "失败次数: {count}次",
       "completed": "完成！",
-      "boardNum": "棋盘{num}"
+      "boardNum": "棋盘{num}",
+      "rulesTitle": "数独游戏规则"
     },
     "numberSums": {
       "name": "数字求和",
@@ -193,7 +213,8 @@
       "description": "根据行列的求和提示填入数字。",
       "sum": "总和",
       "row": "行",
-      "column": "列"
+      "column": "列",
+      "rulesTitle": "数字求和游戏规则"
     }
   },
   "dialog": {

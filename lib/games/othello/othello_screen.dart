@@ -1,6 +1,7 @@
 import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:easy_localization/easy_localization.dart';
 import '../../services/game_save_service.dart';
 import '../../services/ad_service.dart';
 
@@ -680,14 +681,14 @@ class _OthelloScreenState extends State<OthelloScreen> {
           IconButton(
             icon: const Icon(Icons.help_outline),
             onPressed: _showRulesDialog,
-            tooltip: '게임 규칙',
+            tooltip: 'app.rules'.tr(),
           ),
           Opacity(
             opacity: moveHistory.isNotEmpty && !gameOver ? 1.0 : 0.3,
             child: IconButton(
               icon: const Icon(Icons.undo),
               onPressed: moveHistory.isNotEmpty && !gameOver ? _showUndoAdDialog : null,
-              tooltip: '되돌리기',
+              tooltip: 'common.undo'.tr(),
             ),
           ),
           IconButton(
@@ -1269,9 +1270,9 @@ class _OthelloScreenState extends State<OthelloScreen> {
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(16),
         ),
-        title: const Text(
-          '오델로 게임 규칙',
-          style: TextStyle(color: Colors.green),
+        title: Text(
+          'games.othello.rulesTitle'.tr(),
+          style: const TextStyle(color: Colors.green),
         ),
         content: SingleChildScrollView(
           child: Column(
@@ -1343,7 +1344,7 @@ class _OthelloScreenState extends State<OthelloScreen> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('확인'),
+            child: Text('app.confirm'.tr()),
           ),
         ],
       ),

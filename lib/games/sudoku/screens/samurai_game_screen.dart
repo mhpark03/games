@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:easy_localization/easy_localization.dart';
 import '../models/samurai_game_state.dart';
 import '../models/samurai_sudoku_generator.dart';
 import '../services/game_storage.dart';
@@ -273,7 +274,7 @@ class _SamuraiGameScreenState extends State<SamuraiGameScreen>
               Navigator.pop(context); // 팝업 닫기
               Navigator.pop(context); // 홈 화면으로 이동
             },
-            child: const Text('확인'),
+            child: Text('app.confirm'.tr()),
           ),
         ],
       ),
@@ -357,7 +358,7 @@ class _SamuraiGameScreenState extends State<SamuraiGameScreen>
           IconButton(
             onPressed: _showRulesDialog,
             icon: const Icon(Icons.help_outline, color: Colors.white),
-            tooltip: '게임 규칙',
+            tooltip: 'app.rules'.tr(),
           ),
           TextButton.icon(
             onPressed: _showDifficultyDialog,
@@ -720,9 +721,9 @@ class _SamuraiGameScreenState extends State<SamuraiGameScreen>
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(16),
         ),
-        title: const Text(
-          '사무라이 스도쿠 규칙',
-          style: TextStyle(color: Colors.deepPurple),
+        title: Text(
+          'games.sudoku.rulesTitle'.tr(),
+          style: const TextStyle(color: Colors.deepPurple),
         ),
         content: SingleChildScrollView(
           child: Column(
@@ -792,7 +793,7 @@ class _SamuraiGameScreenState extends State<SamuraiGameScreen>
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('확인'),
+            child: Text('app.confirm'.tr()),
           ),
         ],
       ),

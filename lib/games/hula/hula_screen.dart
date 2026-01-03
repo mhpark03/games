@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:easy_localization/easy_localization.dart';
 import '../../services/game_save_service.dart';
 
 // 카드 무늬
@@ -3705,9 +3706,9 @@ class _HulaScreenState extends State<HulaScreen> with TickerProviderStateMixin {
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(16),
         ),
-        title: const Text(
-          '훌라 게임 규칙',
-          style: TextStyle(color: Colors.amber),
+        title: Text(
+          'games.hula.rulesTitle'.tr(),
+          style: const TextStyle(color: Colors.amber),
         ),
         content: SingleChildScrollView(
           child: Column(
@@ -3826,7 +3827,7 @@ class _HulaScreenState extends State<HulaScreen> with TickerProviderStateMixin {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('확인'),
+            child: Text('app.confirm'.tr()),
           ),
         ],
       ),

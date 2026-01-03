@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:easy_localization/easy_localization.dart';
 import '../../services/game_save_service.dart';
 
 // 카드 무늬
@@ -990,12 +991,12 @@ class _OneCardScreenState extends State<OneCardScreen> with TickerProviderStateM
           IconButton(
             icon: const Icon(Icons.help_outline),
             onPressed: _showRulesDialog,
-            tooltip: '게임 규칙',
+            tooltip: 'app.rules'.tr(),
           ),
           IconButton(
             icon: const Icon(Icons.refresh),
             onPressed: _restartGame,
-            tooltip: '다시 시작',
+            tooltip: 'app.restart'.tr(),
           ),
         ],
       ),
@@ -2504,9 +2505,9 @@ class _OneCardScreenState extends State<OneCardScreen> with TickerProviderStateM
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(16),
         ),
-        title: const Text(
-          '원카드 게임 규칙',
-          style: TextStyle(color: Colors.purple),
+        title: Text(
+          'games.onecard.rulesTitle'.tr(),
+          style: const TextStyle(color: Colors.purple),
         ),
         content: SingleChildScrollView(
           child: Column(
@@ -2611,7 +2612,7 @@ class _OneCardScreenState extends State<OneCardScreen> with TickerProviderStateM
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('확인'),
+            child: Text('app.confirm'.tr()),
           ),
         ],
       ),

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:easy_localization/easy_localization.dart';
 import 'dart:math';
 import 'dart:async';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -1009,14 +1010,14 @@ class _SolitaireScreenState extends State<SolitaireScreen> {
           IconButton(
             icon: const Icon(Icons.help_outline),
             onPressed: _showRulesDialog,
-            tooltip: '게임 규칙',
+            tooltip: 'app.rules'.tr(),
           ),
           Opacity(
             opacity: _undoHistory.isNotEmpty ? 1.0 : 0.3,
             child: IconButton(
               icon: const Icon(Icons.undo),
               onPressed: _undoHistory.isEmpty ? null : _showUndoAdDialog,
-              tooltip: '되돌리기',
+              tooltip: 'common.undo'.tr(),
             ),
           ),
           IconButton(
@@ -2374,7 +2375,7 @@ class _SolitaireScreenState extends State<SolitaireScreen> {
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(context),
-              child: const Text('확인'),
+              child: Text('app.confirm'.tr()),
             ),
           ],
         ),
@@ -2391,7 +2392,7 @@ class _SolitaireScreenState extends State<SolitaireScreen> {
           borderRadius: BorderRadius.circular(16),
         ),
         title: Text(
-          '솔리테어 게임 규칙',
+          'games.solitaire.rulesTitle'.tr(),
           style: TextStyle(color: Colors.green.shade400),
         ),
         content: SingleChildScrollView(
@@ -2464,7 +2465,7 @@ class _SolitaireScreenState extends State<SolitaireScreen> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('확인'),
+            child: Text('app.confirm'.tr()),
           ),
         ],
       ),

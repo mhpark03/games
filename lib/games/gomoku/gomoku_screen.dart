@@ -1,6 +1,7 @@
 import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:easy_localization/easy_localization.dart';
 import '../../services/game_save_service.dart';
 import '../../services/ad_service.dart';
 
@@ -1110,7 +1111,7 @@ class _GomokuScreenState extends State<GomokuScreen> {
           IconButton(
             icon: const Icon(Icons.help_outline),
             onPressed: _showRulesDialog,
-            tooltip: '게임 규칙',
+            tooltip: 'app.rules'.tr(),
           ),
           Opacity(
             opacity: moveHistory.isNotEmpty && !gameOver ? 1.0 : 0.3,
@@ -1586,9 +1587,9 @@ class _GomokuScreenState extends State<GomokuScreen> {
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(16),
         ),
-        title: const Text(
-          '오목 게임 규칙',
-          style: TextStyle(color: Colors.amber),
+        title: Text(
+          'games.gomoku.rulesTitle'.tr(),
+          style: const TextStyle(color: Colors.amber),
         ),
         content: SingleChildScrollView(
           child: Column(
@@ -1658,7 +1659,7 @@ class _GomokuScreenState extends State<GomokuScreen> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('확인'),
+            child: Text('app.confirm'.tr()),
           ),
         ],
       ),

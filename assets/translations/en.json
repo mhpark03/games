@@ -56,7 +56,16 @@
       "description": "Rotate and place falling blocks to complete horizontal lines. Game over when blocks reach the top!",
       "level": "Level",
       "lines": "Lines",
-      "nextBlock": "Next"
+      "nextBlock": "Next",
+      "rulesTitle": "Tetris Game Rules",
+      "objective": "Objective",
+      "objectiveDesc": "Place falling blocks to complete horizontal lines.\nCompleted lines disappear and you earn points.",
+      "controls": "Controls",
+      "controlsDesc": "• ←→ : Move block left/right\n• ↓ : Move block down faster\n• Rotate button : Rotate block 90°\n• Drop button : Drop block instantly",
+      "scoring": "Scoring System",
+      "scoringDesc": "• 1 line: 100 points\n• 2 lines: 300 points\n• 3 lines: 500 points\n• 4 lines (Tetris): 800 points",
+      "gameOverTitle": "Game Over",
+      "gameOverDesc": "The game ends when blocks reach the ceiling."
     },
     "gomoku": {
       "name": "Gomoku",
@@ -67,7 +76,8 @@
       "blackWins": "Black Wins!",
       "whiteWins": "White Wins!",
       "yourTurn": "Your Turn",
-      "computerThinking": "Computer thinking..."
+      "computerThinking": "Computer thinking...",
+      "rulesTitle": "Gomoku Rules"
     },
     "othello": {
       "name": "Othello",
@@ -78,7 +88,8 @@
       "blackCount": "Black: {count}",
       "whiteCount": "White: {count}",
       "noValidMove": "No valid moves available",
-      "pass": "Pass"
+      "pass": "Pass",
+      "rulesTitle": "Othello Rules"
     },
     "chess": {
       "name": "Chess",
@@ -88,7 +99,8 @@
       "checkmate": "Checkmate!",
       "stalemate": "Stalemate",
       "promotion": "Promotion",
-      "selectPiece": "Select piece for promotion"
+      "selectPiece": "Select piece for promotion",
+      "rulesTitle": "Chess Rules"
     },
     "janggi": {
       "name": "Janggi",
@@ -97,7 +109,8 @@
       "cho": "Cho",
       "han": "Han",
       "choWins": "Cho Wins!",
-      "hanWins": "Han Wins!"
+      "hanWins": "Han Wins!",
+      "rulesTitle": "Janggi Rules"
     },
     "solitaire": {
       "name": "Solitaire",
@@ -115,7 +128,8 @@
       "flipRight": "Flip from right",
       "youWin": "You Win!",
       "movesCount": "Moves: {count}",
-      "timeElapsed": "Time: {time}"
+      "timeElapsed": "Time: {time}",
+      "rulesTitle": "Solitaire Rules"
     },
     "minesweeper": {
       "name": "Minesweeper",
@@ -124,7 +138,8 @@
       "mines": "Mines",
       "flags": "Flags",
       "mineExploded": "Mine Exploded!",
-      "cleared": "Cleared!"
+      "cleared": "Cleared!",
+      "rulesTitle": "Minesweeper Rules"
     },
     "baseball": {
       "name": "Number Baseball",
@@ -135,7 +150,8 @@
       "out": "Out",
       "guess": "Guess",
       "attempts": "Attempts",
-      "correct": "Correct!"
+      "correct": "Correct!",
+      "rulesTitle": "Number Baseball Rules"
     },
     "onecard": {
       "name": "One Card",
@@ -144,7 +160,8 @@
       "yourCards": "Your Cards",
       "drawCard": "Draw Card",
       "uno": "One Card!",
-      "winner": "{player} Wins!"
+      "winner": "{player} Wins!",
+      "rulesTitle": "One Card Rules"
     },
     "yutnori": {
       "name": "Yutnori",
@@ -158,7 +175,8 @@
       "backDo": "Back Do",
       "throw": "Throw",
       "selectPiece": "Select Piece",
-      "goal": "Goal"
+      "goal": "Goal",
+      "rulesTitle": "Yutnori Rules"
     },
     "hula": {
       "name": "Hula",
@@ -166,7 +184,8 @@
       "description": "Korean flower card game. Combine cards and be the first to play all your cards to win.",
       "meld": "Meld",
       "thankYou": "Thank You",
-      "declare": "Declare"
+      "declare": "Declare",
+      "rulesTitle": "Hula Rules"
     },
     "sudoku": {
       "name": "Sudoku",
@@ -185,7 +204,8 @@
       "wrongAnswer": "Wrong Answer",
       "failCount": "Failures: {count}",
       "completed": "Completed!",
-      "boardNum": "Board {num}"
+      "boardNum": "Board {num}",
+      "rulesTitle": "Sudoku Rules"
     },
     "numberSums": {
       "name": "Number Sums",
@@ -193,7 +213,8 @@
       "description": "Fill in the blanks using the sum hints for rows and columns.",
       "sum": "Sum",
       "row": "Row",
-      "column": "Column"
+      "column": "Column",
+      "rulesTitle": "Number Sums Rules"
     }
   },
   "dialog": {

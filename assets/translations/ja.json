@@ -56,7 +56,16 @@
       "description": "落ちてくるブロックを回転させて配置し、横一列を完成させると消えます。ブロックが天井に達するとゲームオーバー！",
       "level": "レベル",
       "lines": "ライン",
-      "nextBlock": "次のブロック"
+      "nextBlock": "次のブロック",
+      "rulesTitle": "テトリス ゲームルール",
+      "objective": "ゲーム目標",
+      "objectiveDesc": "落ちてくるブロックを配置して横一列を完成させましょう。\n完成した列は消えてポイントを獲得します。",
+      "controls": "操作方法",
+      "controlsDesc": "• ←→ : ブロックを左右に移動\n• ↓ : ブロックを速く落とす\n• 回転ボタン : ブロックを90°回転\n• ドロップボタン : ブロックを即座に落とす",
+      "scoring": "スコアシステム",
+      "scoringDesc": "• 1列完成: 100点\n• 2列同時: 300点\n• 3列同時: 500点\n• 4列同時 (テトリス): 800点",
+      "gameOverTitle": "ゲームオーバー",
+      "gameOverDesc": "ブロックが天井に達するとゲームが終了します。"
     },
     "gomoku": {
       "name": "五目並べ",
@@ -67,7 +76,8 @@
       "blackWins": "黒の勝利！",
       "whiteWins": "白の勝利！",
       "yourTurn": "あなたの番",
-      "computerThinking": "コンピュータ思考中..."
+      "computerThinking": "コンピュータ思考中...",
+      "rulesTitle": "五目並べ ルール"
     },
     "othello": {
       "name": "オセロ",
@@ -78,7 +88,8 @@
       "blackCount": "黒: {count}",
       "whiteCount": "白: {count}",
       "noValidMove": "置ける場所がありません",
-      "pass": "パス"
+      "pass": "パス",
+      "rulesTitle": "オセロ ルール"
     },
     "chess": {
       "name": "チェス",
@@ -88,7 +99,8 @@
       "checkmate": "チェックメイト！",
       "stalemate": "ステイルメイト",
       "promotion": "プロモーション",
-      "selectPiece": "昇格する駒を選択"
+      "selectPiece": "昇格する駒を選択",
+      "rulesTitle": "チェス ルール"
     },
     "janggi": {
       "name": "チャンギ",
@@ -97,7 +109,8 @@
       "cho": "楚",
       "han": "漢",
       "choWins": "楚の勝利！",
-      "hanWins": "漢の勝利！"
+      "hanWins": "漢の勝利！",
+      "rulesTitle": "チャンギ ルール"
     },
     "solitaire": {
       "name": "ソリティア",
@@ -115,7 +128,8 @@
       "flipRight": "右からめくる",
       "youWin": "勝利！",
       "movesCount": "手数: {count}",
-      "timeElapsed": "時間: {time}"
+      "timeElapsed": "時間: {time}",
+      "rulesTitle": "ソリティア ルール"
     },
     "minesweeper": {
       "name": "マインスイーパー",
@@ -124,7 +138,8 @@
       "mines": "地雷",
       "flags": "旗",
       "mineExploded": "地雷爆発！",
-      "cleared": "クリア！"
+      "cleared": "クリア！",
+      "rulesTitle": "マインスイーパー ルール"
     },
     "baseball": {
       "name": "数字野球",
@@ -135,7 +150,8 @@
       "out": "アウト",
       "guess": "推測",
       "attempts": "試行回数",
-      "correct": "正解！"
+      "correct": "正解！",
+      "rulesTitle": "数字野球 ルール"
     },
     "onecard": {
       "name": "ワンカード",
@@ -144,7 +160,8 @@
       "yourCards": "手札",
       "drawCard": "カードを引く",
       "uno": "ワンカード！",
-      "winner": "{player}の勝利！"
+      "winner": "{player}の勝利！",
+      "rulesTitle": "ワンカード ルール"
     },
     "yutnori": {
       "name": "ユンノリ",
@@ -158,7 +175,8 @@
       "backDo": "バックト",
       "throw": "投げる",
       "selectPiece": "駒を選択",
-      "goal": "ゴール"
+      "goal": "ゴール",
+      "rulesTitle": "ユンノリ ルール"
     },
     "hula": {
       "name": "フラ",
@@ -166,7 +184,8 @@
       "description": "花札カードゲームです。カードを組み合わせて、最初にすべてのカードを出した人が勝ちです。",
       "meld": "メルド",
       "thankYou": "テンキュー",
-      "declare": "宣言"
+      "declare": "宣言",
+      "rulesTitle": "フラ ルール"
     },
     "sudoku": {
       "name": "数独",
@@ -185,7 +204,8 @@
       "wrongAnswer": "不正解",
       "failCount": "失敗回数: {count}回",
       "completed": "完成！",
-      "boardNum": "ボード{num}"
+      "boardNum": "ボード{num}",
+      "rulesTitle": "数独 ルール"
     },
     "numberSums": {
       "name": "ナンバーサムズ",
@@ -193,7 +213,8 @@
       "description": "合計のヒントを見て空欄に数字を埋めるパズルです。",
       "sum": "合計",
       "row": "行",
-      "column": "列"
+      "column": "列",
+      "rulesTitle": "ナンバーサムズ ルール"
     }
   },
   "dialog": {

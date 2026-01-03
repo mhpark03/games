@@ -1,6 +1,7 @@
 import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:easy_localization/easy_localization.dart';
 import '../../services/ad_service.dart';
 
 enum BaseballDifficulty {
@@ -450,17 +451,17 @@ class _BaseballScreenState extends State<BaseballScreen> {
           IconButton(
             icon: const Icon(Icons.help_outline),
             onPressed: _showRulesDialog,
-            tooltip: '게임 규칙',
+            tooltip: 'app.rules'.tr(),
           ),
           IconButton(
             icon: const Icon(Icons.lightbulb_outline),
             onPressed: !gameOver ? _showHintAdDialog : null,
-            tooltip: '힌트',
+            tooltip: 'common.hint'.tr(),
           ),
           IconButton(
             icon: const Icon(Icons.refresh),
             onPressed: _restartGame,
-            tooltip: '다시 시작',
+            tooltip: 'app.restart'.tr(),
           ),
         ],
       ),
@@ -1320,9 +1321,9 @@ class _BaseballScreenState extends State<BaseballScreen> {
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(16),
         ),
-        title: const Text(
-          '숫자야구 게임 규칙',
-          style: TextStyle(color: Colors.deepOrange),
+        title: Text(
+          'games.baseball.rulesTitle'.tr(),
+          style: const TextStyle(color: Colors.deepOrange),
         ),
         content: SingleChildScrollView(
           child: Column(
@@ -1394,7 +1395,7 @@ class _BaseballScreenState extends State<BaseballScreen> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('확인'),
+            child: Text('app.confirm'.tr()),
           ),
         ],
       ),

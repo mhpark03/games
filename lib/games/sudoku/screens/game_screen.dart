@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:easy_localization/easy_localization.dart';
 import '../models/game_state.dart';
 import '../models/sudoku_generator.dart';
 import '../services/game_storage.dart';
@@ -474,7 +475,7 @@ class _GameScreenState extends State<GameScreen> with WidgetsBindingObserver {
               Navigator.pop(context); // 팝업 닫기
               Navigator.pop(context); // 홈 화면으로 이동
             },
-            child: const Text('확인'),
+            child: Text('app.confirm'.tr()),
           ),
         ],
       ),
@@ -773,7 +774,7 @@ class _GameScreenState extends State<GameScreen> with WidgetsBindingObserver {
           IconButton(
             onPressed: _showRulesDialog,
             icon: const Icon(Icons.help_outline, color: Colors.white),
-            tooltip: '게임 규칙',
+            tooltip: 'app.rules'.tr(),
           ),
           TextButton.icon(
             onPressed: _showDifficultyDialog,
@@ -1135,9 +1136,9 @@ class _GameScreenState extends State<GameScreen> with WidgetsBindingObserver {
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(16),
         ),
-        title: const Text(
-          '스도쿠 게임 규칙',
-          style: TextStyle(color: Colors.blue),
+        title: Text(
+          'games.sudoku.rulesTitle'.tr(),
+          style: const TextStyle(color: Colors.blue),
         ),
         content: SingleChildScrollView(
           child: Column(
@@ -1208,7 +1209,7 @@ class _GameScreenState extends State<GameScreen> with WidgetsBindingObserver {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('확인'),
+            child: Text('app.confirm'.tr()),
           ),
         ],
       ),

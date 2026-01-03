@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:easy_localization/easy_localization.dart';
 import '../models/killer_game_state.dart';
 import '../models/killer_sudoku_generator.dart';
 import '../services/game_storage.dart';
@@ -472,7 +473,7 @@ class _KillerGameScreenState extends State<KillerGameScreen>
               Navigator.pop(context);
               Navigator.pop(context);
             },
-            child: const Text('확인'),
+            child: Text('app.confirm'.tr()),
           ),
         ],
       ),
@@ -755,7 +756,7 @@ class _KillerGameScreenState extends State<KillerGameScreen>
           IconButton(
             onPressed: _showRulesDialog,
             icon: const Icon(Icons.help_outline, color: Colors.white),
-            tooltip: '게임 규칙',
+            tooltip: 'app.rules'.tr(),
           ),
           TextButton.icon(
             onPressed: _showDifficultyDialog,
@@ -1115,9 +1116,9 @@ class _KillerGameScreenState extends State<KillerGameScreen>
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(16),
         ),
-        title: const Text(
-          '킬러 스도쿠 규칙',
-          style: TextStyle(color: Colors.teal),
+        title: Text(
+          'games.sudoku.rulesTitle'.tr(),
+          style: const TextStyle(color: Colors.teal),
         ),
         content: SingleChildScrollView(
           child: Column(
@@ -1186,7 +1187,7 @@ class _KillerGameScreenState extends State<KillerGameScreen>
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('확인'),
+            child: Text('app.confirm'.tr()),
           ),
         ],
       ),

@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:easy_localization/easy_localization.dart';
 import '../../services/game_save_service.dart';
 
 // 윷 결과
@@ -1110,12 +1111,12 @@ class _YutnoriScreenState extends State<YutnoriScreen>
           IconButton(
             icon: const Icon(Icons.help_outline),
             onPressed: _showRulesDialog,
-            tooltip: '게임 규칙',
+            tooltip: 'app.rules'.tr(),
           ),
           IconButton(
             icon: const Icon(Icons.refresh),
             onPressed: _restartGame,
-            tooltip: '다시 시작',
+            tooltip: 'app.restart'.tr(),
           ),
         ],
       ),
@@ -3636,9 +3637,9 @@ class _YutnoriScreenState extends State<YutnoriScreen>
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(16),
         ),
-        title: const Text(
-          '윷놀이 게임 규칙',
-          style: TextStyle(color: Color(0xFFDEB887)),
+        title: Text(
+          'games.yutnori.rulesTitle'.tr(),
+          style: const TextStyle(color: Color(0xFFDEB887)),
         ),
         content: SingleChildScrollView(
           child: Column(
@@ -3712,7 +3713,7 @@ class _YutnoriScreenState extends State<YutnoriScreen>
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('확인'),
+            child: Text('app.confirm'.tr()),
           ),
         ],
       ),

@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:easy_localization/easy_localization.dart';
 import '../../../services/ad_service.dart';
 import '../models/number_sums_game_state.dart';
 import '../models/number_sums_generator.dart';
@@ -323,7 +324,7 @@ class _NumberSumsGameScreenState extends State<NumberSumsGameScreen>
               backgroundColor: Colors.deepOrange,
               foregroundColor: Colors.white,
             ),
-            child: const Text('확인'),
+            child: Text('app.confirm'.tr()),
           ),
         ],
       ),
@@ -413,7 +414,7 @@ class _NumberSumsGameScreenState extends State<NumberSumsGameScreen>
           IconButton(
             onPressed: _showRulesDialog,
             icon: const Icon(Icons.help_outline),
-            tooltip: '게임 규칙',
+            tooltip: 'app.rules'.tr(),
           ),
           IconButton(
             onPressed: _showDifficultyDialog,
@@ -1084,7 +1085,7 @@ class _NumberSumsGameScreenState extends State<NumberSumsGameScreen>
           borderRadius: BorderRadius.circular(16),
         ),
         title: Text(
-          '넘버 썸즈 규칙',
+          'games.numberSums.rulesTitle'.tr(),
           style: TextStyle(color: Colors.deepOrange.shade400),
         ),
         content: SingleChildScrollView(
@@ -1155,7 +1156,7 @@ class _NumberSumsGameScreenState extends State<NumberSumsGameScreen>
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('확인'),
+            child: Text('app.confirm'.tr()),
           ),
         ],
       ),

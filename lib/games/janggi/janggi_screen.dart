@@ -2,6 +2,7 @@ import 'dart:math';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:easy_localization/easy_localization.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../services/gemini_service.dart';
 import '../../services/game_save_service.dart';
@@ -2968,7 +2969,7 @@ class _JanggiScreenState extends State<JanggiScreen> {
           IconButton(
             icon: const Icon(Icons.help_outline),
             onPressed: _showRulesDialog,
-            tooltip: '게임 규칙',
+            tooltip: 'app.rules'.tr(),
           ),
           // 무승부 선언 버튼 (반복 장군/장군 불가 상황에서만 표시)
           if (_canDeclareDraw())
@@ -3601,9 +3602,9 @@ class _JanggiScreenState extends State<JanggiScreen> {
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(16),
         ),
-        title: const Text(
-          '장기 게임 규칙',
-          style: TextStyle(color: Color(0xFFD2691E)),
+        title: Text(
+          'games.janggi.rulesTitle'.tr(),
+          style: const TextStyle(color: Color(0xFFD2691E)),
         ),
         content: SingleChildScrollView(
           child: Column(
@@ -3679,7 +3680,7 @@ class _JanggiScreenState extends State<JanggiScreen> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('확인'),
+            child: Text('app.confirm'.tr()),
           ),
         ],
       ),

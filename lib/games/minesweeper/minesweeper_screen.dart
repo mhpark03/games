@@ -1,6 +1,7 @@
 import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:easy_localization/easy_localization.dart';
 import '../../services/game_save_service.dart';
 import '../../services/ad_service.dart';
 
@@ -517,17 +518,17 @@ class _MinesweeperScreenState extends State<MinesweeperScreen> {
           IconButton(
             icon: const Icon(Icons.help_outline),
             onPressed: _showRulesDialog,
-            tooltip: '게임 규칙',
+            tooltip: 'app.rules'.tr(),
           ),
           IconButton(
             icon: const Icon(Icons.lightbulb_outline),
             onPressed: (!firstClick && !gameOver && !gameWon) ? _showHintAdDialog : null,
-            tooltip: '힌트',
+            tooltip: 'common.hint'.tr(),
           ),
           IconButton(
             icon: const Icon(Icons.refresh),
             onPressed: _restartGame,
-            tooltip: '다시 시작',
+            tooltip: 'app.restart'.tr(),
           ),
         ],
       ),
@@ -1029,9 +1030,9 @@ class _MinesweeperScreenState extends State<MinesweeperScreen> {
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(16),
         ),
-        title: const Text(
-          '지뢰찾기 게임 규칙',
-          style: TextStyle(color: Colors.blueGrey),
+        title: Text(
+          'games.minesweeper.rulesTitle'.tr(),
+          style: const TextStyle(color: Colors.blueGrey),
         ),
         content: SingleChildScrollView(
           child: Column(
@@ -1102,7 +1103,7 @@ class _MinesweeperScreenState extends State<MinesweeperScreen> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('확인'),
+            child: Text('app.confirm'.tr()),
           ),
         ],
       ),

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:easy_localization/easy_localization.dart';
 import 'models/game_board.dart';
 import 'widgets/game_board_widget.dart';
 import 'widgets/next_piece_widget.dart';
@@ -677,72 +678,65 @@ class _TetrisScreenState extends State<TetrisScreen> {
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(16),
         ),
-        title: const Text(
-          '테트리스 게임 규칙',
-          style: TextStyle(color: Colors.cyan),
+        title: Text(
+          'games.tetris.rulesTitle'.tr(),
+          style: const TextStyle(color: Colors.cyan),
         ),
         content: SingleChildScrollView(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             mainAxisSize: MainAxisSize.min,
-            children: const [
+            children: [
               Text(
-                '🎯 게임 목표',
-                style: TextStyle(
+                '🎯 ${'games.tetris.objective'.tr()}',
+                style: const TextStyle(
                   color: Colors.white,
                   fontWeight: FontWeight.bold,
                 ),
               ),
-              SizedBox(height: 4),
+              const SizedBox(height: 4),
               Text(
-                '떨어지는 블록을 배치하여 가로줄을 완성하세요.\n'
-                '완성된 줄은 사라지고 점수를 얻습니다.',
-                style: TextStyle(color: Colors.white70, fontSize: 13),
+                'games.tetris.objectiveDesc'.tr(),
+                style: const TextStyle(color: Colors.white70, fontSize: 13),
               ),
-              SizedBox(height: 12),
+              const SizedBox(height: 12),
               Text(
-                '🎮 조작 방법',
-                style: TextStyle(
+                '🎮 ${'games.tetris.controls'.tr()}',
+                style: const TextStyle(
                   color: Colors.white,
                   fontWeight: FontWeight.bold,
                 ),
               ),
-              SizedBox(height: 4),
+              const SizedBox(height: 4),
               Text(
-                '• ←→ : 블록 좌우 이동\n'
-                '• ↓ : 블록 빠르게 내리기\n'
-                '• 회전 버튼 : 블록 90° 회전\n'
-                '• 드롭 버튼 : 블록 즉시 떨어뜨리기',
-                style: TextStyle(color: Colors.white70, fontSize: 13),
+                'games.tetris.controlsDesc'.tr(),
+                style: const TextStyle(color: Colors.white70, fontSize: 13),
               ),
-              SizedBox(height: 12),
+              const SizedBox(height: 12),
               Text(
-                '💯 점수 시스템',
-                style: TextStyle(
+                '💯 ${'games.tetris.scoring'.tr()}',
+                style: const TextStyle(
                   color: Colors.white,
                   fontWeight: FontWeight.bold,
                 ),
               ),
-              SizedBox(height: 4),
+              const SizedBox(height: 4),
               Text(
-                '• 1줄 완성: 100점\n'
-                '• 2줄 동시: 300점\n'
-                '• 3줄 동시: 500점\n'
-                '• 4줄 동시 (테트리스): 800점',
-                style: TextStyle(color: Colors.white70, fontSize: 13),
+                'games.tetris.scoringDesc'.tr(),
+                style: const TextStyle(color: Colors.white70, fontSize: 13),
               ),
-              SizedBox(height: 12),
+              const SizedBox(height: 12),
               Text(
-                '⚠️ 게임 오버',
-                style: TextStyle(
+                '⚠️ ${'games.tetris.gameOverTitle'.tr()}',
+                style: const TextStyle(
                   color: Colors.white,
                   fontWeight: FontWeight.bold,
                 ),
               ),
-              SizedBox(height: 4),
+              const SizedBox(height: 4),
               Text(
-                '블록이 천장에 닿으면 게임이 끝납니다.',
-                style: TextStyle(color: Colors.white70, fontSize: 13),
+                'games.tetris.gameOverDesc'.tr(),
+                style: const TextStyle(color: Colors.white70, fontSize: 13),
               ),
             ],
           ),
@@ -750,7 +744,7 @@ class _TetrisScreenState extends State<TetrisScreen> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('확인'),
+            child: Text('app.confirm'.tr()),
           ),
         ],
       ),
