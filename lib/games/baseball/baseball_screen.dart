@@ -416,7 +416,8 @@ class _BaseballScreenState extends State<BaseballScreen> {
   }
 
   String _getDifficultyText() {
-    return widget.difficulty == BaseballDifficulty.easy ? '3자리' : '4자리';
+    final count = widget.difficulty == BaseballDifficulty.easy ? '3' : '4';
+    return 'games.baseball.digitCount'.tr(namedArgs: {'count': count});
   }
 
   @override
@@ -741,10 +742,10 @@ class _BaseballScreenState extends State<BaseballScreen> {
                     color: Colors.deepOrange,
                     borderRadius: BorderRadius.circular(12),
                   ),
-                  child: const Center(
+                  child: Center(
                     child: Text(
-                      '확인',
-                      style: TextStyle(
+                      'common.confirm'.tr(),
+                      style: const TextStyle(
                         color: Colors.white,
                         fontSize: fontSize * 0.85,
                         fontWeight: FontWeight.bold,
@@ -834,10 +835,10 @@ class _BaseballScreenState extends State<BaseballScreen> {
                 color: Colors.deepOrange,
                 borderRadius: BorderRadius.circular(8),
               ),
-              child: const Center(
+              child: Center(
                 child: Text(
-                  '확인',
-                  style: TextStyle(
+                  'common.confirm'.tr(),
+                  style: const TextStyle(
                     color: Colors.white,
                     fontSize: fontSize,
                     fontWeight: FontWeight.bold,
@@ -1158,7 +1159,7 @@ class _BaseballScreenState extends State<BaseballScreen> {
             ),
             const SizedBox(height: 16),
             Text(
-              '${digitCount}자리 숫자를 맞춰보세요!',
+              'games.baseball.guessInstruction'.tr(namedArgs: {'count': '$digitCount'}),
               style: TextStyle(
                 color: Colors.grey.shade500,
                 fontSize: isLandscape ? 14 : 18,
@@ -1166,7 +1167,7 @@ class _BaseballScreenState extends State<BaseballScreen> {
             ),
             const SizedBox(height: 8),
             Text(
-              '각 자리의 숫자는 중복되지 않습니다',
+              'games.baseball.noDuplicates'.tr(),
               style: TextStyle(
                 color: Colors.grey.shade600,
                 fontSize: isLandscape ? 11 : 14,

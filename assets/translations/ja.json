@@ -65,7 +65,9 @@
     "adLoadingFreeHint": "広告を読み込んでいます。ヒントを無料で提供します。",
     "adLoadingFree": "広告を読み込んでいます。無料で提供します。",
     "select": "選択",
-    "remove": "削除"
+    "remove": "削除",
+    "answer": "答え",
+    "confirm": "確認"
   },
   "games": {
     "tetris": {
@@ -263,7 +265,10 @@
       "rulesExample": "例",
       "rulesExampleDesc": "正解が「123」の場合:\n• 123 → 3S 0B (正解!)\n• 132 → 1S 2B\n• 456 → 0S 0B (アウト)",
       "rulesTips": "ヒント",
-      "rulesTipsDesc": "• まずボールのヒントで数字を見つけましょう\n• 見つけた数字の位置を変えてみましょう\n• ヒント機能を使って助けを得ましょう"
+      "rulesTipsDesc": "• まずボールのヒントで数字を見つけましょう\n• 見つけた数字の位置を変えてみましょう\n• ヒント機能を使って助けを得ましょう",
+      "digitCount": "{count}桁",
+      "guessInstruction": "{count}桁の数字を当ててください！",
+      "noDuplicates": "各桁の数字は重複しません"
     },
     "onecard": {
       "name": "ワンカード",

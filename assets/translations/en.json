@@ -65,7 +65,9 @@
     "adLoadingFreeHint": "Loading ad... Free hint provided.",
     "adLoadingFree": "Loading ad... Free feature provided.",
     "select": "Select",
-    "remove": "Remove"
+    "remove": "Remove",
+    "answer": "Answer",
+    "confirm": "Confirm"
   },
   "games": {
     "tetris": {
@@ -271,7 +273,10 @@
       "rulesExample": "Example",
       "rulesExampleDesc": "If the answer is \"123\":\n• 123 → 3S 0B (Correct!)\n• 132 → 1S 2B\n• 456 → 0S 0B (Out)",
       "rulesTips": "Tips",
-      "rulesTipsDesc": "• Use ball hints to find the correct digits first\n• Then try different positions for those digits\n• Use hints for extra help"
+      "rulesTipsDesc": "• Use ball hints to find the correct digits first\n• Then try different positions for those digits\n• Use hints for extra help",
+      "digitCount": "{count}-digit",
+      "guessInstruction": "Guess the {count}-digit number!",
+      "noDuplicates": "Each digit is unique"
     },
     "onecard": {
       "name": "One Card",

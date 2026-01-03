@@ -65,7 +65,9 @@
     "adLoadingFreeHint": "正在加载广告...免费提供提示。",
     "adLoadingFree": "正在加载广告...免费提供。",
     "select": "选择",
-    "remove": "删除"
+    "remove": "删除",
+    "answer": "答案",
+    "confirm": "确认"
   },
   "games": {
     "tetris": {
@@ -245,7 +247,10 @@
       "guess": "猜测",
       "attempts": "尝试次数",
       "correct": "正确！",
-      "rulesTitle": "数字棒球游戏规则"
+      "rulesTitle": "数字棒球游戏规则",
+      "digitCount": "{count}位数",
+      "guessInstruction": "猜测{count}位数字！",
+      "noDuplicates": "各位数字不重复"
     },
     "onecard": {
       "name": "单张牌",

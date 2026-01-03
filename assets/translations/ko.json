@@ -65,7 +65,9 @@
     "adLoadingFreeHint": "광고를 불러오는 중입니다. 힌트를 무료로 제공합니다.",
     "adLoadingFree": "광고를 불러오는 중입니다. 무료로 제공합니다.",
     "select": "선택",
-    "remove": "제거"
+    "remove": "제거",
+    "answer": "정답",
+    "confirm": "확인"
   },
   "games": {
     "tetris": {
@@ -271,7 +273,10 @@
       "rulesExample": "예시",
       "rulesExampleDesc": "정답이 \"123\"일 때:\n• 123 → 3S 0B (정답!)\n• 132 → 1S 2B\n• 456 → 0S 0B (아웃)",
       "rulesTips": "팁",
-      "rulesTipsDesc": "• 볼 힌트로 숫자를 먼저 찾으세요\n• 찾은 숫자의 위치를 바꿔보세요\n• 힌트를 사용해 도움을 받으세요"
+      "rulesTipsDesc": "• 볼 힌트로 숫자를 먼저 찾으세요\n• 찾은 숫자의 위치를 바꿔보세요\n• 힌트를 사용해 도움을 받으세요",
+      "digitCount": "{count}자리",
+      "guessInstruction": "{count}자리 숫자를 맞춰보세요!",
+      "noDuplicates": "각 자리의 숫자는 중복되지 않습니다"
     },
     "onecard": {
       "name": "원카드",
