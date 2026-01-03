@@ -1899,33 +1899,29 @@ class _SolitaireScreenState extends State<SolitaireScreen> {
     final color = card.suitColor;
     final suit = card.suitString;
 
-    // J, Q, K는 그림 카드 스타일
+    // J, Q, K는 그림 카드 스타일 (아이콘 사용)
     if (card.rank >= 11 && card.rank <= 13) {
-      String faceLabel;
+      IconData faceIcon;
       if (card.rank == 11) {
-        faceLabel = 'J';
+        faceIcon = Icons.shield; // Jack (기사)
       } else if (card.rank == 12) {
-        faceLabel = 'Q';
+        faceIcon = Icons.face_4; // Queen (여왕)
       } else {
-        faceLabel = 'K';
+        faceIcon = Icons.workspace_premium; // King (왕관)
       }
       return Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Text(
-            faceLabel,
-            style: TextStyle(
-              color: color,
-              fontSize: cardWidth * 0.3,
-              fontWeight: FontWeight.bold,
-              height: 1.0,
-            ),
+          Icon(
+            faceIcon,
+            color: color,
+            size: cardWidth * 0.4,
           ),
           Text(
             suit,
             style: TextStyle(
               color: color,
-              fontSize: cardWidth * 0.25,
+              fontSize: cardWidth * 0.2,
               height: 1.0,
             ),
           ),
