@@ -305,7 +305,15 @@
       "rulesSpecialCards": "⚡ 특수 카드",
       "rulesSpecialCardsDesc": "• 7: 무늬 변경 가능\n• J: 다음 사람 건너뛰기\n• Q: 진행 방향 바꾸기\n• K: 연속 2턴 건너뛰기",
       "rulesTips": "💡 팁",
-      "rulesTipsDesc": "• 공격이 오면 같거나 더 강한 공격 카드로 방어\n• 조커는 강력하지만 아껴서 사용하세요\n• 마지막 1장에서 원카드를 놓치면 벌칙!"
+      "rulesTipsDesc": "• 공격이 오면 같거나 더 강한 공격 카드로 방어\n• 조커는 강력하지만 아껴서 사용하세요\n• 마지막 1장에서 원카드를 놓치면 벌칙!",
+      "cardsCount": "{count}장",
+      "attackMessage": "{player}: 공격! +{power}장 (총 {total}장)",
+      "receivedCards": "{count}장을 받았습니다",
+      "drewCard": "카드를 1장 뽑았습니다",
+      "bankruptcy": "파산! 카드가 {count}장이 되었습니다",
+      "computerReceivedCards": "{name}: {count}장을 받았습니다",
+      "computerDrewCard": "{name}: 1장을 뽑았습니다",
+      "computerBankruptcy": "{name} 파산! 카드가 {count}장이 되었습니다"
     },
     "yutnori": {
       "name": "윷놀이",

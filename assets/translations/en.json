@@ -305,7 +305,15 @@
       "rulesSpecialCards": "⚡ Special Cards",
       "rulesSpecialCardsDesc": "• 7: Change suit\n• J: Skip next player\n• Q: Reverse direction\n• K: Skip 2 consecutive turns",
       "rulesTips": "💡 Tips",
-      "rulesTipsDesc": "• Defend attacks with equal or stronger attack cards\n• Use Jokers wisely - they're powerful\n• Missing \"One Card\" on your last card results in a penalty!"
+      "rulesTipsDesc": "• Defend attacks with equal or stronger attack cards\n• Use Jokers wisely - they're powerful\n• Missing \"One Card\" on your last card results in a penalty!",
+      "cardsCount": "{count}",
+      "attackMessage": "{player}: Attack! +{power} cards (Total {total})",
+      "receivedCards": "Received {count} cards",
+      "drewCard": "Drew 1 card",
+      "bankruptcy": "Bankruptcy! You now have {count} cards",
+      "computerReceivedCards": "{name}: Received {count} cards",
+      "computerDrewCard": "{name}: Drew 1 card",
+      "computerBankruptcy": "{name} Bankruptcy! Now has {count} cards"
     },
     "yutnori": {
       "name": "Yutnori",

@@ -610,7 +610,11 @@ class _OneCardScreenState extends State<OneCardScreen> with TickerProviderStateM
       // 카드 효과 처리
       if (card.isAttack) {
         attackStack += card.attackPower;
-        pendingMessage = '$playerName: 공격! +${card.attackPower}장 (총 $attackStack장)';
+        pendingMessage = 'games.onecard.attackMessage'.tr(namedArgs: {
+          'player': playerName,
+          'power': '${card.attackPower}',
+          'total': '$attackStack',
+        });
       } else if (card.isJump) {
         skipNextTurn = true;
         pendingMessage = '$playerName: J! 다음 턴 건너뛰기';
@@ -757,19 +761,19 @@ class _OneCardScreenState extends State<OneCardScreen> with TickerProviderStateM
       if (attackStack > 0) {
         // 공격 받기
         _drawCards(playerHand, attackStack);
-        pendingMessage = '$attackStack장을 받았습니다';
+        pendingMessage = 'games.onecard.receivedCards'.tr(namedArgs: {'count': '$attackStack'});
         attackStack = 0;
       } else {
         // 일반 드로우
         _drawCards(playerHand, 1);
-        pendingMessage = '카드를 1장 뽑았습니다';
+        pendingMessage = 'games.onecard.drewCard'.tr();
       }
 
       // 파산 체크
       if (playerHand.length >= bankruptcyLimit) {
         gameOver = true;
         winner = _getBankruptcyWinner();
-        pendingMessage = '파산! 카드가 ${playerHand.length}장이 되었습니다';
+        pendingMessage = 'games.onecard.bankruptcy'.tr(namedArgs: {'count': '${playerHand.length}'});
         return;
       }
 
@@ -817,11 +821,11 @@ class _OneCardScreenState extends State<OneCardScreen> with TickerProviderStateM
       setState(() {
         if (attackStack > 0) {
           _drawCards(computerHand, attackStack);
-          pendingMessage = '$computerName: $attackStack장을 받았습니다';
+          pendingMessage = 'games.onecard.computerReceivedCards'.tr(namedArgs: {'name': computerName, 'count': '$attackStack'});
           attackStack = 0;
         } else {
           _drawCards(computerHand, 1);
-          pendingMessage = '$computerName: 1장을 뽑았습니다';
+          pendingMessage = 'games.onecard.computerDrewCard'.tr(namedArgs: {'name': computerName});
         }
 
         lastPlayedCard = null;
@@ -832,7 +836,7 @@ class _OneCardScreenState extends State<OneCardScreen> with TickerProviderStateM
         if (computerHand.length >= bankruptcyLimit) {
           gameOver = true;
           winner = 'common.player'.tr();
-          pendingMessage = '$computerName 파산! 카드가 ${computerHand.length}장이 되었습니다';
+          pendingMessage = 'games.onecard.computerBankruptcy'.tr(namedArgs: {'name': computerName, 'count': '${computerHand.length}'});
           return;
         }
 
@@ -1102,7 +1106,7 @@ class _OneCardScreenState extends State<OneCardScreen> with TickerProviderStateM
           const SizedBox(height: 4),
           // 카드 수
           Text(
-            '${hand.length}장',
+            'games.onecard.cardsCount'.tr(namedArgs: {'count': '${hand.length}'}),
             style: const TextStyle(color: Colors.white, fontSize: 11),
           ),
           const SizedBox(height: 8),
@@ -1271,7 +1275,7 @@ class _OneCardScreenState extends State<OneCardScreen> with TickerProviderStateM
                 const Icon(Icons.computer, color: Colors.white, size: 12),
                 const SizedBox(width: 4),
                 Text(
-                  '${computerIndex + 1} (${hand.length}장)',
+                  '${computerIndex + 1} (${'games.onecard.cardsCount'.tr(namedArgs: {'count': '${hand.length}'})})',
                   style: const TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.bold),
                 ),
               ],
@@ -1347,7 +1351,7 @@ class _OneCardScreenState extends State<OneCardScreen> with TickerProviderStateM
           const SizedBox(height: 2),
           // 카드 수
           Text(
-            '${hand.length}장',
+            'games.onecard.cardsCount'.tr(namedArgs: {'count': '${hand.length}'}),
             style: const TextStyle(color: Colors.white, fontSize: 10),
           ),
           const SizedBox(height: 4),
@@ -1416,7 +1420,7 @@ class _OneCardScreenState extends State<OneCardScreen> with TickerProviderStateM
                 const Icon(Icons.person, color: Colors.white, size: 14),
                 const SizedBox(width: 4),
                 Text(
-                  '${playerHand.length}장',
+                  'games.onecard.cardsCount'.tr(namedArgs: {'count': '${playerHand.length}'}),
                   style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold),
                 ),
               ],
@@ -1742,7 +1746,7 @@ class _OneCardScreenState extends State<OneCardScreen> with TickerProviderStateM
                 const Icon(Icons.computer, color: Colors.white, size: 14),
                 const SizedBox(width: 4),
                 Text(
-                  '${computerIndex + 1} (${hand.length}장)',
+                  '${computerIndex + 1} (${'games.onecard.cardsCount'.tr(namedArgs: {'count': '${hand.length}'})})',
                   style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold),
                 ),
               ],
@@ -2334,7 +2338,7 @@ class _OneCardScreenState extends State<OneCardScreen> with TickerProviderStateM
                 const Icon(Icons.person, color: Colors.white, size: 16),
                 const SizedBox(width: 4),
                 Text(
-                  '${playerHand.length}장',
+                  'games.onecard.cardsCount'.tr(namedArgs: {'count': '${playerHand.length}'}),
                   style: const TextStyle(
                     color: Colors.white,
                     fontSize: 13,
