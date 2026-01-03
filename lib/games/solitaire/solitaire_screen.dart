@@ -1954,7 +1954,7 @@ class _SolitaireScreenState extends State<SolitaireScreen> {
     final color = card.suitColor;
     final suit = card.suitString;
 
-    // J, Q, K는 아이콘 표시
+    // J, Q, K는 아이콘만 표시 (무늬 제거)
     if (card.rank >= 11 && card.rank <= 13) {
       IconData faceIcon;
       if (card.rank == 11) {
@@ -1964,23 +1964,10 @@ class _SolitaireScreenState extends State<SolitaireScreen> {
       } else {
         faceIcon = Icons.workspace_premium; // King (왕관)
       }
-      return Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(
-            faceIcon,
-            color: color,
-            size: cardWidth * 0.4,
-          ),
-          Text(
-            suit,
-            style: TextStyle(
-              color: color,
-              fontSize: cardWidth * 0.2,
-              height: 1.0,
-            ),
-          ),
-        ],
+      return Icon(
+        faceIcon,
+        color: color,
+        size: cardWidth * 0.5,
       );
     }
 
