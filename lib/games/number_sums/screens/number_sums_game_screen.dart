@@ -942,6 +942,7 @@ class _NumberSumsGameScreenState extends State<NumberSumsGameScreen>
       helpMessage = 'games.numberSums.helpHint'.tr(namedArgs: {'count': '$remainingWrong'});
     }
     return Container(
+      height: 40,
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       child: Text(
         helpMessage,
@@ -950,6 +951,8 @@ class _NumberSumsGameScreenState extends State<NumberSumsGameScreen>
           color: Colors.white.withValues(alpha: 0.7),
         ),
         textAlign: TextAlign.center,
+        maxLines: 1,
+        overflow: TextOverflow.ellipsis,
       ),
     );
   }
