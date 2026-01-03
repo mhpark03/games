@@ -131,16 +131,16 @@ class _MinesweeperScreenState extends State<MinesweeperScreen> {
       barrierDismissible: false,
       builder: (context) => AlertDialog(
         backgroundColor: Colors.grey.shade900,
-        title: const Row(
+        title: Row(
           children: [
-            Icon(Icons.warning_amber, color: Colors.redAccent, size: 28),
-            SizedBox(width: 8),
-            Text('폭탄을 밟았습니다!', style: TextStyle(color: Colors.redAccent)),
+            const Icon(Icons.warning_amber, color: Colors.redAccent, size: 28),
+            const SizedBox(width: 8),
+            Text('games.minesweeper.mineExploded'.tr(), style: const TextStyle(color: Colors.redAccent)),
           ],
         ),
-        content: const Text(
-          '광고를 시청하면 부활할 수 있습니다.',
-          style: TextStyle(color: Colors.white70),
+        content: Text(
+          'dialog.reviveMessage'.tr(),
+          style: const TextStyle(color: Colors.white70),
         ),
         actions: [
           TextButton(
@@ -153,7 +153,7 @@ class _MinesweeperScreenState extends State<MinesweeperScreen> {
               });
               _saveGame();
             },
-            child: const Text('포기', style: TextStyle(color: Colors.grey)),
+            child: Text('common.giveUp'.tr(), style: const TextStyle(color: Colors.grey)),
           ),
           ElevatedButton.icon(
             onPressed: () async {
@@ -180,7 +180,7 @@ class _MinesweeperScreenState extends State<MinesweeperScreen> {
               }
             },
             icon: const Icon(Icons.play_circle_outline),
-            label: const Text('광고 보고 부활'),
+            label: Text('common.watchAdRevive'.tr()),
             style: ElevatedButton.styleFrom(
               backgroundColor: Colors.deepOrange,
             ),
@@ -198,15 +198,15 @@ class _MinesweeperScreenState extends State<MinesweeperScreen> {
       context: context,
       builder: (context) => AlertDialog(
         backgroundColor: Colors.grey.shade900,
-        title: const Text('힌트', style: TextStyle(color: Colors.white)),
-        content: const Text(
-          '광고를 시청하고 힌트를 사용하시겠습니까?',
-          style: TextStyle(color: Colors.white70),
+        title: Text('dialog.hintTitle'.tr(), style: const TextStyle(color: Colors.white)),
+        content: Text(
+          'dialog.hintMessage'.tr(),
+          style: const TextStyle(color: Colors.white70),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('취소'),
+            child: Text('app.cancel'.tr()),
           ),
           ElevatedButton(
             onPressed: () async {
@@ -223,7 +223,7 @@ class _MinesweeperScreenState extends State<MinesweeperScreen> {
                 adService.loadRewardedAd();
               }
             },
-            child: const Text('광고 보기'),
+            child: Text('common.watchAd'.tr()),
           ),
         ],
       ),
@@ -504,7 +504,7 @@ class _MinesweeperScreenState extends State<MinesweeperScreen> {
             const Icon(Icons.terrain, color: Colors.blueGrey),
             const SizedBox(width: 8),
             Text(
-              '지뢰찾기',
+              'games.minesweeper.name'.tr(),
               style: TextStyle(
                 fontWeight: FontWeight.bold,
                 fontSize: 18,
@@ -570,20 +570,13 @@ class _MinesweeperScreenState extends State<MinesweeperScreen> {
                     const Icon(Icons.terrain, color: Colors.blueGrey, size: 32),
                     const SizedBox(height: 8),
                     Text(
-                      '지뢰',
+                      'games.minesweeper.name'.tr(),
                       style: TextStyle(
                         fontWeight: FontWeight.bold,
                         fontSize: 20,
                         color: Colors.blueGrey.shade100,
                       ),
-                    ),
-                    Text(
-                      '찾기',
-                      style: TextStyle(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 20,
-                        color: Colors.blueGrey.shade100,
-                      ),
+                      textAlign: TextAlign.center,
                     ),
                     const Spacer(),
                     if (gameOver || gameWon) ...[
@@ -662,7 +655,7 @@ class _MinesweeperScreenState extends State<MinesweeperScreen> {
           ),
           const SizedBox(height: 4),
           Text(
-            gameWon ? '축하합니다!' : '게임 오버',
+            gameWon ? 'common.win'.tr() : 'common.lose'.tr(),
             style: TextStyle(
               color: gameWon ? Colors.green : Colors.red,
               fontSize: 14,
@@ -695,7 +688,7 @@ class _MinesweeperScreenState extends State<MinesweeperScreen> {
             ),
           ),
           Text(
-            '남은 지뢰',
+            'games.minesweeper.mines'.tr(),
             style: TextStyle(
               color: Colors.grey.shade400,
               fontSize: 10,
@@ -774,7 +767,7 @@ class _MinesweeperScreenState extends State<MinesweeperScreen> {
                       icon: Icons.flag,
                       iconColor: Colors.red,
                       value: '${totalMines - flagCount}',
-                      label: '남은 지뢰',
+                      label: 'games.minesweeper.mines'.tr(),
                     ),
                     _buildInfoItem(
                       icon: Icons.grid_on,
@@ -816,7 +809,7 @@ class _MinesweeperScreenState extends State<MinesweeperScreen> {
             icon: Icons.flag,
             iconColor: Colors.red,
             value: '${totalMines - flagCount}',
-            label: '남은 지뢰',
+            label: 'games.minesweeper.mines'.tr(),
           ),
           const SizedBox(height: 12),
           _buildInfoItem(
@@ -895,7 +888,7 @@ class _MinesweeperScreenState extends State<MinesweeperScreen> {
           ),
           const SizedBox(width: 12),
           Text(
-            gameWon ? '축하합니다!' : '게임 오버',
+            gameWon ? 'common.win'.tr() : 'common.lose'.tr(),
             style: TextStyle(
               color: gameWon ? Colors.green : Colors.red,
               fontSize: 18,

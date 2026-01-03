@@ -451,9 +451,9 @@ class _JanggiScreenState extends State<JanggiScreen> {
               actions: [
                 TextButton(
                   onPressed: () => Navigator.pop(context),
-                  child: const Text(
-                    '취소',
-                    style: TextStyle(color: Color(0xFF8B4513)),
+                  child: Text(
+                    'app.cancel'.tr(),
+                    style: const TextStyle(color: Color(0xFF8B4513)),
                   ),
                 ),
                 ElevatedButton(
@@ -475,7 +475,7 @@ class _JanggiScreenState extends State<JanggiScreen> {
                       ),
                     );
                   },
-                  child: const Text('저장'),
+                  child: Text('app.save'.tr()),
                 ),
               ],
             );
@@ -1675,7 +1675,7 @@ class _JanggiScreenState extends State<JanggiScreen> {
     // 궁 잡힘 체크
     if (capturedPiece?.type == JanggiPieceType.gung) {
       isGameOver = true;
-      winner = currentTurn == JanggiColor.cho ? '초' : '한';
+      winner = currentTurn == JanggiColor.cho ? 'games.janggi.cho'.tr() : 'games.janggi.han'.tr();
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (mounted) _showGameOverDialog();
       });
@@ -1699,7 +1699,7 @@ class _JanggiScreenState extends State<JanggiScreen> {
     // 외통수(체크메이트) 확인
     if (!isGameOver && _isCheckmate(currentTurn)) {
       isGameOver = true;
-      winner = currentTurn == JanggiColor.cho ? '한' : '초';
+      winner = currentTurn == JanggiColor.cho ? 'games.janggi.han'.tr() : 'games.janggi.cho'.tr();
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (mounted) _showGameOverDialog();
       });
@@ -1742,21 +1742,21 @@ class _JanggiScreenState extends State<JanggiScreen> {
           borderRadius: BorderRadius.circular(16),
           side: const BorderSide(color: Color(0xFF8B4513), width: 3),
         ),
-        title: const Row(
+        title: Row(
           children: [
-            Icon(Icons.undo, color: Color(0xFF8B4513), size: 28),
-            SizedBox(width: 8),
-            Text('한 수 취소', style: TextStyle(color: Color(0xFF8B4513))),
+            const Icon(Icons.undo, color: Color(0xFF8B4513), size: 28),
+            const SizedBox(width: 8),
+            Text('dialog.undoTitle'.tr(), style: const TextStyle(color: Color(0xFF8B4513))),
           ],
         ),
-        content: const Text(
-          '광고를 시청하고 마지막 수를 취소하시겠습니까?',
-          style: TextStyle(color: Colors.black87),
+        content: Text(
+          'dialog.undoMessage'.tr(),
+          style: const TextStyle(color: Colors.black87),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('취소', style: TextStyle(color: Color(0xFF8B4513))),
+            child: Text('app.cancel'.tr(), style: const TextStyle(color: Color(0xFF8B4513))),
           ),
           ElevatedButton.icon(
             onPressed: () async {
@@ -1774,7 +1774,7 @@ class _JanggiScreenState extends State<JanggiScreen> {
               }
             },
             icon: const Icon(Icons.play_circle_outline, size: 18),
-            label: const Text('광고 보고 취소'),
+            label: Text('common.watchAd'.tr()),
             style: ElevatedButton.styleFrom(
               backgroundColor: const Color(0xFF8B4513),
               foregroundColor: Colors.white,
@@ -1908,7 +1908,7 @@ class _JanggiScreenState extends State<JanggiScreen> {
       setState(() {
         isThinking = false;
         isGameOver = true;
-        winner = computerColor == JanggiColor.cho ? '한' : '초';
+        winner = computerColor == JanggiColor.cho ? 'games.janggi.han'.tr() : 'games.janggi.cho'.tr();
       });
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (mounted) _showGameOverDialog();
@@ -1951,11 +1951,11 @@ class _JanggiScreenState extends State<JanggiScreen> {
   String get _difficultyName {
     switch (_difficulty) {
       case JanggiDifficulty.easy:
-        return '쉬움';
+        return 'common.easy'.tr();
       case JanggiDifficulty.normal:
-        return '보통';
+        return 'common.normal'.tr();
       case JanggiDifficulty.hard:
-        return '어려움';
+        return 'common.hard'.tr();
     }
   }
 
@@ -2624,14 +2624,14 @@ class _JanggiScreenState extends State<JanggiScreen> {
             borderRadius: BorderRadius.circular(16),
             side: const BorderSide(color: Color(0xFF8B4513), width: 3),
           ),
-          title: const Row(
+          title: Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Icon(Icons.handshake, color: Color(0xFF8B4513), size: 28),
-              SizedBox(width: 8),
+              const Icon(Icons.handshake, color: Color(0xFF8B4513), size: 28),
+              const SizedBox(width: 8),
               Text(
-                '무승부 선언',
-                style: TextStyle(
+                'common.draw'.tr(),
+                style: const TextStyle(
                   color: Color(0xFF8B4513),
                   fontWeight: FontWeight.bold,
                 ),
@@ -2647,9 +2647,9 @@ class _JanggiScreenState extends State<JanggiScreen> {
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(context),
-              child: const Text(
-                '계속하기',
-                style: TextStyle(color: Color(0xFF8B4513)),
+              child: Text(
+                'app.continue'.tr(),
+                style: const TextStyle(color: Color(0xFF8B4513)),
               ),
             ),
             ElevatedButton(
@@ -2661,7 +2661,7 @@ class _JanggiScreenState extends State<JanggiScreen> {
                 Navigator.pop(context);
                 _declareDraw();
               },
-              child: const Text('무승부'),
+              child: Text('common.draw'.tr()),
             ),
           ],
         );
@@ -2677,6 +2677,9 @@ class _JanggiScreenState extends State<JanggiScreen> {
       winner = null;
     });
 
+    final choLabel = 'games.janggi.cho'.tr();
+    final hanLabel = 'games.janggi.han'.tr();
+
     showDialog(
       context: context,
       barrierDismissible: false,
@@ -2687,17 +2690,17 @@ class _JanggiScreenState extends State<JanggiScreen> {
             borderRadius: BorderRadius.circular(20),
             side: const BorderSide(color: Color(0xFF8B4513), width: 4),
           ),
-          title: const Column(
+          title: Column(
             children: [
-              Icon(
+              const Icon(
                 Icons.balance,
                 size: 60,
                 color: Color(0xFF8B4513),
               ),
-              SizedBox(height: 12),
+              const SizedBox(height: 12),
               Text(
-                '무승부',
-                style: TextStyle(
+                'common.draw'.tr(),
+                style: const TextStyle(
                   fontSize: 28,
                   fontWeight: FontWeight.bold,
                   color: Color(0xFF8B4513),
@@ -2706,10 +2709,10 @@ class _JanggiScreenState extends State<JanggiScreen> {
               ),
             ],
           ),
-          content: const Column(
+          content: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Text(
+              const Text(
                 '게임이 무승부로 종료되었습니다.',
                 style: TextStyle(
                   fontSize: 16,
@@ -2717,33 +2720,33 @@ class _JanggiScreenState extends State<JanggiScreen> {
                 ),
                 textAlign: TextAlign.center,
               ),
-              SizedBox(height: 20),
+              const SizedBox(height: 20),
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   // 초 기물
                   CircleAvatar(
                     radius: 30,
-                    backgroundColor: Color(0xFF90EE90),
+                    backgroundColor: const Color(0xFF90EE90),
                     child: Text(
-                      '초',
-                      style: TextStyle(
+                      choLabel,
+                      style: const TextStyle(
                         fontSize: 24,
                         fontWeight: FontWeight.bold,
                         color: Color(0xFF006400),
                       ),
                     ),
                   ),
-                  SizedBox(width: 16),
-                  Icon(Icons.handshake, size: 40, color: Color(0xFF8B4513)),
-                  SizedBox(width: 16),
+                  const SizedBox(width: 16),
+                  const Icon(Icons.handshake, size: 40, color: Color(0xFF8B4513)),
+                  const SizedBox(width: 16),
                   // 한 기물
                   CircleAvatar(
                     radius: 30,
-                    backgroundColor: Color(0xFFFFB6C1),
+                    backgroundColor: const Color(0xFFFFB6C1),
                     child: Text(
-                      '한',
-                      style: TextStyle(
+                      hanLabel,
+                      style: const TextStyle(
                         fontSize: 24,
                         fontWeight: FontWeight.bold,
                         color: Color(0xFFB22222),
@@ -2766,9 +2769,9 @@ class _JanggiScreenState extends State<JanggiScreen> {
                 Navigator.pop(context);
                 _resetGame();
               },
-              child: const Text(
-                '새 게임',
-                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+              child: Text(
+                'app.newGame'.tr(),
+                style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
               ),
             ),
           ],
@@ -2781,11 +2784,14 @@ class _JanggiScreenState extends State<JanggiScreen> {
     // 저장된 게임 삭제
     JanggiScreen.clearSavedGame();
 
-    final isPlayerWin = widget.gameMode == JanggiGameMode.vsHuman ||
-        (widget.gameMode == JanggiGameMode.vsHan && winner == '초') ||
-        (widget.gameMode == JanggiGameMode.vsCho && winner == '한');
+    final choLabel = 'games.janggi.cho'.tr();
+    final hanLabel = 'games.janggi.han'.tr();
 
-    final winnerColor = winner == '초' ? JanggiColor.cho : JanggiColor.han;
+    final isPlayerWin = widget.gameMode == JanggiGameMode.vsHuman ||
+        (widget.gameMode == JanggiGameMode.vsHan && winner == choLabel) ||
+        (widget.gameMode == JanggiGameMode.vsCho && winner == hanLabel);
+
+    final winnerColor = winner == choLabel ? JanggiColor.cho : JanggiColor.han;
     final Color winnerDisplayColor = winnerColor == JanggiColor.cho
         ? const Color(0xFF006400)
         : const Color(0xFFB22222);
@@ -2795,16 +2801,16 @@ class _JanggiScreenState extends State<JanggiScreen> {
     IconData icon;
 
     if (widget.gameMode == JanggiGameMode.vsHuman) {
-      title = '$winner 승리!';
+      title = '$winner ${'common.win'.tr()}!';
       message = '$winner가 승리하였습니다!';
       icon = Icons.emoji_events;
     } else if (isPlayerWin) {
-      title = '축하합니다!';
-      message = '플레이어($winner)가 컴퓨터를 이겼습니다!';
+      title = 'common.congratulations'.tr();
+      message = '${'common.player'.tr()}($winner)가 ${'common.computer'.tr()}를 이겼습니다!';
       icon = Icons.celebration;
     } else {
-      title = '패배...';
-      message = '컴퓨터($winner)에게 졌습니다.\n다시 도전해보세요!';
+      title = 'common.lose'.tr();
+      message = '${'common.computer'.tr()}($winner)에게 졌습니다.\n${'common.tryAgain'.tr()}';
       icon = Icons.sentiment_dissatisfied;
     }
 
@@ -2886,9 +2892,9 @@ class _JanggiScreenState extends State<JanggiScreen> {
               onPressed: () {
                 Navigator.pop(context);
               },
-              child: const Text(
-                '결과 확인',
-                style: TextStyle(
+              child: Text(
+                'app.confirm'.tr(),
+                style: const TextStyle(
                   color: Color(0xFF8B4513),
                   fontSize: 16,
                 ),
@@ -2904,9 +2910,9 @@ class _JanggiScreenState extends State<JanggiScreen> {
                 Navigator.pop(context);
                 _resetGame();
               },
-              child: const Text(
-                '새 게임',
-                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+              child: Text(
+                'app.newGame'.tr(),
+                style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
               ),
             ),
           ],
@@ -2962,7 +2968,7 @@ class _JanggiScreenState extends State<JanggiScreen> {
   Widget _buildPortraitLayout() {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('장기'),
+        title: Text('games.janggi.name'.tr()),
         backgroundColor: const Color(0xFFD2691E),
         foregroundColor: Colors.white,
         actions: [
@@ -2976,7 +2982,7 @@ class _JanggiScreenState extends State<JanggiScreen> {
             IconButton(
               icon: const Icon(Icons.handshake),
               onPressed: _showDrawDialog,
-              tooltip: '무승부 선언',
+              tooltip: 'common.draw'.tr(),
             ),
           // Gemini AI 상태 표시
           if (widget.gameMode != JanggiGameMode.vsHuman)
@@ -2999,11 +3005,12 @@ class _JanggiScreenState extends State<JanggiScreen> {
             onPressed: _moveHistory.isNotEmpty && !isGameOver && !isThinking
                 ? _showUndoAdDialog
                 : null,
-            tooltip: '한 수 취소',
+            tooltip: 'common.undo'.tr(),
           ),
           IconButton(
             icon: const Icon(Icons.refresh),
             onPressed: _resetGame,
+            tooltip: 'app.newGame'.tr(),
           ),
         ],
       ),
@@ -3036,16 +3043,16 @@ class _JanggiScreenState extends State<JanggiScreen> {
 
     switch (widget.gameMode) {
       case JanggiGameMode.vsCho:
-        choPlayerName = '컴퓨터';
-        hanPlayerName = '당신';
+        choPlayerName = 'common.computer'.tr();
+        hanPlayerName = 'common.you'.tr();
         break;
       case JanggiGameMode.vsHan:
-        choPlayerName = '당신';
-        hanPlayerName = '컴퓨터';
+        choPlayerName = 'common.you'.tr();
+        hanPlayerName = 'common.computer'.tr();
         break;
       case JanggiGameMode.vsHuman:
-        choPlayerName = '플레이어 1';
-        hanPlayerName = '플레이어 2';
+        choPlayerName = 'games.janggi.player1'.tr();
+        hanPlayerName = 'games.janggi.player2'.tr();
         break;
     }
 
@@ -3100,7 +3107,7 @@ class _JanggiScreenState extends State<JanggiScreen> {
                     _buildCircleButton(
                       icon: Icons.arrow_back,
                       onPressed: () => Navigator.pop(context),
-                      tooltip: '뒤로가기',
+                      tooltip: 'app.close'.tr(),
                     ),
                     const SizedBox(width: 8),
                     Container(
@@ -3109,9 +3116,9 @@ class _JanggiScreenState extends State<JanggiScreen> {
                         color: const Color(0xFF8B4513).withValues(alpha: 0.7),
                         borderRadius: BorderRadius.circular(20),
                       ),
-                      child: const Text(
-                        '장기',
-                        style: TextStyle(
+                      child: Text(
+                        'games.janggi.name'.tr(),
+                        style: const TextStyle(
                           color: Colors.white,
                           fontSize: 16,
                           fontWeight: FontWeight.bold,
@@ -3131,7 +3138,7 @@ class _JanggiScreenState extends State<JanggiScreen> {
                       _buildCircleButton(
                         icon: Icons.handshake,
                         onPressed: _showDrawDialog,
-                        tooltip: '무승부 선언',
+                        tooltip: 'common.draw'.tr(),
                       ),
                     if (_canDeclareDraw())
                       const SizedBox(width: 8),
@@ -3149,13 +3156,13 @@ class _JanggiScreenState extends State<JanggiScreen> {
                       onPressed: _moveHistory.isNotEmpty && !isGameOver && !isThinking
                           ? _showUndoAdDialog
                           : null,
-                      tooltip: '한 수 취소',
+                      tooltip: 'common.undo'.tr(),
                     ),
                     const SizedBox(width: 8),
                     _buildCircleButton(
                       icon: Icons.refresh,
                       onPressed: _resetGame,
-                      tooltip: '새 게임',
+                      tooltip: 'app.newGame'.tr(),
                     ),
                   ],
                 ),
@@ -3209,7 +3216,7 @@ class _JanggiScreenState extends State<JanggiScreen> {
         ? const Color(0xFF90EE90)
         : const Color(0xFFFFB6C1);
     final borderColor = isCurrentTurn ? pieceColor : Colors.brown.shade300;
-    final label = color == JanggiColor.cho ? '초' : '한';
+    final label = color == JanggiColor.cho ? 'games.janggi.cho'.tr() : 'games.janggi.han'.tr();
 
     return Container(
       padding: const EdgeInsets.all(16),
@@ -3276,7 +3283,7 @@ class _JanggiScreenState extends State<JanggiScreen> {
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Text(
-                  isInCheck ? '장군!' : (isThinking ? '생각중...' : '차례'),
+                  isInCheck ? '장군!' : (isThinking ? '생각중...' : 'common.turn'.tr()),
                   style: const TextStyle(
                     fontSize: 12,
                     color: Colors.white,
@@ -3291,11 +3298,15 @@ class _JanggiScreenState extends State<JanggiScreen> {
               child: Container(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                 decoration: BoxDecoration(
-                  color: winner == label ? Colors.green : Colors.red,
+                  color: (winner == 'games.janggi.cho'.tr() && color == JanggiColor.cho) ||
+                         (winner == 'games.janggi.han'.tr() && color == JanggiColor.han) ||
+                         winner == label ? Colors.green : Colors.red,
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Text(
-                  winner == label ? '승리' : '패배',
+                  (winner == 'games.janggi.cho'.tr() && color == JanggiColor.cho) ||
+                  (winner == 'games.janggi.han'.tr() && color == JanggiColor.han) ||
+                  winner == label ? 'common.win'.tr() : 'common.lose'.tr(),
                   style: const TextStyle(
                     fontSize: 12,
                     color: Colors.white,
@@ -3312,12 +3323,15 @@ class _JanggiScreenState extends State<JanggiScreen> {
   Widget _buildStatusBar() {
     String status;
     Color bgColor = const Color(0xFFD2691E);
+    final choLabel = 'games.janggi.cho'.tr();
+    final hanLabel = 'games.janggi.han'.tr();
+    final currentLabel = currentTurn == JanggiColor.cho ? choLabel : hanLabel;
 
     if (isSetupPhase) {
       status = '마상 배치 선택 중...';
       bgColor = Colors.blueGrey;
     } else if (isGameOver) {
-      status = '$winner 승리!';
+      status = '$winner ${'common.win'.tr()}!';
       bgColor = Colors.purple;
     } else if (isThinking) {
       status = useGeminiAI && geminiService != null
@@ -3327,10 +3341,10 @@ class _JanggiScreenState extends State<JanggiScreen> {
           ? Colors.indigo
           : const Color(0xFFD2691E);
     } else if (isInCheck) {
-      status = '${currentTurn == JanggiColor.cho ? "초" : "한"} 장군!';
+      status = '$currentLabel 장군!';
       bgColor = Colors.red.shade700;
     } else {
-      status = '${currentTurn == JanggiColor.cho ? "초" : "한"} 차례';
+      status = '$currentLabel ${'common.turn'.tr()}';
     }
 
     return Container(
@@ -3533,7 +3547,7 @@ class _JanggiScreenState extends State<JanggiScreen> {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
         children: [
-          _buildLegendItem('초', JanggiColor.cho),
+          _buildLegendItem('games.janggi.cho'.tr(), JanggiColor.cho),
           const Text(
             'VS',
             style: TextStyle(
@@ -3541,7 +3555,7 @@ class _JanggiScreenState extends State<JanggiScreen> {
               fontSize: 16,
             ),
           ),
-          _buildLegendItem('한', JanggiColor.han),
+          _buildLegendItem('games.janggi.han'.tr(), JanggiColor.han),
         ],
       ),
     );
@@ -3587,7 +3601,7 @@ class _JanggiScreenState extends State<JanggiScreen> {
         ),
         const SizedBox(width: 8),
         Text(
-          isCurrentPlayer ? '플레이어' : '컴퓨터',
+          isCurrentPlayer ? 'common.player'.tr() : 'common.computer'.tr(),
           style: const TextStyle(fontSize: 14),
         ),
       ],

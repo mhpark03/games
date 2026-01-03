@@ -266,15 +266,15 @@ class _BaseballScreenState extends State<BaseballScreen> {
       context: context,
       builder: (context) => AlertDialog(
         backgroundColor: Colors.grey.shade900,
-        title: const Text('힌트', style: TextStyle(color: Colors.white)),
-        content: const Text(
-          '광고를 시청하고 힌트를 사용하시겠습니까?',
-          style: TextStyle(color: Colors.white70),
+        title: Text('dialog.hintTitle'.tr(), style: const TextStyle(color: Colors.white)),
+        content: Text(
+          'dialog.hintMessage'.tr(),
+          style: const TextStyle(color: Colors.white70),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('취소'),
+            child: Text('app.cancel'.tr()),
           ),
           ElevatedButton(
             onPressed: () async {
@@ -291,7 +291,7 @@ class _BaseballScreenState extends State<BaseballScreen> {
                 adService.loadRewardedAd();
               }
             },
-            child: const Text('광고 보기'),
+            child: Text('common.watchAd'.tr()),
           ),
         ],
       ),
@@ -439,7 +439,7 @@ class _BaseballScreenState extends State<BaseballScreen> {
         backgroundColor: Colors.deepOrange.shade800,
         foregroundColor: Colors.white,
         title: Text(
-          '숫자야구',
+          'games.baseball.name'.tr(),
           style: TextStyle(
             fontWeight: FontWeight.bold,
             fontSize: 18,
@@ -505,20 +505,13 @@ class _BaseballScreenState extends State<BaseballScreen> {
                     const Icon(Icons.sports_baseball, color: Colors.deepOrange, size: 28),
                     const SizedBox(height: 4),
                     Text(
-                      '숫자',
+                      'games.baseball.name'.tr(),
                       style: TextStyle(
                         fontWeight: FontWeight.bold,
                         fontSize: 18,
                         color: Colors.orange.shade100,
                       ),
-                    ),
-                    Text(
-                      '야구',
-                      style: TextStyle(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 18,
-                        color: Colors.orange.shade100,
-                      ),
+                      textAlign: TextAlign.center,
                     ),
                     const SizedBox(height: 16),
                     _buildCompactInfo(),
@@ -537,18 +530,18 @@ class _BaseballScreenState extends State<BaseballScreen> {
                               color: Colors.amber.withValues(alpha: 0.5),
                             ),
                           ),
-                          child: const Row(
+                          child: Row(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
-                              Icon(
+                              const Icon(
                                 Icons.lightbulb_outline,
                                 color: Colors.amber,
                                 size: 18,
                               ),
-                              SizedBox(width: 6),
+                              const SizedBox(width: 6),
                               Text(
-                                '힌트',
-                                style: TextStyle(
+                                'common.hint'.tr(),
+                                style: const TextStyle(
                                   color: Colors.amber,
                                   fontWeight: FontWeight.bold,
                                   fontSize: 13,
@@ -764,7 +757,7 @@ class _BaseballScreenState extends State<BaseballScreen> {
           ),
           const SizedBox(height: 8),
           Text(
-            'S : 숫자 O 위치 O  |  B : 숫자 O 위치 X',
+            '${'games.baseball.strike'.tr()} : ${'games.baseball.strikeDesc'.tr()}  |  ${'games.baseball.ball'.tr()} : ${'games.baseball.ballDesc'.tr()}',
             style: TextStyle(
               color: Colors.grey.shade500,
               fontSize: 12,
@@ -1025,7 +1018,7 @@ class _BaseballScreenState extends State<BaseballScreen> {
           ),
           const SizedBox(height: 4),
           Text(
-            gameWon ? '정답!' : '게임 오버',
+            gameWon ? 'games.baseball.correct'.tr() : 'common.gameOver'.tr(),
             style: TextStyle(
               color: gameWon ? Colors.green : Colors.red,
               fontSize: 14,
@@ -1033,7 +1026,7 @@ class _BaseballScreenState extends State<BaseballScreen> {
             ),
           ),
           Text(
-            gameWon ? '${guessHistory.length}번' : secretNumber,
+            gameWon ? 'games.baseball.attempts'.tr(args: [guessHistory.length.toString()]) : secretNumber,
             style: TextStyle(
               color: Colors.grey.shade400,
               fontSize: 12,
@@ -1054,19 +1047,19 @@ class _BaseballScreenState extends State<BaseballScreen> {
             icon: Icons.tag,
             iconColor: Colors.deepOrange,
             value: _getDifficultyText(),
-            label: '난이도',
+            label: 'common.difficulty'.tr(),
           ),
           _buildInfoItem(
             icon: Icons.format_list_numbered,
             iconColor: Colors.blue,
             value: '${guessHistory.length}/$maxAttempts',
-            label: '시도 횟수',
+            label: 'games.baseball.attempts'.tr(),
           ),
           _buildInfoItem(
             icon: Icons.lightbulb_outline,
             iconColor: Colors.amber,
             value: _getHintedAnswer(),
-            label: '정답',
+            label: 'common.answer'.tr(),
           ),
         ],
       ),
@@ -1129,7 +1122,7 @@ class _BaseballScreenState extends State<BaseballScreen> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                gameWon ? '정답입니다!' : '게임 오버',
+                gameWon ? 'games.baseball.correct'.tr() : 'common.gameOver'.tr(),
                 style: TextStyle(
                   color: gameWon ? Colors.green : Colors.red,
                   fontSize: 20,
@@ -1138,8 +1131,8 @@ class _BaseballScreenState extends State<BaseballScreen> {
               ),
               Text(
                 gameWon
-                    ? '${guessHistory.length}번 만에 맞추셨습니다!'
-                    : '정답: $secretNumber',
+                    ? 'games.baseball.attempts'.tr(args: [guessHistory.length.toString()])
+                    : '${'common.answer'.tr()}: $secretNumber',
                 style: TextStyle(
                   color: Colors.grey.shade300,
                   fontSize: 14,
@@ -1244,14 +1237,14 @@ class _BaseballScreenState extends State<BaseballScreen> {
           const Spacer(),
           // 결과
           _buildResultBadge(
-            label: 'S',
+            label: 'games.baseball.strike'.tr(),
             count: result.strikes,
             color: Colors.red,
             isLandscape: isLandscape,
           ),
           SizedBox(width: isLandscape ? 4 : 8),
           _buildResultBadge(
-            label: 'B',
+            label: 'games.baseball.ball'.tr(),
             count: result.balls,
             color: Colors.blue,
             isLandscape: isLandscape,

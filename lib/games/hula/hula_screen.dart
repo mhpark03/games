@@ -677,7 +677,7 @@ class _HulaScreenState extends State<HulaScreen> with TickerProviderStateMixin {
               ),
             ),
             const SizedBox(width: 8),
-            const Text('땡큐 옵션 선택'),
+            Text('${'games.hula.thankYou'.tr()} ${'dialog.selectMode'.tr()}'),
           ],
         ),
         content: SizedBox(
@@ -707,7 +707,7 @@ class _HulaScreenState extends State<HulaScreen> with TickerProviderStateMixin {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('취소'),
+            child: Text('app.cancel'.tr()),
           ),
         ],
       ),
@@ -2686,9 +2686,9 @@ class _HulaScreenState extends State<HulaScreen> with TickerProviderStateMixin {
       gameOver = true;
       winnerIndex = winnerIdx;
       if (winnerIdx == 0) {
-        winner = '플레이어';
+        winner = 'common.player'.tr();
       } else {
-        winner = '컴퓨터$winnerIdx';
+        winner = '${'common.computer'.tr()}$winnerIdx';
       }
     });
 
@@ -2747,7 +2747,7 @@ class _HulaScreenState extends State<HulaScreen> with TickerProviderStateMixin {
             ),
             const SizedBox(height: 8),
             Text(
-              '플레이어: ${scores[0]}점',
+              '${'common.player'.tr()}: ${scores[0]}${'common.score'.tr()}',
               style: TextStyle(
                 color: winnerIndex == 0 ? Colors.amber : Colors.white70,
               ),
@@ -2755,7 +2755,7 @@ class _HulaScreenState extends State<HulaScreen> with TickerProviderStateMixin {
             ...List.generate(
               computerHands.length,
               (i) => Text(
-                '컴퓨터${i + 1}: ${scores[i + 1]}점',
+                '${'common.computer'.tr()}${i + 1}: ${scores[i + 1]}${'common.score'.tr()}',
                 style: TextStyle(
                   color: winnerIndex == i + 1 ? Colors.red : Colors.white70,
                 ),
@@ -2769,14 +2769,14 @@ class _HulaScreenState extends State<HulaScreen> with TickerProviderStateMixin {
               Navigator.pop(context);
               _initGame();
             },
-            child: const Text('다시 하기'),
+            child: Text('app.newGame'.tr()),
           ),
           TextButton(
             onPressed: () {
               Navigator.pop(context);
               Navigator.pop(context);
             },
-            child: const Text('나가기'),
+            child: Text('app.close'.tr()),
           ),
         ],
       ),
@@ -2804,7 +2804,7 @@ class _HulaScreenState extends State<HulaScreen> with TickerProviderStateMixin {
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
-        title: Text('훌라 (${playerCount}인)',
+        title: Text('${'games.hula.name'.tr()} (${playerCount}${'common.players'.tr()})',
             style: const TextStyle(color: Colors.white)),
         leading: IconButton(
           icon: const Icon(Icons.arrow_back, color: Colors.white),
@@ -2853,7 +2853,7 @@ class _HulaScreenState extends State<HulaScreen> with TickerProviderStateMixin {
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: Text(
-                      '훌라 (${playerCount}인)',
+                      '${'games.hula.name'.tr()} (${playerCount}${'common.players'.tr()})',
                       style: const TextStyle(
                         color: Colors.white,
                         fontSize: 12,
@@ -3258,8 +3258,8 @@ class _HulaScreenState extends State<HulaScreen> with TickerProviderStateMixin {
                     ),
                     child: Text(
                       currentTurn == 0
-                          ? '내 차례'
-                          : (waitingForNextTurn ? '다음: 컴퓨터$currentTurn ($_autoPlayCountdown)' : '컴퓨터$currentTurn 차례'),
+                          ? 'common.yourTurnIs'.tr()
+                          : (waitingForNextTurn ? '${'common.computer'.tr()}$currentTurn ($_autoPlayCountdown)' : '${'common.computer'.tr()}$currentTurn ${'common.turn'.tr()}'),
                       style: const TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.bold,
@@ -3658,7 +3658,7 @@ class _HulaScreenState extends State<HulaScreen> with TickerProviderStateMixin {
           ElevatedButton.icon(
             onPressed: currentTurn == 0 && hasDrawn && canMeld ? _registerMeld : null,
             icon: Icon(Icons.check_circle, size: iconSize),
-            label: Text('등록', style: TextStyle(fontSize: isLandscape ? 12 : 14)),
+            label: Text('games.hula.meld'.tr(), style: TextStyle(fontSize: isLandscape ? 12 : 14)),
             style: ElevatedButton.styleFrom(
               backgroundColor: Colors.green,
               foregroundColor: Colors.white,

@@ -112,7 +112,7 @@ class _GomokuScreenState extends State<GomokuScreen> {
 
     // 컴퓨터(흑) 모드일 때 컴퓨터가 먼저 둠
     if (widget.gameMode == GameMode.vsComputerBlack) {
-      gameMessage = '컴퓨터가 생각 중...';
+      gameMessage = 'games.gomoku.computerThinking'.tr();
       Future.delayed(const Duration(milliseconds: 500), () {
         if (mounted) _computerMove();
       });
@@ -180,13 +180,13 @@ class _GomokuScreenState extends State<GomokuScreen> {
 
     switch (widget.gameMode) {
       case GameMode.vsComputerWhite:
-        gameMessage = isBlackTurn ? '당신의 차례입니다' : '컴퓨터가 생각 중...';
+        gameMessage = isBlackTurn ? 'games.gomoku.yourTurn'.tr() : 'games.gomoku.computerThinking'.tr();
         break;
       case GameMode.vsComputerBlack:
-        gameMessage = isBlackTurn ? '컴퓨터가 생각 중...' : '당신의 차례입니다';
+        gameMessage = isBlackTurn ? 'games.gomoku.computerThinking'.tr() : 'games.gomoku.yourTurn'.tr();
         break;
       case GameMode.vsPerson:
-        gameMessage = isBlackTurn ? '흑돌 차례입니다' : '백돌 차례입니다';
+        gameMessage = isBlackTurn ? 'games.gomoku.blackTurn'.tr() : 'games.gomoku.whiteTurn'.tr();
         break;
     }
   }
@@ -271,15 +271,15 @@ class _GomokuScreenState extends State<GomokuScreen> {
       context: context,
       builder: (context) => AlertDialog(
         backgroundColor: Colors.grey.shade900,
-        title: const Text('되돌리기', style: TextStyle(color: Colors.white)),
-        content: const Text(
-          '광고를 시청하고 되돌리기를 사용하시겠습니까?',
-          style: TextStyle(color: Colors.white70),
+        title: Text('dialog.undoTitle'.tr(), style: const TextStyle(color: Colors.white)),
+        content: Text(
+          'dialog.undoMessage'.tr(),
+          style: const TextStyle(color: Colors.white70),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('취소'),
+            child: Text('app.cancel'.tr()),
           ),
           ElevatedButton(
             onPressed: () async {
@@ -296,7 +296,7 @@ class _GomokuScreenState extends State<GomokuScreen> {
                 adService.loadRewardedAd();
               }
             },
-            child: const Text('광고 보기'),
+            child: Text('common.watchAd'.tr()),
           ),
         ],
       ),
@@ -377,26 +377,28 @@ class _GomokuScreenState extends State<GomokuScreen> {
     switch (widget.gameMode) {
       case GameMode.vsComputerWhite:
         gameMessage = winner == Stone.black
-            ? '축하합니다! 당신이 이겼습니다!'
-            : '컴퓨터가 이겼습니다!';
+            ? 'games.gomoku.youWin'.tr()
+            : 'common.computerWins'.tr();
         break;
       case GameMode.vsComputerBlack:
         gameMessage = winner == Stone.white
-            ? '축하합니다! 당신이 이겼습니다!'
-            : '컴퓨터가 이겼습니다!';
+            ? 'games.gomoku.youWin'.tr()
+            : 'common.computerWins'.tr();
         break;
       case GameMode.vsPerson:
         gameMessage = winner == Stone.black
-            ? '흑돌이 이겼습니다!'
-            : '백돌이 이겼습니다!';
+            ? 'games.gomoku.blackWins'.tr()
+            : 'games.gomoku.whiteWins'.tr();
         break;
     }
   }
 
   // 게임 종료 팝업
   void _showGameOverDialog() {
-    final isWin = gameMessage.contains('축하');
-    final isDraw = gameMessage.contains('무승부');
+    final youWinMessage = 'games.gomoku.youWin'.tr();
+    final drawMessage = 'common.draw'.tr();
+    final isWin = gameMessage == youWinMessage;
+    final isDraw = gameMessage == drawMessage;
 
     showDialog(
       context: context,
@@ -415,7 +417,7 @@ class _GomokuScreenState extends State<GomokuScreen> {
             ),
             const SizedBox(width: 8),
             Text(
-              isDraw ? '무승부' : (isWin ? '승리!' : '패배'),
+              isDraw ? 'common.draw'.tr() : (isWin ? 'common.win'.tr() : 'common.lose'.tr()),
               style: TextStyle(
                 color: isDraw ? Colors.grey : (isWin ? Colors.amber : Colors.red),
                 fontWeight: FontWeight.bold,
@@ -433,7 +435,7 @@ class _GomokuScreenState extends State<GomokuScreen> {
               Navigator.pop(context);
               Navigator.pop(context);
             },
-            child: const Text('나가기'),
+            child: Text('app.close'.tr()),
           ),
           ElevatedButton(
             onPressed: () {
@@ -443,7 +445,7 @@ class _GomokuScreenState extends State<GomokuScreen> {
             style: ElevatedButton.styleFrom(
               backgroundColor: Colors.brown.shade700,
             ),
-            child: const Text('새 게임'),
+            child: Text('app.newGame'.tr()),
           ),
         ],
       ),
@@ -1101,9 +1103,9 @@ class _GomokuScreenState extends State<GomokuScreen> {
   Widget _buildPortraitLayout(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text(
-          '오목',
-          style: TextStyle(fontWeight: FontWeight.bold),
+        title: Text(
+          'games.gomoku.name'.tr(),
+          style: const TextStyle(fontWeight: FontWeight.bold),
         ),
         backgroundColor: Colors.brown.shade800,
         foregroundColor: Colors.white,
@@ -1118,13 +1120,13 @@ class _GomokuScreenState extends State<GomokuScreen> {
             child: IconButton(
               icon: const Icon(Icons.undo),
               onPressed: moveHistory.isNotEmpty && !gameOver ? _showUndoAdDialog : null,
-              tooltip: '되돌리기',
+              tooltip: 'common.undo'.tr(),
             ),
           ),
           IconButton(
             icon: const Icon(Icons.refresh),
             onPressed: _resetGame,
-            tooltip: '새 게임',
+            tooltip: 'app.newGame'.tr(),
           ),
         ],
       ),
@@ -1191,16 +1193,16 @@ class _GomokuScreenState extends State<GomokuScreen> {
 
     switch (widget.gameMode) {
       case GameMode.vsComputerWhite:
-        blackPlayerName = '당신';
-        whitePlayerName = '컴퓨터';
+        blackPlayerName = 'common.you'.tr();
+        whitePlayerName = 'common.computer'.tr();
         break;
       case GameMode.vsComputerBlack:
-        blackPlayerName = '컴퓨터';
-        whitePlayerName = '당신';
+        blackPlayerName = 'common.computer'.tr();
+        whitePlayerName = 'common.you'.tr();
         break;
       case GameMode.vsPerson:
-        blackPlayerName = '흑돌';
-        whitePlayerName = '백돌';
+        blackPlayerName = 'games.gomoku.blackStone'.tr();
+        whitePlayerName = 'games.gomoku.whiteStone'.tr();
         break;
     }
 
@@ -1273,9 +1275,9 @@ class _GomokuScreenState extends State<GomokuScreen> {
                         color: Colors.black.withValues(alpha: 0.5),
                         borderRadius: BorderRadius.circular(20),
                       ),
-                      child: const Text(
-                        '오목',
-                        style: TextStyle(
+                      child: Text(
+                        'games.gomoku.name'.tr(),
+                        style: const TextStyle(
                           color: Colors.white,
                           fontSize: 16,
                           fontWeight: FontWeight.bold,
@@ -1294,13 +1296,13 @@ class _GomokuScreenState extends State<GomokuScreen> {
                     _buildCircleButton(
                       icon: Icons.undo,
                       onPressed: moveHistory.isNotEmpty && !gameOver ? _showUndoAdDialog : null,
-                      tooltip: '되돌리기',
+                      tooltip: 'common.undo'.tr(),
                     ),
                     const SizedBox(width: 8),
                     _buildCircleButton(
                       icon: Icons.refresh,
                       onPressed: _resetGame,
-                      tooltip: '새 게임',
+                      tooltip: 'app.newGame'.tr(),
                     ),
                   ],
                 ),
@@ -1526,24 +1528,27 @@ class _GomokuScreenState extends State<GomokuScreen> {
   }
 
   List<Widget> _buildLegendByMode() {
+    final black = 'games.gomoku.black'.tr();
+    final white = 'games.gomoku.white'.tr();
+
     switch (widget.gameMode) {
       case GameMode.vsComputerWhite:
         return [
-          _buildLegend(Colors.black, '당신 (흑)'),
+          _buildLegend(Colors.black, 'common.playerWithColor'.tr(namedArgs: {'player': 'common.you'.tr(), 'color': black})),
           const SizedBox(width: 32),
-          _buildLegend(Colors.white, '컴퓨터 (백)'),
+          _buildLegend(Colors.white, 'common.playerWithColor'.tr(namedArgs: {'player': 'common.computer'.tr(), 'color': white})),
         ];
       case GameMode.vsComputerBlack:
         return [
-          _buildLegend(Colors.black, '컴퓨터 (흑)'),
+          _buildLegend(Colors.black, 'common.playerWithColor'.tr(namedArgs: {'player': 'common.computer'.tr(), 'color': black})),
           const SizedBox(width: 32),
-          _buildLegend(Colors.white, '당신 (백)'),
+          _buildLegend(Colors.white, 'common.playerWithColor'.tr(namedArgs: {'player': 'common.you'.tr(), 'color': white})),
         ];
       case GameMode.vsPerson:
         return [
-          _buildLegend(Colors.black, '플레이어 1 (흑)'),
+          _buildLegend(Colors.black, 'common.playerWithColor'.tr(namedArgs: {'player': 'games.gomoku.player1'.tr(), 'color': black})),
           const SizedBox(width: 32),
-          _buildLegend(Colors.white, '플레이어 2 (백)'),
+          _buildLegend(Colors.white, 'common.playerWithColor'.tr(namedArgs: {'player': 'games.gomoku.player2'.tr(), 'color': white})),
         ];
     }
   }

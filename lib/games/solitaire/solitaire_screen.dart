@@ -224,17 +224,17 @@ class _SolitaireScreenState extends State<SolitaireScreen> {
             borderRadius: BorderRadius.circular(12),
             side: const BorderSide(color: Colors.white30, width: 2),
           ),
-          title: const Text(
-            '게임 모드 선택',
-            style: TextStyle(
+          title: Text(
+            'dialog.selectMode'.tr(),
+            style: const TextStyle(
               color: Colors.white,
               fontWeight: FontWeight.bold,
             ),
             textAlign: TextAlign.center,
           ),
-          content: const Text(
-            '스톡에서 카드를 몇 장씩 뽑으시겠습니까?',
-            style: TextStyle(color: Colors.white70),
+          content: Text(
+            'games.solitaire.description'.tr(),
+            style: const TextStyle(color: Colors.white70),
             textAlign: TextAlign.center,
           ),
           actionsAlignment: MainAxisAlignment.center,
@@ -250,7 +250,7 @@ class _SolitaireScreenState extends State<SolitaireScreen> {
                     onPressed: () {
                       Navigator.pop(context, 1);
                     },
-                    child: const Text('1장씩'),
+                    child: Text('games.solitaire.draw1'.tr()),
                   ),
                 ),
                 const SizedBox(width: 8),
@@ -263,7 +263,7 @@ class _SolitaireScreenState extends State<SolitaireScreen> {
                     onPressed: () {
                       Navigator.pop(context, 3);
                     },
-                    child: const Text('3장씩'),
+                    child: Text('games.solitaire.draw3'.tr()),
                   ),
                 ),
               ],
@@ -297,17 +297,17 @@ class _SolitaireScreenState extends State<SolitaireScreen> {
             borderRadius: BorderRadius.circular(16),
             side: const BorderSide(color: Colors.white30, width: 2),
           ),
-          title: const Text(
-            '저장된 게임',
-            style: TextStyle(
+          title: Text(
+            'dialog.savedGame'.tr(),
+            style: const TextStyle(
               color: Colors.white,
               fontWeight: FontWeight.bold,
             ),
             textAlign: TextAlign.center,
           ),
-          content: const Text(
-            '이전에 플레이하던 게임이 있습니다.\n이어서 하시겠습니까?',
-            style: TextStyle(color: Colors.white70),
+          content: Text(
+            'dialog.savedGameMessage'.tr(),
+            style: const TextStyle(color: Colors.white70),
             textAlign: TextAlign.center,
           ),
           actions: [
@@ -322,9 +322,9 @@ class _SolitaireScreenState extends State<SolitaireScreen> {
                   }
                 });
               },
-              child: const Text(
-                '새 게임',
-                style: TextStyle(color: Colors.white70),
+              child: Text(
+                'app.newGame'.tr(),
+                style: const TextStyle(color: Colors.white70),
               ),
             ),
             ElevatedButton(
@@ -336,7 +336,7 @@ class _SolitaireScreenState extends State<SolitaireScreen> {
                 Navigator.pop(context);
                 _loadGame();
               },
-              child: const Text('이어하기'),
+              child: Text('app.continue'.tr()),
             ),
           ],
         );
@@ -552,15 +552,15 @@ class _SolitaireScreenState extends State<SolitaireScreen> {
       context: context,
       builder: (context) => AlertDialog(
         backgroundColor: Colors.grey.shade900,
-        title: const Text('되돌리기', style: TextStyle(color: Colors.white)),
-        content: const Text(
-          '광고를 시청하고 되돌리기를 사용하시겠습니까?',
-          style: TextStyle(color: Colors.white70),
+        title: Text('dialog.undoTitle'.tr(), style: const TextStyle(color: Colors.white)),
+        content: Text(
+          'dialog.undoMessage'.tr(),
+          style: const TextStyle(color: Colors.white70),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('취소'),
+            child: Text('app.cancel'.tr()),
           ),
           ElevatedButton(
             onPressed: () async {
@@ -577,7 +577,7 @@ class _SolitaireScreenState extends State<SolitaireScreen> {
                 adService.loadRewardedAd();
               }
             },
-            child: const Text('광고 보기'),
+            child: Text('common.watchAd'.tr()),
           ),
         ],
       ),
@@ -671,16 +671,16 @@ class _SolitaireScreenState extends State<SolitaireScreen> {
             borderRadius: BorderRadius.circular(16),
             side: const BorderSide(color: Colors.amber, width: 3),
           ),
-          title: const Column(
+          title: Column(
             children: [
-              Text(
+              const Text(
                 '🎉',
                 style: TextStyle(fontSize: 48),
               ),
-              SizedBox(height: 8),
+              const SizedBox(height: 8),
               Text(
-                '축하합니다!',
-                style: TextStyle(
+                'common.congratulations'.tr(),
+                style: const TextStyle(
                   color: Colors.white,
                   fontWeight: FontWeight.bold,
                   fontSize: 24,
@@ -690,7 +690,7 @@ class _SolitaireScreenState extends State<SolitaireScreen> {
             ],
           ),
           content: Text(
-            '게임을 완료했습니다!\n총 $moves번 이동했습니다.',
+            '${'games.solitaire.youWin'.tr()}\n${'games.solitaire.movesCount'.tr(namedArgs: {'count': moves.toString()})}',
             style: const TextStyle(color: Colors.white70, fontSize: 16),
             textAlign: TextAlign.center,
           ),
@@ -706,9 +706,9 @@ class _SolitaireScreenState extends State<SolitaireScreen> {
                   Navigator.pop(context);
                   _showDrawModeDialog();
                 },
-                child: const Text(
-                  '새 게임',
-                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                child: Text(
+                  'app.newGame'.tr(),
+                  style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                 ),
               ),
             ),
@@ -998,14 +998,14 @@ class _SolitaireScreenState extends State<SolitaireScreen> {
   Widget _buildPortraitLayout() {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('솔리테어'),
+        title: Text('games.solitaire.name'.tr()),
         backgroundColor: Colors.green.shade800,
         foregroundColor: Colors.white,
         actions: [
           IconButton(
             icon: const Icon(Icons.settings),
             onPressed: _showSettingsDialog,
-            tooltip: '카드 설정',
+            tooltip: 'app.settings'.tr(),
           ),
           IconButton(
             icon: const Icon(Icons.help_outline),
@@ -1026,7 +1026,7 @@ class _SolitaireScreenState extends State<SolitaireScreen> {
               _clearSavedGame();
               _showDrawModeDialog();
             },
-            tooltip: '새 게임',
+            tooltip: 'app.newGame'.tr(),
           ),
         ],
       ),
@@ -1050,7 +1050,7 @@ class _SolitaireScreenState extends State<SolitaireScreen> {
                       ),
                       const SizedBox(width: 4),
                       Text(
-                        _isPaused ? '일시정지' : _formatTime(_elapsedSeconds),
+                        _isPaused ? 'common.pause'.tr() : _formatTime(_elapsedSeconds),
                         style: TextStyle(
                           color: _isPaused ? Colors.amber : Colors.white,
                           fontSize: 14,
@@ -1078,14 +1078,14 @@ class _SolitaireScreenState extends State<SolitaireScreen> {
                   Icon(Icons.swap_horiz, color: Colors.white70, size: 18),
                   const SizedBox(width: 4),
                   Text(
-                    '이동: $moves',
+                    'games.solitaire.movesCount'.tr(namedArgs: {'count': moves.toString()}),
                     style: const TextStyle(color: Colors.white, fontSize: 14),
                   ),
                   const SizedBox(width: 16),
                   Icon(Icons.style, color: Colors.white70, size: 18),
                   const SizedBox(width: 4),
                   Text(
-                    '${drawCount}장',
+                    drawCount == 1 ? 'games.solitaire.draw1'.tr() : 'games.solitaire.draw3'.tr(),
                     style: const TextStyle(color: Colors.white, fontSize: 14),
                   ),
                 ],
@@ -1131,7 +1131,7 @@ class _SolitaireScreenState extends State<SolitaireScreen> {
                         _buildCircleButton(
                           icon: Icons.arrow_back,
                           onPressed: () => Navigator.pop(context),
-                          tooltip: '뒤로가기',
+                          tooltip: 'app.close'.tr(),
                         ),
                         const SizedBox(width: 8),
                         Container(
@@ -1140,9 +1140,9 @@ class _SolitaireScreenState extends State<SolitaireScreen> {
                             color: Colors.black.withValues(alpha: 0.5),
                             borderRadius: BorderRadius.circular(20),
                           ),
-                          child: const Text(
-                            '솔리테어',
-                            style: TextStyle(
+                          child: Text(
+                            'games.solitaire.name'.tr(),
+                            style: const TextStyle(
                               color: Colors.white,
                               fontSize: 16,
                               fontWeight: FontWeight.bold,
@@ -1172,7 +1172,7 @@ class _SolitaireScreenState extends State<SolitaireScreen> {
                               borderRadius: BorderRadius.circular(8),
                             ),
                             child: Text(
-                              '${drawCount}장 모드',
+                              drawCount == 1 ? 'games.solitaire.draw1'.tr() : 'games.solitaire.draw3'.tr(),
                               style: const TextStyle(
                                 fontSize: 12,
                                 fontWeight: FontWeight.bold,
@@ -1192,7 +1192,7 @@ class _SolitaireScreenState extends State<SolitaireScreen> {
                               ),
                               const SizedBox(width: 4),
                               Text(
-                                _isPaused ? '일시정지' : _formatTime(_elapsedSeconds),
+                                _isPaused ? 'common.pause'.tr() : _formatTime(_elapsedSeconds),
                                 style: TextStyle(
                                   fontSize: 13,
                                   fontWeight: FontWeight.bold,
@@ -1225,7 +1225,7 @@ class _SolitaireScreenState extends State<SolitaireScreen> {
                               const Icon(Icons.swap_horiz, size: 14, color: Colors.white70),
                               const SizedBox(width: 4),
                               Text(
-                                '이동: $moves',
+                                'games.solitaire.movesCount'.tr(namedArgs: {'count': moves.toString()}),
                                 style: const TextStyle(
                                   fontSize: 13,
                                   color: Colors.white,
@@ -1248,13 +1248,13 @@ class _SolitaireScreenState extends State<SolitaireScreen> {
                     _buildCircleButton(
                       icon: Icons.settings,
                       onPressed: _showSettingsDialog,
-                      tooltip: '카드 설정',
+                      tooltip: 'app.settings'.tr(),
                     ),
                     const SizedBox(width: 8),
                     _buildCircleButton(
                       icon: Icons.undo,
                       onPressed: _undoHistory.isEmpty ? null : _showUndoAdDialog,
-                      tooltip: '되돌리기',
+                      tooltip: 'common.undo'.tr(),
                     ),
                     const SizedBox(width: 8),
                     _buildCircleButton(
@@ -1263,7 +1263,7 @@ class _SolitaireScreenState extends State<SolitaireScreen> {
                         _clearSavedGame();
                         _showDrawModeDialog();
                       },
-                      tooltip: '새 게임',
+                      tooltip: 'app.newGame'.tr(),
                     ),
                   ],
                 ),
@@ -2065,7 +2065,7 @@ class _SolitaireScreenState extends State<SolitaireScreen> {
             borderRadius: BorderRadius.circular(16),
           ),
           title: Text(
-            '게임 설정',
+            'dialog.gameSettings'.tr(),
             style: TextStyle(color: Colors.green.shade400),
           ),
           content: SingleChildScrollView(
@@ -2074,9 +2074,9 @@ class _SolitaireScreenState extends State<SolitaireScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 // 카드 글자 크기 설정
-                const Text(
-                  '카드 글자 크기',
-                  style: TextStyle(color: Colors.white70, fontSize: 14),
+                Text(
+                  'games.solitaire.cardSize'.tr(),
+                  style: const TextStyle(color: Colors.white70, fontSize: 14),
                 ),
                 const SizedBox(height: 12),
                 Row(
@@ -2145,7 +2145,7 @@ class _SolitaireScreenState extends State<SolitaireScreen> {
                               ),
                               const SizedBox(height: 8),
                               Text(
-                                '작게',
+                                'games.solitaire.small'.tr(),
                                 style: TextStyle(
                                   color: !_largeCardMode
                                       ? Colors.white
@@ -2223,7 +2223,7 @@ class _SolitaireScreenState extends State<SolitaireScreen> {
                               ),
                               const SizedBox(height: 8),
                               Text(
-                                '크게',
+                                'games.solitaire.large'.tr(),
                                 style: TextStyle(
                                   color: _largeCardMode
                                       ? Colors.white
@@ -2240,9 +2240,9 @@ class _SolitaireScreenState extends State<SolitaireScreen> {
                 ),
                 const SizedBox(height: 24),
                 // 손잡이 설정 (카드 넘기기 위치)
-                const Text(
-                  '카드 넘기기 위치',
-                  style: TextStyle(color: Colors.white70, fontSize: 14),
+                Text(
+                  'games.solitaire.handedness'.tr(),
+                  style: const TextStyle(color: Colors.white70, fontSize: 14),
                 ),
                 const SizedBox(height: 12),
                 Row(
@@ -2281,7 +2281,7 @@ class _SolitaireScreenState extends State<SolitaireScreen> {
                               ),
                               const SizedBox(height: 8),
                               Text(
-                                '오른손잡이',
+                                'games.solitaire.rightHanded'.tr(),
                                 style: TextStyle(
                                   color: !_leftHandedMode
                                       ? Colors.white
@@ -2292,7 +2292,7 @@ class _SolitaireScreenState extends State<SolitaireScreen> {
                               ),
                               const SizedBox(height: 4),
                               Text(
-                                '왼쪽에서 넘기기',
+                                'games.solitaire.flipLeft'.tr(),
                                 style: TextStyle(
                                   color: !_leftHandedMode
                                       ? Colors.white70
@@ -2343,7 +2343,7 @@ class _SolitaireScreenState extends State<SolitaireScreen> {
                               ),
                               const SizedBox(height: 8),
                               Text(
-                                '왼손잡이',
+                                'games.solitaire.leftHanded'.tr(),
                                 style: TextStyle(
                                   color: _leftHandedMode
                                       ? Colors.white
@@ -2354,7 +2354,7 @@ class _SolitaireScreenState extends State<SolitaireScreen> {
                               ),
                               const SizedBox(height: 4),
                               Text(
-                                '오른쪽에서 넘기기',
+                                'games.solitaire.flipRight'.tr(),
                                 style: TextStyle(
                                   color: _leftHandedMode
                                       ? Colors.white70

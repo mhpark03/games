@@ -286,7 +286,7 @@ class _OneCardScreenState extends State<OneCardScreen> with TickerProviderStateM
         playerCalledOneCard = true; // 더 이상 벌칙 없음
         _waitingForOneCard = false;
       });
-      _showMessage('컴퓨터 $randomComputer: 원카드! (플레이어 벌칙 1장)');
+      _showMessage('${'common.computer'.tr()} $randomComputer: ${'games.onecard.uno'.tr()}!');
       HapticFeedback.heavyImpact();
       _saveGame();
 
@@ -460,7 +460,7 @@ class _OneCardScreenState extends State<OneCardScreen> with TickerProviderStateM
     _cancelOneCardTimer();
 
     setState(() {});
-    _showMessage('게임을 이어서 시작합니다');
+    _showMessage('app.continue'.tr());
 
     // 컴퓨터 턴인 경우 컴퓨터가 진행
     if (currentTurn > 0) {
@@ -483,8 +483,8 @@ class _OneCardScreenState extends State<OneCardScreen> with TickerProviderStateM
 
   // 플레이어 이름
   String _getPlayerName(int turn) {
-    if (turn == 0) return '플레이어';
-    return '컴퓨터 $turn';
+    if (turn == 0) return 'common.player'.tr();
+    return '${'common.computer'.tr()} $turn';
   }
 
   // 특정 턴의 핸드 가져오기
@@ -634,13 +634,13 @@ class _OneCardScreenState extends State<OneCardScreen> with TickerProviderStateM
       // 승리 체크
       if (playerHand.isEmpty) {
         gameOver = true;
-        winner = '플레이어';
+        winner = 'common.player'.tr();
         return;
       }
       for (int i = 0; i < computerHands.length; i++) {
         if (computerHands[i].isEmpty) {
           gameOver = true;
-          winner = '컴퓨터 ${i + 1}';
+          winner = '${'common.computer'.tr()} ${i + 1}';
           return;
         }
       }
@@ -649,7 +649,7 @@ class _OneCardScreenState extends State<OneCardScreen> with TickerProviderStateM
       if (currentTurn > 0 && computerHands[currentTurn - 1].length == 1) {
         // 컴퓨터는 자동으로 원카드 외침
         computerCalledOneCard[currentTurn - 1] = true;
-        pendingMessage = '$playerName: 원카드!';
+        pendingMessage = '$playerName: ${'games.onecard.uno'.tr()}';
       }
 
       // 카드가 2장 이상이면 원카드 상태 리셋
@@ -735,7 +735,7 @@ class _OneCardScreenState extends State<OneCardScreen> with TickerProviderStateM
       playerCalledOneCard = true;
       _waitingForOneCard = false;
     });
-    _showMessage('원카드!');
+    _showMessage('games.onecard.uno'.tr());
     HapticFeedback.heavyImpact();
 
     // 컴퓨터 턴 진행
@@ -799,8 +799,8 @@ class _OneCardScreenState extends State<OneCardScreen> with TickerProviderStateM
 
   String _getBankruptcyWinner() {
     // 파산하지 않은 플레이어 중 카드가 가장 적은 사람
-    if (playerCount == 2) return playerHand.length >= bankruptcyLimit ? '컴퓨터 1' : '플레이어';
-    return '다른 플레이어';
+    if (playerCount == 2) return playerHand.length >= bankruptcyLimit ? '${'common.computer'.tr()} 1' : 'common.player'.tr();
+    return 'common.player'.tr();
   }
 
   void _computerTurn(int computerIndex) {
@@ -831,7 +831,7 @@ class _OneCardScreenState extends State<OneCardScreen> with TickerProviderStateM
         // 파산 체크
         if (computerHand.length >= bankruptcyLimit) {
           gameOver = true;
-          winner = '플레이어';
+          winner = 'common.player'.tr();
           pendingMessage = '$computerName 파산! 카드가 ${computerHand.length}장이 되었습니다';
           return;
         }
@@ -983,7 +983,7 @@ class _OneCardScreenState extends State<OneCardScreen> with TickerProviderStateM
         backgroundColor: Colors.green.shade800,
         foregroundColor: Colors.white,
         title: Text(
-          '원카드 (${playerCount}인)',
+          '${'games.onecard.name'.tr()} (${playerCount}P)',
           style: const TextStyle(fontWeight: FontWeight.bold),
         ),
         centerTitle: true,
@@ -1209,7 +1209,7 @@ class _OneCardScreenState extends State<OneCardScreen> with TickerProviderStateM
                         borderRadius: BorderRadius.circular(16),
                       ),
                       child: Text(
-                        '원카드 (${playerCount}인)',
+                        '${'games.onecard.name'.tr()} (${playerCount}P)',
                         style: const TextStyle(
                           color: Colors.white,
                           fontSize: 14,
@@ -1859,7 +1859,7 @@ class _OneCardScreenState extends State<OneCardScreen> with TickerProviderStateM
                 ),
                 const SizedBox(width: 6),
                 Text(
-                  isPlayerTurn ? '내 차례' : (playerCount == 2 ? '상대 차례' : '${_getPlayerName(currentTurn)} 차례'),
+                  isPlayerTurn ? 'common.yourTurnIs'.tr() : '${_getPlayerName(currentTurn)} ${'common.turn'.tr()}',
                   style: const TextStyle(
                     color: Colors.white,
                     fontWeight: FontWeight.bold,
@@ -2436,7 +2436,7 @@ class _OneCardScreenState extends State<OneCardScreen> with TickerProviderStateM
   }
 
   Widget _buildGameOverOverlay() {
-    final isPlayerWinner = winner == '플레이어';
+    final isPlayerWinner = winner == 'common.player'.tr();
 
     return Container(
       color: Colors.black54,
@@ -2462,7 +2462,7 @@ class _OneCardScreenState extends State<OneCardScreen> with TickerProviderStateM
               ),
               const SizedBox(height: 16),
               Text(
-                isPlayerWinner ? '승리!' : '패배',
+                isPlayerWinner ? 'common.win'.tr() : 'common.lose'.tr(),
                 style: TextStyle(
                   color: isPlayerWinner ? Colors.amber : Colors.red,
                   fontSize: 28,
@@ -2471,7 +2471,7 @@ class _OneCardScreenState extends State<OneCardScreen> with TickerProviderStateM
               ),
               const SizedBox(height: 8),
               Text(
-                '$winner 승리',
+                'games.onecard.winner'.tr(namedArgs: {'player': winner ?? ''}),
                 style: TextStyle(
                   color: Colors.grey.shade400,
                   fontSize: 16,
@@ -2485,9 +2485,9 @@ class _OneCardScreenState extends State<OneCardScreen> with TickerProviderStateM
                   foregroundColor: Colors.white,
                   padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 12),
                 ),
-                child: const Text(
-                  '다시 하기',
-                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                child: Text(
+                  'app.newGame'.tr(),
+                  style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                 ),
               ),
             ],
@@ -2612,7 +2612,7 @@ class _OneCardScreenState extends State<OneCardScreen> with TickerProviderStateM
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: Text('app.confirm'.tr()),
+            child: Text('app.close'.tr()),
           ),
         ],
       ),

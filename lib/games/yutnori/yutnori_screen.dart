@@ -36,17 +36,17 @@ extension YutResultExtension on YutResult {
   String get name {
     switch (this) {
       case YutResult.backDo:
-        return '빽도';
+        return 'games.yutnori.backDo'.tr();
       case YutResult.do_:
-        return '도';
+        return 'games.yutnori.do'.tr();
       case YutResult.gae:
-        return '개';
+        return 'games.yutnori.gae'.tr();
       case YutResult.geol:
-        return '걸';
+        return 'games.yutnori.geol'.tr();
       case YutResult.yut:
-        return '윷';
+        return 'games.yutnori.yut'.tr();
       case YutResult.mo:
-        return '모';
+        return 'games.yutnori.mo'.tr();
     }
   }
 
@@ -223,9 +223,9 @@ class _YutnoriScreenState extends State<YutnoriScreen>
     selectedPieceIndex = null;
     selectedMoveIndex = null;
     if (currentPlayer == 0) {
-      gameMessage = '플레이어 선공! 윷을 던지세요!';
+      gameMessage = '${'common.player'.tr()} ${'games.yutnori.goesFirst'.tr()}! ${'games.yutnori.throw'.tr()}!';
     } else {
-      gameMessage = '${_getPlayerName(currentPlayer)} 선공!';
+      gameMessage = '${_getPlayerName(currentPlayer)} ${'games.yutnori.goesFirst'.tr()}!';
     }
   }
 
@@ -314,17 +314,17 @@ class _YutnoriScreenState extends State<YutnoriScreen>
     if (currentPlayer == 0) {
       if (pendingMoves.isNotEmpty) {
         if (pendingMoves.length > 1) {
-          gameMessage = '사용할 결과를 선택하세요';
+          gameMessage = 'games.yutnori.selectResult'.tr();
         } else {
-          gameMessage = '${pendingMoves.first.name}! 말을 선택하세요';
+          gameMessage = '${pendingMoves.first.name}! ${'games.yutnori.selectPiece'.tr()}';
         }
       } else if (canThrowYut) {
-        gameMessage = '윷을 던지세요!';
+        gameMessage = '${'games.yutnori.throw'.tr()}!';
       } else {
-        gameMessage = '게임을 이어서 시작합니다';
+        gameMessage = 'games.yutnori.resumeGame'.tr();
       }
     } else {
-      gameMessage = '${_getPlayerName(currentPlayer)} 차례 - 다음 버튼을 눌러주세요';
+      gameMessage = '${_getPlayerName(currentPlayer)} ${'games.yutnori.turn'.tr()} - ${'games.yutnori.pressNext'.tr()}';
     }
 
     setState(() {});
@@ -353,7 +353,7 @@ class _YutnoriScreenState extends State<YutnoriScreen>
 
     setState(() {
       isThrowingYut = true;
-      gameMessage = '윷을 던지는 중...';
+      gameMessage = '${'games.yutnori.throwing'.tr()}...';
     });
 
     _yutAnimController.reset();
@@ -387,17 +387,17 @@ class _YutnoriScreenState extends State<YutnoriScreen>
 
       if (result.isBonus) {
         if (isPlayerTurn) {
-          gameMessage = '${result.name}! 한 번 더 던지세요!';
+          gameMessage = '${result.name}! ${'games.yutnori.throwAgain'.tr()}!';
         } else {
-          gameMessage = '${_getPlayerName(currentPlayer)}: ${result.name}! 한 번 더!';
+          gameMessage = '${_getPlayerName(currentPlayer)}: ${result.name}! ${'games.yutnori.oneMore'.tr()}!';
         }
         canThrowYut = true;
       } else {
         if (isPlayerTurn) {
           if (pendingMoves.length > 1) {
-            gameMessage = '${result.name}! 사용할 결과를 선택하세요';
+            gameMessage = '${result.name}! ${'games.yutnori.selectResult'.tr()}';
           } else {
-            gameMessage = '${result.name}! 말을 선택하세요';
+            gameMessage = '${result.name}! ${'games.yutnori.selectPiece'.tr()}';
           }
         } else {
           gameMessage = '${_getPlayerName(currentPlayer)}: ${result.name}!';
@@ -624,7 +624,7 @@ class _YutnoriScreenState extends State<YutnoriScreen>
   void _selectMove(int index) {
     setState(() {
       selectedMoveIndex = index;
-      gameMessage = '${pendingMoves[index].name} 선택 - 이동할 말을 선택하세요';
+      gameMessage = '${pendingMoves[index].name} ${'games.yutnori.selected'.tr()} - ${'games.yutnori.selectPieceToMove'.tr()}';
     });
   }
 
@@ -635,7 +635,7 @@ class _YutnoriScreenState extends State<YutnoriScreen>
     // 결과가 여러 개인데 선택 안 했으면 먼저 선택하라고 안내
     if (pendingMoves.length > 1 && selectedMoveIndex == null) {
       setState(() {
-        gameMessage = '먼저 사용할 결과를 선택하세요';
+        gameMessage = 'games.yutnori.selectResultFirst'.tr();
       });
       return;
     }
@@ -643,7 +643,7 @@ class _YutnoriScreenState extends State<YutnoriScreen>
     final move = selectedMove!;
     if (!_canMovePiece(pieceIndex, move)) {
       setState(() {
-        gameMessage = '이 말은 이동할 수 없습니다';
+        gameMessage = 'games.yutnori.cannotMove'.tr();
       });
       return;
     }
@@ -676,7 +676,7 @@ class _YutnoriScreenState extends State<YutnoriScreen>
       if (newPos == finishPosition) {
         piece.isFinished = true;
         piece.position = finishPosition;
-        gameMessage = '${_getPlayerName(currentPlayer)} 말 골인!';
+        gameMessage = '${_getPlayerName(currentPlayer)} ${'games.yutnori.goal'.tr()}!';
 
         // 업힌 말들도 골인
         for (var stackedIndex in piece.stackedPieces) {
@@ -688,7 +688,7 @@ class _YutnoriScreenState extends State<YutnoriScreen>
         // 잡기 확인
         captured = _checkCapture(newPos);
         if (captured) {
-          gameMessage = '${_getPlayerName(currentPlayer)} 잡았다! 한 번 더!';
+          gameMessage = '${_getPlayerName(currentPlayer)} ${'games.yutnori.captured'.tr()}! ${'games.yutnori.oneMore'.tr()}!';
           canThrowYut = true;
         }
 
@@ -704,7 +704,7 @@ class _YutnoriScreenState extends State<YutnoriScreen>
       if (_checkWin(currentPlayer) && !rankings.contains(currentPlayer)) {
         rankings.add(currentPlayer);
         final rank = rankings.length;
-        gameMessage = '${_getPlayerName(currentPlayer)} ${rank}등 완료!';
+        gameMessage = '${_getPlayerName(currentPlayer)} ${'games.yutnori.rankComplete'.tr(args: [rank.toString()])}';
       }
 
       // 게임 종료 확인: 플레이어 완료 또는 다른 모든 플레이어 완료
@@ -712,24 +712,24 @@ class _YutnoriScreenState extends State<YutnoriScreen>
         gameOver = true;
         final playerRank = rankings.indexOf(0) + 1;
         if (playerRank > 0) {
-          winner = '$playerRank등';
+          winner = 'games.yutnori.rankPlace'.tr(args: [playerRank.toString()]);
         } else {
           // 플레이어가 아직 완료하지 않은 경우 (다른 모두가 완료)
-          winner = '${rankings.length + 1}등';
+          winner = 'games.yutnori.rankPlace'.tr(args: [(rankings.length + 1).toString()]);
         }
-        gameMessage = '게임 종료! 나의 등수: $winner';
+        gameMessage = '${'games.yutnori.gameOver'.tr()}! ${'games.yutnori.myRank'.tr()}: $winner';
       } else if (pendingMoves.isEmpty && !canThrowYut) {
         // 턴 종료
         _nextTurn();
       } else if (pendingMoves.isNotEmpty) {
         if (isPlayerTurn) {
           if (pendingMoves.length == 1) {
-            gameMessage = '${pendingMoves.first.name} - 말을 선택하세요';
+            gameMessage = '${pendingMoves.first.name} - ${'games.yutnori.selectPiece'.tr()}';
           } else {
-            gameMessage = '사용할 결과를 선택하세요';
+            gameMessage = 'games.yutnori.selectResult'.tr();
           }
         } else {
-          gameMessage = '${_getPlayerName(currentPlayer)}: ${pendingMoves.first.name} 이동 중...';
+          gameMessage = '${_getPlayerName(currentPlayer)}: ${pendingMoves.first.name} ${'games.yutnori.moving'.tr()}...';
         }
       }
 
@@ -809,7 +809,7 @@ class _YutnoriScreenState extends State<YutnoriScreen>
       canThrowYut = true;
       pendingMoves.clear();
       selectedMoveIndex = null;
-      gameMessage = '${_getPlayerName(currentPlayer)} 차례';
+      gameMessage = '${_getPlayerName(currentPlayer)} ${'games.yutnori.turn'.tr()}';
     });
 
     _saveGame();
@@ -821,8 +821,8 @@ class _YutnoriScreenState extends State<YutnoriScreen>
   }
 
   String _getPlayerName(int player) {
-    if (player == 0) return '플레이어';
-    return '컴퓨터 $player';
+    if (player == 0) return 'common.player'.tr();
+    return '${'common.computer'.tr()} $player';
   }
 
   // 다른 플레이어가 다음 턴에 도달 가능한 위치 계산
@@ -1103,7 +1103,7 @@ class _YutnoriScreenState extends State<YutnoriScreen>
         backgroundColor: const Color(0xFF8B4513),
         foregroundColor: Colors.white,
         title: Text(
-          '윷놀이 (${playerCount}인)',
+          '${'games.yutnori.name'.tr()} (${playerCount}${'games.yutnori.players'.tr()})',
           style: const TextStyle(fontWeight: FontWeight.bold),
         ),
         centerTitle: true,
@@ -1189,7 +1189,7 @@ class _YutnoriScreenState extends State<YutnoriScreen>
                 const Icon(Icons.computer, color: Colors.white, size: 16),
                 const SizedBox(width: 6),
                 Text(
-                  '컴퓨터 $player',
+                  '${'common.computer'.tr()} $player',
                   style: const TextStyle(
                     color: Colors.white,
                     fontSize: 13,
@@ -1424,12 +1424,12 @@ class _YutnoriScreenState extends State<YutnoriScreen>
             ? const Icon(Icons.play_arrow, color: Colors.white, size: 24)
             : Row(
                 mainAxisSize: MainAxisSize.min,
-                children: const [
-                  Icon(Icons.play_arrow, color: Colors.white, size: 20),
-                  SizedBox(width: 4),
+                children: [
+                  const Icon(Icons.play_arrow, color: Colors.white, size: 20),
+                  const SizedBox(width: 4),
                   Text(
-                    '다음',
-                    style: TextStyle(
+                    'games.yutnori.next'.tr(),
+                    style: const TextStyle(
                       color: Colors.white,
                       fontSize: 14,
                       fontWeight: FontWeight.bold,
@@ -1514,7 +1514,7 @@ class _YutnoriScreenState extends State<YutnoriScreen>
                               borderRadius: BorderRadius.circular(16),
                             ),
                             child: Text(
-                              '윷놀이 (${playerCount}인)',
+                              '${'games.yutnori.name'.tr()} (${playerCount}${'games.yutnori.players'.tr()})',
                               style: const TextStyle(
                                 color: Colors.white,
                                 fontSize: 14,
@@ -1782,14 +1782,14 @@ class _YutnoriScreenState extends State<YutnoriScreen>
                   ),
                 ],
               ),
-              child: const Row(
+              child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Icon(Icons.casino, color: Colors.white, size: 16),
-                  SizedBox(width: 6),
+                  const Icon(Icons.casino, color: Colors.white, size: 16),
+                  const SizedBox(width: 6),
                   Text(
-                    '던지기',
-                    style: TextStyle(
+                    'games.yutnori.throwButton'.tr(),
+                    style: const TextStyle(
                       color: Colors.white,
                       fontSize: 13,
                       fontWeight: FontWeight.bold,
@@ -1807,10 +1807,10 @@ class _YutnoriScreenState extends State<YutnoriScreen>
               borderRadius: BorderRadius.circular(12),
               border: Border.all(color: Colors.grey.shade600, width: 2),
             ),
-            child: const Row(
+            child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                SizedBox(
+                const SizedBox(
                   width: 14,
                   height: 14,
                   child: CircularProgressIndicator(
@@ -1818,10 +1818,10 @@ class _YutnoriScreenState extends State<YutnoriScreen>
                     color: Colors.white,
                   ),
                 ),
-                SizedBox(width: 6),
+                const SizedBox(width: 6),
                 Text(
-                  '던지는 중',
-                  style: TextStyle(
+                  'games.yutnori.throwing'.tr(),
+                  style: const TextStyle(
                     color: Colors.white,
                     fontSize: 13,
                     fontWeight: FontWeight.bold,
@@ -1992,14 +1992,14 @@ class _YutnoriScreenState extends State<YutnoriScreen>
                   : const Color(0xFF8B4513),
               borderRadius: BorderRadius.circular(8),
             ),
-            child: const Row(
+            child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Icon(Icons.person, color: Colors.white, size: 14),
-                SizedBox(width: 4),
+                const Icon(Icons.person, color: Colors.white, size: 14),
+                const SizedBox(width: 4),
                 Text(
-                  '플레이어',
-                  style: TextStyle(
+                  'common.player'.tr(),
+                  style: const TextStyle(
                     color: Colors.white,
                     fontSize: 11,
                     fontWeight: FontWeight.bold,
@@ -2022,7 +2022,7 @@ class _YutnoriScreenState extends State<YutnoriScreen>
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: Text(
-                    '새로 달기 ($waitingCount)',
+                    '${'games.yutnori.startNew'.tr()} ($waitingCount)',
                     style: const TextStyle(
                       color: Colors.white,
                       fontSize: 11,
@@ -2044,9 +2044,9 @@ class _YutnoriScreenState extends State<YutnoriScreen>
                     color: Colors.red.shade700,
                     borderRadius: BorderRadius.circular(12),
                   ),
-                  child: const Text(
-                    '건너뛰기',
-                    style: TextStyle(
+                  child: Text(
+                    'games.yutnori.skip'.tr(),
+                    style: const TextStyle(
                       color: Colors.white,
                       fontSize: 11,
                       fontWeight: FontWeight.bold,
@@ -2116,9 +2116,9 @@ class _YutnoriScreenState extends State<YutnoriScreen>
         _nextTurn();
       } else if (pendingMoves.isNotEmpty) {
         if (pendingMoves.length == 1) {
-          gameMessage = '${pendingMoves.first.name}! 말을 선택하세요';
+          gameMessage = '${pendingMoves.first.name}! ${'games.yutnori.selectPiece'.tr()}';
         } else {
-          gameMessage = '사용할 결과를 선택하세요';
+          gameMessage = 'games.yutnori.selectResult'.tr();
         }
         // 새로운 결과에 대해 자동 액션 체크
         _checkAutoAction();
@@ -2166,7 +2166,7 @@ class _YutnoriScreenState extends State<YutnoriScreen>
     if (!hasPieceOnBoard && canStartNewPiece) {
       setState(() {
         isAutoActionPending = true;
-        gameMessage = '새로 달기합니다...';
+        gameMessage = '${'games.yutnori.startingNew'.tr()}...';
       });
       Future.delayed(const Duration(milliseconds: 1200), () {
         if (mounted && isAutoActionPending && currentPlayer == 0) {
@@ -2180,7 +2180,7 @@ class _YutnoriScreenState extends State<YutnoriScreen>
     if (movablePieces.length == 1) {
       setState(() {
         isAutoActionPending = true;
-        gameMessage = '말을 이동합니다...';
+        gameMessage = '${'games.yutnori.movingPiece'.tr()}...';
       });
       Future.delayed(const Duration(milliseconds: 800), () {
         if (mounted && isAutoActionPending && currentPlayer == 0) {
@@ -2197,7 +2197,7 @@ class _YutnoriScreenState extends State<YutnoriScreen>
     if (movablePieces.isEmpty) {
       setState(() {
         isAutoActionPending = true;
-        gameMessage = '이동할 수 없어 건너뜁니다...';
+        gameMessage = '${'games.yutnori.skipping'.tr()}...';
       });
       Future.delayed(const Duration(milliseconds: 1200), () {
         if (mounted && isAutoActionPending && currentPlayer == 0) {
@@ -2309,14 +2309,14 @@ class _YutnoriScreenState extends State<YutnoriScreen>
                       : const Color(0xFF8B4513),
                   borderRadius: BorderRadius.circular(6),
                 ),
-                child: const Row(
+                child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Icon(Icons.person, color: Colors.white, size: 14),
-                    SizedBox(width: 4),
+                    const Icon(Icons.person, color: Colors.white, size: 14),
+                    const SizedBox(width: 4),
                     Text(
-                      '플레이어',
-                      style: TextStyle(
+                      'common.player'.tr(),
+                      style: const TextStyle(
                         color: Colors.white,
                         fontSize: 11,
                         fontWeight: FontWeight.bold,
@@ -2446,9 +2446,9 @@ class _YutnoriScreenState extends State<YutnoriScreen>
                     color: const Color(0xFF8B4513),
                     borderRadius: BorderRadius.circular(20),
                   ),
-                  child: const Text(
-                    '윷 던지기',
-                    style: TextStyle(
+                  child: Text(
+                    'games.yutnori.throwYut'.tr(),
+                    style: const TextStyle(
                       color: Colors.white,
                       fontSize: 12,
                       fontWeight: FontWeight.bold,
@@ -2519,10 +2519,10 @@ class _YutnoriScreenState extends State<YutnoriScreen>
             ),
             child: Row(
               children: [
-                Icon(Icons.computer, color: Colors.white, size: 16),
+                const Icon(Icons.computer, color: Colors.white, size: 16),
                 const SizedBox(width: 4),
                 Text(
-                  '컴퓨터 $player',
+                  '${'common.computer'.tr()} $player',
                   style: const TextStyle(
                     color: Colors.white,
                     fontSize: 12,
@@ -2573,10 +2573,10 @@ class _YutnoriScreenState extends State<YutnoriScreen>
               Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Icon(Icons.computer, color: Colors.white, size: 14),
+                  const Icon(Icons.computer, color: Colors.white, size: 14),
                   const SizedBox(width: 4),
                   Text(
-                    '컴퓨터 $player',
+                    '${'common.computer'.tr()} $player',
                     style: const TextStyle(
                       color: Colors.white,
                       fontSize: 11,
@@ -3013,14 +3013,14 @@ class _YutnoriScreenState extends State<YutnoriScreen>
               ),
             ],
           ),
-          child: const Row(
+          child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(Icons.casino, color: Colors.white, size: 20),
-              SizedBox(width: 8),
+              const Icon(Icons.casino, color: Colors.white, size: 20),
+              const SizedBox(width: 8),
               Text(
-                '던지기',
-                style: TextStyle(
+                'games.yutnori.throwButton'.tr(),
+                style: const TextStyle(
                   color: Colors.white,
                   fontSize: 16,
                   fontWeight: FontWeight.bold,
@@ -3038,10 +3038,10 @@ class _YutnoriScreenState extends State<YutnoriScreen>
           borderRadius: BorderRadius.circular(12),
           border: Border.all(color: Colors.grey.shade600, width: 2),
         ),
-        child: const Row(
+        child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            SizedBox(
+            const SizedBox(
               width: 18,
               height: 18,
               child: CircularProgressIndicator(
@@ -3049,10 +3049,10 @@ class _YutnoriScreenState extends State<YutnoriScreen>
                 color: Colors.white,
               ),
             ),
-            SizedBox(width: 8),
+            const SizedBox(width: 8),
             Text(
-              '던지는 중',
-              style: TextStyle(
+              'games.yutnori.throwing'.tr(),
+              style: const TextStyle(
                 color: Colors.white,
                 fontSize: 16,
                 fontWeight: FontWeight.bold,
@@ -3217,7 +3217,7 @@ class _YutnoriScreenState extends State<YutnoriScreen>
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Text(
-                  isThrowingYut ? '...' : '던지기',
+                  isThrowingYut ? '...' : 'games.yutnori.throwButton'.tr(),
                   style: const TextStyle(
                     color: Colors.white,
                     fontSize: 12,
@@ -3312,9 +3312,9 @@ class _YutnoriScreenState extends State<YutnoriScreen>
               children: [
                 const Icon(Icons.person, color: Colors.white, size: 18),
                 const SizedBox(width: 6),
-                const Text(
-                  '플레이어',
-                  style: TextStyle(
+                Text(
+                  'common.player'.tr(),
+                  style: const TextStyle(
                     fontSize: 14,
                     fontWeight: FontWeight.bold,
                     color: Colors.white,
@@ -3358,7 +3358,7 @@ class _YutnoriScreenState extends State<YutnoriScreen>
                   borderRadius: BorderRadius.circular(16),
                 ),
                 child: Text(
-                  '새로 달기 ($waitingCount)',
+                  '${'games.yutnori.startNew'.tr()} ($waitingCount)',
                   style: const TextStyle(
                     color: Colors.white,
                     fontSize: 14,
@@ -3379,9 +3379,9 @@ class _YutnoriScreenState extends State<YutnoriScreen>
                     color: Colors.red.shade700,
                     borderRadius: BorderRadius.circular(16),
                   ),
-                  child: const Text(
-                    '건너뛰기',
-                    style: TextStyle(
+                  child: Text(
+                    'games.yutnori.skip'.tr(),
+                    style: const TextStyle(
                       color: Colors.white,
                       fontSize: 14,
                       fontWeight: FontWeight.bold,
@@ -3421,11 +3421,11 @@ class _YutnoriScreenState extends State<YutnoriScreen>
                 Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Icon(Icons.person, color: Colors.white, size: 14),
+                    const Icon(Icons.person, color: Colors.white, size: 14),
                     const SizedBox(width: 4),
-                    const Text(
-                      '플레이어',
-                      style: TextStyle(
+                    Text(
+                      'common.player'.tr(),
+                      style: const TextStyle(
                         color: Colors.white,
                         fontSize: 11,
                         fontWeight: FontWeight.bold,
@@ -3569,7 +3569,7 @@ class _YutnoriScreenState extends State<YutnoriScreen>
               ),
               const SizedBox(height: 16),
               Text(
-                '게임 종료',
+                'games.yutnori.gameOver'.tr(),
                 style: const TextStyle(
                   color: Color(0xFF8B4513),
                   fontSize: 28,
@@ -3578,7 +3578,7 @@ class _YutnoriScreenState extends State<YutnoriScreen>
               ),
               const SizedBox(height: 8),
               Text(
-                '나의 등수: $playerRank등',
+                '${'games.yutnori.myRank'.tr()}: ${'games.yutnori.rankPlace'.tr(args: [playerRank.toString()])}',
                 style: TextStyle(
                   color: isFirstPlace ? Colors.amber.shade800 : Colors.blue.shade800,
                   fontSize: 24,
@@ -3595,9 +3595,9 @@ class _YutnoriScreenState extends State<YutnoriScreen>
                 ),
                 child: Column(
                   children: [
-                    const Text(
-                      '순위',
-                      style: TextStyle(
+                    Text(
+                      'games.yutnori.ranking'.tr(),
+                      style: const TextStyle(
                         fontSize: 14,
                         fontWeight: FontWeight.bold,
                         color: Color(0xFF8B4513),
@@ -3617,9 +3617,9 @@ class _YutnoriScreenState extends State<YutnoriScreen>
                   padding:
                       const EdgeInsets.symmetric(horizontal: 32, vertical: 12),
                 ),
-                child: const Text(
-                  '다시 하기',
-                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                child: Text(
+                  'app.newGame'.tr(),
+                  style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                 ),
               ),
             ],

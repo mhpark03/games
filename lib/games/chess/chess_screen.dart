@@ -164,7 +164,7 @@ class _ChessScreenState extends State<ChessScreen> {
     _updateMessage();
 
     if (widget.gameMode == ChessGameMode.vsComputerBlack) {
-      gameMessage = '컴퓨터가 생각 중...';
+      gameMessage = 'games.chess.computerThinking'.tr();
       Future.delayed(const Duration(milliseconds: 500), () {
         if (mounted) _computerMove();
       });
@@ -232,18 +232,18 @@ class _ChessScreenState extends State<ChessScreen> {
     String turnText;
     switch (widget.gameMode) {
       case ChessGameMode.vsComputerWhite:
-        turnText = isWhiteTurn ? '당신의 차례입니다 (백)' : '컴퓨터가 생각 중...';
+        turnText = isWhiteTurn ? 'games.chess.yourTurn'.tr() : 'games.chess.computerThinking'.tr();
         break;
       case ChessGameMode.vsComputerBlack:
-        turnText = isWhiteTurn ? '컴퓨터가 생각 중...' : '당신의 차례입니다 (흑)';
+        turnText = isWhiteTurn ? 'games.chess.computerThinking'.tr() : 'games.chess.yourTurn'.tr();
         break;
       case ChessGameMode.vsPerson:
-        turnText = isWhiteTurn ? '백 차례입니다' : '흑 차례입니다';
+        turnText = isWhiteTurn ? 'games.chess.whiteTurn'.tr() : 'games.chess.blackTurn'.tr();
         break;
     }
 
     if (isInCheck) {
-      turnText += ' (체크!)';
+      turnText += ' (${'games.chess.check'.tr()})';
     }
 
     gameMessage = turnText;
@@ -385,7 +385,7 @@ class _ChessScreenState extends State<ChessScreen> {
         if (isInCheck) {
           _setWinMessage(piece.color);
         } else {
-          gameMessage = '스테일메이트! 무승부입니다.';
+          gameMessage = '${'games.chess.stalemate'.tr()}! ${'common.draw'.tr()}';
         }
         _saveGame();
         return;
@@ -411,15 +411,15 @@ class _ChessScreenState extends State<ChessScreen> {
       context: context,
       builder: (context) => AlertDialog(
         backgroundColor: Colors.grey.shade900,
-        title: const Text('되돌리기', style: TextStyle(color: Colors.white)),
-        content: const Text(
-          '광고를 시청하고 되돌리기를 사용하시겠습니까?',
-          style: TextStyle(color: Colors.white70),
+        title: Text('dialog.undoTitle'.tr(), style: const TextStyle(color: Colors.white)),
+        content: Text(
+          'dialog.undoMessage'.tr(),
+          style: const TextStyle(color: Colors.white70),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('취소'),
+            child: Text('app.cancel'.tr()),
           ),
           ElevatedButton(
             onPressed: () async {
@@ -436,7 +436,7 @@ class _ChessScreenState extends State<ChessScreen> {
                 adService.loadRewardedAd();
               }
             },
-            child: const Text('광고 보기'),
+            child: Text('common.watchAd'.tr()),
           ),
         ],
       ),
@@ -521,18 +521,18 @@ class _ChessScreenState extends State<ChessScreen> {
     switch (widget.gameMode) {
       case ChessGameMode.vsComputerWhite:
         gameMessage = winner == PieceColor.white
-            ? '체크메이트! 당신이 이겼습니다!'
-            : '체크메이트! 컴퓨터가 이겼습니다.';
+            ? '${'games.chess.checkmate'.tr()} ${'common.youWin'.tr()}'
+            : '${'games.chess.checkmate'.tr()} ${'common.computerWins'.tr()}';
         break;
       case ChessGameMode.vsComputerBlack:
         gameMessage = winner == PieceColor.black
-            ? '체크메이트! 당신이 이겼습니다!'
-            : '체크메이트! 컴퓨터가 이겼습니다.';
+            ? '${'games.chess.checkmate'.tr()} ${'common.youWin'.tr()}'
+            : '${'games.chess.checkmate'.tr()} ${'common.computerWins'.tr()}';
         break;
       case ChessGameMode.vsPerson:
         gameMessage = winner == PieceColor.white
-            ? '체크메이트! 백이 이겼습니다!'
-            : '체크메이트! 흑이 이겼습니다!';
+            ? '${'games.chess.checkmate'.tr()} ${'games.chess.whiteWins'.tr()}'
+            : '${'games.chess.checkmate'.tr()} ${'games.chess.blackWins'.tr()}';
         break;
     }
   }
@@ -980,9 +980,9 @@ class _ChessScreenState extends State<ChessScreen> {
   Widget _buildPortraitLayout() {
     return Scaffold(
       appBar: AppBar(
-        title: const Text(
-          '체스',
-          style: TextStyle(fontWeight: FontWeight.bold),
+        title: Text(
+          'games.chess.name'.tr(),
+          style: const TextStyle(fontWeight: FontWeight.bold),
         ),
         backgroundColor: Colors.brown.shade700,
         foregroundColor: Colors.white,
@@ -1003,7 +1003,7 @@ class _ChessScreenState extends State<ChessScreen> {
           IconButton(
             icon: const Icon(Icons.refresh),
             onPressed: _resetGame,
-            tooltip: '새 게임',
+            tooltip: 'app.newGame'.tr(),
           ),
         ],
       ),
@@ -1113,16 +1113,16 @@ class _ChessScreenState extends State<ChessScreen> {
 
     switch (widget.gameMode) {
       case ChessGameMode.vsComputerWhite:
-        whitePlayerName = '당신';
-        blackPlayerName = '컴퓨터';
+        whitePlayerName = 'common.you'.tr();
+        blackPlayerName = 'common.computer'.tr();
         break;
       case ChessGameMode.vsComputerBlack:
-        whitePlayerName = '컴퓨터';
-        blackPlayerName = '당신';
+        whitePlayerName = 'common.computer'.tr();
+        blackPlayerName = 'common.you'.tr();
         break;
       case ChessGameMode.vsPerson:
-        whitePlayerName = '플레이어 1';
-        blackPlayerName = '플레이어 2';
+        whitePlayerName = 'games.chess.player1'.tr();
+        blackPlayerName = 'games.chess.player2'.tr();
         break;
     }
 
@@ -1186,7 +1186,7 @@ class _ChessScreenState extends State<ChessScreen> {
                     _buildCircleButton(
                       icon: Icons.arrow_back,
                       onPressed: () => Navigator.pop(context),
-                      tooltip: '뒤로가기',
+                      tooltip: 'app.close'.tr(),
                     ),
                     const SizedBox(width: 8),
                     Container(
@@ -1195,9 +1195,9 @@ class _ChessScreenState extends State<ChessScreen> {
                         color: Colors.black.withValues(alpha: 0.5),
                         borderRadius: BorderRadius.circular(20),
                       ),
-                      child: const Text(
-                        '체스',
-                        style: TextStyle(
+                      child: Text(
+                        'games.chess.name'.tr(),
+                        style: const TextStyle(
                           color: Colors.white,
                           fontSize: 16,
                           fontWeight: FontWeight.bold,
@@ -1216,13 +1216,13 @@ class _ChessScreenState extends State<ChessScreen> {
                     _buildCircleButton(
                       icon: Icons.undo,
                       onPressed: moveHistory.isNotEmpty && !gameOver ? _showUndoAdDialog : null,
-                      tooltip: '되돌리기',
+                      tooltip: 'common.undo'.tr(),
                     ),
                     const SizedBox(width: 8),
                     _buildCircleButton(
                       icon: Icons.refresh,
                       onPressed: _resetGame,
-                      tooltip: '새 게임',
+                      tooltip: 'app.newGame'.tr(),
                     ),
                   ],
                 ),
@@ -1314,7 +1314,7 @@ class _ChessScreenState extends State<ChessScreen> {
             ),
           ),
           Text(
-            isWhite ? '(백)' : '(흑)',
+            isWhite ? '(${'games.chess.white'.tr()})' : '(${'games.chess.black'.tr()})',
             style: TextStyle(
               fontSize: 12,
               color: Colors.brown.shade400,
@@ -1330,7 +1330,7 @@ class _ChessScreenState extends State<ChessScreen> {
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Text(
-                  isInCheck ? '체크!' : '차례',
+                  isInCheck ? 'games.chess.check'.tr() : 'common.turn'.tr(),
                   style: const TextStyle(
                     fontSize: 12,
                     color: Colors.white,
@@ -1345,29 +1345,11 @@ class _ChessScreenState extends State<ChessScreen> {
               child: Container(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                 decoration: BoxDecoration(
-                  color: gameMessage.contains('당신이')
-                      ? (widget.gameMode == ChessGameMode.vsComputerWhite && isWhite) ||
-                        (widget.gameMode == ChessGameMode.vsComputerBlack && !isWhite)
-                          ? Colors.green
-                          : Colors.red
-                      : gameMessage.contains('백이') && isWhite || gameMessage.contains('흑이') && !isWhite
-                          ? Colors.green
-                          : gameMessage.contains('무승부')
-                              ? Colors.grey
-                              : Colors.red,
+                  color: _getGameOverColor(isWhite),
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Text(
-                  gameMessage.contains('무승부')
-                      ? '무승부'
-                      : gameMessage.contains('당신이')
-                          ? (widget.gameMode == ChessGameMode.vsComputerWhite && isWhite) ||
-                            (widget.gameMode == ChessGameMode.vsComputerBlack && !isWhite)
-                              ? '승리'
-                              : '패배'
-                          : (gameMessage.contains('백이') && isWhite) || (gameMessage.contains('흑이') && !isWhite)
-                              ? '승리'
-                              : '패배',
+                  _getGameOverText(isWhite),
                   style: const TextStyle(
                     fontSize: 12,
                     color: Colors.white,
@@ -1379,6 +1361,54 @@ class _ChessScreenState extends State<ChessScreen> {
         ],
       ),
     );
+  }
+
+  // Helper method to determine game over color for player indicator
+  Color _getGameOverColor(bool isWhite) {
+    final youWinText = 'common.youWin'.tr();
+    final drawText = 'common.draw'.tr();
+    final whiteWinsText = 'games.chess.whiteWins'.tr();
+    final blackWinsText = 'games.chess.blackWins'.tr();
+
+    if (gameMessage.contains(drawText)) {
+      return Colors.grey;
+    }
+    if (gameMessage.contains(youWinText)) {
+      if ((widget.gameMode == ChessGameMode.vsComputerWhite && isWhite) ||
+          (widget.gameMode == ChessGameMode.vsComputerBlack && !isWhite)) {
+        return Colors.green;
+      }
+      return Colors.red;
+    }
+    if ((gameMessage.contains(whiteWinsText) && isWhite) ||
+        (gameMessage.contains(blackWinsText) && !isWhite)) {
+      return Colors.green;
+    }
+    return Colors.red;
+  }
+
+  // Helper method to determine game over text for player indicator
+  String _getGameOverText(bool isWhite) {
+    final youWinText = 'common.youWin'.tr();
+    final drawText = 'common.draw'.tr();
+    final whiteWinsText = 'games.chess.whiteWins'.tr();
+    final blackWinsText = 'games.chess.blackWins'.tr();
+
+    if (gameMessage.contains(drawText)) {
+      return 'common.draw'.tr();
+    }
+    if (gameMessage.contains(youWinText)) {
+      if ((widget.gameMode == ChessGameMode.vsComputerWhite && isWhite) ||
+          (widget.gameMode == ChessGameMode.vsComputerBlack && !isWhite)) {
+        return 'common.win'.tr();
+      }
+      return 'common.lose'.tr();
+    }
+    if ((gameMessage.contains(whiteWinsText) && isWhite) ||
+        (gameMessage.contains(blackWinsText) && !isWhite)) {
+      return 'common.win'.tr();
+    }
+    return 'common.lose'.tr();
   }
 
   Widget _buildGameBoard() {
@@ -1489,24 +1519,27 @@ class _ChessScreenState extends State<ChessScreen> {
   }
 
   List<Widget> _buildLegendByMode() {
+    final white = 'games.chess.white'.tr();
+    final black = 'games.chess.black'.tr();
+
     switch (widget.gameMode) {
       case ChessGameMode.vsComputerWhite:
         return [
-          _buildLegend(Colors.white, '당신 (백)'),
+          _buildLegend(Colors.white, 'common.playerWithColor'.tr(namedArgs: {'player': 'common.you'.tr(), 'color': white})),
           const SizedBox(width: 32),
-          _buildLegend(Colors.black, '컴퓨터 (흑)'),
+          _buildLegend(Colors.black, 'common.playerWithColor'.tr(namedArgs: {'player': 'common.computer'.tr(), 'color': black})),
         ];
       case ChessGameMode.vsComputerBlack:
         return [
-          _buildLegend(Colors.white, '컴퓨터 (백)'),
+          _buildLegend(Colors.white, 'common.playerWithColor'.tr(namedArgs: {'player': 'common.computer'.tr(), 'color': white})),
           const SizedBox(width: 32),
-          _buildLegend(Colors.black, '당신 (흑)'),
+          _buildLegend(Colors.black, 'common.playerWithColor'.tr(namedArgs: {'player': 'common.you'.tr(), 'color': black})),
         ];
       case ChessGameMode.vsPerson:
         return [
-          _buildLegend(Colors.white, '플레이어 1 (백)'),
+          _buildLegend(Colors.white, 'common.playerWithColor'.tr(namedArgs: {'player': 'games.chess.player1'.tr(), 'color': white})),
           const SizedBox(width: 32),
-          _buildLegend(Colors.black, '플레이어 2 (흑)'),
+          _buildLegend(Colors.black, 'common.playerWithColor'.tr(namedArgs: {'player': 'games.chess.player2'.tr(), 'color': black})),
         ];
     }
   }

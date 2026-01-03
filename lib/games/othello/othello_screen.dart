@@ -111,7 +111,7 @@ class _OthelloScreenState extends State<OthelloScreen> {
     _updateMessage();
 
     if (widget.gameMode == OthelloGameMode.vsComputerBlack) {
-      gameMessage = '컴퓨터가 생각 중...';
+      gameMessage = 'games.othello.computerThinking'.tr();
       Future.delayed(const Duration(milliseconds: 500), () {
         if (mounted) _computerMove();
       });
@@ -262,13 +262,13 @@ class _OthelloScreenState extends State<OthelloScreen> {
     String turnText;
     switch (widget.gameMode) {
       case OthelloGameMode.vsComputerWhite:
-        turnText = isBlackTurn ? '당신의 차례입니다 (흑)' : '컴퓨터가 생각 중...';
+        turnText = isBlackTurn ? 'games.othello.yourTurn'.tr() : 'games.othello.computerThinking'.tr();
         break;
       case OthelloGameMode.vsComputerBlack:
-        turnText = isBlackTurn ? '컴퓨터가 생각 중...' : '당신의 차례입니다 (백)';
+        turnText = isBlackTurn ? 'games.othello.computerThinking'.tr() : 'games.othello.yourTurn'.tr();
         break;
       case OthelloGameMode.vsPerson:
-        turnText = isBlackTurn ? '흑 차례입니다' : '백 차례입니다';
+        turnText = isBlackTurn ? 'games.othello.blackTurn'.tr() : 'games.othello.whiteTurn'.tr();
         break;
     }
     gameMessage = turnText;
@@ -289,15 +289,15 @@ class _OthelloScreenState extends State<OthelloScreen> {
       context: context,
       builder: (context) => AlertDialog(
         backgroundColor: Colors.grey.shade900,
-        title: const Text('되돌리기', style: TextStyle(color: Colors.white)),
-        content: const Text(
-          '광고를 시청하고 되돌리기를 사용하시겠습니까?',
-          style: TextStyle(color: Colors.white70),
+        title: Text('dialog.undoTitle'.tr(), style: const TextStyle(color: Colors.white)),
+        content: Text(
+          'dialog.undoMessage'.tr(),
+          style: const TextStyle(color: Colors.white70),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('취소'),
+            child: Text('app.cancel'.tr()),
           ),
           ElevatedButton(
             onPressed: () async {
@@ -314,7 +314,7 @@ class _OthelloScreenState extends State<OthelloScreen> {
                 adService.loadRewardedAd();
               }
             },
-            child: const Text('광고 보기'),
+            child: Text('common.watchAd'.tr()),
           ),
         ],
       ),
@@ -427,34 +427,39 @@ class _OthelloScreenState extends State<OthelloScreen> {
     _saveGame();
   }
 
+  bool _isUserWin = false;
+
   void _setWinMessage() {
     String winner;
+    _isUserWin = false;
     if (blackCount > whiteCount) {
       switch (widget.gameMode) {
         case OthelloGameMode.vsComputerWhite:
-          winner = '축하합니다! 당신이 이겼습니다!';
+          winner = 'games.othello.youWin'.tr();
+          _isUserWin = true;
           break;
         case OthelloGameMode.vsComputerBlack:
-          winner = '컴퓨터가 이겼습니다!';
+          winner = 'common.computerWins'.tr();
           break;
         case OthelloGameMode.vsPerson:
-          winner = '흑이 이겼습니다!';
+          winner = 'games.othello.blackWins'.tr();
           break;
       }
     } else if (whiteCount > blackCount) {
       switch (widget.gameMode) {
         case OthelloGameMode.vsComputerWhite:
-          winner = '컴퓨터가 이겼습니다!';
+          winner = 'common.computerWins'.tr();
           break;
         case OthelloGameMode.vsComputerBlack:
-          winner = '축하합니다! 당신이 이겼습니다!';
+          winner = 'games.othello.youWin'.tr();
+          _isUserWin = true;
           break;
         case OthelloGameMode.vsPerson:
-          winner = '백이 이겼습니다!';
+          winner = 'games.othello.whiteWins'.tr();
           break;
       }
     } else {
-      winner = '무승부입니다!';
+      winner = 'common.draw'.tr();
     }
     gameMessage = '$winner ($blackCount : $whiteCount)';
   }
@@ -671,9 +676,9 @@ class _OthelloScreenState extends State<OthelloScreen> {
   Widget _buildPortraitLayout(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text(
-          '오델로',
-          style: TextStyle(fontWeight: FontWeight.bold),
+        title: Text(
+          'games.othello.name'.tr(),
+          style: const TextStyle(fontWeight: FontWeight.bold),
         ),
         backgroundColor: Colors.green.shade800,
         foregroundColor: Colors.white,
@@ -694,7 +699,7 @@ class _OthelloScreenState extends State<OthelloScreen> {
           IconButton(
             icon: const Icon(Icons.refresh),
             onPressed: _resetGame,
-            tooltip: '새 게임',
+            tooltip: 'app.newGame'.tr(),
           ),
         ],
       ),
@@ -729,14 +734,14 @@ class _OthelloScreenState extends State<OthelloScreen> {
                 padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
                 decoration: BoxDecoration(
                   color: gameOver
-                      ? (gameMessage.contains('축하')
+                      ? (_isUserWin
                           ? Colors.green.withValues(alpha: 0.3)
                           : Colors.red.withValues(alpha: 0.3))
                       : Colors.teal.withValues(alpha: 0.2),
                   borderRadius: BorderRadius.circular(12),
                   border: Border.all(
                     color: gameOver
-                        ? (gameMessage.contains('축하') ? Colors.green : Colors.red)
+                        ? (_isUserWin ? Colors.green : Colors.red)
                         : Colors.teal,
                     width: 2,
                   ),
@@ -747,7 +752,7 @@ class _OthelloScreenState extends State<OthelloScreen> {
                     fontSize: 18,
                     fontWeight: FontWeight.bold,
                     color: gameOver
-                        ? (gameMessage.contains('축하') ? Colors.green : Colors.red)
+                        ? (_isUserWin ? Colors.green : Colors.red)
                         : Colors.teal,
                   ),
                 ),
@@ -784,16 +789,16 @@ class _OthelloScreenState extends State<OthelloScreen> {
 
     switch (widget.gameMode) {
       case OthelloGameMode.vsComputerWhite:
-        blackPlayerName = '당신';
-        whitePlayerName = '컴퓨터';
+        blackPlayerName = 'common.you'.tr();
+        whitePlayerName = 'common.computer'.tr();
         break;
       case OthelloGameMode.vsComputerBlack:
-        blackPlayerName = '컴퓨터';
-        whitePlayerName = '당신';
+        blackPlayerName = 'common.computer'.tr();
+        whitePlayerName = 'common.you'.tr();
         break;
       case OthelloGameMode.vsPerson:
-        blackPlayerName = '흑';
-        whitePlayerName = '백';
+        blackPlayerName = 'games.othello.black'.tr();
+        whitePlayerName = 'games.othello.white'.tr();
         break;
     }
 
@@ -865,7 +870,7 @@ class _OthelloScreenState extends State<OthelloScreen> {
                     _buildCircleButton(
                       icon: Icons.arrow_back,
                       onPressed: () => Navigator.pop(context),
-                      tooltip: '뒤로가기',
+                      tooltip: 'app.close'.tr(),
                     ),
                     const SizedBox(width: 8),
                     Container(
@@ -874,9 +879,9 @@ class _OthelloScreenState extends State<OthelloScreen> {
                         color: Colors.black.withValues(alpha: 0.5),
                         borderRadius: BorderRadius.circular(20),
                       ),
-                      child: const Text(
-                        '오델로',
-                        style: TextStyle(
+                      child: Text(
+                        'games.othello.name'.tr(),
+                        style: const TextStyle(
                           color: Colors.white,
                           fontSize: 16,
                           fontWeight: FontWeight.bold,
@@ -895,13 +900,13 @@ class _OthelloScreenState extends State<OthelloScreen> {
                     _buildCircleButton(
                       icon: Icons.undo,
                       onPressed: moveHistory.isNotEmpty && !gameOver ? _showUndoAdDialog : null,
-                      tooltip: '되돌리기',
+                      tooltip: 'common.undo'.tr(),
                     ),
                     const SizedBox(width: 8),
                     _buildCircleButton(
                       icon: Icons.refresh,
                       onPressed: _resetGame,
-                      tooltip: '새 게임',
+                      tooltip: 'app.newGame'.tr(),
                     ),
                   ],
                 ),
@@ -1022,7 +1027,7 @@ class _OthelloScreenState extends State<OthelloScreen> {
           ),
           const SizedBox(height: 2),
           Text(
-            isBlack ? '(흑)' : '(백)',
+            isBlack ? '(${'games.othello.black'.tr()})' : '(${'games.othello.white'.tr()})',
             style: TextStyle(
               color: isCurrentTurn ? Colors.teal.shade200 : Colors.grey.shade600,
               fontSize: 13,
@@ -1033,7 +1038,7 @@ class _OthelloScreenState extends State<OthelloScreen> {
             Padding(
               padding: const EdgeInsets.only(top: 8),
               child: Text(
-                '차례',
+                'common.turn'.tr(),
                 style: TextStyle(
                   color: highlightColor,
                   fontSize: 14,
@@ -1209,24 +1214,27 @@ class _OthelloScreenState extends State<OthelloScreen> {
   }
 
   List<Widget> _buildLegendByMode() {
+    final black = 'games.othello.black'.tr();
+    final white = 'games.othello.white'.tr();
+
     switch (widget.gameMode) {
       case OthelloGameMode.vsComputerWhite:
         return [
-          _buildLegend(Colors.black, '당신 (흑)'),
+          _buildLegend(Colors.black, 'common.playerWithColor'.tr(namedArgs: {'player': 'common.you'.tr(), 'color': black})),
           const SizedBox(width: 32),
-          _buildLegend(Colors.white, '컴퓨터 (백)'),
+          _buildLegend(Colors.white, 'common.playerWithColor'.tr(namedArgs: {'player': 'common.computer'.tr(), 'color': white})),
         ];
       case OthelloGameMode.vsComputerBlack:
         return [
-          _buildLegend(Colors.black, '컴퓨터 (흑)'),
+          _buildLegend(Colors.black, 'common.playerWithColor'.tr(namedArgs: {'player': 'common.computer'.tr(), 'color': black})),
           const SizedBox(width: 32),
-          _buildLegend(Colors.white, '당신 (백)'),
+          _buildLegend(Colors.white, 'common.playerWithColor'.tr(namedArgs: {'player': 'common.you'.tr(), 'color': white})),
         ];
       case OthelloGameMode.vsPerson:
         return [
-          _buildLegend(Colors.black, '플레이어 1 (흑)'),
+          _buildLegend(Colors.black, 'common.playerWithColor'.tr(namedArgs: {'player': 'games.othello.player1'.tr(), 'color': black})),
           const SizedBox(width: 32),
-          _buildLegend(Colors.white, '플레이어 2 (백)'),
+          _buildLegend(Colors.white, 'common.playerWithColor'.tr(namedArgs: {'player': 'games.othello.player2'.tr(), 'color': white})),
         ];
     }
   }
