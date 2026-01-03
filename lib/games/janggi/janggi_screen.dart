@@ -363,13 +363,13 @@ class _JanggiScreenState extends State<JanggiScreen> {
                 borderRadius: BorderRadius.circular(16),
                 side: const BorderSide(color: Color(0xFF8B4513), width: 3),
               ),
-              title: const Row(
+              title: Row(
                 children: [
-                  Icon(Icons.smart_toy, color: Color(0xFF8B4513)),
-                  SizedBox(width: 8),
+                  const Icon(Icons.smart_toy, color: Color(0xFF8B4513)),
+                  const SizedBox(width: 8),
                   Text(
-                    'Gemini AI 설정',
-                    style: TextStyle(
+                    'games.janggi.geminiSettings'.tr(),
+                    style: const TextStyle(
                       color: Color(0xFF8B4513),
                       fontWeight: FontWeight.bold,
                     ),
@@ -413,7 +413,7 @@ class _JanggiScreenState extends State<JanggiScreen> {
                     const SizedBox(height: 16),
                     Row(
                       children: [
-                        const Text('Gemini AI 사용'),
+                        Text('games.janggi.geminiUse'.tr()),
                         const Spacer(),
                         Switch(
                           value: useGeminiAI,
@@ -434,13 +434,13 @@ class _JanggiScreenState extends State<JanggiScreen> {
                           color: Colors.green.shade100,
                           borderRadius: BorderRadius.circular(8),
                         ),
-                        child: const Row(
+                        child: Row(
                           children: [
-                            Icon(Icons.check_circle, color: Colors.green, size: 18),
-                            SizedBox(width: 8),
+                            const Icon(Icons.check_circle, color: Colors.green, size: 18),
+                            const SizedBox(width: 8),
                             Text(
-                              'API 키가 설정됨',
-                              style: TextStyle(color: Colors.green, fontSize: 13),
+                              'games.janggi.geminiApiKeySet'.tr(),
+                              style: const TextStyle(color: Colors.green, fontSize: 13),
                             ),
                           ],
                         ),
@@ -468,8 +468,8 @@ class _JanggiScreenState extends State<JanggiScreen> {
                       SnackBar(
                         content: Text(
                           controller.text.trim().isNotEmpty
-                              ? 'Gemini AI가 활성화되었습니다'
-                              : 'API 키가 제거되었습니다',
+                              ? 'games.janggi.geminiActivated'.tr()
+                              : 'games.janggi.geminiApiKeyRemoved'.tr(),
                         ),
                         backgroundColor: const Color(0xFF8B4513),
                       ),
@@ -2992,7 +2992,7 @@ class _JanggiScreenState extends State<JanggiScreen> {
                 color: geminiService != null ? Colors.lightGreenAccent : Colors.white70,
               ),
               onPressed: _showAISettingsDialog,
-              tooltip: geminiService != null ? 'Gemini AI 활성화됨' : 'AI 설정',
+              tooltip: geminiService != null ? 'games.janggi.geminiTooltipActive'.tr() : 'games.janggi.geminiTooltipSettings'.tr(),
             ),
           // 취소 버튼
           IconButton(
@@ -3146,7 +3146,7 @@ class _JanggiScreenState extends State<JanggiScreen> {
                       _buildCircleButton(
                         icon: geminiService != null ? Icons.smart_toy : Icons.smart_toy_outlined,
                         onPressed: _showAISettingsDialog,
-                        tooltip: geminiService != null ? 'Gemini AI 활성화됨' : 'AI 설정',
+                        tooltip: geminiService != null ? 'games.janggi.geminiTooltipActive'.tr() : 'games.janggi.geminiTooltipSettings'.tr(),
                       ),
                     if (widget.gameMode != JanggiGameMode.vsHuman)
                       const SizedBox(width: 8),

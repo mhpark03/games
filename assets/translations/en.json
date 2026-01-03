@@ -223,7 +223,14 @@
       "leftOuterRightInner": "Left Outer, Right Inner",
       "check": "Check",
       "geminiApiDesc": "Enter Gemini API key to play against a smarter AI.",
-      "geminiApiGuide": "You can get a free API key from Google AI Studio:\nhttps://aistudio.google.com/apikey"
+      "geminiApiGuide": "You can get a free API key from Google AI Studio:\nhttps://aistudio.google.com/apikey",
+      "geminiSettings": "Gemini AI Settings",
+      "geminiUse": "Use Gemini AI",
+      "geminiApiKeySet": "API key set",
+      "geminiActivated": "Gemini AI activated",
+      "geminiApiKeyRemoved": "API key removed",
+      "geminiTooltipActive": "Gemini AI active",
+      "geminiTooltipSettings": "AI Settings"
     },
     "solitaire": {
       "name": "Solitaire",

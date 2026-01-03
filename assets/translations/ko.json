@@ -223,7 +223,14 @@
       "leftOuterRightInner": "좌외마 우내마",
       "check": "장군",
       "geminiApiDesc": "Gemini API 키를 입력하면 더 똑똑한 AI와 대국할 수 있습니다.",
-      "geminiApiGuide": "API 키는 Google AI Studio에서 무료로 발급받을 수 있습니다:\nhttps://aistudio.google.com/apikey"
+      "geminiApiGuide": "API 키는 Google AI Studio에서 무료로 발급받을 수 있습니다:\nhttps://aistudio.google.com/apikey",
+      "geminiSettings": "Gemini AI 설정",
+      "geminiUse": "Gemini AI 사용",
+      "geminiApiKeySet": "API 키가 설정됨",
+      "geminiActivated": "Gemini AI가 활성화되었습니다",
+      "geminiApiKeyRemoved": "API 키가 제거되었습니다",
+      "geminiTooltipActive": "Gemini AI 활성화됨",
+      "geminiTooltipSettings": "AI 설정"
     },
     "solitaire": {
       "name": "솔리테어",

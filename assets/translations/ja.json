@@ -223,7 +223,14 @@
       "leftOuterRightInner": "左外馬 右内馬",
       "check": "将軍",
       "geminiApiDesc": "Gemini APIキーを入力すると、より賢いAIと対局できます。",
-      "geminiApiGuide": "APIキーはGoogle AI Studioで無料で取得できます:\nhttps://aistudio.google.com/apikey"
+      "geminiApiGuide": "APIキーはGoogle AI Studioで無料で取得できます:\nhttps://aistudio.google.com/apikey",
+      "geminiSettings": "Gemini AI 設定",
+      "geminiUse": "Gemini AI を使用",
+      "geminiApiKeySet": "APIキー設定済み",
+      "geminiActivated": "Gemini AI が有効になりました",
+      "geminiApiKeyRemoved": "APIキーが削除されました",
+      "geminiTooltipActive": "Gemini AI 有効",
+      "geminiTooltipSettings": "AI設定"
     },
     "solitaire": {
       "name": "ソリティア",
