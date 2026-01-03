@@ -3062,6 +3062,51 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
+  Widget _buildExitButton(BuildContext context) {
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: 0.1),
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.2)),
+      ),
+      child: IconButton(
+        icon: const Icon(Icons.exit_to_app, color: Colors.white),
+        iconSize: 24,
+        padding: const EdgeInsets.all(8),
+        constraints: const BoxConstraints(),
+        tooltip: '앱 종료',
+        onPressed: () => _showExitDialog(context),
+      ),
+    );
+  }
+
+  void _showExitDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('앱 종료'),
+        content: const Text('게임 센터를 종료하시겠습니까?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('취소'),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              Navigator.pop(context);
+              SystemNavigator.pop();
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.red,
+              foregroundColor: Colors.white,
+            ),
+            child: const Text('종료'),
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -3091,8 +3136,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     child: isLandscape
                         ? Row(
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            crossAxisAlignment: CrossAxisAlignment.baseline,
-                            textBaseline: TextBaseline.alphabetic,
+                            crossAxisAlignment: CrossAxisAlignment.center,
                             children: [
                               const Text(
                                 'GAME CENTER',
@@ -3116,33 +3160,44 @@ class _HomeScreenState extends State<HomeScreen> {
                                   color: Colors.grey.shade400,
                                 ),
                               ),
+                              _buildExitButton(context),
                             ],
                           )
-                        : Column(
+                        : Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              const Text(
-                                'GAME CENTER',
-                                style: TextStyle(
-                                  fontSize: 28,
-                                  fontWeight: FontWeight.bold,
-                                  color: Colors.white,
-                                  letterSpacing: 4,
-                                  shadows: [
-                                    Shadow(
-                                      color: Colors.cyan,
-                                      blurRadius: 20,
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.center,
+                                  children: [
+                                    const Text(
+                                      'GAME CENTER',
+                                      style: TextStyle(
+                                        fontSize: 28,
+                                        fontWeight: FontWeight.bold,
+                                        color: Colors.white,
+                                        letterSpacing: 4,
+                                        shadows: [
+                                          Shadow(
+                                            color: Colors.cyan,
+                                            blurRadius: 20,
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                    const SizedBox(height: 6),
+                                    Text(
+                                      '게임을 선택하세요 (길게 누르면 설명)',
+                                      style: TextStyle(
+                                        fontSize: 14,
+                                        color: Colors.grey.shade400,
+                                      ),
                                     ),
                                   ],
                                 ),
                               ),
-                              const SizedBox(height: 6),
-                              Text(
-                                '게임을 선택하세요 (길게 누르면 설명)',
-                                style: TextStyle(
-                                  fontSize: 14,
-                                  color: Colors.grey.shade400,
-                                ),
-                              ),
+                              _buildExitButton(context),
                             ],
                           ),
                   ),
