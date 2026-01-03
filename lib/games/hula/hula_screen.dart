@@ -324,14 +324,14 @@ class _HulaScreenState extends State<HulaScreen> with TickerProviderStateMixin {
     // 컴퓨터가 먼저 시작하면 대기 상태로 전환
     if (currentTurn != 0) {
       final startingComputer = currentTurn;
-      _showMessage('컴퓨터$startingComputer 먼저 시작!');
+      _showMessage('games.hula.computerStartsFirst'.tr(namedArgs: {'num': '$startingComputer'}));
       setState(() {
         waitingForNextTurn = true;
       });
       _startNextTurnTimer();
     } else {
       // 플레이어가 먼저 시작
-      _showMessage('내 차례! 카드를 드로우하세요');
+      _showMessage('games.hula.yourTurnDraw'.tr());
     }
   }
 
@@ -570,7 +570,7 @@ class _HulaScreenState extends State<HulaScreen> with TickerProviderStateMixin {
 
     // 내 차례면 메시지만 표시
     if (currentTurn == 0) {
-      _showMessage(hasDrawn ? '카드를 버리거나 등록하세요' : '카드를 드로우하세요');
+      _showMessage(hasDrawn ? 'games.hula.discardOrRegister'.tr() : 'games.hula.drawCard'.tr());
     }
     // 컴퓨터 턴이고 대기 상태면 타이머 시작
     else if (waitingForNextTurn) {
@@ -614,7 +614,7 @@ class _HulaScreenState extends State<HulaScreen> with TickerProviderStateMixin {
     if (deck.isEmpty) {
       // 덱이 비면 버린 더미 섞기
       if (discardPile.length <= 1) {
-        _showMessage('더 이상 카드가 없습니다');
+        _showMessage('games.hula.noMoreCards'.tr());
         return;
       }
       final topCard = discardPile.removeLast();
@@ -632,7 +632,7 @@ class _HulaScreenState extends State<HulaScreen> with TickerProviderStateMixin {
       selectedCardIndices = [];
       waitingForNextTurn = false;
     });
-    _showMessage('덱에서 ${card.suitSymbol}${card.rankString} 드로우');
+    _showMessage('games.hula.drewFromDeck'.tr(namedArgs: {'card': '${card.suitSymbol}${card.rankString}'}));
     _saveGame();
   }
 
@@ -752,15 +752,15 @@ class _HulaScreenState extends State<HulaScreen> with TickerProviderStateMixin {
     switch (option.type) {
       case ThankYouType.seven:
         playerMelds.add(Meld(cards: [card], isRun: false));
-        meldMessage = '땡큐! ${card.suitSymbol}7 등록!';
+        meldMessage = 'games.hula.thankYouRegister7'.tr(namedArgs: {'card': '${card.suitSymbol}7'});
 
       case ThankYouType.attachPlayer:
         _attachToMeld(option.meldIndex!, card);
-        meldMessage = '땡큐! ${card.suitSymbol}${card.rankString} 붙이기!';
+        meldMessage = 'games.hula.thankYouAttach'.tr(namedArgs: {'card': '${card.suitSymbol}${card.rankString}'});
 
       case ThankYouType.attachComputer:
         _attachToMeldList(option.meldIndex!, card, computerMelds[option.computerIndex!]);
-        meldMessage = '땡큐! ${card.suitSymbol}${card.rankString} 컴퓨터${option.computerIndex! + 1} 멜드에 붙이기!';
+        meldMessage = 'games.hula.thankYouAttachToComputer'.tr(namedArgs: {'card': '${card.suitSymbol}${card.rankString}', 'num': '${option.computerIndex! + 1}'});
 
       case ThankYouType.newMeld:
         final newMeldCards = [...option.handCards, card];
@@ -772,7 +772,7 @@ class _HulaScreenState extends State<HulaScreen> with TickerProviderStateMixin {
           newMeldCards.sort((a, b) => a.rank.compareTo(b.rank));
         }
         playerMelds.add(Meld(cards: newMeldCards, isRun: option.isRun));
-        meldMessage = '땡큐! ${option.description}';
+        meldMessage = 'games.hula.thankYouNewMeld'.tr(namedArgs: {'desc': option.description});
     }
 
     setState(() {
@@ -1601,7 +1601,7 @@ class _HulaScreenState extends State<HulaScreen> with TickerProviderStateMixin {
 
   // 컴퓨터가 스톱 선언
   void _computerCallStop(int computerIndex) {
-    _showMessage('컴퓨터${computerIndex + 1}: 스톱!');
+    _showMessage('games.hula.computerStop'.tr(namedArgs: {'num': '${computerIndex + 1}'}));
     _calculateScoresAndEnd();
   }
 
@@ -1759,7 +1759,7 @@ class _HulaScreenState extends State<HulaScreen> with TickerProviderStateMixin {
       setState(() {
         selectedCardIndices = [];
       });
-      _showMessage('7 단독 등록!');
+      _showMessage('games.hula.registered7Alone'.tr());
       _saveGame();
 
       if (playerHand.isEmpty) {
@@ -1798,7 +1798,7 @@ class _HulaScreenState extends State<HulaScreen> with TickerProviderStateMixin {
         setState(() {
           selectedCardIndices = [];
         });
-        _showMessage('멜드에 카드 추가!');
+        _showMessage('games.hula.addedToMeld'.tr());
         _saveGame();
 
         if (playerHand.isEmpty) {
@@ -1807,13 +1807,13 @@ class _HulaScreenState extends State<HulaScreen> with TickerProviderStateMixin {
         return;
       }
 
-      _showMessage('붙일 수 있는 멜드가 없습니다');
+      _showMessage('games.hula.noMeldToAttach'.tr());
       return;
     }
 
     // 3장 이상: 새 멜드 등록
     if (!_isValidMeld(selectedCards)) {
-      _showMessage('유효하지 않은 조합입니다');
+      _showMessage('games.hula.invalidCombination'.tr());
       return;
     }
 
@@ -1830,7 +1830,7 @@ class _HulaScreenState extends State<HulaScreen> with TickerProviderStateMixin {
       selectedCardIndices = [];
     });
 
-    _showMessage(isRun ? 'Run 등록!' : 'Group 등록!');
+    _showMessage(isRun ? 'games.hula.registeredRun'.tr() : 'games.hula.registeredGroup'.tr());
     _saveGame();
 
     // 손패가 비었으면 승리
@@ -1842,11 +1842,11 @@ class _HulaScreenState extends State<HulaScreen> with TickerProviderStateMixin {
   // 카드 버리기
   void _discardCard() {
     if (!hasDrawn) {
-      _showMessage('먼저 카드를 드로우하세요');
+      _showMessage('games.hula.drawFirst'.tr());
       return;
     }
     if (selectedCardIndices.length != 1) {
-      _showMessage('버릴 카드 1장을 선택하세요');
+      _showMessage('games.hula.selectOneToDiscard'.tr());
       return;
     }
 
@@ -1859,7 +1859,7 @@ class _HulaScreenState extends State<HulaScreen> with TickerProviderStateMixin {
       hasDrawn = false;
     });
 
-    _showMessage('${card.suitSymbol}${card.rankString} 버림');
+    _showMessage('games.hula.discardedCard'.tr(namedArgs: {'card': '${card.suitSymbol}${card.rankString}'}));
     _saveGame();
 
     // 손패가 비었으면 승리
@@ -1971,7 +1971,7 @@ class _HulaScreenState extends State<HulaScreen> with TickerProviderStateMixin {
 
     if (takeDiscard && discardPile.isNotEmpty) {
       drawnCard = discardPile.removeLast();
-      _showMessage('컴퓨터${computerIndex + 1}: ${drawnCard.suitSymbol}${drawnCard.rankString} 땡큐!');
+      _showMessage('games.hula.computerThankYou'.tr(namedArgs: {'num': '${computerIndex + 1}', 'card': '${drawnCard.suitSymbol}${drawnCard.rankString}'}));
     } else {
       if (deck.isEmpty && discardPile.length > 1) {
         final topCard = discardPile.removeLast();
@@ -1984,7 +1984,7 @@ class _HulaScreenState extends State<HulaScreen> with TickerProviderStateMixin {
         return;
       }
       drawnCard = deck.removeLast();
-      _showMessage('컴퓨터${computerIndex + 1}: 덱에서 드로우');
+      _showMessage('games.hula.computerDrew'.tr(namedArgs: {'num': '${computerIndex + 1}'}));
     }
 
     hand.add(drawnCard);
@@ -2081,12 +2081,12 @@ class _HulaScreenState extends State<HulaScreen> with TickerProviderStateMixin {
 
     // 메시지 표시
     if (type == '7group') {
-      _showMessage('컴퓨터${computerIndex + 1}: 7 Group 등록!');
+      _showMessage('games.hula.computerRegister7Group'.tr(namedArgs: {'num': '${computerIndex + 1}'}));
     } else if (type == '7') {
-      _showMessage('컴퓨터${computerIndex + 1}: 7 등록!');
+      _showMessage('games.hula.computerRegister7'.tr(namedArgs: {'num': '${computerIndex + 1}'}));
     } else {
       final cardStr = cards.map((c) => '${c.suitSymbol}${c.rankString}').join(' ');
-      _showMessage('컴퓨터${computerIndex + 1}: ${isRun ? 'Run' : 'Group'} 등록! $cardStr');
+      _showMessage('games.hula.computerRegisterMeld'.tr(namedArgs: {'num': '${computerIndex + 1}', 'type': isRun ? 'Run' : 'Group', 'cards': cardStr}));
     }
 
     setState(() {});
@@ -2129,7 +2129,7 @@ class _HulaScreenState extends State<HulaScreen> with TickerProviderStateMixin {
       if (ownMeldIndex >= 0 && Random().nextInt(100) < attachChance) {
         _attachToMeldList(ownMeldIndex, card, melds);
         hand.removeAt(i);
-        _showMessage('컴퓨터${computerIndex + 1}: ${card.suitSymbol}${card.rankString} 붙이기!');
+        _showMessage('games.hula.computerAttach'.tr(namedArgs: {'num': '${computerIndex + 1}', 'card': '${card.suitSymbol}${card.rankString}'}));
         setState(() {});
         _saveGame();
 
@@ -2148,7 +2148,7 @@ class _HulaScreenState extends State<HulaScreen> with TickerProviderStateMixin {
       if (playerMeldIndex >= 0 && Random().nextInt(100) < attachChance) {
         _attachToMeldList(playerMeldIndex, card, playerMelds);
         hand.removeAt(i);
-        _showMessage('컴퓨터${computerIndex + 1}: ${card.suitSymbol}${card.rankString} → 플레이어에게 붙이기!');
+        _showMessage('games.hula.computerAttachToPlayer'.tr(namedArgs: {'num': '${computerIndex + 1}', 'card': '${card.suitSymbol}${card.rankString}'}));
         setState(() {});
         _saveGame();
 
@@ -2169,7 +2169,7 @@ class _HulaScreenState extends State<HulaScreen> with TickerProviderStateMixin {
         if (otherMeldIndex >= 0 && Random().nextInt(100) < attachChance) {
           _attachToMeldList(otherMeldIndex, card, computerMelds[c]);
           hand.removeAt(i);
-          _showMessage('컴퓨터${computerIndex + 1}: ${card.suitSymbol}${card.rankString} → 컴퓨터${c + 1}에게 붙이기!');
+          _showMessage('games.hula.computerAttachToComputer'.tr(namedArgs: {'num': '${computerIndex + 1}', 'card': '${card.suitSymbol}${card.rankString}', 'target': '${c + 1}'}));
           setState(() {});
           _saveGame();
 
@@ -2202,7 +2202,7 @@ class _HulaScreenState extends State<HulaScreen> with TickerProviderStateMixin {
       final seven = sevens.first;
       hand.remove(seven);
       melds.add(Meld(cards: [seven], isRun: false));
-      _showMessage('컴퓨터${computerIndex + 1}: 7 등록!');
+      _showMessage('games.hula.computerRegister7'.tr(namedArgs: {'num': '${computerIndex + 1}'}));
       setState(() {});
       _saveGame();
 
@@ -2334,7 +2334,7 @@ class _HulaScreenState extends State<HulaScreen> with TickerProviderStateMixin {
 
     hand.add(card);
     _sortHand(hand);
-    _showMessage('컴퓨터${computerIndex + 1}: 땡큐! ${card.suitSymbol}${card.rankString}');
+    _showMessage('games.hula.computerThankYou'.tr(namedArgs: {'num': '${computerIndex + 1}', 'card': '${card.suitSymbol}${card.rankString}'}));
     setState(() {});
     _saveGame();
 
@@ -2431,12 +2431,12 @@ class _HulaScreenState extends State<HulaScreen> with TickerProviderStateMixin {
 
     // 메시지 표시
     if (type == '7group') {
-      _showMessage('컴퓨터${computerIndex + 1}: 7 Group 등록!');
+      _showMessage('games.hula.computerRegister7Group'.tr(namedArgs: {'num': '${computerIndex + 1}'}));
     } else if (type == '7') {
-      _showMessage('컴퓨터${computerIndex + 1}: 7 등록!');
+      _showMessage('games.hula.computerRegister7'.tr(namedArgs: {'num': '${computerIndex + 1}'}));
     } else {
       final cardStr = cards.map((c) => '${c.suitSymbol}${c.rankString}').join(' ');
-      _showMessage('컴퓨터${computerIndex + 1}: ${isRun ? 'Run' : 'Group'} 등록! $cardStr');
+      _showMessage('games.hula.computerRegisterMeld'.tr(namedArgs: {'num': '${computerIndex + 1}', 'type': isRun ? 'Run' : 'Group', 'cards': cardStr}));
     }
 
     setState(() {});
@@ -2479,7 +2479,7 @@ class _HulaScreenState extends State<HulaScreen> with TickerProviderStateMixin {
       if (ownMeldIndex >= 0 && Random().nextInt(100) < attachChance) {
         _attachToMeldList(ownMeldIndex, card, melds);
         hand.removeAt(i);
-        _showMessage('컴퓨터${computerIndex + 1}: ${card.suitSymbol}${card.rankString} 붙이기!');
+        _showMessage('games.hula.computerAttach'.tr(namedArgs: {'num': '${computerIndex + 1}', 'card': '${card.suitSymbol}${card.rankString}'}));
         setState(() {});
         _saveGame();
 
@@ -2498,7 +2498,7 @@ class _HulaScreenState extends State<HulaScreen> with TickerProviderStateMixin {
       if (playerMeldIndex >= 0 && Random().nextInt(100) < attachChance) {
         _attachToMeldList(playerMeldIndex, card, playerMelds);
         hand.removeAt(i);
-        _showMessage('컴퓨터${computerIndex + 1}: ${card.suitSymbol}${card.rankString} → 플레이어에게 붙이기!');
+        _showMessage('games.hula.computerAttachToPlayer'.tr(namedArgs: {'num': '${computerIndex + 1}', 'card': '${card.suitSymbol}${card.rankString}'}));
         setState(() {});
         _saveGame();
 
@@ -2519,7 +2519,7 @@ class _HulaScreenState extends State<HulaScreen> with TickerProviderStateMixin {
         if (otherMeldIndex >= 0 && Random().nextInt(100) < attachChance) {
           _attachToMeldList(otherMeldIndex, card, computerMelds[c]);
           hand.removeAt(i);
-          _showMessage('컴퓨터${computerIndex + 1}: ${card.suitSymbol}${card.rankString} → 컴퓨터${c + 1}에게 붙이기!');
+          _showMessage('games.hula.computerAttachToComputer'.tr(namedArgs: {'num': '${computerIndex + 1}', 'card': '${card.suitSymbol}${card.rankString}', 'target': '${c + 1}'}));
           setState(() {});
           _saveGame();
 
@@ -2550,7 +2550,7 @@ class _HulaScreenState extends State<HulaScreen> with TickerProviderStateMixin {
       final seven = sevens.first;
       hand.remove(seven);
       melds.add(Meld(cards: [seven], isRun: false));
-      _showMessage('컴퓨터${computerIndex + 1}: 7 등록!');
+      _showMessage('games.hula.computerRegister7'.tr(namedArgs: {'num': '${computerIndex + 1}'}));
       setState(() {});
       _saveGame();
 
@@ -2714,7 +2714,7 @@ class _HulaScreenState extends State<HulaScreen> with TickerProviderStateMixin {
         title: Column(
           children: [
             Text(
-              winnerIndex == 0 ? '🎉 승리!' : '😢 패배',
+              winnerIndex == 0 ? 'games.hula.victory'.tr() : 'games.hula.defeat'.tr(),
               style: TextStyle(
                 color: winnerIndex == 0 ? Colors.amber : Colors.red,
                 fontWeight: FontWeight.bold,
@@ -2723,9 +2723,9 @@ class _HulaScreenState extends State<HulaScreen> with TickerProviderStateMixin {
               textAlign: TextAlign.center,
             ),
             if (isHula && winnerIndex == 0)
-              const Text(
-                '🎊 훌라! 🎊',
-                style: TextStyle(
+              Text(
+                'games.hula.hulaWin'.tr(),
+                style: const TextStyle(
                   color: Colors.orange,
                   fontWeight: FontWeight.bold,
                   fontSize: 20,
@@ -2737,13 +2737,13 @@ class _HulaScreenState extends State<HulaScreen> with TickerProviderStateMixin {
           mainAxisSize: MainAxisSize.min,
           children: [
             Text(
-              '$winner 승리!',
+              'games.hula.winnerWins'.tr(namedArgs: {'winner': winner ?? ''}),
               style: const TextStyle(color: Colors.white, fontSize: 18),
             ),
             const SizedBox(height: 16),
-            const Text(
-              '남은 카드 점수:',
-              style: TextStyle(color: Colors.grey, fontSize: 14),
+            Text(
+              'games.hula.remainingScore'.tr(),
+              style: const TextStyle(color: Colors.grey, fontSize: 14),
             ),
             const SizedBox(height: 8),
             Text(
@@ -3280,9 +3280,9 @@ class _HulaScreenState extends State<HulaScreen> with TickerProviderStateMixin {
                           borderRadius: BorderRadius.circular(8),
                         ),
                       ),
-                      child: const Text(
-                        '시작 ▶',
-                        style: TextStyle(
+                      child: Text(
+                        'games.hula.startButton'.tr(),
+                        style: const TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.bold,
                         ),
