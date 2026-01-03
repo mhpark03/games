@@ -313,7 +313,14 @@
       "rulesStop": "停止",
       "rulesStopDesc": "• 随时可以宣告停止\n• 停止时手牌点数最低的玩家获胜\n• 手牌少时宣告更有利！",
       "rulesScoring": "计分",
-      "rulesScoringDesc": "• A = 1分\n• 2~9 = 面值\n• J = 10分、Q = 11分、K = 12分"
+      "rulesScoringDesc": "• A = 1分\n• 2~9 = 面值\n• J = 10分、Q = 11分、K = 12分",
+      "cardsCount": "{count}张",
+      "meldsCount": "{count}组",
+      "discardPile": "弃牌",
+      "discardButton": "弃牌",
+      "stopButton": "停止",
+      "discarded": "弃",
+      "computer": "电脑{num}"
     },
     "sudoku": {
       "name": "数独",

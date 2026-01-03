@@ -339,7 +339,14 @@
       "rulesStop": "Stop",
       "rulesStopDesc": "• Can declare Stop anytime\n• Player with lowest hand points wins on Stop\n• Advantageous when you have few cards!",
       "rulesScoring": "Scoring",
-      "rulesScoringDesc": "• A = 1 point\n• 2-9 = face value\n• J = 10, Q = 11, K = 12 points"
+      "rulesScoringDesc": "• A = 1 point\n• 2-9 = face value\n• J = 10, Q = 11, K = 12 points",
+      "cardsCount": "{count}",
+      "meldsCount": "{count} melds",
+      "discardPile": "Discard",
+      "discardButton": "Discard",
+      "stopButton": "Stop",
+      "discarded": "discarded",
+      "computer": "COM{num}"
     },
     "sudoku": {
       "name": "Sudoku",

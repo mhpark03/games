@@ -2226,7 +2226,7 @@ class _HulaScreenState extends State<HulaScreen> with TickerProviderStateMixin {
     discardPile.add(discardCard);
     _sortHand(hand);
 
-    _showMessage('컴퓨터${computerIndex + 1}: ${discardCard.suitSymbol}${discardCard.rankString} 버림');
+    _showMessage('${'games.hula.computer'.tr(namedArgs: {'num': '${computerIndex + 1}'})}: ${discardCard.suitSymbol}${discardCard.rankString} ${'games.hula.discarded'.tr()}');
     setState(() {});
     _saveGame();
 
@@ -2574,7 +2574,7 @@ class _HulaScreenState extends State<HulaScreen> with TickerProviderStateMixin {
     discardPile.add(discardCard);
     _sortHand(hand);
 
-    _showMessage('컴퓨터${computerIndex + 1}: ${discardCard.suitSymbol}${discardCard.rankString} 버림');
+    _showMessage('${'games.hula.computer'.tr(namedArgs: {'num': '${computerIndex + 1}'})}: ${discardCard.suitSymbol}${discardCard.rankString} ${'games.hula.discarded'.tr()}');
     setState(() {});
     _saveGame();
 
@@ -3009,13 +3009,13 @@ class _HulaScreenState extends State<HulaScreen> with TickerProviderStateMixin {
                     ),
                     const SizedBox(width: 8),
                     Text(
-                      '${hand.length}장',
+                      'games.hula.cardsCount'.tr(namedArgs: {'count': '${hand.length}'}),
                       style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
                     ),
                     if (melds.isNotEmpty) ...[
                       const SizedBox(width: 8),
                       Text(
-                        '(${melds.length}멜드)',
+                        '(${'games.hula.meldsCount'.tr(namedArgs: {'count': '${melds.length}'})})',
                         style: const TextStyle(color: Colors.green, fontSize: 11),
                       ),
                     ],
@@ -3089,12 +3089,12 @@ class _HulaScreenState extends State<HulaScreen> with TickerProviderStateMixin {
           const SizedBox(height: 4),
           // 카드 수
           Text(
-            '${hand.length}장',
+            'games.hula.cardsCount'.tr(namedArgs: {'count': '${hand.length}'}),
             style: const TextStyle(color: Colors.white, fontSize: 11),
           ),
           if (melds.isNotEmpty)
             Text(
-              '${melds.length}멜드',
+              'games.hula.meldsCount'.tr(namedArgs: {'count': '${melds.length}'}),
               style: const TextStyle(color: Colors.green, fontSize: 9),
             ),
           const SizedBox(height: 8),
@@ -3229,10 +3229,10 @@ class _HulaScreenState extends State<HulaScreen> with TickerProviderStateMixin {
                         ],
                       ),
                       child: discardPile.isEmpty
-                          ? const Center(
+                          ? Center(
                               child: Text(
-                                '버림',
-                                style: TextStyle(color: Colors.grey),
+                                'games.hula.discardPile'.tr(),
+                                style: const TextStyle(color: Colors.grey),
                               ),
                             )
                           : _buildCardFace(discardPile.last, small: true),
@@ -3671,7 +3671,7 @@ class _HulaScreenState extends State<HulaScreen> with TickerProviderStateMixin {
           ElevatedButton.icon(
             onPressed: currentTurn == 0 && canDiscard ? _discardCard : null,
             icon: Icon(Icons.delete_outline, size: iconSize),
-            label: Text('버리기', style: TextStyle(fontSize: isLandscape ? 12 : 14)),
+            label: Text('games.hula.discardButton'.tr(), style: TextStyle(fontSize: isLandscape ? 12 : 14)),
             style: ElevatedButton.styleFrom(
               backgroundColor: Colors.orange,
               foregroundColor: Colors.white,
@@ -3684,7 +3684,7 @@ class _HulaScreenState extends State<HulaScreen> with TickerProviderStateMixin {
           ElevatedButton.icon(
             onPressed: currentTurn == 0 && !gameOver ? _callStop : null,
             icon: Icon(Icons.stop_circle, size: iconSize),
-            label: Text('스톱', style: TextStyle(fontSize: isLandscape ? 12 : 14)),
+            label: Text('games.hula.stopButton'.tr(), style: TextStyle(fontSize: isLandscape ? 12 : 14)),
             style: ElevatedButton.styleFrom(
               backgroundColor: Colors.red,
               foregroundColor: Colors.white,

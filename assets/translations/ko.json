@@ -339,7 +339,14 @@
       "rulesStop": "스톱",
       "rulesStopDesc": "• 언제든 스톱 선언 가능\n• 스톱 시 손패 점수가 가장 낮은 사람 승리\n• 손패가 적을 때 선언하면 유리!",
       "rulesScoring": "점수 계산",
-      "rulesScoringDesc": "• A = 1점\n• 2~9 = 숫자 그대로\n• J = 10점, Q = 11점, K = 12점"
+      "rulesScoringDesc": "• A = 1점\n• 2~9 = 숫자 그대로\n• J = 10점, Q = 11점, K = 12점",
+      "cardsCount": "{count}장",
+      "meldsCount": "{count}멜드",
+      "discardPile": "버림",
+      "discardButton": "버리기",
+      "stopButton": "스톱",
+      "discarded": "버림",
+      "computer": "컴퓨터{num}"
     },
     "sudoku": {
       "name": "스도쿠",

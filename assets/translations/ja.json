@@ -331,7 +331,14 @@
       "rulesStop": "ストップ",
       "rulesStopDesc": "• いつでもストップ宣言可能\n• ストップ時、手札の点数が最も低い人が勝利\n• 手札が少ない時に宣言すると有利！",
       "rulesScoring": "点数計算",
-      "rulesScoringDesc": "• A = 1点\n• 2〜9 = 数字通り\n• J = 10点、Q = 11点、K = 12点"
+      "rulesScoringDesc": "• A = 1点\n• 2〜9 = 数字通り\n• J = 10点、Q = 11点、K = 12点",
+      "cardsCount": "{count}枚",
+      "meldsCount": "{count}メルド",
+      "discardPile": "捨て札",
+      "discardButton": "捨てる",
+      "stopButton": "ストップ",
+      "discarded": "捨て",
+      "computer": "COM{num}"
     },
     "sudoku": {
       "name": "数独",
