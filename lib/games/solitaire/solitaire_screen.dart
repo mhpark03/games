@@ -107,17 +107,17 @@ class _SolitaireScreenState extends State<SolitaireScreen> {
 
   // 카드 크기 (화면 너비와 모드에 따라 동적 계산) - 표준 카드 비율 5:7 (0.714)
   double get cardWidth {
-    if (_screenWidth == 0) return _largeCardMode ? 56 : 50;
-    // 7열 + 패딩(16) + 열간격(7*4=28) 고려하여 계산
-    final baseWidth = (_screenWidth - 16 - 28) / 7;
+    if (_screenWidth == 0) return _largeCardMode ? 60 : 54;
+    // 7열 + 패딩(8) + 열간격(7*2=14) 고려하여 계산 (간격 최소화)
+    final baseWidth = (_screenWidth - 8 - 14) / 7;
     if (_largeCardMode) {
-      return baseWidth.clamp(50.0, 62.0);  // 크게 모드: 50~62
+      return baseWidth.clamp(54.0, 72.0);  // 크게 모드: 54~72
     } else {
-      return baseWidth.clamp(42.0, 50.0);  // 작게 모드: 42~50
+      return baseWidth.clamp(48.0, 60.0);  // 작게 모드: 48~60
     }
   }
   double get cardHeight => cardWidth * 1.4;  // 비율 5:7
-  double get cardOverlap => _largeCardMode ? (cardWidth * 0.43) : (cardWidth * 0.4);  // 테이블 카드 겹침 간격
+  double get cardOverlap => _largeCardMode ? (cardWidth * 0.38) : (cardWidth * 0.35);  // 테이블 카드 겹침 간격 (줄임)
 
   // Undo 히스토리
   List<Map<String, dynamic>> _undoHistory = [];
@@ -1287,8 +1287,8 @@ class _SolitaireScreenState extends State<SolitaireScreen> {
     final foundationWidgets = List.generate(4, (index) {
       return Padding(
         padding: EdgeInsets.only(
-          left: _leftHandedMode ? 0 : (_largeCardMode ? 4 : 6),
-          right: _leftHandedMode ? (_largeCardMode ? 4 : 6) : 0,
+          left: _leftHandedMode ? 0 : 2,
+          right: _leftHandedMode ? 2 : 0,
         ),
         child: SizedBox(
           width: cardWidth + 4,
@@ -1302,7 +1302,7 @@ class _SolitaireScreenState extends State<SolitaireScreen> {
       children: [
         // 상단: 스톡, 웨이스트, 파운데이션 (왼손잡이 모드에 따라 위치 변경)
         Padding(
-          padding: const EdgeInsets.all(8),
+          padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 6),
           child: Row(
             children: _leftHandedMode
                 ? [
@@ -1322,13 +1322,13 @@ class _SolitaireScreenState extends State<SolitaireScreen> {
         // 하단: 테이블 7열
         Expanded(
           child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 8),
+            padding: const EdgeInsets.symmetric(horizontal: 4),
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: List.generate(7, (index) {
                 return Expanded(
                   child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 2),
+                    padding: const EdgeInsets.symmetric(horizontal: 1),
                     child: _buildTableauColumn(index),
                   ),
                 );
