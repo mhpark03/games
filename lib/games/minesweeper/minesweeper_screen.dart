@@ -503,12 +503,15 @@ class _MinesweeperScreenState extends State<MinesweeperScreen> {
           children: [
             const Icon(Icons.terrain, color: Colors.blueGrey),
             const SizedBox(width: 8),
-            Text(
-              'games.minesweeper.name'.tr(),
-              style: TextStyle(
-                fontWeight: FontWeight.bold,
-                fontSize: 18,
-                color: Colors.blueGrey.shade100,
+            Flexible(
+              child: Text(
+                'games.minesweeper.name'.tr(),
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 18,
+                  color: Colors.blueGrey.shade100,
+                ),
+                overflow: TextOverflow.ellipsis,
               ),
             ),
           ],
@@ -569,14 +572,19 @@ class _MinesweeperScreenState extends State<MinesweeperScreen> {
                     const SizedBox(height: 16),
                     const Icon(Icons.terrain, color: Colors.blueGrey, size: 32),
                     const SizedBox(height: 8),
-                    Text(
-                      'games.minesweeper.name'.tr(),
-                      style: TextStyle(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 20,
-                        color: Colors.blueGrey.shade100,
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 4),
+                      child: Text(
+                        'games.minesweeper.name'.tr(),
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 16,
+                          color: Colors.blueGrey.shade100,
+                        ),
+                        textAlign: TextAlign.center,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
                       ),
-                      textAlign: TextAlign.center,
                     ),
                     const Spacer(),
                     if (gameOver || gameWon) ...[
