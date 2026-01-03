@@ -316,24 +316,29 @@ class _ExpandedBoardScreenState extends State<ExpandedBoardScreen> {
                       ),
                     ),
                     // 오른쪽: 컨트롤 패널만 (상태 정보 제거)
-                    SizedBox(
-                      width: 220,
-                      child: Container(
-                        margin: const EdgeInsets.symmetric(vertical: 8, horizontal: 4),
-                        decoration: BoxDecoration(
-                          color: Colors.black.withValues(alpha: 0.3),
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: Column(
-                          children: [
-                            const SizedBox(height: 44), // 상단 버튼 공간
-                            // 컨트롤 패널
-                            Expanded(
-                              child: _buildControlPanel(isCompact: true),
+                    Builder(
+                      builder: (context) {
+                        final screenHeight = MediaQuery.of(context).size.height;
+                        return SizedBox(
+                          width: 220,
+                          child: Container(
+                            margin: const EdgeInsets.symmetric(vertical: 4, horizontal: 4),
+                            decoration: BoxDecoration(
+                              color: Colors.black.withValues(alpha: 0.3),
+                              borderRadius: BorderRadius.circular(12),
                             ),
-                          ],
-                        ),
-                      ),
+                            child: Column(
+                              children: [
+                                const SizedBox(height: 48), // 상단 버튼 공간 (겹침 방지)
+                                // 컨트롤 패널
+                                Expanded(
+                                  child: _buildControlPanel(isCompact: true, landscapeHeight: screenHeight),
+                                ),
+                              ],
+                            ),
+                          ),
+                        );
+                      },
                     ),
                   ],
                 ),
@@ -491,7 +496,7 @@ class _ExpandedBoardScreenState extends State<ExpandedBoardScreen> {
   }
 
   // 공통 컨트롤 패널
-  Widget _buildControlPanel({required bool isCompact}) {
+  Widget _buildControlPanel({required bool isCompact, double? landscapeHeight}) {
     return GameControlPanel(
       onNumberTap: _onNumberTap,
       onErase: _onErase,
@@ -525,6 +530,7 @@ class _ExpandedBoardScreenState extends State<ExpandedBoardScreen> {
       initialQuickInputMode: _isQuickInputMode,
       initialQuickInputNumber: _quickInputNumber,
       initialNoteMode: _isNoteMode,
+      landscapeHeight: landscapeHeight,
     );
   }
 

@@ -46,6 +46,9 @@ class GameControlPanel extends StatefulWidget {
   /// 외부에서 메모 모드 초기값 설정
   final bool initialNoteMode;
 
+  /// 가로 모드에서 화면 높이 (동적 크기 계산용)
+  final double? landscapeHeight;
+
   const GameControlPanel({
     super.key,
     required this.onNumberTap,
@@ -62,6 +65,7 @@ class GameControlPanel extends StatefulWidget {
     this.initialQuickInputMode = false,
     this.initialQuickInputNumber,
     this.initialNoteMode = false,
+    this.landscapeHeight,
   });
 
   @override
@@ -209,18 +213,28 @@ class GameControlPanelState extends State<GameControlPanel> {
     }
   }
 
+  // 화면 높이에 따른 크기 계수 계산
+  double _getSizeFactor() {
+    if (!widget.isCompact || widget.landscapeHeight == null) return 0.0;
+    return ((widget.landscapeHeight! - 300) / 300).clamp(0.0, 1.0);
+  }
+
   @override
   Widget build(BuildContext context) {
     if (widget.isCompact) {
+      final bool showModeGuide = _isQuickInputMode || _isEraseMode;
+      // 화면 높이에 따른 동적 크기 계산 (가로 모드)
+      final sectionSpacing = 8.0 + (_getSizeFactor() * 8.0); // 8~16
+
       return SingleChildScrollView(
         child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
+          mainAxisAlignment: MainAxisAlignment.start,
           mainAxisSize: MainAxisSize.min,
           children: [
-            if (_isQuickInputMode || _isEraseMode) _buildModeGuide(),
-            const SizedBox(height: 8),
+            if (showModeGuide) _buildModeGuide(),
+            SizedBox(height: showModeGuide ? 4 : 6),
             _buildControlButtons(),
-            const SizedBox(height: 16),
+            SizedBox(height: sectionSpacing),
             NumberPad(
               onNumberTap: _onNumberTap,
               onUndo: widget.onUndo,
@@ -230,6 +244,7 @@ class GameControlPanelState extends State<GameControlPanel> {
               onQuickInputToggle: null,
               disabledNumbers: widget.disabledNumbers,
               showUndoButton: false, // 컨트롤 버튼에 취소 버튼이 있으므로 숨김
+              landscapeHeight: widget.landscapeHeight,
             ),
           ],
         ),
@@ -281,15 +296,21 @@ class GameControlPanelState extends State<GameControlPanel> {
       textColor = Colors.orange.shade700;
     }
 
+    final sizeFactor = _getSizeFactor();
+    final hPadding = widget.isCompact ? (8.0 + sizeFactor * 4.0) : 12.0;
+    final vPadding = widget.isCompact ? (3.0 + sizeFactor * 3.0) : 6.0;
+    final iconSz = widget.isCompact ? (12.0 + sizeFactor * 4.0) : 16.0;
+    final fontSz = widget.isCompact ? (10.0 + sizeFactor * 2.0) : 12.0;
+
     return Container(
-      margin: EdgeInsets.only(bottom: widget.isCompact ? 4 : 8),
+      margin: EdgeInsets.only(bottom: widget.isCompact ? 2 : 8),
       padding: EdgeInsets.symmetric(
-        horizontal: widget.isCompact ? 10 : 12,
-        vertical: widget.isCompact ? 4 : 6,
+        horizontal: hPadding,
+        vertical: vPadding,
       ),
       decoration: BoxDecoration(
         color: bgColor,
-        borderRadius: BorderRadius.circular(8),
+        borderRadius: BorderRadius.circular(6),
         border: Border.all(color: borderColor),
       ),
       child: Row(
@@ -297,15 +318,15 @@ class GameControlPanelState extends State<GameControlPanel> {
         children: [
           Icon(
             _isEraseMode ? Icons.cleaning_services : Icons.info_outline,
-            size: widget.isCompact ? 14 : 16,
+            size: iconSz,
             color: textColor,
           ),
-          SizedBox(width: widget.isCompact ? 4 : 6),
+          SizedBox(width: widget.isCompact ? 3 : 6),
           Flexible(
             child: Text(
               guideText,
               style: TextStyle(
-                fontSize: widget.isCompact ? 11 : 12,
+                fontSize: fontSz,
                 color: textColor,
                 fontWeight: FontWeight.w500,
               ),
@@ -318,9 +339,12 @@ class GameControlPanelState extends State<GameControlPanel> {
   }
 
   Widget _buildControlButtons() {
+    final sizeFactor = _getSizeFactor();
+    final spacing = widget.isCompact ? (4.0 + sizeFactor * 4.0) : 8.0;
+
     return Wrap(
-      spacing: widget.isCompact ? 5 : 8,
-      runSpacing: widget.isCompact ? 5 : 8,
+      spacing: spacing,
+      runSpacing: spacing,
       alignment: WrapAlignment.center,
       children: [
         _buildToggleButton(
@@ -366,32 +390,38 @@ class GameControlPanelState extends State<GameControlPanel> {
     required Color activeColor,
     required VoidCallback onTap,
   }) {
+    final sizeFactor = _getSizeFactor();
+    final hPadding = widget.isCompact ? (8.0 + sizeFactor * 6.0) : 14.0;
+    final vPadding = widget.isCompact ? (4.0 + sizeFactor * 3.0) : 7.0;
+    final iconSz = widget.isCompact ? (12.0 + sizeFactor * 5.0) : 17.0;
+    final fontSz = widget.isCompact ? (10.0 + sizeFactor * 3.0) : 13.0;
+
     return InkWell(
       onTap: onTap,
       child: Container(
         padding: EdgeInsets.symmetric(
-          horizontal: widget.isCompact ? 10 : 14,
-          vertical: widget.isCompact ? 5 : 7,
+          horizontal: hPadding,
+          vertical: vPadding,
         ),
         decoration: BoxDecoration(
           color: isActive ? activeColor : Colors.grey.shade200,
-          borderRadius: BorderRadius.circular(8),
+          borderRadius: BorderRadius.circular(6),
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
             Icon(
               icon,
-              size: widget.isCompact ? 14 : 17,
+              size: iconSz,
               color: isActive ? Colors.white : Colors.grey.shade600,
             ),
-            SizedBox(width: widget.isCompact ? 4 : 6),
+            SizedBox(width: widget.isCompact ? 3 : 6),
             Text(
               label,
               style: TextStyle(
                 color: isActive ? Colors.white : Colors.grey.shade600,
                 fontWeight: FontWeight.w500,
-                fontSize: widget.isCompact ? 11 : 13,
+                fontSize: fontSz,
               ),
             ),
           ],
@@ -406,28 +436,34 @@ class GameControlPanelState extends State<GameControlPanel> {
     required VoidCallback onTap,
     Color? color,
   }) {
+    final sizeFactor = _getSizeFactor();
+    final hPadding = widget.isCompact ? (8.0 + sizeFactor * 6.0) : 14.0;
+    final vPadding = widget.isCompact ? (4.0 + sizeFactor * 3.0) : 7.0;
+    final iconSz = widget.isCompact ? (12.0 + sizeFactor * 5.0) : 17.0;
+    final fontSz = widget.isCompact ? (10.0 + sizeFactor * 3.0) : 13.0;
+
     return InkWell(
       onTap: onTap,
       child: Container(
         padding: EdgeInsets.symmetric(
-          horizontal: widget.isCompact ? 10 : 14,
-          vertical: widget.isCompact ? 5 : 7,
+          horizontal: hPadding,
+          vertical: vPadding,
         ),
         decoration: BoxDecoration(
           color: (color ?? Colors.blue).withValues(alpha: 0.1),
-          borderRadius: BorderRadius.circular(8),
+          borderRadius: BorderRadius.circular(6),
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(icon, size: widget.isCompact ? 14 : 17, color: color ?? Colors.blue),
-            SizedBox(width: widget.isCompact ? 4 : 6),
+            Icon(icon, size: iconSz, color: color ?? Colors.blue),
+            SizedBox(width: widget.isCompact ? 3 : 6),
             Text(
               label,
               style: TextStyle(
                 color: color ?? Colors.blue,
                 fontWeight: FontWeight.w500,
-                fontSize: widget.isCompact ? 11 : 13,
+                fontSize: fontSz,
               ),
             ),
           ],

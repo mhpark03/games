@@ -9,6 +9,7 @@ class NumberPad extends StatelessWidget {
   final VoidCallback? onQuickInputToggle; // 빠른 입력 모드 토글
   final Set<int> disabledNumbers; // 비활성화된 숫자들 (모두 채워진 숫자)
   final bool showUndoButton; // 취소 버튼 표시 여부
+  final double? landscapeHeight; // 가로 모드에서 화면 높이 (동적 크기 계산용)
 
   const NumberPad({
     super.key,
@@ -20,16 +21,38 @@ class NumberPad extends StatelessWidget {
     this.onQuickInputToggle,
     this.disabledNumbers = const {},
     this.showUndoButton = true,
+    this.landscapeHeight,
   });
 
   bool get isQuickInputMode => quickInputNumber != null;
 
   @override
   Widget build(BuildContext context) {
-    final buttonSize = isCompact ? 44.0 : 56.0;
-    final fontSize = isCompact ? 18.0 : 22.0;
-    final iconSize = isCompact ? 18.0 : 22.0;
-    final spacing = isCompact ? 5.0 : 8.0;
+    // 화면 높이에 따른 동적 버튼 크기 계산
+    double buttonSize;
+    double fontSize;
+    double iconSize;
+    double spacing;
+
+    if (isCompact && landscapeHeight != null) {
+      // 가로 모드: 화면 높이에 따라 동적 크기 조정
+      // 높이가 클수록 버튼이 커짐 (300~600 범위 기준)
+      final heightFactor = ((landscapeHeight! - 300) / 300).clamp(0.0, 1.0);
+      buttonSize = 40.0 + (heightFactor * 20.0); // 40~60
+      fontSize = 16.0 + (heightFactor * 8.0);    // 16~24
+      iconSize = 16.0 + (heightFactor * 6.0);    // 16~22
+      spacing = 4.0 + (heightFactor * 4.0);      // 4~8
+    } else if (isCompact) {
+      buttonSize = 40.0;
+      fontSize = 16.0;
+      iconSize = 16.0;
+      spacing = 4.0;
+    } else {
+      buttonSize = 56.0;
+      fontSize = 22.0;
+      iconSize = 22.0;
+      spacing = 8.0;
+    }
 
     if (isCompact) {
       // 가로 모드: 3x3 + 지우기 버튼 그리드
