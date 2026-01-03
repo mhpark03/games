@@ -74,9 +74,9 @@ class _TetrisScreenState extends State<TetrisScreen> {
       context: context,
       builder: (context) => AlertDialog(
         backgroundColor: Colors.grey.shade900,
-        title: const Text(
-          'SELECT START LEVEL',
-          style: TextStyle(color: Colors.cyan, fontWeight: FontWeight.bold),
+        title: Text(
+          'games.tetris.selectStartLevel'.tr(),
+          style: const TextStyle(color: Colors.cyan, fontWeight: FontWeight.bold),
           textAlign: TextAlign.center,
         ),
         content: StatefulBuilder(
@@ -84,7 +84,7 @@ class _TetrisScreenState extends State<TetrisScreen> {
             mainAxisSize: MainAxisSize.min,
             children: [
               Text(
-                'Level ${_gameBoard.startLevel}',
+                'games.tetris.levelValue'.tr(namedArgs: {'level': _gameBoard.startLevel.toString()}),
                 style: const TextStyle(color: Colors.white, fontSize: 32),
               ),
               const SizedBox(height: 16),
@@ -129,7 +129,7 @@ class _TetrisScreenState extends State<TetrisScreen> {
               ),
               const SizedBox(height: 8),
               Text(
-                'Speed: ${500 - (_gameBoard.startLevel - 1) * 50}ms',
+                'games.tetris.speed'.tr(namedArgs: {'speed': (500 - (_gameBoard.startLevel - 1) * 50).toString()}),
                 style: TextStyle(color: Colors.grey.shade400, fontSize: 14),
               ),
             ],
@@ -141,9 +141,9 @@ class _TetrisScreenState extends State<TetrisScreen> {
               Navigator.of(context).pop();
               _gameBoard.pauseGame();
             },
-            child: const Text(
-              'CANCEL',
-              style: TextStyle(color: Colors.grey, fontSize: 16),
+            child: Text(
+              'games.tetris.cancel'.tr(),
+              style: const TextStyle(color: Colors.grey, fontSize: 16),
             ),
           ),
           TextButton(
@@ -151,9 +151,9 @@ class _TetrisScreenState extends State<TetrisScreen> {
               Navigator.of(context).pop();
               _gameBoard.startGame();
             },
-            child: const Text(
-              'START GAME',
-              style: TextStyle(color: Colors.cyan, fontSize: 16),
+            child: Text(
+              'games.tetris.startGame'.tr(),
+              style: const TextStyle(color: Colors.cyan, fontSize: 16),
             ),
           ),
         ],
@@ -170,25 +170,25 @@ class _TetrisScreenState extends State<TetrisScreen> {
       barrierDismissible: false,
       builder: (context) => AlertDialog(
         backgroundColor: Colors.grey.shade900,
-        title: const Text(
-          'GAME OVER',
-          style: TextStyle(color: Colors.red, fontWeight: FontWeight.bold),
+        title: Text(
+          'games.tetris.gameOverTitle'.tr(),
+          style: const TextStyle(color: Colors.red, fontWeight: FontWeight.bold),
           textAlign: TextAlign.center,
         ),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             Text(
-              'Score: ${_gameBoard.score}',
+              'games.tetris.scoreValue'.tr(namedArgs: {'score': _gameBoard.score.toString()}),
               style: const TextStyle(color: Colors.white, fontSize: 24),
             ),
             const SizedBox(height: 8),
             Text(
-              'Level: ${_gameBoard.level}',
+              'games.tetris.levelValueColon'.tr(namedArgs: {'level': _gameBoard.level.toString()}),
               style: const TextStyle(color: Colors.white, fontSize: 18),
             ),
             Text(
-              'Lines: ${_gameBoard.linesCleared}',
+              'games.tetris.linesValue'.tr(namedArgs: {'lines': _gameBoard.linesCleared.toString()}),
               style: const TextStyle(color: Colors.white, fontSize: 18),
             ),
           ],
@@ -200,9 +200,9 @@ class _TetrisScreenState extends State<TetrisScreen> {
               _gameOverDialogShown = false;
               _gameBoard.startGame();
             },
-            child: const Text(
-              'PLAY AGAIN',
-              style: TextStyle(color: Colors.cyan, fontSize: 18),
+            child: Text(
+              'games.tetris.playAgain'.tr(),
+              style: const TextStyle(color: Colors.cyan, fontSize: 18),
             ),
           ),
         ],
@@ -247,9 +247,9 @@ class _TetrisScreenState extends State<TetrisScreen> {
           icon: const Icon(Icons.arrow_back, color: Colors.white),
           onPressed: () => Navigator.pop(context),
         ),
-        title: const Text(
-          'TETRIS',
-          style: TextStyle(
+        title: Text(
+          'games.tetris.name'.tr().toUpperCase(),
+          style: const TextStyle(
             color: Colors.cyan,
             fontWeight: FontWeight.bold,
             fontSize: 24,
@@ -283,9 +283,9 @@ class _TetrisScreenState extends State<TetrisScreen> {
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceAround,
                 children: [
-                  _buildInfoBox('SCORE', _gameBoard.score.toString()),
-                  _buildInfoBox('LEVEL', _gameBoard.level.toString()),
-                  _buildInfoBox('LINES', _gameBoard.linesCleared.toString()),
+                  _buildInfoBox('games.tetris.score'.tr(), _gameBoard.score.toString()),
+                  _buildInfoBox('games.tetris.level'.tr(), _gameBoard.level.toString()),
+                  _buildInfoBox('games.tetris.lines'.tr(), _gameBoard.linesCleared.toString()),
                 ],
               ),
             ),
@@ -308,10 +308,10 @@ class _TetrisScreenState extends State<TetrisScreen> {
                                 Positioned.fill(
                                   child: Container(
                                     color: Colors.black54,
-                                    child: const Center(
+                                    child: Center(
                                       child: Text(
-                                        'PAUSED',
-                                        style: TextStyle(
+                                        'games.tetris.paused'.tr(),
+                                        style: const TextStyle(
                                           color: Colors.white,
                                           fontSize: 32,
                                           fontWeight: FontWeight.bold,
@@ -392,9 +392,9 @@ class _TetrisScreenState extends State<TetrisScreen> {
                           onPressed: () => Navigator.pop(context),
                         ),
                         const SizedBox(width: 8),
-                        const Text(
-                          'TETRIS',
-                          style: TextStyle(
+                        Text(
+                          'games.tetris.name'.tr().toUpperCase(),
+                          style: const TextStyle(
                             color: Colors.cyan,
                             fontWeight: FontWeight.bold,
                             fontSize: 20,
@@ -406,17 +406,17 @@ class _TetrisScreenState extends State<TetrisScreen> {
                     ),
                     const SizedBox(height: 16),
                     // SCORE (전체 너비)
-                    _buildLandscapeInfoBox('SCORE', _gameBoard.score.toString()),
+                    _buildLandscapeInfoBox('games.tetris.score'.tr(), _gameBoard.score.toString()),
                     const SizedBox(height: 8),
                     // LV와 LINE (가로 배치)
                     Row(
                       children: [
                         Expanded(
-                          child: _buildLandscapeInfoBox('LV', _gameBoard.level.toString()),
+                          child: _buildLandscapeInfoBox('games.tetris.level'.tr(), _gameBoard.level.toString()),
                         ),
                         const SizedBox(width: 8),
                         Expanded(
-                          child: _buildLandscapeInfoBox('LINE', _gameBoard.linesCleared.toString()),
+                          child: _buildLandscapeInfoBox('games.tetris.lines'.tr(), _gameBoard.linesCleared.toString()),
                         ),
                       ],
                     ),
@@ -469,10 +469,10 @@ class _TetrisScreenState extends State<TetrisScreen> {
                           Positioned.fill(
                             child: Container(
                               color: Colors.black54,
-                              child: const Center(
+                              child: Center(
                                 child: Text(
-                                  'PAUSED',
-                                  style: TextStyle(
+                                  'games.tetris.paused'.tr(),
+                                  style: const TextStyle(
                                     color: Colors.white,
                                     fontSize: 28,
                                     fontWeight: FontWeight.bold,

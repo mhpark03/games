@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:easy_localization/easy_localization.dart';
 import '../models/piece.dart';
 
 class NextPieceWidget extends StatelessWidget {
@@ -18,9 +19,9 @@ class NextPieceWidget extends StatelessWidget {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          const Text(
-            'NEXT',
-            style: TextStyle(
+          Text(
+            'games.tetris.next'.tr(),
+            style: const TextStyle(
               color: Colors.white,
               fontSize: 16,
               fontWeight: FontWeight.bold,

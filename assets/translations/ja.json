@@ -85,7 +85,19 @@
       "scoring": "スコアシステム",
       "scoringDesc": "• 1列完成: 100点\n• 2列同時: 300点\n• 3列同時: 500点\n• 4列同時 (テトリス): 800点",
       "gameOverTitle": "ゲームオーバー",
-      "gameOverDesc": "ブロックが天井に達するとゲームが終了します。"
+      "gameOverDesc": "ブロックが天井に達するとゲームが終了します。",
+      "score": "スコア",
+      "selectStartLevel": "スタートレベル選択",
+      "levelValue": "レベル {level}",
+      "speed": "速度: {speed}ms",
+      "cancel": "キャンセル",
+      "startGame": "ゲーム開始",
+      "playAgain": "もう一度",
+      "paused": "一時停止",
+      "next": "次",
+      "scoreValue": "スコア: {score}",
+      "levelValueColon": "レベル: {level}",
+      "linesValue": "ライン: {lines}"
     },
     "gomoku": {
       "name": "五目並べ",

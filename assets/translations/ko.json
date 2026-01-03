@@ -85,7 +85,19 @@
       "scoring": "점수 시스템",
       "scoringDesc": "• 1줄 완성: 100점\n• 2줄 동시: 300점\n• 3줄 동시: 500점\n• 4줄 동시 (테트리스): 800점",
       "gameOverTitle": "게임 오버",
-      "gameOverDesc": "블록이 천장에 닿으면 게임이 끝납니다."
+      "gameOverDesc": "블록이 천장에 닿으면 게임이 끝납니다.",
+      "score": "점수",
+      "selectStartLevel": "시작 레벨 선택",
+      "levelValue": "레벨 {level}",
+      "speed": "속도: {speed}ms",
+      "cancel": "취소",
+      "startGame": "게임 시작",
+      "playAgain": "다시 플레이",
+      "paused": "일시정지",
+      "next": "다음",
+      "scoreValue": "점수: {score}",
+      "levelValueColon": "레벨: {level}",
+      "linesValue": "줄: {lines}"
     },
     "gomoku": {
       "name": "오목",

@@ -85,7 +85,19 @@
       "scoring": "计分系统",
       "scoringDesc": "• 消除1行: 100分\n• 同时消除2行: 300分\n• 同时消除3行: 500分\n• 同时消除4行 (俄罗斯方块): 800分",
       "gameOverTitle": "游戏结束",
-      "gameOverDesc": "方块堆到顶部时游戏结束。"
+      "gameOverDesc": "方块堆到顶部时游戏结束。",
+      "score": "得分",
+      "selectStartLevel": "选择起始等级",
+      "levelValue": "等级 {level}",
+      "speed": "速度: {speed}ms",
+      "cancel": "取消",
+      "startGame": "开始游戏",
+      "playAgain": "再玩一次",
+      "paused": "暂停",
+      "next": "下一个",
+      "scoreValue": "得分: {score}",
+      "levelValueColon": "等级: {level}",
+      "linesValue": "行数: {lines}"
     },
     "gomoku": {
       "name": "五子棋",

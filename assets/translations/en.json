@@ -85,7 +85,19 @@
       "scoring": "Scoring System",
       "scoringDesc": "• 1 line: 100 points\n• 2 lines: 300 points\n• 3 lines: 500 points\n• 4 lines (Tetris): 800 points",
       "gameOverTitle": "Game Over",
-      "gameOverDesc": "The game ends when blocks reach the ceiling."
+      "gameOverDesc": "The game ends when blocks reach the ceiling.",
+      "score": "Score",
+      "selectStartLevel": "Select Start Level",
+      "levelValue": "Level {level}",
+      "speed": "Speed: {speed}ms",
+      "cancel": "Cancel",
+      "startGame": "Start Game",
+      "playAgain": "Play Again",
+      "paused": "Paused",
+      "next": "Next",
+      "scoreValue": "Score: {score}",
+      "levelValueColon": "Level: {level}",
+      "linesValue": "Lines: {lines}"
     },
     "gomoku": {
       "name": "Gomoku",
