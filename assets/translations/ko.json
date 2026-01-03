@@ -50,6 +50,8 @@
     "expert": "달인",
     "mode": "모드",
     "players": "플레이어 수",
+    "playerCount": "{count}인",
+    "playerCountGame": "{count}인 게임",
     "watchAd": "광고 보기",
     "adLoading": "광고를 불러오는 중입니다.",
     "freeFeature": "무료로 제공합니다."

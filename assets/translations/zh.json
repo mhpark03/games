@@ -50,6 +50,8 @@
     "expert": "专家",
     "mode": "模式",
     "players": "玩家数",
+    "playerCount": "{count}人",
+    "playerCountGame": "{count}人游戏",
     "watchAd": "观看广告",
     "adLoading": "正在加载广告...",
     "freeFeature": "免费提供。"

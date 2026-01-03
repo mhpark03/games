@@ -50,6 +50,8 @@
     "expert": "Expert",
     "mode": "Mode",
     "players": "Players",
+    "playerCount": "{count} Players",
+    "playerCountGame": "{count} Player Game",
     "watchAd": "Watch Ad",
     "adLoading": "Loading ad...",
     "freeFeature": "Free feature provided."

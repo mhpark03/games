@@ -50,6 +50,8 @@
     "expert": "エキスパート",
     "mode": "モード",
     "players": "プレイヤー数",
+    "playerCount": "{count}人",
+    "playerCountGame": "{count}人ゲーム",
     "watchAd": "広告を見る",
     "adLoading": "広告を読み込んでいます...",
     "freeFeature": "無料で提供されます。"

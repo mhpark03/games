@@ -1869,9 +1869,9 @@ class _HomeScreenState extends State<HomeScreen> {
             borderRadius: BorderRadius.circular(16),
             side: BorderSide(color: Colors.purple.withValues(alpha: 0.5), width: 2),
           ),
-          title: const Text(
-            '인원 선택',
-            style: TextStyle(
+          title: Text(
+            'dialog.selectPlayers'.tr(),
+            style: const TextStyle(
               color: Colors.purple,
               fontWeight: FontWeight.bold,
             ),
@@ -1888,7 +1888,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   Divider(color: Colors.grey.shade700),
                   const SizedBox(height: 8),
                   Text(
-                    '새 게임',
+                    'app.newGame'.tr(),
                     style: TextStyle(
                       color: Colors.grey.shade400,
                       fontSize: 12,
@@ -1957,16 +1957,16 @@ class _HomeScreenState extends State<HomeScreen> {
             Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text(
-                  '이어하기',
-                  style: TextStyle(
+                Text(
+                  'app.continue'.tr(),
+                  style: const TextStyle(
                     color: Colors.green,
                     fontSize: 16,
                     fontWeight: FontWeight.bold,
                   ),
                 ),
                 Text(
-                  '${savedPlayerCount}인 게임',
+                  'common.playerCountGame'.tr(namedArgs: {'count': savedPlayerCount.toString()}),
                   style: TextStyle(
                     color: Colors.grey.shade400,
                     fontSize: 12,
@@ -2022,7 +2022,7 @@ class _HomeScreenState extends State<HomeScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  '${playerCount}인',
+                  'common.playerCount'.tr(namedArgs: {'count': playerCount.toString()}),
                   style: const TextStyle(
                     color: Colors.white,
                     fontSize: 16,
@@ -2075,7 +2075,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 side: BorderSide(color: const Color(0xFFDEB887).withValues(alpha: 0.5), width: 2),
               ),
               title: Text(
-                '인원 선택',
+                'dialog.selectPlayers'.tr(),
                 style: TextStyle(
                   color: const Color(0xFFDEB887),
                   fontWeight: FontWeight.bold,
@@ -2093,7 +2093,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     Divider(color: Colors.grey.shade700, height: 1),
                     SizedBox(height: isLandscape ? 6 : 8),
                     Text(
-                      '새 게임',
+                      'app.newGame'.tr(),
                       style: TextStyle(
                         color: Colors.grey.shade400,
                         fontSize: isLandscape ? 10 : 12,
@@ -2162,7 +2162,7 @@ class _HomeScreenState extends State<HomeScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  '이어하기',
+                  'app.continue'.tr(),
                   style: TextStyle(
                     color: Colors.green,
                     fontSize: compact ? 13 : 16,
@@ -2170,7 +2170,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   ),
                 ),
                 Text(
-                  '${savedPlayerCount}인 게임',
+                  'common.playerCountGame'.tr(namedArgs: {'count': savedPlayerCount.toString()}),
                   style: TextStyle(
                     color: Colors.grey.shade400,
                     fontSize: compact ? 10 : 12,
@@ -2227,7 +2227,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   Icon(icon, color: const Color(0xFFDEB887), size: 22),
                   const SizedBox(height: 4),
                   Text(
-                    '${playerCount}인',
+                    'common.playerCount'.tr(namedArgs: {'count': playerCount.toString()}),
                     style: const TextStyle(
                       color: Colors.white,
                       fontSize: 13,
@@ -2252,7 +2252,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        '${playerCount}인',
+                        'common.playerCount'.tr(namedArgs: {'count': playerCount.toString()}),
                         style: const TextStyle(
                           color: Colors.white,
                           fontSize: 16,
@@ -2307,7 +2307,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 side: BorderSide(color: Colors.teal.withValues(alpha: 0.5), width: 2),
               ),
               title: Text(
-                '인원 선택',
+                'dialog.selectPlayers'.tr(),
                 style: TextStyle(
                   color: Colors.teal,
                   fontWeight: FontWeight.bold,
@@ -2325,7 +2325,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     Divider(color: Colors.grey.shade700, height: 1),
                     SizedBox(height: isLandscape ? 6 : 8),
                     Text(
-                      '새 게임',
+                      'app.newGame'.tr(),
                       style: TextStyle(
                         color: Colors.grey.shade400,
                         fontSize: isLandscape ? 10 : 12,
@@ -2365,13 +2365,13 @@ class _HomeScreenState extends State<HomeScreen> {
     if (savedDifficulty != null) {
       switch (savedDifficulty) {
         case HulaDifficulty.easy:
-          difficultyText = ' - 쉬움';
+          difficultyText = ' - ${'common.easy'.tr()}';
           break;
         case HulaDifficulty.medium:
-          difficultyText = ' - 보통';
+          difficultyText = ' - ${'common.normal'.tr()}';
           break;
         case HulaDifficulty.hard:
-          difficultyText = ' - 어려움';
+          difficultyText = ' - ${'common.hard'.tr()}';
           break;
       }
     }
@@ -2410,7 +2410,7 @@ class _HomeScreenState extends State<HomeScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  '이어하기',
+                  'app.continue'.tr(),
                   style: TextStyle(
                     color: Colors.green,
                     fontSize: compact ? 13 : 16,
@@ -2418,7 +2418,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   ),
                 ),
                 Text(
-                  '${savedPlayerCount}인 게임$difficultyText',
+                  '${'common.playerCountGame'.tr(namedArgs: {'count': savedPlayerCount.toString()})}$difficultyText',
                   style: TextStyle(
                     color: Colors.grey.shade400,
                     fontSize: compact ? 10 : 12,
@@ -2474,7 +2474,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   Icon(icon, color: Colors.teal, size: 22),
                   const SizedBox(height: 4),
                   Text(
-                    '${playerCount}인',
+                    'common.playerCount'.tr(namedArgs: {'count': playerCount.toString()}),
                     style: const TextStyle(
                       color: Colors.white,
                       fontSize: 13,
@@ -2499,7 +2499,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        '${playerCount}인',
+                        'common.playerCount'.tr(namedArgs: {'count': playerCount.toString()}),
                         style: const TextStyle(
                           color: Colors.white,
                           fontSize: 16,
@@ -2547,7 +2547,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 side: BorderSide(color: Colors.teal.withValues(alpha: 0.5), width: 2),
               ),
               title: Text(
-                '훌라 ${playerCount}인 - 난이도 선택',
+                '${'games.hula.name'.tr()} ${'common.playerCount'.tr(namedArgs: {'count': playerCount.toString()})} - ${'dialog.selectDifficulty'.tr()}',
                 style: const TextStyle(
                   color: Colors.teal,
                   fontWeight: FontWeight.bold,
@@ -2560,19 +2560,19 @@ class _HomeScreenState extends State<HomeScreen> {
                   if (isLandscape)
                     Row(
                       children: [
-                        Expanded(child: _buildHulaDifficultyButton(context, playerCount: playerCount, difficulty: HulaDifficulty.easy, title: '쉬움', icon: Icons.sentiment_satisfied, color: Colors.green, compact: true)),
+                        Expanded(child: _buildHulaDifficultyButton(context, playerCount: playerCount, difficulty: HulaDifficulty.easy, title: 'common.easy'.tr(), icon: Icons.sentiment_satisfied, color: Colors.green, compact: true)),
                         const SizedBox(width: 8),
-                        Expanded(child: _buildHulaDifficultyButton(context, playerCount: playerCount, difficulty: HulaDifficulty.medium, title: '보통', icon: Icons.sentiment_neutral, color: Colors.orange, compact: true)),
+                        Expanded(child: _buildHulaDifficultyButton(context, playerCount: playerCount, difficulty: HulaDifficulty.medium, title: 'common.normal'.tr(), icon: Icons.sentiment_neutral, color: Colors.orange, compact: true)),
                         const SizedBox(width: 8),
-                        Expanded(child: _buildHulaDifficultyButton(context, playerCount: playerCount, difficulty: HulaDifficulty.hard, title: '어려움', icon: Icons.sentiment_very_dissatisfied, color: Colors.red, compact: true)),
+                        Expanded(child: _buildHulaDifficultyButton(context, playerCount: playerCount, difficulty: HulaDifficulty.hard, title: 'common.hard'.tr(), icon: Icons.sentiment_very_dissatisfied, color: Colors.red, compact: true)),
                       ],
                     )
                   else ...[
-                    _buildHulaDifficultyButton(context, playerCount: playerCount, difficulty: HulaDifficulty.easy, title: '쉬움', icon: Icons.sentiment_satisfied, color: Colors.green),
+                    _buildHulaDifficultyButton(context, playerCount: playerCount, difficulty: HulaDifficulty.easy, title: 'common.easy'.tr(), icon: Icons.sentiment_satisfied, color: Colors.green),
                     const SizedBox(height: 12),
-                    _buildHulaDifficultyButton(context, playerCount: playerCount, difficulty: HulaDifficulty.medium, title: '보통', icon: Icons.sentiment_neutral, color: Colors.orange),
+                    _buildHulaDifficultyButton(context, playerCount: playerCount, difficulty: HulaDifficulty.medium, title: 'common.normal'.tr(), icon: Icons.sentiment_neutral, color: Colors.orange),
                     const SizedBox(height: 12),
-                    _buildHulaDifficultyButton(context, playerCount: playerCount, difficulty: HulaDifficulty.hard, title: '어려움', icon: Icons.sentiment_very_dissatisfied, color: Colors.red),
+                    _buildHulaDifficultyButton(context, playerCount: playerCount, difficulty: HulaDifficulty.hard, title: 'common.hard'.tr(), icon: Icons.sentiment_very_dissatisfied, color: Colors.red),
                   ],
                 ],
               ),
