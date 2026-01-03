@@ -973,10 +973,17 @@ class _ExpandedBoardScreenState extends State<ExpandedBoardScreen> {
   void _onUndo() {
     // 일시정지 상태에서는 입력 차단
     if (_localIsPaused) return;
+    // Undo 히스토리가 비어있으면 무시
+    if (!widget.gameState.canUndo) {
+      debugPrint('Undo 불가: 히스토리 비어있음');
+      return;
+    }
 
-    setState(() {
-      widget.gameState.undo();
-    });
+    final undoSuccess = widget.gameState.undo();
+    debugPrint('Undo 실행 결과: $undoSuccess');
+    if (undoSuccess) {
+      setState(() {});
+    }
   }
 
   // 오답 시 광고 다이얼로그 (4번째 오답부터)
@@ -1000,12 +1007,21 @@ class _ExpandedBoardScreenState extends State<ExpandedBoardScreen> {
             onPressed: () async {
               Navigator.pop(context);
               final adService = AdService();
+              bool rewardEarned = false;
               final result = await adService.showRewardedAd(
                 onUserEarnedReward: (ad, reward) {
-                  // 광고 시청 완료
+                  rewardEarned = true;
+                },
+                onAdDismissed: () {
+                  if (mounted && rewardEarned) {
+                    // 광고 시청 완료 후 틀린 항목 되돌리기
+                    _onUndo();
+                  }
                 },
               );
-              if (!result) {
+              if (!result && mounted) {
+                // 광고가 없는 경우에도 되돌리기 실행
+                _onUndo();
                 adService.loadRewardedAd();
               }
             },
@@ -1018,8 +1034,12 @@ class _ExpandedBoardScreenState extends State<ExpandedBoardScreen> {
 
   // 취소 버튼 광고 다이얼로그
   void _showUndoAdDialog() {
-    if (_localIsPaused || !widget.gameState.canUndo) return;
+    if (_localIsPaused || !widget.gameState.canUndo) {
+      debugPrint('Undo 다이얼로그 표시 불가: paused=$_localIsPaused, canUndo=${widget.gameState.canUndo}');
+      return;
+    }
 
+    debugPrint('Undo 다이얼로그 표시, undoCount=${widget.gameState.undoCount}');
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
@@ -1039,18 +1059,23 @@ class _ExpandedBoardScreenState extends State<ExpandedBoardScreen> {
               Navigator.pop(context);
               final adService = AdService();
               bool rewardEarned = false;
+              debugPrint('광고 시청 시작');
               final result = await adService.showRewardedAd(
                 onUserEarnedReward: (ad, reward) {
                   rewardEarned = true;
+                  debugPrint('광고 보상 획득');
                 },
                 onAdDismissed: () {
+                  debugPrint('광고 닫힘: mounted=$mounted, rewardEarned=$rewardEarned');
                   if (mounted && rewardEarned) {
                     _onUndo();
                   }
                 },
               );
+              debugPrint('showRewardedAd 반환: result=$result');
               if (!result && mounted) {
                 // 광고가 없는 경우 되돌리기 실행
+                debugPrint('광고 없음 - 무료 Undo');
                 _onUndo();
                 adService.loadRewardedAd();
               }

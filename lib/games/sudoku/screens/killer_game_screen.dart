@@ -574,12 +574,21 @@ class _KillerGameScreenState extends State<KillerGameScreen>
             onPressed: () async {
               Navigator.pop(context);
               final adService = AdService();
+              bool rewardEarned = false;
               final result = await adService.showRewardedAd(
                 onUserEarnedReward: (ad, reward) {
-                  // 광고 시청 완료
+                  rewardEarned = true;
+                },
+                onAdDismissed: () {
+                  if (mounted && rewardEarned) {
+                    // 광고 시청 완료 후 틀린 항목 되돌리기
+                    _onUndo();
+                  }
                 },
               );
-              if (!result) {
+              if (!result && mounted) {
+                // 광고가 없는 경우에도 되돌리기 실행
+                _onUndo();
                 adService.loadRewardedAd();
               }
             },

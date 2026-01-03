@@ -98,6 +98,8 @@ class AdService {
         _rewardedAd = null;
         // 실패 시에도 몰입 모드 유지
         SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersiveSticky);
+        // 광고 실패 시에도 콜백 호출 (사용자 책임 아님)
+        onAdDismissed?.call();
         loadRewardedAd();
       },
     );
