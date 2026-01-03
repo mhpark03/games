@@ -107,17 +107,17 @@ class _SolitaireScreenState extends State<SolitaireScreen> {
 
   // 카드 크기 (화면 너비와 모드에 따라 동적 계산) - 표준 카드 비율 5:7 (0.714)
   double get cardWidth {
-    if (_screenWidth == 0) return _largeCardMode ? 60 : 54;
-    // 7열 + 패딩(8) + 열간격(7*2=14) 고려하여 계산 (간격 최소화)
-    final baseWidth = (_screenWidth - 8 - 14) / 7;
+    if (_screenWidth == 0) return _largeCardMode ? 56 : 50;
+    // 7열 + 패딩(16) + 열간격(7*4=28) 고려하여 계산
+    final baseWidth = (_screenWidth - 16 - 28) / 7;
     if (_largeCardMode) {
-      return baseWidth.clamp(54.0, 72.0);  // 크게 모드: 54~72
+      return baseWidth.clamp(50.0, 62.0);  // 크게 모드: 50~62
     } else {
-      return baseWidth.clamp(48.0, 60.0);  // 작게 모드: 48~60
+      return baseWidth.clamp(42.0, 50.0);  // 작게 모드: 42~50
     }
   }
   double get cardHeight => cardWidth * 1.4;  // 비율 5:7
-  double get cardOverlap => _largeCardMode ? (cardWidth * 0.38) : (cardWidth * 0.35);  // 테이블 카드 겹침 간격 (줄임)
+  double get cardOverlap => _largeCardMode ? (cardWidth * 0.43) : (cardWidth * 0.4);  // 테이블 카드 겹침 간격
 
   // Undo 히스토리
   List<Map<String, dynamic>> _undoHistory = [];
@@ -1287,8 +1287,8 @@ class _SolitaireScreenState extends State<SolitaireScreen> {
     final foundationWidgets = List.generate(4, (index) {
       return Padding(
         padding: EdgeInsets.only(
-          left: _leftHandedMode ? 0 : 2,
-          right: _leftHandedMode ? 2 : 0,
+          left: _leftHandedMode ? 0 : (_largeCardMode ? 4 : 6),
+          right: _leftHandedMode ? (_largeCardMode ? 4 : 6) : 0,
         ),
         child: SizedBox(
           width: cardWidth + 4,
@@ -1302,7 +1302,7 @@ class _SolitaireScreenState extends State<SolitaireScreen> {
       children: [
         // 상단: 스톡, 웨이스트, 파운데이션 (왼손잡이 모드에 따라 위치 변경)
         Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 6),
+          padding: const EdgeInsets.all(8),
           child: Row(
             children: _leftHandedMode
                 ? [
@@ -1322,13 +1322,13 @@ class _SolitaireScreenState extends State<SolitaireScreen> {
         // 하단: 테이블 7열
         Expanded(
           child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 4),
+            padding: const EdgeInsets.symmetric(horizontal: 8),
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: List.generate(7, (index) {
                 return Expanded(
                   child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 1),
+                    padding: const EdgeInsets.symmetric(horizontal: 2),
                     child: _buildTableauColumn(index),
                   ),
                 );
@@ -1457,14 +1457,6 @@ class _SolitaireScreenState extends State<SolitaireScreen> {
   }
 
   Widget _buildFoundation(int index) {
-    // Foundation 무늬 색상 (참조 이미지처럼 금색)
-    final suitColors = [
-      Colors.amber.shade600, // 스페이드
-      Colors.amber.shade600, // 하트
-      Colors.amber.shade600, // 클로버
-      Colors.amber.shade600, // 다이아몬드
-    ];
-
     return DragTarget<Map<String, dynamic>>(
       onWillAcceptWithDetails: (details) {
         final data = details.data;
@@ -1480,25 +1472,12 @@ class _SolitaireScreenState extends State<SolitaireScreen> {
 
         Widget cardWidget;
         if (pile.isEmpty) {
-          // 빈 Foundation: 금색 테두리와 큰 무늬
-          cardWidget = Container(
-            width: cardWidth,
-            height: cardHeight,
-            decoration: BoxDecoration(
-              color: Colors.green.shade800.withAlpha(150),
-              borderRadius: BorderRadius.circular(8),
-              border: Border.all(
-                color: isHighlighted ? Colors.yellow : suitColors[index],
-                width: isHighlighted ? 3 : 2,
-              ),
-            ),
-            child: Center(
-              child: Text(
-                ['♠', '♥', '♣', '♦'][index],
-                style: TextStyle(
-                  fontSize: cardWidth * 0.55,
-                  color: suitColors[index],
-                ),
+          cardWidget = _buildCardPlaceholder(
+            child: Text(
+              ['♠', '♥', '♣', '♦'][index],
+              style: TextStyle(
+                fontSize: cardWidth * 0.48,
+                color: Colors.white.withAlpha(77),
               ),
             ),
           );
@@ -1509,21 +1488,12 @@ class _SolitaireScreenState extends State<SolitaireScreen> {
             feedback: _buildCard(card, width: cardWidth, height: cardHeight),
             childWhenDragging: pile.length > 1
                 ? _buildCard(pile[pile.length - 2], width: cardWidth, height: cardHeight)
-                : Container(
-                    width: cardWidth,
-                    height: cardHeight,
-                    decoration: BoxDecoration(
-                      color: Colors.green.shade800.withAlpha(150),
-                      borderRadius: BorderRadius.circular(8),
-                      border: Border.all(color: suitColors[index], width: 2),
-                    ),
-                    child: Center(
-                      child: Text(
-                        ['♠', '♥', '♣', '♦'][index],
-                        style: TextStyle(
-                          fontSize: cardWidth * 0.55,
-                          color: suitColors[index],
-                        ),
+                : _buildCardPlaceholder(
+                    child: Text(
+                      ['♠', '♥', '♣', '♦'][index],
+                      style: TextStyle(
+                        fontSize: cardWidth * 0.48,
+                        color: Colors.white.withAlpha(77),
                       ),
                     ),
                   ),
@@ -1533,21 +1503,16 @@ class _SolitaireScreenState extends State<SolitaireScreen> {
           );
         }
 
-        // 카드가 있을 때도 테두리 표시
-        if (pile.isNotEmpty) {
-          return Container(
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(8),
-              border: Border.all(
-                color: isHighlighted ? Colors.yellow : suitColors[index].withAlpha(150),
-                width: isHighlighted ? 3 : 2,
-              ),
+        return Container(
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(6),
+            border: Border.all(
+              color: isHighlighted ? Colors.yellow : Colors.white30,
+              width: isHighlighted ? 3 : 2,
             ),
-            child: cardWidget,
-          );
-        }
-
-        return cardWidget;
+          ),
+          child: cardWidget,
+        );
       },
     );
   }
@@ -1728,72 +1693,40 @@ class _SolitaireScreenState extends State<SolitaireScreen> {
       width: width,
       height: height,
       decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [
-            Colors.blue.shade700,
-            Colors.blue.shade900,
-          ],
-        ),
+        color: Colors.blue.shade800,
         borderRadius: showPartial
             ? const BorderRadius.only(
-                topLeft: Radius.circular(8),
-                topRight: Radius.circular(8),
+                topLeft: Radius.circular(6),
+                topRight: Radius.circular(6),
               )
-            : BorderRadius.circular(8),
+            : BorderRadius.circular(6),
         border: showPartial
-            ? Border(
-                top: BorderSide(color: Colors.blue.shade300, width: 2),
-                left: BorderSide(color: Colors.blue.shade300, width: 2),
-                right: BorderSide(color: Colors.blue.shade300, width: 2),
+            ? const Border(
+                top: BorderSide(color: Colors.white, width: 1),
+                left: BorderSide(color: Colors.white, width: 1),
+                right: BorderSide(color: Colors.white, width: 1),
               )
-            : Border.all(color: Colors.blue.shade300, width: 2),
+            : Border.all(color: Colors.white, width: 1),
         boxShadow: showPartial
             ? null
             : [
                 BoxShadow(
-                  color: Colors.black.withAlpha(60),
-                  blurRadius: 3,
-                  offset: const Offset(1, 2),
+                  color: Colors.black.withAlpha(51),
+                  blurRadius: 2,
+                  offset: const Offset(1, 1),
                 ),
               ],
       ),
       child: showPartial
           ? null
-          : ClipRRect(
-              borderRadius: BorderRadius.circular(6),
-              child: Stack(
-                children: [
-                  // 장식 패턴 배경
-                  Positioned.fill(
-                    child: CustomPaint(
-                      painter: _CardBackPatternPainter(),
-                    ),
-                  ),
-                  // 중앙 장식
-                  Center(
-                    child: Container(
-                      width: width * 0.6,
-                      height: height * 0.5,
-                      decoration: BoxDecoration(
-                        color: Colors.blue.shade800.withAlpha(200),
-                        borderRadius: BorderRadius.circular(6),
-                        border: Border.all(
-                          color: Colors.white.withAlpha(100),
-                          width: 2,
-                        ),
-                      ),
-                      child: Center(
-                        child: Icon(
-                          Icons.auto_awesome,
-                          color: Colors.white.withAlpha(150),
-                          size: width * 0.35,
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
+          : Center(
+              child: Container(
+                width: width - 10,
+                height: height - 10,
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(4),
+                  border: Border.all(color: Colors.white24),
+                ),
               ),
             ),
     );
@@ -1812,245 +1745,48 @@ class _SolitaireScreenState extends State<SolitaireScreen> {
         color: Colors.white,
         borderRadius: showPartial
             ? const BorderRadius.only(
-                topLeft: Radius.circular(8),
-                topRight: Radius.circular(8),
+                topLeft: Radius.circular(6),
+                topRight: Radius.circular(6),
               )
-            : BorderRadius.circular(8),
-        border: Border.all(color: Colors.grey.shade300, width: 1),
-        boxShadow: showPartial
-            ? null
-            : [
-                BoxShadow(
-                  color: Colors.black.withAlpha(60),
-                  blurRadius: 3,
-                  offset: const Offset(1, 2),
-                ),
-              ],
+            : BorderRadius.circular(6),
+        border: Border.all(color: Colors.grey.shade400),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withAlpha(51),
+            blurRadius: 2,
+            offset: const Offset(1, 1),
+          ),
+        ],
       ),
       child: showPartial
           ? Padding(
-              padding: const EdgeInsets.only(left: 4, top: 2),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+              padding: const EdgeInsets.only(left: 3, top: 2),
+              child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   Text(
                     card.rankString,
                     style: TextStyle(
                       color: card.suitColor,
-                      fontSize: cardWidth * 0.28,
+                      fontSize: _largeCardMode ? (cardWidth * 0.25) : (cardWidth * 0.22),
                       fontWeight: FontWeight.bold,
-                      height: 1.0,
+                    ),
+                  ),
+                  Text(
+                    card.suitString,
+                    style: TextStyle(
+                      color: card.suitColor,
+                      fontSize: _largeCardMode ? (cardWidth * 0.22) : (cardWidth * 0.18),
+                      fontWeight: FontWeight.bold,
                     ),
                   ),
                 ],
               ),
             )
-          : _buildNewCardContent(card),
+          : _largeCardMode
+              ? _buildLargeCardContent(card)
+              : _buildSmallCardContent(card),
     );
-  }
-
-  // 참조 이미지 스타일의 카드 내용
-  Widget _buildNewCardContent(PlayingCard card) {
-    return ClipRRect(
-      borderRadius: BorderRadius.circular(6),
-      child: Padding(
-        padding: const EdgeInsets.all(3),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // 좌상단: 숫자와 무늬
-            Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text(
-                  card.rankString,
-                  style: TextStyle(
-                    color: card.suitColor,
-                    fontSize: cardWidth * 0.28,
-                    fontWeight: FontWeight.bold,
-                    height: 1.0,
-                  ),
-                ),
-                Text(
-                  card.suitString,
-                  style: TextStyle(
-                    color: card.suitColor,
-                    fontSize: cardWidth * 0.22,
-                    height: 1.0,
-                  ),
-                ),
-              ],
-            ),
-            // 중앙: 무늬
-            Expanded(
-              child: Center(
-                child: _buildCenterContent(card),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  // 카드 중앙 내용 (숫자에 따라 다름)
-  Widget _buildCenterContent(PlayingCard card) {
-    final color = card.suitColor;
-    final suit = card.suitString;
-
-    // J, Q, K는 그림 카드 스타일 (아이콘 사용)
-    if (card.rank >= 11 && card.rank <= 13) {
-      IconData faceIcon;
-      if (card.rank == 11) {
-        faceIcon = Icons.shield; // Jack (기사)
-      } else if (card.rank == 12) {
-        faceIcon = Icons.face_4; // Queen (여왕)
-      } else {
-        faceIcon = Icons.workspace_premium; // King (왕관)
-      }
-      return Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(
-            faceIcon,
-            color: color,
-            size: cardWidth * 0.4,
-          ),
-          Text(
-            suit,
-            style: TextStyle(
-              color: color,
-              fontSize: cardWidth * 0.2,
-              height: 1.0,
-            ),
-          ),
-        ],
-      );
-    }
-
-    // A는 큰 무늬 하나
-    if (card.rank == 1) {
-      return Text(
-        suit,
-        style: TextStyle(
-          color: color,
-          fontSize: cardWidth * 0.5,
-        ),
-      );
-    }
-
-    // 2-10은 무늬 갯수 만큼 표시
-    return _buildSimplePipPattern(card);
-  }
-
-  // 단순화된 무늬 패턴 (2-10)
-  Widget _buildSimplePipPattern(PlayingCard card) {
-    final suit = card.suitString;
-    final color = card.suitColor;
-    final count = card.rank;
-
-    // 무늬 크기 계산
-    double pipSize = cardWidth * 0.22;
-    if (count >= 7) pipSize = cardWidth * 0.18;
-    if (count >= 9) pipSize = cardWidth * 0.16;
-
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        return _buildPipGrid(count, suit, color, pipSize, constraints);
-      },
-    );
-  }
-
-  // 그리드 형태의 무늬 배치
-  Widget _buildPipGrid(int count, String suit, Color color, double pipSize, BoxConstraints constraints) {
-    final pipStyle = TextStyle(color: color, fontSize: pipSize);
-    final invertedPipStyle = TextStyle(color: color, fontSize: pipSize);
-
-    Widget pip({bool inverted = false}) => inverted
-        ? Transform.rotate(angle: 3.14159, child: Text(suit, style: invertedPipStyle))
-        : Text(suit, style: pipStyle);
-
-    switch (count) {
-      case 2:
-        return Column(
-          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-          children: [pip(), pip(inverted: true)],
-        );
-      case 3:
-        return Column(
-          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-          children: [pip(), pip(), pip(inverted: true)],
-        );
-      case 4:
-        return Column(
-          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-          children: [
-            Row(mainAxisAlignment: MainAxisAlignment.spaceEvenly, children: [pip(), pip()]),
-            Row(mainAxisAlignment: MainAxisAlignment.spaceEvenly, children: [pip(inverted: true), pip(inverted: true)]),
-          ],
-        );
-      case 5:
-        return Column(
-          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-          children: [
-            Row(mainAxisAlignment: MainAxisAlignment.spaceEvenly, children: [pip(), pip()]),
-            pip(),
-            Row(mainAxisAlignment: MainAxisAlignment.spaceEvenly, children: [pip(inverted: true), pip(inverted: true)]),
-          ],
-        );
-      case 6:
-        return Column(
-          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-          children: [
-            Row(mainAxisAlignment: MainAxisAlignment.spaceEvenly, children: [pip(), pip()]),
-            Row(mainAxisAlignment: MainAxisAlignment.spaceEvenly, children: [pip(), pip()]),
-            Row(mainAxisAlignment: MainAxisAlignment.spaceEvenly, children: [pip(inverted: true), pip(inverted: true)]),
-          ],
-        );
-      case 7:
-        return Column(
-          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-          children: [
-            Row(mainAxisAlignment: MainAxisAlignment.spaceEvenly, children: [pip(), pip()]),
-            Row(mainAxisAlignment: MainAxisAlignment.spaceEvenly, children: [pip(), pip(), pip()]),
-            Row(mainAxisAlignment: MainAxisAlignment.spaceEvenly, children: [pip(inverted: true), pip(inverted: true)]),
-          ],
-        );
-      case 8:
-        return Column(
-          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-          children: [
-            Row(mainAxisAlignment: MainAxisAlignment.spaceEvenly, children: [pip(), pip()]),
-            Row(mainAxisAlignment: MainAxisAlignment.spaceEvenly, children: [pip(), pip()]),
-            Row(mainAxisAlignment: MainAxisAlignment.spaceEvenly, children: [pip(inverted: true), pip(inverted: true)]),
-            Row(mainAxisAlignment: MainAxisAlignment.spaceEvenly, children: [pip(inverted: true), pip(inverted: true)]),
-          ],
-        );
-      case 9:
-        return Column(
-          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-          children: [
-            Row(mainAxisAlignment: MainAxisAlignment.spaceEvenly, children: [pip(), pip()]),
-            Row(mainAxisAlignment: MainAxisAlignment.spaceEvenly, children: [pip(), pip()]),
-            pip(),
-            Row(mainAxisAlignment: MainAxisAlignment.spaceEvenly, children: [pip(inverted: true), pip(inverted: true)]),
-            Row(mainAxisAlignment: MainAxisAlignment.spaceEvenly, children: [pip(inverted: true), pip(inverted: true)]),
-          ],
-        );
-      case 10:
-        return Column(
-          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-          children: [
-            Row(mainAxisAlignment: MainAxisAlignment.spaceEvenly, children: [pip(), pip()]),
-            Row(mainAxisAlignment: MainAxisAlignment.spaceEvenly, children: [pip(), pip(), pip()]),
-            Row(mainAxisAlignment: MainAxisAlignment.spaceEvenly, children: [pip(inverted: true), pip(inverted: true), pip(inverted: true)]),
-            Row(mainAxisAlignment: MainAxisAlignment.spaceEvenly, children: [pip(inverted: true), pip(inverted: true)]),
-          ],
-        );
-      default:
-        return const SizedBox();
-    }
   }
 
   // 작은 카드 레이아웃 (기존)
@@ -2727,49 +2463,4 @@ class _SolitaireScreenState extends State<SolitaireScreen> {
       ),
     );
   }
-}
-
-// 카드 뒷면 장식 패턴 그리기
-class _CardBackPatternPainter extends CustomPainter {
-  @override
-  void paint(Canvas canvas, Size size) {
-    final paint = Paint()
-      ..color = Colors.white.withAlpha(30)
-      ..strokeWidth = 1
-      ..style = PaintingStyle.stroke;
-
-    // 대각선 패턴
-    const spacing = 8.0;
-    for (double i = -size.height; i < size.width + size.height; i += spacing) {
-      canvas.drawLine(
-        Offset(i, 0),
-        Offset(i + size.height, size.height),
-        paint,
-      );
-    }
-
-    // 반대 대각선
-    for (double i = -size.height; i < size.width + size.height; i += spacing) {
-      canvas.drawLine(
-        Offset(i + size.height, 0),
-        Offset(i, size.height),
-        paint,
-      );
-    }
-
-    // 테두리 장식
-    final borderPaint = Paint()
-      ..color = Colors.white.withAlpha(50)
-      ..strokeWidth = 2
-      ..style = PaintingStyle.stroke;
-
-    final rect = Rect.fromLTWH(4, 4, size.width - 8, size.height - 8);
-    canvas.drawRRect(
-      RRect.fromRectAndRadius(rect, const Radius.circular(4)),
-      borderPaint,
-    );
-  }
-
-  @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }
