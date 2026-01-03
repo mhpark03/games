@@ -1852,41 +1852,44 @@ class _SolitaireScreenState extends State<SolitaireScreen> {
 
   // 참조 이미지 스타일의 카드 내용
   Widget _buildNewCardContent(PlayingCard card) {
-    return Padding(
-      padding: const EdgeInsets.all(4),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // 좌상단: 큰 숫자와 그 아래 무늬
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                card.rankString,
-                style: TextStyle(
-                  color: card.suitColor,
-                  fontSize: cardWidth * 0.36,
-                  fontWeight: FontWeight.bold,
-                  height: 1.0,
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(6),
+      child: Padding(
+        padding: const EdgeInsets.all(3),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // 좌상단: 숫자와 무늬
+            Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  card.rankString,
+                  style: TextStyle(
+                    color: card.suitColor,
+                    fontSize: cardWidth * 0.28,
+                    fontWeight: FontWeight.bold,
+                    height: 1.0,
+                  ),
                 ),
-              ),
-              Text(
-                card.suitString,
-                style: TextStyle(
-                  color: card.suitColor,
-                  fontSize: cardWidth * 0.28,
-                  height: 0.9,
+                Text(
+                  card.suitString,
+                  style: TextStyle(
+                    color: card.suitColor,
+                    fontSize: cardWidth * 0.22,
+                    height: 1.0,
+                  ),
                 ),
-              ),
-            ],
-          ),
-          // 중앙: J, Q, K는 특별 표시, 나머지는 무늬
-          Expanded(
-            child: Center(
-              child: _buildCenterContent(card),
+              ],
             ),
-          ),
-        ],
+            // 중앙: 무늬
+            Expanded(
+              child: Center(
+                child: _buildCenterContent(card),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -1899,51 +1902,34 @@ class _SolitaireScreenState extends State<SolitaireScreen> {
     // J, Q, K는 그림 카드 스타일
     if (card.rank >= 11 && card.rank <= 13) {
       String faceLabel;
-      Color bgColor;
       if (card.rank == 11) {
         faceLabel = 'J';
-        bgColor = card.color == CardColor.red
-            ? Colors.red.shade100
-            : Colors.grey.shade200;
       } else if (card.rank == 12) {
         faceLabel = 'Q';
-        bgColor = card.color == CardColor.red
-            ? Colors.red.shade100
-            : Colors.grey.shade200;
       } else {
         faceLabel = 'K';
-        bgColor = card.color == CardColor.red
-            ? Colors.red.shade100
-            : Colors.grey.shade200;
       }
-      return Container(
-        width: cardWidth * 0.6,
-        height: cardHeight * 0.45,
-        decoration: BoxDecoration(
-          color: bgColor,
-          borderRadius: BorderRadius.circular(4),
-          border: Border.all(color: color.withAlpha(100), width: 1),
-        ),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Text(
-              faceLabel,
-              style: TextStyle(
-                color: color,
-                fontSize: cardWidth * 0.35,
-                fontWeight: FontWeight.bold,
-              ),
+      return Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(
+            faceLabel,
+            style: TextStyle(
+              color: color,
+              fontSize: cardWidth * 0.3,
+              fontWeight: FontWeight.bold,
+              height: 1.0,
             ),
-            Text(
-              suit,
-              style: TextStyle(
-                color: color,
-                fontSize: cardWidth * 0.2,
-              ),
+          ),
+          Text(
+            suit,
+            style: TextStyle(
+              color: color,
+              fontSize: cardWidth * 0.25,
+              height: 1.0,
             ),
-          ],
-        ),
+          ),
+        ],
       );
     }
 
@@ -1953,13 +1939,19 @@ class _SolitaireScreenState extends State<SolitaireScreen> {
         suit,
         style: TextStyle(
           color: color,
-          fontSize: cardWidth * 0.6,
+          fontSize: cardWidth * 0.5,
         ),
       );
     }
 
-    // 2-10은 무늬 패턴
-    return _buildSimplePipPattern(card);
+    // 2-10은 큰 무늬 하나로 단순화
+    return Text(
+      suit,
+      style: TextStyle(
+        color: color,
+        fontSize: cardWidth * 0.4,
+      ),
+    );
   }
 
   // 단순화된 무늬 패턴 (2-10)
