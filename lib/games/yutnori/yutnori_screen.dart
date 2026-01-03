@@ -1309,7 +1309,7 @@ class _YutnoriScreenState extends State<YutnoriScreen>
                 ),
                 const SizedBox(width: 6),
                 Text(
-                  '${_getPlayerName(currentPlayer)} 차례',
+                  '${_getPlayerName(currentPlayer)} ${'games.yutnori.turn'.tr()}',
                   style: const TextStyle(
                     color: Colors.white,
                     fontSize: 13,
@@ -1603,7 +1603,7 @@ class _YutnoriScreenState extends State<YutnoriScreen>
                 ),
                 const SizedBox(width: 3),
                 Text(
-                  '${_getPlayerName(currentPlayer)} 차례',
+                  '${_getPlayerName(currentPlayer)} ${'games.yutnori.turn'.tr()}',
                   style: const TextStyle(
                     color: Colors.white,
                     fontSize: 10,
