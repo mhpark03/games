@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_native_splash/flutter_native_splash.dart';
+import 'package:easy_localization/easy_localization.dart';
 import 'games/tetris/tetris_screen.dart';
 import 'games/gomoku/gomoku_screen.dart';
 import 'games/othello/othello_screen.dart';
@@ -76,6 +77,9 @@ void main() async {
   WidgetsBinding widgetsBinding = WidgetsFlutterBinding.ensureInitialized();
   FlutterNativeSplash.preserve(widgetsBinding: widgetsBinding);
 
+  // 다국어 지원 초기화
+  await EasyLocalization.ensureInitialized();
+
   // AdMob 초기화
   await AdService.initialize();
   AdService().loadRewardedAd();
@@ -93,7 +97,19 @@ void main() async {
     overlays: [],
   );
 
-  runApp(const GameCenterApp());
+  runApp(
+    EasyLocalization(
+      supportedLocales: const [
+        Locale('ko'),
+        Locale('en'),
+        Locale('ja'),
+        Locale('zh'),
+      ],
+      path: 'assets/translations',
+      fallbackLocale: const Locale('en'),
+      child: const GameCenterApp(),
+    ),
+  );
 }
 
 class GameCenterApp extends StatefulWidget {
@@ -141,6 +157,10 @@ class _GameCenterAppState extends State<GameCenterApp> {
       title: 'Game Center',
       debugShowCheckedModeBanner: false,
       navigatorObservers: [bannerNavigatorObserver],
+      // 다국어 지원
+      localizationsDelegates: context.localizationDelegates,
+      supportedLocales: context.supportedLocales,
+      locale: context.locale,
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(
           seedColor: Colors.indigo,
@@ -229,9 +249,9 @@ class _HomeScreenState extends State<HomeScreen> {
             borderRadius: BorderRadius.circular(16),
             side: BorderSide(color: Colors.amber.withValues(alpha: 0.5), width: 2),
           ),
-          title: const Text(
-            '게임 대상 선택',
-            style: TextStyle(
+          title: Text(
+            'dialog.selectMode'.tr(),
+            style: const TextStyle(
               color: Colors.amber,
               fontWeight: FontWeight.bold,
             ),
@@ -248,7 +268,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   Divider(color: Colors.grey.shade700),
                   const SizedBox(height: 8),
                   Text(
-                    '새 게임',
+                    'app.newGame'.tr(),
                     style: TextStyle(
                       color: Colors.grey.shade400,
                       fontSize: 12,
@@ -258,24 +278,24 @@ class _HomeScreenState extends State<HomeScreen> {
                 ],
                 _buildModeButton(
                   context,
-                  title: '컴퓨터 (백)',
-                  subtitle: '내가 흑돌 (선공)',
+                  title: 'vs.vsComputer'.tr() + ' (${'games.gomoku.white'.tr()})',
+                  subtitle: 'vs.playAs'.tr(namedArgs: {'piece': 'games.gomoku.black'.tr()}),
                   icon: Icons.computer,
                   mode: GameMode.vsComputerWhite,
                 ),
                 const SizedBox(height: 12),
                 _buildModeButton(
                   context,
-                  title: '컴퓨터 (흑)',
-                  subtitle: '내가 백돌 (후공)',
+                  title: 'vs.vsComputer'.tr() + ' (${'games.gomoku.black'.tr()})',
+                  subtitle: 'vs.playAs'.tr(namedArgs: {'piece': 'games.gomoku.white'.tr()}),
                   icon: Icons.computer,
                   mode: GameMode.vsComputerBlack,
                 ),
                 const SizedBox(height: 12),
                 _buildModeButton(
                   context,
-                  title: '사람',
-                  subtitle: '2인 플레이',
+                  title: 'vs.twoPlayer'.tr(),
+                  subtitle: 'vs.twoPlayer'.tr(),
                   icon: Icons.people,
                   mode: GameMode.vsPerson,
                 ),
@@ -291,13 +311,13 @@ class _HomeScreenState extends State<HomeScreen> {
     String modeText;
     switch (savedMode) {
       case GameMode.vsComputerWhite:
-        modeText = 'vs 컴퓨터(백)';
+        modeText = '${'vs.vsComputer'.tr()}(${'games.gomoku.white'.tr()})';
         break;
       case GameMode.vsComputerBlack:
-        modeText = 'vs 컴퓨터(흑)';
+        modeText = '${'vs.vsComputer'.tr()}(${'games.gomoku.black'.tr()})';
         break;
       case GameMode.vsPerson:
-        modeText = '2인 플레이';
+        modeText = 'vs.twoPlayer'.tr();
         break;
     }
 
@@ -305,13 +325,13 @@ class _HomeScreenState extends State<HomeScreen> {
     if (savedMode != GameMode.vsPerson) {
       switch (savedDifficulty) {
         case Difficulty.easy:
-          difficultyText = ' - 쉬움';
+          difficultyText = ' - ${'common.easy'.tr()}';
           break;
         case Difficulty.medium:
-          difficultyText = ' - 보통';
+          difficultyText = ' - ${'common.normal'.tr()}';
           break;
         case Difficulty.hard:
-          difficultyText = ' - 어려움';
+          difficultyText = ' - ${'common.hard'.tr()}';
           break;
       }
     }
@@ -349,9 +369,9 @@ class _HomeScreenState extends State<HomeScreen> {
             Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text(
-                  '이어하기',
-                  style: TextStyle(
+                Text(
+                  'app.continue'.tr(),
+                  style: const TextStyle(
                     color: Colors.green,
                     fontSize: 16,
                     fontWeight: FontWeight.bold,
@@ -460,9 +480,9 @@ class _HomeScreenState extends State<HomeScreen> {
             borderRadius: BorderRadius.circular(16),
             side: BorderSide(color: Colors.amber.withValues(alpha: 0.5), width: 2),
           ),
-          title: const Text(
-            '난이도 선택',
-            style: TextStyle(
+          title: Text(
+            'dialog.selectDifficulty'.tr(),
+            style: const TextStyle(
               color: Colors.amber,
               fontWeight: FontWeight.bold,
             ),
@@ -474,8 +494,8 @@ class _HomeScreenState extends State<HomeScreen> {
               children: [
                 _buildDifficultyButton(
                   context,
-                  title: '쉬움',
-                  subtitle: '초보자용',
+                  title: 'common.easy'.tr(),
+                  subtitle: '',
                   icon: Icons.sentiment_satisfied,
                   color: Colors.green,
                   mode: mode,
@@ -484,8 +504,8 @@ class _HomeScreenState extends State<HomeScreen> {
                 const SizedBox(height: 12),
                 _buildDifficultyButton(
                   context,
-                  title: '보통',
-                  subtitle: '일반 플레이어용',
+                  title: 'common.normal'.tr(),
+                  subtitle: '',
                   icon: Icons.sentiment_neutral,
                   color: Colors.orange,
                   mode: mode,
@@ -494,8 +514,8 @@ class _HomeScreenState extends State<HomeScreen> {
                 const SizedBox(height: 12),
                 _buildDifficultyButton(
                   context,
-                  title: '어려움',
-                  subtitle: '고수용',
+                  title: 'common.hard'.tr(),
+                  subtitle: '',
                   icon: Icons.sentiment_very_dissatisfied,
                   color: Colors.red,
                   mode: mode,
@@ -597,9 +617,9 @@ class _HomeScreenState extends State<HomeScreen> {
             borderRadius: BorderRadius.circular(16),
             side: BorderSide(color: Colors.green.withValues(alpha: 0.5), width: 2),
           ),
-          title: const Text(
-            '게임 대상 선택',
-            style: TextStyle(
+          title: Text(
+            'dialog.selectMode'.tr(),
+            style: const TextStyle(
               color: Colors.green,
               fontWeight: FontWeight.bold,
             ),
@@ -615,7 +635,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   Divider(color: Colors.grey.shade700),
                   const SizedBox(height: 8),
                   Text(
-                    '새 게임',
+                    'app.newGame'.tr(),
                     style: TextStyle(
                       color: Colors.grey.shade400,
                       fontSize: 12,
@@ -625,24 +645,24 @@ class _HomeScreenState extends State<HomeScreen> {
                 ],
                 _buildOthelloModeButton(
                   context,
-                  title: '컴퓨터 (백)',
-                  subtitle: '내가 흑 (선공)',
+                  title: '${'vs.vsComputer'.tr()} (${'games.othello.white'.tr()})',
+                  subtitle: 'vs.playAs'.tr(namedArgs: {'piece': 'games.othello.black'.tr()}),
                   icon: Icons.computer,
                   mode: OthelloGameMode.vsComputerWhite,
                 ),
                 const SizedBox(height: 8),
                 _buildOthelloModeButton(
                   context,
-                  title: '컴퓨터 (흑)',
-                  subtitle: '내가 백 (후공)',
+                  title: '${'vs.vsComputer'.tr()} (${'games.othello.black'.tr()})',
+                  subtitle: 'vs.playAs'.tr(namedArgs: {'piece': 'games.othello.white'.tr()}),
                   icon: Icons.computer,
                   mode: OthelloGameMode.vsComputerBlack,
                 ),
                 const SizedBox(height: 8),
                 _buildOthelloModeButton(
                   context,
-                  title: '사람',
-                  subtitle: '2인 플레이',
+                  title: 'vs.twoPlayer'.tr(),
+                  subtitle: 'vs.twoPlayer'.tr(),
                   icon: Icons.people,
                   mode: OthelloGameMode.vsPerson,
                 ),
@@ -658,13 +678,13 @@ class _HomeScreenState extends State<HomeScreen> {
     String modeText;
     switch (savedMode) {
       case OthelloGameMode.vsComputerWhite:
-        modeText = 'vs 컴퓨터(백)';
+        modeText = '${'vs.vsComputer'.tr()}(${'games.othello.white'.tr()})';
         break;
       case OthelloGameMode.vsComputerBlack:
-        modeText = 'vs 컴퓨터(흑)';
+        modeText = '${'vs.vsComputer'.tr()}(${'games.othello.black'.tr()})';
         break;
       case OthelloGameMode.vsPerson:
-        modeText = '2인 플레이';
+        modeText = 'vs.twoPlayer'.tr();
         break;
     }
 
@@ -672,13 +692,13 @@ class _HomeScreenState extends State<HomeScreen> {
     if (savedMode != OthelloGameMode.vsPerson) {
       switch (savedDifficulty) {
         case OthelloDifficulty.easy:
-          difficultyText = ' - 쉬움';
+          difficultyText = ' - ${'common.easy'.tr()}';
           break;
         case OthelloDifficulty.medium:
-          difficultyText = ' - 보통';
+          difficultyText = ' - ${'common.normal'.tr()}';
           break;
         case OthelloDifficulty.hard:
-          difficultyText = ' - 어려움';
+          difficultyText = ' - ${'common.hard'.tr()}';
           break;
       }
     }
@@ -716,9 +736,9 @@ class _HomeScreenState extends State<HomeScreen> {
             Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text(
-                  '이어하기',
-                  style: TextStyle(
+                Text(
+                  'app.continue'.tr(),
+                  style: const TextStyle(
                     color: Colors.teal,
                     fontSize: 16,
                     fontWeight: FontWeight.bold,
@@ -827,9 +847,9 @@ class _HomeScreenState extends State<HomeScreen> {
             borderRadius: BorderRadius.circular(16),
             side: BorderSide(color: Colors.green.withValues(alpha: 0.5), width: 2),
           ),
-          title: const Text(
-            '난이도 선택',
-            style: TextStyle(
+          title: Text(
+            'dialog.selectDifficulty'.tr(),
+            style: const TextStyle(
               color: Colors.green,
               fontWeight: FontWeight.bold,
             ),
@@ -841,8 +861,8 @@ class _HomeScreenState extends State<HomeScreen> {
               children: [
                 _buildOthelloDifficultyButton(
                   context,
-                  title: '쉬움',
-                  subtitle: '초보자용',
+                  title: 'common.easy'.tr(),
+                  subtitle: '',
                   icon: Icons.sentiment_satisfied,
                   color: Colors.green,
                   mode: mode,
@@ -851,8 +871,8 @@ class _HomeScreenState extends State<HomeScreen> {
                 const SizedBox(height: 12),
                 _buildOthelloDifficultyButton(
                   context,
-                  title: '보통',
-                  subtitle: '일반 플레이어용',
+                  title: 'common.normal'.tr(),
+                  subtitle: '',
                   icon: Icons.sentiment_neutral,
                   color: Colors.orange,
                   mode: mode,
@@ -861,8 +881,8 @@ class _HomeScreenState extends State<HomeScreen> {
                 const SizedBox(height: 12),
                 _buildOthelloDifficultyButton(
                   context,
-                  title: '어려움',
-                  subtitle: '고수용',
+                  title: 'common.hard'.tr(),
+                  subtitle: '',
                   icon: Icons.sentiment_very_dissatisfied,
                   color: Colors.red,
                   mode: mode,
@@ -1512,9 +1532,9 @@ class _HomeScreenState extends State<HomeScreen> {
             borderRadius: BorderRadius.circular(16),
             side: BorderSide(color: Colors.blueGrey.withValues(alpha: 0.5), width: 2),
           ),
-          title: const Text(
-            '난이도 선택',
-            style: TextStyle(
+          title: Text(
+            'dialog.selectDifficulty'.tr(),
+            style: const TextStyle(
               color: Colors.blueGrey,
               fontWeight: FontWeight.bold,
             ),
@@ -1530,7 +1550,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   Divider(color: Colors.grey.shade700),
                   const SizedBox(height: 8),
                   Text(
-                    '새 게임',
+                    'app.newGame'.tr(),
                     style: TextStyle(
                       color: Colors.grey.shade400,
                       fontSize: 12,
@@ -1540,8 +1560,8 @@ class _HomeScreenState extends State<HomeScreen> {
                 ],
                 _buildMinesweeperDifficultyButton(
                   context,
-                  title: '초급',
-                  subtitle: '9x9, 지뢰 10개',
+                  title: 'common.easy'.tr(),
+                  subtitle: '9x9, ${'games.minesweeper.mines'.tr()} 10',
                   icon: Icons.sentiment_satisfied,
                   color: Colors.green,
                   difficulty: MinesweeperDifficulty.easy,
@@ -1549,8 +1569,8 @@ class _HomeScreenState extends State<HomeScreen> {
                 const SizedBox(height: 12),
                 _buildMinesweeperDifficultyButton(
                   context,
-                  title: '중급',
-                  subtitle: '16x16, 지뢰 40개',
+                  title: 'common.normal'.tr(),
+                  subtitle: '16x16, ${'games.minesweeper.mines'.tr()} 40',
                   icon: Icons.sentiment_neutral,
                   color: Colors.orange,
                   difficulty: MinesweeperDifficulty.medium,
@@ -1558,8 +1578,8 @@ class _HomeScreenState extends State<HomeScreen> {
                 const SizedBox(height: 12),
                 _buildMinesweeperDifficultyButton(
                   context,
-                  title: '고급',
-                  subtitle: '24x16, 지뢰 75개',
+                  title: 'common.hard'.tr(),
+                  subtitle: '24x16, ${'games.minesweeper.mines'.tr()} 75',
                   icon: Icons.sentiment_very_dissatisfied,
                   color: Colors.red,
                   difficulty: MinesweeperDifficulty.hard,
@@ -1576,13 +1596,13 @@ class _HomeScreenState extends State<HomeScreen> {
     String difficultyText;
     switch (savedDifficulty) {
       case MinesweeperDifficulty.easy:
-        difficultyText = '초급';
+        difficultyText = 'common.easy'.tr();
         break;
       case MinesweeperDifficulty.medium:
-        difficultyText = '중급';
+        difficultyText = 'common.normal'.tr();
         break;
       case MinesweeperDifficulty.hard:
-        difficultyText = '고급';
+        difficultyText = 'common.hard'.tr();
         break;
     }
 
@@ -1618,9 +1638,9 @@ class _HomeScreenState extends State<HomeScreen> {
             Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text(
-                  '이어하기',
-                  style: TextStyle(
+                Text(
+                  'app.continue'.tr(),
+                  style: const TextStyle(
                     color: Colors.teal,
                     fontSize: 16,
                     fontWeight: FontWeight.bold,
@@ -1727,9 +1747,9 @@ class _HomeScreenState extends State<HomeScreen> {
             borderRadius: BorderRadius.circular(16),
             side: BorderSide(color: Colors.deepOrange.withValues(alpha: 0.5), width: 2),
           ),
-          title: const Text(
-            '난이도 선택',
-            style: TextStyle(
+          title: Text(
+            'dialog.selectDifficulty'.tr(),
+            style: const TextStyle(
               color: Colors.deepOrange,
               fontWeight: FontWeight.bold,
             ),
@@ -1741,8 +1761,8 @@ class _HomeScreenState extends State<HomeScreen> {
               children: [
                 _buildBaseballDifficultyButton(
                   context,
-                  title: '3자리',
-                  subtitle: '초보자용 (쉬움)',
+                  title: '3 Digits',
+                  subtitle: 'common.easy'.tr(),
                   icon: Icons.looks_3,
                   color: Colors.green,
                   difficulty: BaseballDifficulty.easy,
@@ -1750,8 +1770,8 @@ class _HomeScreenState extends State<HomeScreen> {
                 const SizedBox(height: 12),
                 _buildBaseballDifficultyButton(
                   context,
-                  title: '4자리',
-                  subtitle: '고수용 (어려움)',
+                  title: '4 Digits',
+                  subtitle: 'common.hard'.tr(),
                   icon: Icons.looks_4,
                   color: Colors.red,
                   difficulty: BaseballDifficulty.hard,
@@ -2666,20 +2686,20 @@ class _HomeScreenState extends State<HomeScreen> {
               mainAxisSize: MainAxisSize.min,
               children: [
                 if (hasSaved) ...[
-                  _buildSudokuResumeButton(context, '일반 스도쿠', Colors.blue),
+                  _buildSudokuResumeButton(context, 'games.sudoku.classic'.tr(), Colors.blue),
                   const SizedBox(height: 16),
                   Divider(color: Colors.grey.shade700),
                   const SizedBox(height: 8),
-                  Text('새 게임', style: TextStyle(color: Colors.grey.shade400, fontSize: 12)),
+                  Text('app.newGame'.tr(), style: TextStyle(color: Colors.grey.shade400, fontSize: 12)),
                   const SizedBox(height: 8),
                 ],
-                _buildSudokuDifficultyButton(context, '쉬움', sudoku.Difficulty.easy, Colors.green),
+                _buildSudokuDifficultyButton(context, 'common.easy'.tr(), sudoku.Difficulty.easy, Colors.green),
                 const SizedBox(height: 8),
-                _buildSudokuDifficultyButton(context, '보통', sudoku.Difficulty.medium, Colors.orange),
+                _buildSudokuDifficultyButton(context, 'common.normal'.tr(), sudoku.Difficulty.medium, Colors.orange),
                 const SizedBox(height: 8),
-                _buildSudokuDifficultyButton(context, '어려움', sudoku.Difficulty.hard, Colors.red),
+                _buildSudokuDifficultyButton(context, 'common.hard'.tr(), sudoku.Difficulty.hard, Colors.red),
                 const SizedBox(height: 8),
-                _buildSudokuDifficultyButton(context, '달인', sudoku.Difficulty.expert, Colors.purple),
+                _buildSudokuDifficultyButton(context, 'common.expert'.tr(), sudoku.Difficulty.expert, Colors.purple),
               ],
             ),
           ),
@@ -2710,7 +2730,7 @@ class _HomeScreenState extends State<HomeScreen> {
           children: [
             const Icon(Icons.play_arrow, color: Colors.green, size: 28),
             const SizedBox(width: 12),
-            Text('이어하기', style: TextStyle(color: Colors.green, fontSize: 16, fontWeight: FontWeight.bold)),
+            Text('app.continue'.tr(), style: const TextStyle(color: Colors.green, fontSize: 16, fontWeight: FontWeight.bold)),
             const Spacer(),
             Icon(Icons.arrow_forward_ios, color: Colors.green.withValues(alpha: 0.7), size: 16),
           ],
@@ -2777,14 +2797,14 @@ class _HomeScreenState extends State<HomeScreen> {
                   const SizedBox(height: 16),
                   Divider(color: Colors.grey.shade700),
                   const SizedBox(height: 8),
-                  Text('새 게임', style: TextStyle(color: Colors.grey.shade400, fontSize: 12)),
+                  Text('app.newGame'.tr(), style: TextStyle(color: Colors.grey.shade400, fontSize: 12)),
                   const SizedBox(height: 8),
                 ],
-                _buildSamuraiDifficultyButton(context, '쉬움', sudoku.SamuraiDifficulty.easy, Colors.green),
+                _buildSamuraiDifficultyButton(context, 'common.easy'.tr(), sudoku.SamuraiDifficulty.easy, Colors.green),
                 const SizedBox(height: 8),
-                _buildSamuraiDifficultyButton(context, '보통', sudoku.SamuraiDifficulty.medium, Colors.orange),
+                _buildSamuraiDifficultyButton(context, 'common.normal'.tr(), sudoku.SamuraiDifficulty.medium, Colors.orange),
                 const SizedBox(height: 8),
-                _buildSamuraiDifficultyButton(context, '어려움', sudoku.SamuraiDifficulty.hard, Colors.red),
+                _buildSamuraiDifficultyButton(context, 'common.hard'.tr(), sudoku.SamuraiDifficulty.hard, Colors.red),
               ],
             ),
           ),
@@ -2815,7 +2835,7 @@ class _HomeScreenState extends State<HomeScreen> {
           children: [
             const Icon(Icons.play_arrow, color: Colors.green, size: 28),
             const SizedBox(width: 12),
-            Text('이어하기', style: TextStyle(color: Colors.green, fontSize: 16, fontWeight: FontWeight.bold)),
+            Text('app.continue'.tr(), style: const TextStyle(color: Colors.green, fontSize: 16, fontWeight: FontWeight.bold)),
             const Spacer(),
             Icon(Icons.arrow_forward_ios, color: Colors.green.withValues(alpha: 0.7), size: 16),
           ],
@@ -2882,14 +2902,14 @@ class _HomeScreenState extends State<HomeScreen> {
                   const SizedBox(height: 16),
                   Divider(color: Colors.grey.shade700),
                   const SizedBox(height: 8),
-                  Text('새 게임', style: TextStyle(color: Colors.grey.shade400, fontSize: 12)),
+                  Text('app.newGame'.tr(), style: TextStyle(color: Colors.grey.shade400, fontSize: 12)),
                   const SizedBox(height: 8),
                 ],
-                _buildKillerDifficultyButton(context, '쉬움', sudoku.KillerDifficulty.easy, Colors.green),
+                _buildKillerDifficultyButton(context, 'common.easy'.tr(), sudoku.KillerDifficulty.easy, Colors.green),
                 const SizedBox(height: 8),
-                _buildKillerDifficultyButton(context, '보통', sudoku.KillerDifficulty.medium, Colors.orange),
+                _buildKillerDifficultyButton(context, 'common.normal'.tr(), sudoku.KillerDifficulty.medium, Colors.orange),
                 const SizedBox(height: 8),
-                _buildKillerDifficultyButton(context, '어려움', sudoku.KillerDifficulty.hard, Colors.red),
+                _buildKillerDifficultyButton(context, 'common.hard'.tr(), sudoku.KillerDifficulty.hard, Colors.red),
               ],
             ),
           ),
@@ -2920,7 +2940,7 @@ class _HomeScreenState extends State<HomeScreen> {
           children: [
             const Icon(Icons.play_arrow, color: Colors.green, size: 28),
             const SizedBox(width: 12),
-            Text('이어하기', style: TextStyle(color: Colors.green, fontSize: 16, fontWeight: FontWeight.bold)),
+            Text('app.continue'.tr(), style: const TextStyle(color: Colors.green, fontSize: 16, fontWeight: FontWeight.bold)),
             const Spacer(),
             Icon(Icons.arrow_forward_ios, color: Colors.green.withValues(alpha: 0.7), size: 16),
           ],
@@ -2987,14 +3007,14 @@ class _HomeScreenState extends State<HomeScreen> {
                   const SizedBox(height: 16),
                   Divider(color: Colors.grey.shade700),
                   const SizedBox(height: 8),
-                  Text('새 게임', style: TextStyle(color: Colors.grey.shade400, fontSize: 12)),
+                  Text('app.newGame'.tr(), style: TextStyle(color: Colors.grey.shade400, fontSize: 12)),
                   const SizedBox(height: 8),
                 ],
-                _buildNumberSumsDifficultyButton(context, '쉬움 (5x5)', number_sums.NumberSumsDifficulty.easy, Colors.green),
+                _buildNumberSumsDifficultyButton(context, '${'common.easy'.tr()} (5x5)', number_sums.NumberSumsDifficulty.easy, Colors.green),
                 const SizedBox(height: 8),
-                _buildNumberSumsDifficultyButton(context, '보통 (6x6)', number_sums.NumberSumsDifficulty.medium, Colors.orange),
+                _buildNumberSumsDifficultyButton(context, '${'common.normal'.tr()} (6x6)', number_sums.NumberSumsDifficulty.medium, Colors.orange),
                 const SizedBox(height: 8),
-                _buildNumberSumsDifficultyButton(context, '어려움 (7x7)', number_sums.NumberSumsDifficulty.hard, Colors.red),
+                _buildNumberSumsDifficultyButton(context, '${'common.hard'.tr()} (7x7)', number_sums.NumberSumsDifficulty.hard, Colors.red),
               ],
             ),
           ),
@@ -3025,7 +3045,7 @@ class _HomeScreenState extends State<HomeScreen> {
           children: [
             const Icon(Icons.play_arrow, color: Colors.green, size: 28),
             const SizedBox(width: 12),
-            Text('이어하기', style: TextStyle(color: Colors.green, fontSize: 16, fontWeight: FontWeight.bold)),
+            Text('app.continue'.tr(), style: const TextStyle(color: Colors.green, fontSize: 16, fontWeight: FontWeight.bold)),
             const Spacer(),
             Icon(Icons.arrow_forward_ios, color: Colors.green.withValues(alpha: 0.7), size: 16),
           ],
@@ -3084,12 +3104,12 @@ class _HomeScreenState extends State<HomeScreen> {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('앱 종료'),
-        content: const Text('게임 센터를 종료하시겠습니까?'),
+        title: Text('app.exit'.tr()),
+        content: Text('app.exitConfirm'.tr()),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('취소'),
+            child: Text('app.cancel'.tr()),
           ),
           ElevatedButton(
             onPressed: () {
@@ -3100,10 +3120,74 @@ class _HomeScreenState extends State<HomeScreen> {
               backgroundColor: Colors.red,
               foregroundColor: Colors.white,
             ),
-            child: const Text('종료'),
+            child: Text('app.exit'.tr()),
           ),
         ],
       ),
+    );
+  }
+
+  Widget _buildLanguageButton(BuildContext context) {
+    return Container(
+      margin: const EdgeInsets.only(right: 8),
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: 0.1),
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.2)),
+      ),
+      child: IconButton(
+        icon: const Icon(Icons.language, color: Colors.white),
+        iconSize: 24,
+        padding: const EdgeInsets.all(8),
+        constraints: const BoxConstraints(),
+        tooltip: 'app.language'.tr(),
+        onPressed: () => _showLanguageDialog(context),
+      ),
+    );
+  }
+
+  void _showLanguageDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: Text('app.selectLanguage'.tr()),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            _buildLanguageOption(context, '한국어', const Locale('ko')),
+            _buildLanguageOption(context, 'English', const Locale('en')),
+            _buildLanguageOption(context, '日本語', const Locale('ja')),
+            _buildLanguageOption(context, '简体中文', const Locale('zh')),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext),
+            child: Text('app.close'.tr()),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildLanguageOption(BuildContext context, String label, Locale locale) {
+    final isSelected = context.locale == locale;
+    return ListTile(
+      leading: Icon(
+        isSelected ? Icons.check_circle : Icons.circle_outlined,
+        color: isSelected ? Colors.cyan : Colors.grey,
+      ),
+      title: Text(
+        label,
+        style: TextStyle(
+          fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+          color: isSelected ? Colors.cyan : null,
+        ),
+      ),
+      onTap: () {
+        context.setLocale(locale);
+        Navigator.pop(context);
+      },
     );
   }
 
@@ -3138,9 +3222,9 @@ class _HomeScreenState extends State<HomeScreen> {
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             crossAxisAlignment: CrossAxisAlignment.center,
                             children: [
-                              const Text(
-                                'GAME CENTER',
-                                style: TextStyle(
+                              Text(
+                                'app.title'.tr(),
+                                style: const TextStyle(
                                   fontSize: 28,
                                   fontWeight: FontWeight.bold,
                                   color: Colors.white,
@@ -3154,13 +3238,19 @@ class _HomeScreenState extends State<HomeScreen> {
                                 ),
                               ),
                               Text(
-                                '게임을 선택하세요 (길게 누르면 설명)',
+                                'app.subtitle'.tr(),
                                 style: TextStyle(
                                   fontSize: 14,
                                   color: Colors.grey.shade400,
                                 ),
                               ),
-                              _buildExitButton(context),
+                              Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  _buildLanguageButton(context),
+                                  _buildExitButton(context),
+                                ],
+                              ),
                             ],
                           )
                         : Row(
@@ -3171,9 +3261,9 @@ class _HomeScreenState extends State<HomeScreen> {
                                 child: Column(
                                   crossAxisAlignment: CrossAxisAlignment.center,
                                   children: [
-                                    const Text(
-                                      'GAME CENTER',
-                                      style: TextStyle(
+                                    Text(
+                                      'app.title'.tr(),
+                                      style: const TextStyle(
                                         fontSize: 28,
                                         fontWeight: FontWeight.bold,
                                         color: Colors.white,
@@ -3188,7 +3278,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                     ),
                                     const SizedBox(height: 6),
                                     Text(
-                                      '게임을 선택하세요 (길게 누르면 설명)',
+                                      'app.subtitle'.tr(),
                                       style: TextStyle(
                                         fontSize: 14,
                                         color: Colors.grey.shade400,
@@ -3197,7 +3287,13 @@ class _HomeScreenState extends State<HomeScreen> {
                                   ],
                                 ),
                               ),
-                              _buildExitButton(context),
+                              Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  _buildLanguageButton(context),
+                                  _buildExitButton(context),
+                                ],
+                              ),
                             ],
                           ),
                   ),
@@ -3220,11 +3316,11 @@ class _HomeScreenState extends State<HomeScreen> {
                             children: [
                               _buildGameTile(
                                 context,
-                                title: '테트리스',
-                                subtitle: 'Tetris',
+                                title: 'games.tetris.name'.tr(),
+                                subtitle: 'games.tetris.subtitle'.tr(),
                                 icon: Icons.grid_view_rounded,
                                 color: Colors.cyan,
-                                description: '떨어지는 블록을 회전하고 배치하여 가로줄을 완성하면 줄이 사라집니다. 블록이 천장에 닿으면 게임 오버!',
+                                description: 'games.tetris.description'.tr(),
                                 onTap: () => Navigator.push(
                                   context,
                                   MaterialPageRoute(
@@ -3234,47 +3330,47 @@ class _HomeScreenState extends State<HomeScreen> {
                               ),
                               _buildGameTile(
                                 context,
-                                title: '오목',
-                                subtitle: 'Omok',
+                                title: 'games.gomoku.name'.tr(),
+                                subtitle: 'games.gomoku.subtitle'.tr(),
                                 icon: Icons.circle_outlined,
                                 color: Colors.amber,
-                                description: '흑과 백이 번갈아 돌을 놓아 가로, 세로, 대각선으로 5개를 먼저 연속으로 놓으면 승리합니다.',
+                                description: 'games.gomoku.description'.tr(),
                                 onTap: () => _showGomokuModeDialog(context),
                               ),
                               _buildGameTile(
                                 context,
-                                title: '오델로',
-                                subtitle: 'Othello',
+                                title: 'games.othello.name'.tr(),
+                                subtitle: 'games.othello.subtitle'.tr(),
                                 icon: Icons.blur_circular,
                                 color: Colors.green,
-                                description: '상대 돌을 자신의 돌 사이에 끼워 뒤집어 더 많은 돌을 차지하면 승리합니다. 리버시라고도 불립니다.',
+                                description: 'games.othello.description'.tr(),
                                 onTap: () => _showOthelloModeDialog(context),
                               ),
                               _buildGameTile(
                                 context,
-                                title: '체스',
-                                subtitle: 'Chess',
+                                title: 'games.chess.name'.tr(),
+                                subtitle: 'games.chess.subtitle'.tr(),
                                 icon: Icons.castle,
                                 color: Colors.brown,
-                                description: '각 기물의 고유한 움직임을 활용하여 상대 킹을 체크메이트하면 승리하는 전략 게임입니다.',
+                                description: 'games.chess.description'.tr(),
                                 onTap: () => _showChessModeDialog(context),
                               ),
                               _buildGameTile(
                                 context,
-                                title: '장기',
-                                subtitle: 'Janggi',
+                                title: 'games.janggi.name'.tr(),
+                                subtitle: 'games.janggi.subtitle'.tr(),
                                 icon: Icons.apps,
                                 color: const Color(0xFFD2691E),
-                                description: '한국 전통 보드 게임으로, 상대방의 궁(왕)을 외통수로 잡으면 승리합니다.',
+                                description: 'games.janggi.description'.tr(),
                                 onTap: () => _showJanggiContinueDialog(context),
                               ),
                               _buildGameTile(
                                 context,
-                                title: '솔리테어',
-                                subtitle: 'Solitaire',
+                                title: 'games.solitaire.name'.tr(),
+                                subtitle: 'games.solitaire.subtitle'.tr(),
                                 icon: Icons.style,
                                 color: Colors.green.shade700,
-                                description: '카드를 정렬하여 에이스부터 킹까지 무늬별로 쌓아 올리는 1인용 카드 게임입니다.',
+                                description: 'games.solitaire.description'.tr(),
                                 onTap: () {
                                   Navigator.push(
                                     context,
@@ -3286,83 +3382,83 @@ class _HomeScreenState extends State<HomeScreen> {
                               ),
                               _buildGameTile(
                                 context,
-                                title: '지뢰찾기',
-                                subtitle: 'Minesweeper',
+                                title: 'games.minesweeper.name'.tr(),
+                                subtitle: 'games.minesweeper.subtitle'.tr(),
                                 icon: Icons.terrain,
                                 color: Colors.blueGrey,
-                                description: '숫자 힌트를 이용하여 지뢰를 피하면서 모든 안전한 칸을 찾아내는 퍼즐 게임입니다.',
+                                description: 'games.minesweeper.description'.tr(),
                                 onTap: () => _showMinesweeperDifficultyDialog(context),
                               ),
                               _buildGameTile(
                                 context,
-                                title: '숫자야구',
-                                subtitle: 'Number Baseball',
+                                title: 'games.baseball.name'.tr(),
+                                subtitle: 'games.baseball.subtitle'.tr(),
                                 icon: Icons.sports_baseball,
                                 color: Colors.deepOrange,
-                                description: '스트라이크와 볼 힌트를 이용하여 상대방의 비밀 숫자 3자리를 맞추는 추리 게임입니다.',
+                                description: 'games.baseball.description'.tr(),
                                 onTap: () => _showBaseballDifficultyDialog(context),
                               ),
                               _buildGameTile(
                                 context,
-                                title: '원카드',
-                                subtitle: 'One Card',
+                                title: 'games.onecard.name'.tr(),
+                                subtitle: 'games.onecard.subtitle'.tr(),
                                 icon: Icons.style,
                                 color: Colors.purple,
-                                description: '같은 숫자나 무늬의 카드를 내며, 먼저 모든 카드를 버리면 승리하는 카드 게임입니다.',
+                                description: 'games.onecard.description'.tr(),
                                 onTap: () => _showOneCardModeDialog(context),
                               ),
                               _buildGameTile(
                                 context,
-                                title: '윷놀이',
-                                subtitle: 'Yut Nori',
+                                title: 'games.yutnori.name'.tr(),
+                                subtitle: 'games.yutnori.subtitle'.tr(),
                                 icon: Icons.casino,
                                 color: const Color(0xFFDEB887),
-                                description: '윷을 던져 나온 결과대로 말을 이동하여 먼저 모든 말을 골인시키면 승리하는 한국 전통 게임입니다.',
+                                description: 'games.yutnori.description'.tr(),
                                 onTap: () => _showYutnoriModeDialog(context),
                               ),
                               _buildGameTile(
                                 context,
-                                title: '훌라',
-                                subtitle: 'Hula',
+                                title: 'games.hula.name'.tr(),
+                                subtitle: 'games.hula.subtitle'.tr(),
                                 icon: Icons.style,
                                 color: Colors.teal,
-                                description: '같은 무늬 연속 3장(런) 또는 같은 숫자 3장(그룹)으로 멜드를 등록하고 카드를 버려 점수를 낮추는 게임입니다.',
+                                description: 'games.hula.description'.tr(),
                                 onTap: () => _showHulaModeDialog(context),
                               ),
                               _buildGameTile(
                                 context,
-                                title: '스도쿠',
-                                subtitle: 'Sudoku',
+                                title: 'games.sudoku.name'.tr(),
+                                subtitle: 'games.sudoku.subtitle'.tr(),
                                 icon: Icons.grid_3x3,
                                 color: Colors.blue,
-                                description: '9x9 격자에 1부터 9까지 숫자를 행, 열, 3x3 박스에 중복 없이 채우는 논리 퍼즐입니다.',
+                                description: 'games.sudoku.description'.tr(),
                                 onTap: () => _showSudokuModeDialog(context),
                               ),
                               _buildGameTile(
                                 context,
-                                title: '사무라이',
+                                title: 'games.sudoku.samurai'.tr(),
                                 subtitle: 'Samurai',
                                 icon: Icons.apps,
                                 color: Colors.deepPurple,
-                                description: '5개의 스도쿠 보드가 겹쳐진 확장 스도쿠입니다. 겹치는 영역의 숫자는 모든 보드에서 유효해야 합니다.',
+                                description: 'games.sudoku.description'.tr(),
                                 onTap: () => _showSamuraiSudokuDialog(context),
                               ),
                               _buildGameTile(
                                 context,
-                                title: '킬러 스도쿠',
+                                title: 'games.sudoku.killer'.tr(),
                                 subtitle: 'Killer',
                                 icon: Icons.calculate,
                                 color: Colors.teal.shade700,
-                                description: '케이지(점선 영역) 안의 숫자 합이 지정된 값이 되어야 하는 조건이 추가된 스도쿠입니다.',
+                                description: 'games.sudoku.description'.tr(),
                                 onTap: () => _showKillerSudokuDialog(context),
                               ),
                               _buildGameTile(
                                 context,
-                                title: '넘버 썸즈',
-                                subtitle: 'Number Sums',
+                                title: 'games.numberSums.name'.tr(),
+                                subtitle: 'games.numberSums.subtitle'.tr(),
                                 icon: Icons.add_box,
                                 color: Colors.deepOrange.shade700,
-                                description: '각 행과 열의 합계 힌트를 이용하여 빈 칸에 숫자를 채우는 퍼즐 게임입니다.',
+                                description: 'games.numberSums.description'.tr(),
                                 onTap: () => _showNumberSumsDialog(context),
                               ),
                             ],
