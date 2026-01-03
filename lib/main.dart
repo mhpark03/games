@@ -3070,7 +3070,7 @@ class _HomeScreenState extends State<HomeScreen> {
         border: Border.all(color: Colors.white.withValues(alpha: 0.2)),
       ),
       child: IconButton(
-        icon: const Icon(Icons.exit_to_app, color: Colors.white),
+        icon: const Icon(Icons.power_settings_new, color: Colors.white),
         iconSize: 24,
         padding: const EdgeInsets.all(8),
         constraints: const BoxConstraints(),
