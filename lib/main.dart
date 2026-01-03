@@ -107,6 +107,8 @@ void main() async {
       ],
       path: 'assets/translations',
       fallbackLocale: const Locale('en'),
+      saveLocale: false,  // 항상 시스템 언어 따름
+      useOnlyLangCode: true,
       child: const GameCenterApp(),
     ),
   );
