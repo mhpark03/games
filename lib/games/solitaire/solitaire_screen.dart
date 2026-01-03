@@ -98,6 +98,9 @@ class _SolitaireScreenState extends State<SolitaireScreen> {
   // 카드 크기 모드 (true: 크게, false: 작게)
   bool _largeCardMode = false;
 
+  // 왼손잡이 모드 (true: 왼손잡이 - 카드 넘기기가 오른쪽)
+  bool _leftHandedMode = false;
+
   // 화면 너비 저장 (동적 카드 크기 계산용)
   double _screenWidth = 0;
 
@@ -135,6 +138,7 @@ class _SolitaireScreenState extends State<SolitaireScreen> {
     final prefs = await SharedPreferences.getInstance();
     setState(() {
       _largeCardMode = prefs.getBool('solitaire_large_card') ?? false;
+      _leftHandedMode = prefs.getBool('solitaire_left_handed') ?? false;
     });
   }
 
@@ -142,6 +146,12 @@ class _SolitaireScreenState extends State<SolitaireScreen> {
   Future<void> _saveCardSizeSetting(bool value) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setBool('solitaire_large_card', value);
+  }
+
+  // 왼손잡이 모드 설정 저장
+  Future<void> _saveLeftHandedSetting(bool value) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool('solitaire_left_handed', value);
   }
 
   @override
@@ -1265,31 +1275,47 @@ class _SolitaireScreenState extends State<SolitaireScreen> {
   }
 
   Widget _buildGameContent() {
+    // 스톡과 웨이스트 위젯
+    final stockWasteWidgets = [
+      _buildStock(),
+      SizedBox(width: _largeCardMode ? 6 : 8),
+      _buildWaste(),
+    ];
+
+    // 파운데이션 위젯들
+    final foundationWidgets = List.generate(4, (index) {
+      return Padding(
+        padding: EdgeInsets.only(
+          left: _leftHandedMode ? 0 : (_largeCardMode ? 4 : 6),
+          right: _leftHandedMode ? (_largeCardMode ? 4 : 6) : 0,
+        ),
+        child: SizedBox(
+          width: cardWidth + 4,
+          height: cardHeight + 4,
+          child: _buildFoundation(index),
+        ),
+      );
+    });
+
     return Column(
       children: [
-        // 상단: 스톡, 웨이스트, 파운데이션
+        // 상단: 스톡, 웨이스트, 파운데이션 (왼손잡이 모드에 따라 위치 변경)
         Padding(
           padding: const EdgeInsets.all(8),
           child: Row(
-            children: [
-              // 스톡
-              _buildStock(),
-              SizedBox(width: _largeCardMode ? 6 : 8),
-              // 웨이스트
-              _buildWaste(),
-              const Spacer(),
-              // 파운데이션 4개 (드래그 타겟 인식 영역 확대)
-              ...List.generate(4, (index) {
-                return Padding(
-                  padding: EdgeInsets.only(left: _largeCardMode ? 4 : 6),
-                  child: SizedBox(
-                    width: cardWidth + 4,
-                    height: cardHeight + 4,
-                    child: _buildFoundation(index),
-                  ),
-                );
-              }),
-            ],
+            children: _leftHandedMode
+                ? [
+                    // 왼손잡이: 파운데이션 왼쪽, 스톡/웨이스트 오른쪽
+                    ...foundationWidgets,
+                    const Spacer(),
+                    ...stockWasteWidgets,
+                  ]
+                : [
+                    // 오른손잡이: 스톡/웨이스트 왼쪽, 파운데이션 오른쪽
+                    ...stockWasteWidgets,
+                    const Spacer(),
+                    ...foundationWidgets,
+                  ],
           ),
         ),
         // 하단: 테이블 7열
@@ -2011,177 +2037,312 @@ class _SolitaireScreenState extends State<SolitaireScreen> {
             borderRadius: BorderRadius.circular(16),
           ),
           title: Text(
-            '카드 표시 설정',
+            '게임 설정',
             style: TextStyle(color: Colors.green.shade400),
           ),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const Text(
-                '카드 글자 크기를 선택하세요',
-                style: TextStyle(color: Colors.white70, fontSize: 14),
-              ),
-              const SizedBox(height: 16),
-              Row(
-                children: [
-                  Expanded(
-                    child: GestureDetector(
-                      onTap: () {
-                        setDialogState(() {});
-                        setState(() {
-                          _largeCardMode = false;
-                        });
-                        _saveCardSizeSetting(false);
-                      },
-                      child: Container(
-                        padding: const EdgeInsets.all(8),
-                        decoration: BoxDecoration(
-                          color: !_largeCardMode
-                              ? Colors.green.shade700
-                              : Colors.grey.shade800,
-                          borderRadius: BorderRadius.circular(8),
-                          border: Border.all(
+          content: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // 카드 글자 크기 설정
+                const Text(
+                  '카드 글자 크기',
+                  style: TextStyle(color: Colors.white70, fontSize: 14),
+                ),
+                const SizedBox(height: 12),
+                Row(
+                  children: [
+                    Expanded(
+                      child: GestureDetector(
+                        onTap: () {
+                          setDialogState(() {});
+                          setState(() {
+                            _largeCardMode = false;
+                          });
+                          _saveCardSizeSetting(false);
+                        },
+                        child: Container(
+                          padding: const EdgeInsets.all(8),
+                          decoration: BoxDecoration(
                             color: !_largeCardMode
-                                ? Colors.green.shade400
-                                : Colors.grey.shade600,
-                            width: 2,
+                                ? Colors.green.shade700
+                                : Colors.grey.shade800,
+                            borderRadius: BorderRadius.circular(8),
+                            border: Border.all(
+                              color: !_largeCardMode
+                                  ? Colors.green.shade400
+                                  : Colors.grey.shade600,
+                              width: 2,
+                            ),
                           ),
-                        ),
-                        child: Column(
-                          children: [
-                            Container(
-                              width: 50,
-                              height: 70,
-                              decoration: BoxDecoration(
-                                color: Colors.white,
-                                borderRadius: BorderRadius.circular(6),
-                              ),
-                              child: Column(
-                                children: [
-                                  const Padding(
-                                    padding: EdgeInsets.only(left: 3, top: 2),
-                                    child: Align(
-                                      alignment: Alignment.topLeft,
-                                      child: Text(
-                                        'A',
-                                        style: TextStyle(
-                                          color: Colors.red,
-                                          fontSize: 10,
-                                          fontWeight: FontWeight.bold,
+                          child: Column(
+                            children: [
+                              Container(
+                                width: 50,
+                                height: 70,
+                                decoration: BoxDecoration(
+                                  color: Colors.white,
+                                  borderRadius: BorderRadius.circular(6),
+                                ),
+                                child: Column(
+                                  children: [
+                                    const Padding(
+                                      padding: EdgeInsets.only(left: 3, top: 2),
+                                      child: Align(
+                                        alignment: Alignment.topLeft,
+                                        child: Text(
+                                          'A',
+                                          style: TextStyle(
+                                            color: Colors.red,
+                                            fontSize: 10,
+                                            fontWeight: FontWeight.bold,
+                                          ),
                                         ),
                                       ),
                                     ),
-                                  ),
-                                  const Expanded(
-                                    child: Center(
-                                      child: Text(
-                                        '♥',
-                                        style: TextStyle(
-                                          color: Colors.red,
-                                          fontSize: 20,
+                                    const Expanded(
+                                      child: Center(
+                                        child: Text(
+                                          '♥',
+                                          style: TextStyle(
+                                            color: Colors.red,
+                                            fontSize: 20,
+                                          ),
                                         ),
                                       ),
                                     ),
-                                  ),
-                                ],
+                                  ],
+                                ),
                               ),
-                            ),
-                            const SizedBox(height: 8),
-                            Text(
-                              '작게',
-                              style: TextStyle(
-                                color: !_largeCardMode
-                                    ? Colors.white
-                                    : Colors.grey,
-                                fontWeight: FontWeight.bold,
+                              const SizedBox(height: 8),
+                              Text(
+                                '작게',
+                                style: TextStyle(
+                                  color: !_largeCardMode
+                                      ? Colors.white
+                                      : Colors.grey,
+                                  fontWeight: FontWeight.bold,
+                                ),
                               ),
-                            ),
-                          ],
+                            ],
+                          ),
                         ),
                       ),
                     ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: GestureDetector(
-                      onTap: () {
-                        setDialogState(() {});
-                        setState(() {
-                          _largeCardMode = true;
-                        });
-                        _saveCardSizeSetting(true);
-                      },
-                      child: Container(
-                        padding: const EdgeInsets.all(8),
-                        decoration: BoxDecoration(
-                          color: _largeCardMode
-                              ? Colors.green.shade700
-                              : Colors.grey.shade800,
-                          borderRadius: BorderRadius.circular(8),
-                          border: Border.all(
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: GestureDetector(
+                        onTap: () {
+                          setDialogState(() {});
+                          setState(() {
+                            _largeCardMode = true;
+                          });
+                          _saveCardSizeSetting(true);
+                        },
+                        child: Container(
+                          padding: const EdgeInsets.all(8),
+                          decoration: BoxDecoration(
                             color: _largeCardMode
-                                ? Colors.green.shade400
-                                : Colors.grey.shade600,
-                            width: 2,
+                                ? Colors.green.shade700
+                                : Colors.grey.shade800,
+                            borderRadius: BorderRadius.circular(8),
+                            border: Border.all(
+                              color: _largeCardMode
+                                  ? Colors.green.shade400
+                                  : Colors.grey.shade600,
+                              width: 2,
+                            ),
                           ),
-                        ),
-                        child: Column(
-                          children: [
-                            Container(
-                              width: 50,
-                              height: 70,
-                              decoration: BoxDecoration(
-                                color: Colors.white,
-                                borderRadius: BorderRadius.circular(6),
-                              ),
-                              child: const Column(
-                                children: [
-                                  Padding(
-                                    padding: EdgeInsets.only(left: 3, top: 2),
-                                    child: Align(
-                                      alignment: Alignment.topLeft,
-                                      child: Text(
-                                        'A♥',
-                                        style: TextStyle(
-                                          color: Colors.red,
-                                          fontSize: 14,
-                                          fontWeight: FontWeight.bold,
+                          child: Column(
+                            children: [
+                              Container(
+                                width: 50,
+                                height: 70,
+                                decoration: BoxDecoration(
+                                  color: Colors.white,
+                                  borderRadius: BorderRadius.circular(6),
+                                ),
+                                child: const Column(
+                                  children: [
+                                    Padding(
+                                      padding: EdgeInsets.only(left: 3, top: 2),
+                                      child: Align(
+                                        alignment: Alignment.topLeft,
+                                        child: Text(
+                                          'A♥',
+                                          style: TextStyle(
+                                            color: Colors.red,
+                                            fontSize: 14,
+                                            fontWeight: FontWeight.bold,
+                                          ),
                                         ),
                                       ),
                                     ),
-                                  ),
-                                  Expanded(
-                                    child: Center(
-                                      child: Text(
-                                        '♥',
-                                        style: TextStyle(
-                                          color: Colors.red,
-                                          fontSize: 28,
+                                    Expanded(
+                                      child: Center(
+                                        child: Text(
+                                          '♥',
+                                          style: TextStyle(
+                                            color: Colors.red,
+                                            fontSize: 28,
+                                          ),
                                         ),
                                       ),
                                     ),
-                                  ),
-                                ],
+                                  ],
+                                ),
                               ),
-                            ),
-                            const SizedBox(height: 8),
-                            Text(
-                              '크게',
-                              style: TextStyle(
-                                color: _largeCardMode
-                                    ? Colors.white
-                                    : Colors.grey,
-                                fontWeight: FontWeight.bold,
+                              const SizedBox(height: 8),
+                              Text(
+                                '크게',
+                                style: TextStyle(
+                                  color: _largeCardMode
+                                      ? Colors.white
+                                      : Colors.grey,
+                                  fontWeight: FontWeight.bold,
+                                ),
                               ),
-                            ),
-                          ],
+                            ],
+                          ),
                         ),
                       ),
                     ),
-                  ),
-                ],
-              ),
-            ],
+                  ],
+                ),
+                const SizedBox(height: 24),
+                // 손잡이 설정 (카드 넘기기 위치)
+                const Text(
+                  '카드 넘기기 위치',
+                  style: TextStyle(color: Colors.white70, fontSize: 14),
+                ),
+                const SizedBox(height: 12),
+                Row(
+                  children: [
+                    Expanded(
+                      child: GestureDetector(
+                        onTap: () {
+                          setDialogState(() {});
+                          setState(() {
+                            _leftHandedMode = false;
+                          });
+                          _saveLeftHandedSetting(false);
+                        },
+                        child: Container(
+                          padding: const EdgeInsets.all(12),
+                          decoration: BoxDecoration(
+                            color: !_leftHandedMode
+                                ? Colors.green.shade700
+                                : Colors.grey.shade800,
+                            borderRadius: BorderRadius.circular(8),
+                            border: Border.all(
+                              color: !_leftHandedMode
+                                  ? Colors.green.shade400
+                                  : Colors.grey.shade600,
+                              width: 2,
+                            ),
+                          ),
+                          child: Column(
+                            children: [
+                              Icon(
+                                Icons.back_hand,
+                                size: 32,
+                                color: !_leftHandedMode
+                                    ? Colors.white
+                                    : Colors.grey,
+                              ),
+                              const SizedBox(height: 8),
+                              Text(
+                                '오른손잡이',
+                                style: TextStyle(
+                                  color: !_leftHandedMode
+                                      ? Colors.white
+                                      : Colors.grey,
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 12,
+                                ),
+                              ),
+                              const SizedBox(height: 4),
+                              Text(
+                                '왼쪽에서 넘기기',
+                                style: TextStyle(
+                                  color: !_leftHandedMode
+                                      ? Colors.white70
+                                      : Colors.grey.shade600,
+                                  fontSize: 10,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: GestureDetector(
+                        onTap: () {
+                          setDialogState(() {});
+                          setState(() {
+                            _leftHandedMode = true;
+                          });
+                          _saveLeftHandedSetting(true);
+                        },
+                        child: Container(
+                          padding: const EdgeInsets.all(12),
+                          decoration: BoxDecoration(
+                            color: _leftHandedMode
+                                ? Colors.green.shade700
+                                : Colors.grey.shade800,
+                            borderRadius: BorderRadius.circular(8),
+                            border: Border.all(
+                              color: _leftHandedMode
+                                  ? Colors.green.shade400
+                                  : Colors.grey.shade600,
+                              width: 2,
+                            ),
+                          ),
+                          child: Column(
+                            children: [
+                              Transform.flip(
+                                flipX: true,
+                                child: Icon(
+                                  Icons.back_hand,
+                                  size: 32,
+                                  color: _leftHandedMode
+                                      ? Colors.white
+                                      : Colors.grey,
+                                ),
+                              ),
+                              const SizedBox(height: 8),
+                              Text(
+                                '왼손잡이',
+                                style: TextStyle(
+                                  color: _leftHandedMode
+                                      ? Colors.white
+                                      : Colors.grey,
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 12,
+                                ),
+                              ),
+                              const SizedBox(height: 4),
+                              Text(
+                                '오른쪽에서 넘기기',
+                                style: TextStyle(
+                                  color: _leftHandedMode
+                                      ? Colors.white70
+                                      : Colors.grey.shade600,
+                                  fontSize: 10,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
           ),
           actions: [
             TextButton(
