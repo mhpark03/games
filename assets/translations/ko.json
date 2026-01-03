@@ -202,6 +202,13 @@
       "geminiThinking": "Gemini AI 생각 중...",
       "left": "좌",
       "right": "우",
+      "leftSide": "좌측",
+      "rightSide": "우측",
+      "placement": "배치",
+      "innerHorseOuterElephant": "내마외상",
+      "outerHorseInnerElephant": "외마내상",
+      "leftInnerRightOuter": "좌내마 우외마",
+      "leftOuterRightInner": "좌외마 우내마",
       "check": "장군",
       "geminiApiDesc": "Gemini API 키를 입력하면 더 똑똑한 AI와 대국할 수 있습니다.",
       "geminiApiGuide": "API 키는 Google AI Studio에서 무료로 발급받을 수 있습니다:\nhttps://aistudio.google.com/apikey"

@@ -202,6 +202,13 @@
       "geminiThinking": "Gemini AI thinking...",
       "left": "L",
       "right": "R",
+      "leftSide": "Left",
+      "rightSide": "Right",
+      "placement": "Position",
+      "innerHorseOuterElephant": "Inner Horse Outer Elephant",
+      "outerHorseInnerElephant": "Outer Horse Inner Elephant",
+      "leftInnerRightOuter": "Left Inner, Right Outer",
+      "leftOuterRightInner": "Left Outer, Right Inner",
       "check": "Check",
       "geminiApiDesc": "Enter Gemini API key to play against a smarter AI.",
       "geminiApiGuide": "You can get a free API key from Google AI Studio:\nhttps://aistudio.google.com/apikey"

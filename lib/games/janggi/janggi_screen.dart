@@ -788,7 +788,7 @@ class _JanggiScreenState extends State<JanggiScreen> {
             children: [
               Expanded(
                 child: _buildSideSelector(
-                  '좌측',
+                  'games.janggi.leftSide'.tr(),
                   leftPos,
                   pieceColor,
                   (pos) => onChanged(pos, rightPos),
@@ -797,7 +797,7 @@ class _JanggiScreenState extends State<JanggiScreen> {
               const SizedBox(width: 8),
               Expanded(
                 child: _buildSideSelector(
-                  '우측',
+                  'games.janggi.rightSide'.tr(),
                   rightPos,
                   pieceColor,
                   (pos) => onChanged(leftPos, pos),
@@ -807,7 +807,7 @@ class _JanggiScreenState extends State<JanggiScreen> {
           ),
           const SizedBox(height: 8),
           Text(
-            '배치: ${_getPositionName(leftPos, rightPos)}',
+            '${'games.janggi.placement'.tr()}: ${_getPositionName(leftPos, rightPos)}',
             style: TextStyle(
               fontSize: 12,
               color: Colors.grey.shade700,
@@ -886,13 +886,13 @@ class _JanggiScreenState extends State<JanggiScreen> {
 
   String _getPositionName(MaSangPosition left, MaSangPosition right) {
     if (left == MaSangPosition.maSang && right == MaSangPosition.maSang) {
-      return '내마외상';
+      return 'games.janggi.innerHorseOuterElephant'.tr();
     } else if (left == MaSangPosition.sangMa && right == MaSangPosition.sangMa) {
-      return '외마내상';
+      return 'games.janggi.outerHorseInnerElephant'.tr();
     } else if (left == MaSangPosition.maSang && right == MaSangPosition.sangMa) {
-      return '좌내마 우외마';
+      return 'games.janggi.leftInnerRightOuter'.tr();
     } else {
-      return '좌외마 우내마';
+      return 'games.janggi.leftOuterRightInner'.tr();
     }
   }
 
@@ -935,14 +935,14 @@ class _JanggiScreenState extends State<JanggiScreen> {
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              _buildPositionLabel('좌측', leftPos, pieceColor),
+              _buildPositionLabel('games.janggi.leftSide'.tr(), leftPos, pieceColor),
               const SizedBox(width: 16),
-              _buildPositionLabel('우측', rightPos, pieceColor),
+              _buildPositionLabel('games.janggi.rightSide'.tr(), rightPos, pieceColor),
             ],
           ),
           const SizedBox(height: 6),
           Text(
-            '배치: ${_getPositionName(leftPos, rightPos)}',
+            '${'games.janggi.placement'.tr()}: ${_getPositionName(leftPos, rightPos)}',
             style: TextStyle(
               fontSize: 11,
               color: Colors.grey.shade600,
