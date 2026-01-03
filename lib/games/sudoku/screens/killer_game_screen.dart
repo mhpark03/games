@@ -409,11 +409,16 @@ class _KillerGameScreenState extends State<KillerGameScreen>
       return;
     }
 
+    bool rewardEarned = false;
     adService.showRewardedAd(
       onUserEarnedReward: (ad, reward) {
-        _applyHint(row, col);
+        rewardEarned = true;
       },
-      onAdDismissed: () {},
+      onAdDismissed: () {
+        if (mounted && rewardEarned) {
+          _applyHint(row, col);
+        }
+      },
     );
   }
 
@@ -606,15 +611,20 @@ class _KillerGameScreenState extends State<KillerGameScreen>
             onPressed: () async {
               Navigator.pop(context);
               final adService = AdService();
+              bool rewardEarned = false;
               final result = await adService.showRewardedAd(
                 onUserEarnedReward: (ad, reward) {
-                  _onUndo();
+                  rewardEarned = true;
                 },
               );
-              if (!result && mounted) {
-                // 광고가 없어도 기능 실행
-                _onUndo();
-                adService.loadRewardedAd();
+              if (mounted) {
+                if (rewardEarned || !result) {
+                  // 광고 시청 완료 또는 광고가 없는 경우 되돌리기 실행
+                  _onUndo();
+                }
+                if (!result) {
+                  adService.loadRewardedAd();
+                }
               }
             },
             child: const Text('광고 보기'),
@@ -673,11 +683,16 @@ class _KillerGameScreenState extends State<KillerGameScreen>
       return;
     }
 
+    bool rewardEarned = false;
     adService.showRewardedAd(
       onUserEarnedReward: (ad, reward) {
-        _applyFillAllNotes();
+        rewardEarned = true;
       },
-      onAdDismissed: () {},
+      onAdDismissed: () {
+        if (mounted && rewardEarned) {
+          _applyFillAllNotes();
+        }
+      },
     );
   }
 
