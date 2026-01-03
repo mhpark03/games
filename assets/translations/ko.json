@@ -313,7 +313,25 @@
       "failCount": "실패 횟수: {count}회",
       "completed": "완료!",
       "boardNum": "보드 {num}",
-      "rulesTitle": "스도쿠 게임 규칙"
+      "rulesTitle": "스도쿠 게임 규칙",
+      "rulesObjective": "게임 목표",
+      "rulesObjectiveDesc": "9x9 격자의 모든 빈 칸을 1~9 숫자로 채우세요!",
+      "rulesBasic": "기본 규칙",
+      "rulesBasicDesc": "• 각 가로줄에 1~9가 한 번씩만\n• 각 세로줄에 1~9가 한 번씩만\n• 각 3x3 박스에 1~9가 한 번씩만",
+      "rulesControls": "조작 방법",
+      "rulesControlsDesc": "• 빈 칸을 탭 → 숫자 패드로 입력\n• 빠른 입력: 숫자 먼저 선택 → 셀 탭\n• 메모: 후보 숫자를 작게 기록\n• 빠른+메모: 셀 탭으로 메모 입력",
+      "rulesTips": "팁",
+      "rulesTipsDesc": "• 확실한 숫자부터 채우세요\n• 모든 메모로 후보 자동 채우기\n• 실패 횟수가 기록됩니다",
+      "samuraiRulesObjectiveDesc": "5개의 겹치는 스도쿠 보드를 모두 완성하세요!",
+      "samuraiRulesBasicDesc": "• 일반 스도쿠와 동일한 규칙\n• 각 9x9 보드에 1~9가 한 번씩\n• 행, 열, 3x3 박스 규칙 적용",
+      "samuraiRulesOverlap": "겹침 규칙",
+      "samuraiRulesOverlapDesc": "• 중앙 보드는 4개의 모서리 보드와 겹침\n• 겹치는 영역의 숫자는 양쪽 보드 모두에서 유효해야 함\n• 겹침을 활용하여 힌트를 얻으세요",
+      "samuraiRulesTipsDesc": "• 겹치는 영역부터 풀면 쉬워집니다\n• 한 보드에서 막히면 다른 보드 확인\n• 핀치로 확대하여 자세히 보세요",
+      "killerRulesObjectiveDesc": "일반 스도쿠 규칙 + 케이지 합계 조건을 만족시키세요!",
+      "killerRulesBasicDesc": "• 각 행, 열, 3x3 박스에 1~9가 한 번씩\n• 일반 스도쿠와 동일한 규칙 적용",
+      "killerRulesCage": "케이지 규칙",
+      "killerRulesCageDesc": "• 점선으로 묶인 영역이 케이지\n• 케이지 안 숫자들의 합 = 왼쪽 상단 숫자\n• 케이지 안에서 같은 숫자 사용 불가",
+      "killerRulesTipsDesc": "• 작은 합의 케이지는 가능한 숫자가 한정됨\n• 예: 2칸 합 3 → 무조건 1+2\n• 케이지와 스도쿠 규칙을 함께 활용!"
     },
     "numberSums": {
       "name": "넘버 썸즈",
@@ -348,6 +366,9 @@
   "vs": {
     "vsComputer": "vs 컴퓨터",
     "twoPlayer": "2인 플레이",
-    "playAs": "{piece}으로 플레이"
+    "playAs": "{piece}으로 플레이",
+    "first": "선공",
+    "second": "후공",
+    "person": "사람"
   }
 }

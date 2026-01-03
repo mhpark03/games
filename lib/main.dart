@@ -983,9 +983,9 @@ class _HomeScreenState extends State<HomeScreen> {
             borderRadius: BorderRadius.circular(16),
             side: BorderSide(color: Colors.brown.withValues(alpha: 0.5), width: 2),
           ),
-          title: const Text(
-            '게임 대상 선택',
-            style: TextStyle(
+          title: Text(
+            'dialog.selectMode'.tr(),
+            style: const TextStyle(
               color: Colors.brown,
               fontWeight: FontWeight.bold,
             ),
@@ -1001,7 +1001,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   Divider(color: Colors.grey.shade700),
                   const SizedBox(height: 8),
                   Text(
-                    '새 게임',
+                    'app.newGame'.tr(),
                     style: TextStyle(
                       color: Colors.grey.shade400,
                       fontSize: 12,
@@ -1011,24 +1011,24 @@ class _HomeScreenState extends State<HomeScreen> {
                 ],
                 _buildChessModeButton(
                   context,
-                  title: '컴퓨터 (흑)',
-                  subtitle: '내가 백 (선공)',
+                  title: '${'vs.vsComputer'.tr()} (${'games.chess.black'.tr()})',
+                  subtitle: '${'vs.playAs'.tr(namedArgs: {'piece': 'games.chess.white'.tr()})} (${'vs.first'.tr()})',
                   icon: Icons.computer,
                   mode: ChessGameMode.vsComputerWhite,
                 ),
                 const SizedBox(height: 8),
                 _buildChessModeButton(
                   context,
-                  title: '컴퓨터 (백)',
-                  subtitle: '내가 흑 (후공)',
+                  title: '${'vs.vsComputer'.tr()} (${'games.chess.white'.tr()})',
+                  subtitle: '${'vs.playAs'.tr(namedArgs: {'piece': 'games.chess.black'.tr()})} (${'vs.second'.tr()})',
                   icon: Icons.computer,
                   mode: ChessGameMode.vsComputerBlack,
                 ),
                 const SizedBox(height: 8),
                 _buildChessModeButton(
                   context,
-                  title: '사람',
-                  subtitle: '2인 플레이',
+                  title: 'vs.person'.tr(),
+                  subtitle: 'vs.twoPlayer'.tr(),
                   icon: Icons.people,
                   mode: ChessGameMode.vsPerson,
                 ),
@@ -1044,13 +1044,13 @@ class _HomeScreenState extends State<HomeScreen> {
     String modeText;
     switch (savedMode) {
       case ChessGameMode.vsComputerWhite:
-        modeText = 'vs 컴퓨터(흑)';
+        modeText = '${'vs.vsComputer'.tr()}(${'games.chess.black'.tr()})';
         break;
       case ChessGameMode.vsComputerBlack:
-        modeText = 'vs 컴퓨터(백)';
+        modeText = '${'vs.vsComputer'.tr()}(${'games.chess.white'.tr()})';
         break;
       case ChessGameMode.vsPerson:
-        modeText = '2인 플레이';
+        modeText = 'vs.twoPlayer'.tr();
         break;
     }
 
@@ -1086,9 +1086,9 @@ class _HomeScreenState extends State<HomeScreen> {
             Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text(
-                  '이어하기',
-                  style: TextStyle(
+                Text(
+                  'app.continue'.tr(),
+                  style: const TextStyle(
                     color: Colors.orange,
                     fontSize: 16,
                     fontWeight: FontWeight.bold,
@@ -1307,9 +1307,9 @@ class _HomeScreenState extends State<HomeScreen> {
             borderRadius: BorderRadius.circular(16),
             side: BorderSide(color: const Color(0xFFD2691E).withValues(alpha: 0.5), width: 2),
           ),
-          title: const Text(
-            '게임 대상 선택',
-            style: TextStyle(
+          title: Text(
+            'dialog.selectMode'.tr(),
+            style: const TextStyle(
               color: Color(0xFFD2691E),
               fontWeight: FontWeight.bold,
             ),
@@ -1321,24 +1321,24 @@ class _HomeScreenState extends State<HomeScreen> {
               children: [
                 _buildJanggiModeButton(
                   context,
-                  title: '컴퓨터 (한)',
-                  subtitle: '내가 초 (선공)',
+                  title: '${'vs.vsComputer'.tr()} (${'games.janggi.han'.tr()})',
+                  subtitle: '${'vs.playAs'.tr(namedArgs: {'piece': 'games.janggi.cho'.tr()})} (${'vs.first'.tr()})',
                   icon: Icons.computer,
                   mode: JanggiGameMode.vsHan,
                 ),
                 const SizedBox(height: 12),
                 _buildJanggiModeButton(
                   context,
-                  title: '컴퓨터 (초)',
-                  subtitle: '내가 한 (후공)',
+                  title: '${'vs.vsComputer'.tr()} (${'games.janggi.cho'.tr()})',
+                  subtitle: '${'vs.playAs'.tr(namedArgs: {'piece': 'games.janggi.han'.tr()})} (${'vs.second'.tr()})',
                   icon: Icons.computer,
                   mode: JanggiGameMode.vsCho,
                 ),
                 const SizedBox(height: 12),
                 _buildJanggiModeButton(
                   context,
-                  title: '사람',
-                  subtitle: '2인 플레이',
+                  title: 'vs.person'.tr(),
+                  subtitle: 'vs.twoPlayer'.tr(),
                   icon: Icons.people,
                   mode: JanggiGameMode.vsHuman,
                 ),

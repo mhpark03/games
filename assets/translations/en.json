@@ -197,7 +197,15 @@
       "youWin": "You Win!",
       "movesCount": "Moves: {count}",
       "timeElapsed": "Time: {time}",
-      "rulesTitle": "Solitaire Rules"
+      "rulesTitle": "Solitaire Rules",
+      "rulesObjective": "Objective",
+      "rulesObjectiveDesc": "Stack all cards on the 4 foundation piles\nby suit from Ace to King!",
+      "rulesHowToPlay": "How to Play",
+      "rulesHowToPlayDesc": "• Tableau: Stack in descending order, alternating red/black\n• Foundation: Stack by suit in ascending order\n• Tap the deck to draw new cards\n• Only Kings can be placed on empty tableau spaces",
+      "rulesCardMove": "Card Movement",
+      "rulesCardMoveDesc": "• Drag face-up cards to move them\n• Move multiple cards at once\n• Double-tap for auto-move to foundation",
+      "rulesTips": "Tips",
+      "rulesTipsDesc": "• Move Aces to foundation immediately\n• Prioritize revealing face-down cards\n• Use Draw 1/Draw 3 mode to adjust difficulty"
     },
     "minesweeper": {
       "name": "Minesweeper",
@@ -340,6 +348,9 @@
   "vs": {
     "vsComputer": "vs Computer",
     "twoPlayer": "2 Players",
-    "playAs": "Play as {piece}"
+    "playAs": "Play as {piece}",
+    "first": "first",
+    "second": "second",
+    "person": "Person"
   }
 }

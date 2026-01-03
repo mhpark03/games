@@ -150,7 +150,15 @@
       "blackWins": "黒の勝利！",
       "player1": "プレイヤー1",
       "player2": "プレイヤー2",
-      "rulesTitle": "チェス ルール"
+      "rulesTitle": "チェス ルール",
+      "rulesObjective": "ゲーム目標",
+      "rulesObjectiveDesc": "相手のキングをチェックメイトすれば勝利！\n（キングが逃げられない状態）",
+      "rulesBasicMoves": "駒の動き",
+      "rulesBasicMovesDesc": "キング(K): 全方向に1マス\nクイーン(Q): 全方向に無制限\nルーク(R): 縦横に無制限\nビショップ(B): 斜めに無制限\nナイト(N): L字型移動（他の駒を飛び越え可能）\nポーン(P): 前進1マス、初回は2マス可能",
+      "rulesSpecialMoves": "特殊ルール",
+      "rulesSpecialMovesDesc": "キャスリング: キングとルークの特殊移動\nアンパッサン: ポーンの特殊な取り方\nプロモーション: ポーンが端に到達すると昇格",
+      "rulesTips": "引き分け条件",
+      "rulesTipsDesc": "ステイルメイト: 動けないがチェックではない状態\n駒不足: チェックメイト不可能な駒のみ残っている"
     },
     "janggi": {
       "name": "チャンギ",
@@ -332,6 +340,9 @@
   "vs": {
     "vsComputer": "vs コンピュータ",
     "twoPlayer": "2人プレイ",
-    "playAs": "{piece}でプレイ"
+    "playAs": "{piece}でプレイ",
+    "first": "先攻",
+    "second": "後攻",
+    "person": "対人"
   }
 }

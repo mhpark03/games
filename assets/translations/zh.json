@@ -162,7 +162,15 @@
       "hanWins": "汉方胜利！",
       "player1": "玩家1",
       "player2": "玩家2",
-      "rulesTitle": "韩国象棋游戏规则"
+      "rulesTitle": "韩国象棋游戏规则",
+      "rulesObjective": "游戏目标",
+      "rulesObjectiveDesc": "将对方的宫（王）将死即可获胜！\n（宫无法逃脱将军的状态）",
+      "rulesPieceMovement": "棋子移动",
+      "rulesPieceMovementDesc": "• 宫：在宫城内移动1格\n• 车：横竖无限制\n• 炮：横竖跳过其他棋子移动\n• 马：横竖1格＋斜向1格\n• 象：横竖1格＋斜向2格\n• 士：在宫城内移动1格\n• 卒/兵：向前/左/右移动1格",
+      "rulesSpecial": "特殊规则",
+      "rulesSpecialDesc": "• 将军：攻击对方宫的状态\n• 将死：宫无法逃脱将军\n• 碰宫：双方宫对面时先移动者不利\n• 炮不能跳过或吃炮",
+      "rulesTips": "技巧",
+      "rulesTipsDesc": "• 车是最强大的棋子\n• 炮需要其他棋子才能攻击\n• 马和象的路径上有棋子则无法移动"
     },
     "solitaire": {
       "name": "纸牌",
@@ -322,6 +330,9 @@
   "vs": {
     "vsComputer": "vs 电脑",
     "twoPlayer": "双人游戏",
-    "playAs": "执{piece}"
+    "playAs": "执{piece}",
+    "first": "先手",
+    "second": "后手",
+    "person": "对人"
   }
 }
