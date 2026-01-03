@@ -654,15 +654,16 @@ class _GameScreenState extends State<GameScreen> with WidgetsBindingObserver {
                 onUserEarnedReward: (ad, reward) {
                   rewardEarned = true;
                 },
+                onAdDismissed: () {
+                  if (mounted && rewardEarned) {
+                    _onUndo();
+                  }
+                },
               );
-              if (mounted) {
-                if (rewardEarned || !result) {
-                  // 광고 시청 완료 또는 광고가 없는 경우 되돌리기 실행
-                  _onUndo();
-                }
-                if (!result) {
-                  adService.loadRewardedAd();
-                }
+              if (!result && mounted) {
+                // 광고가 없는 경우 되돌리기 실행
+                _onUndo();
+                adService.loadRewardedAd();
               }
             },
             child: const Text('광고 보기'),
