@@ -191,7 +191,18 @@
       "rulesSpecial": "Special Rules",
       "rulesSpecialDesc": "• Check: Attacking the opponent's General\n• Checkmate: General cannot escape check\n• Bikjang: When Generals face each other directly\n• Cannon cannot jump over or capture another Cannon",
       "rulesTips": "Tips",
-      "rulesTipsDesc": "• The Chariot is the most powerful piece\n• Cannon needs another piece to jump over\n• Horse and Elephant are blocked by pieces in their path"
+      "rulesTipsDesc": "• The Chariot is the most powerful piece\n• Cannon needs another piece to jump over\n• Horse and Elephant are blocked by pieces in their path",
+      "selectPosition": "Select Position",
+      "maSang": "馬象",
+      "sangMa": "象馬",
+      "selectingPosition": "Selecting position...",
+      "thinking": "Computer thinking...",
+      "geminiThinking": "Gemini AI thinking...",
+      "left": "L",
+      "right": "R",
+      "check": "Check",
+      "geminiApiDesc": "Enter Gemini API key to play against a smarter AI.",
+      "geminiApiGuide": "You can get a free API key from Google AI Studio:\nhttps://aistudio.google.com/apikey"
     },
     "solitaire": {
       "name": "Solitaire",

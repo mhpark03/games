@@ -183,7 +183,18 @@
       "rulesSpecial": "特殊规则",
       "rulesSpecialDesc": "• 将军：攻击对方宫的状态\n• 将死：宫无法逃脱将军\n• 碰宫：双方宫对面时先移动者不利\n• 炮不能跳过或吃炮",
       "rulesTips": "技巧",
-      "rulesTipsDesc": "• 车是最强大的棋子\n• 炮需要其他棋子才能攻击\n• 马和象的路径上有棋子则无法移动"
+      "rulesTipsDesc": "• 车是最强大的棋子\n• 炮需要其他棋子才能攻击\n• 马和象的路径上有棋子则无法移动",
+      "selectPosition": "选择配置",
+      "maSang": "馬象",
+      "sangMa": "象馬",
+      "selectingPosition": "选择配置中...",
+      "thinking": "电脑思考中...",
+      "geminiThinking": "Gemini AI 思考中...",
+      "left": "左",
+      "right": "右",
+      "check": "将军",
+      "geminiApiDesc": "输入Gemini API密钥可与更智能的AI对弈。",
+      "geminiApiGuide": "您可以在Google AI Studio免费获取API密钥:\nhttps://aistudio.google.com/apikey"
     },
     "solitaire": {
       "name": "纸牌",

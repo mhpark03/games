@@ -191,7 +191,18 @@
       "rulesSpecial": "特殊ルール",
       "rulesSpecialDesc": "• 将軍：相手の宮を攻撃している状態\n• 詰み：将軍から逃げられない状態\n• ビッチャン：両方の宮が向かい合うと先に動いた方が不利\n• 包は包を飛び越えたり取ったりできない",
       "rulesTips": "ヒント",
-      "rulesTipsDesc": "• 車が最も強力な駒です\n• 包は他の駒がないと攻撃できません\n• 馬と象の経路に駒があると移動不可"
+      "rulesTipsDesc": "• 車が最も強力な駒です\n• 包は他の駒がないと攻撃できません\n• 馬と象の経路に駒があると移動不可",
+      "selectPosition": "配置選択",
+      "maSang": "馬象",
+      "sangMa": "象馬",
+      "selectingPosition": "配置選択中...",
+      "thinking": "コンピュータ思考中...",
+      "geminiThinking": "Gemini AI 思考中...",
+      "left": "左",
+      "right": "右",
+      "check": "将軍",
+      "geminiApiDesc": "Gemini APIキーを入力すると、より賢いAIと対局できます。",
+      "geminiApiGuide": "APIキーはGoogle AI Studioで無料で取得できます:\nhttps://aistudio.google.com/apikey"
     },
     "solitaire": {
       "name": "ソリティア",

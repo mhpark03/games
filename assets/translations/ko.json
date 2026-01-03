@@ -191,7 +191,18 @@
       "rulesSpecial": "특수 규칙",
       "rulesSpecialDesc": "• 장군: 상대 궁을 공격하는 상태\n• 외통수: 장군을 피할 수 없는 상태\n• 빅장: 양측 궁이 마주보면 먼저 비킨 쪽이 불리\n• 포는 포를 뛰어넘거나 잡을 수 없음",
       "rulesTips": "팁",
-      "rulesTipsDesc": "• 차가 가장 강력한 기물입니다\n• 포는 다른 기물이 있어야 공격 가능\n• 마와 상의 경로에 기물이 있으면 이동 불가"
+      "rulesTipsDesc": "• 차가 가장 강력한 기물입니다\n• 포는 다른 기물이 있어야 공격 가능\n• 마와 상의 경로에 기물이 있으면 이동 불가",
+      "selectPosition": "마상 배치 선택",
+      "maSang": "馬象",
+      "sangMa": "象馬",
+      "selectingPosition": "마상 배치 선택 중...",
+      "thinking": "컴퓨터 생각 중...",
+      "geminiThinking": "Gemini AI 생각 중...",
+      "left": "좌",
+      "right": "우",
+      "check": "장군",
+      "geminiApiDesc": "Gemini API 키를 입력하면 더 똑똑한 AI와 대국할 수 있습니다.",
+      "geminiApiGuide": "API 키는 Google AI Studio에서 무료로 발급받을 수 있습니다:\nhttps://aistudio.google.com/apikey"
     },
     "solitaire": {
       "name": "솔리테어",

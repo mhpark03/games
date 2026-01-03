@@ -27,19 +27,19 @@ class JanggiPiece {
   String get displayName {
     switch (type) {
       case JanggiPieceType.gung:
-        return color == JanggiColor.cho ? '초' : '한';
+        return color == JanggiColor.cho ? '楚' : '漢';
       case JanggiPieceType.cha:
-        return '차';
+        return '車';
       case JanggiPieceType.po:
-        return '포';
+        return '包';
       case JanggiPieceType.ma:
-        return '마';
+        return '馬';
       case JanggiPieceType.sang:
-        return '상';
+        return '象';
       case JanggiPieceType.sa:
-        return '사';
+        return '士';
       case JanggiPieceType.byung:
-        return color == JanggiColor.cho ? '졸' : '병';
+        return color == JanggiColor.cho ? '卒' : '兵';
     }
   }
 
@@ -382,7 +382,7 @@ class _JanggiScreenState extends State<JanggiScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Gemini API 키를 입력하면 더 똑똑한 AI와 대국할 수 있습니다.',
+                      'games.janggi.geminiApiDesc'.tr(),
                       style: TextStyle(
                         fontSize: 13,
                         color: Colors.grey.shade700,
@@ -390,7 +390,7 @@ class _JanggiScreenState extends State<JanggiScreen> {
                     ),
                     const SizedBox(height: 8),
                     Text(
-                      'API 키는 Google AI Studio에서 무료로 발급받을 수 있습니다:\nhttps://aistudio.google.com/apikey',
+                      'games.janggi.geminiApiGuide'.tr(),
                       style: TextStyle(
                         fontSize: 11,
                         color: Colors.blue.shade700,
@@ -546,9 +546,9 @@ class _JanggiScreenState extends State<JanggiScreen> {
         borderRadius: BorderRadius.circular(16),
         side: const BorderSide(color: Color(0xFF8B4513), width: 3),
       ),
-      title: const Text(
-        '마상 배치 선택',
-        style: TextStyle(
+      title: Text(
+        'games.janggi.selectPosition'.tr(),
+        style: const TextStyle(
           color: Color(0xFF8B4513),
           fontWeight: FontWeight.bold,
         ),
@@ -561,7 +561,7 @@ class _JanggiScreenState extends State<JanggiScreen> {
             // 컴퓨터가 초일 때 (vsCho 모드) - 컴퓨터 초 배치 표시
             if (widget.gameMode == JanggiGameMode.vsCho) ...[
               _buildComputerPositionDisplay(
-                '초 (컴퓨터)',
+                '楚 (${'common.computer'.tr()})',
                 JanggiColor.cho,
                 choLeftPosition,
                 choRightPosition,
@@ -572,7 +572,7 @@ class _JanggiScreenState extends State<JanggiScreen> {
             if (widget.gameMode == JanggiGameMode.vsHan ||
                 widget.gameMode == JanggiGameMode.vsHuman) ...[
               _buildPositionSelector(
-                widget.gameMode == JanggiGameMode.vsHuman ? '초' : '초 (플레이어)',
+                widget.gameMode == JanggiGameMode.vsHuman ? '楚' : '楚 (${'common.player'.tr()})',
                 JanggiColor.cho,
                 choLeftPosition,
                 choRightPosition,
@@ -589,7 +589,7 @@ class _JanggiScreenState extends State<JanggiScreen> {
             if (widget.gameMode == JanggiGameMode.vsCho ||
                 widget.gameMode == JanggiGameMode.vsHuman) ...[
               _buildPositionSelector(
-                widget.gameMode == JanggiGameMode.vsHuman ? '한' : '한 (플레이어)',
+                widget.gameMode == JanggiGameMode.vsHuman ? '漢' : '漢 (${'common.player'.tr()})',
                 JanggiColor.han,
                 hanLeftPosition,
                 hanRightPosition,
@@ -605,7 +605,7 @@ class _JanggiScreenState extends State<JanggiScreen> {
             if (widget.gameMode == JanggiGameMode.vsHan) ...[
               const SizedBox(height: 16),
               _buildComputerPositionDisplay(
-                '한 (컴퓨터)',
+                '漢 (${'common.computer'.tr()})',
                 JanggiColor.han,
                 hanLeftPosition,
                 hanRightPosition,
@@ -630,9 +630,9 @@ class _JanggiScreenState extends State<JanggiScreen> {
               });
               _startGame();
             },
-            child: const Text(
-              '게임 시작',
-              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+            child: Text(
+              'app.newGame'.tr(),
+              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
             ),
           ),
         ),
@@ -653,9 +653,9 @@ class _JanggiScreenState extends State<JanggiScreen> {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Text(
-              '마상 배치 선택',
-              style: TextStyle(
+            Text(
+              'games.janggi.selectPosition'.tr(),
+              style: const TextStyle(
                 fontSize: 20,
                 color: Color(0xFF8B4513),
                 fontWeight: FontWeight.bold,
@@ -672,7 +672,7 @@ class _JanggiScreenState extends State<JanggiScreen> {
                     // 컴퓨터가 초
                     Expanded(
                       child: _buildComputerPositionDisplay(
-                        '초 (컴퓨터)',
+                        '楚 (${'common.computer'.tr()})',
                         JanggiColor.cho,
                         choLeftPosition,
                         choRightPosition,
@@ -683,7 +683,7 @@ class _JanggiScreenState extends State<JanggiScreen> {
                     // 플레이어가 초
                     Expanded(
                       child: _buildPositionSelector(
-                        widget.gameMode == JanggiGameMode.vsHuman ? '초' : '초 (플레이어)',
+                        widget.gameMode == JanggiGameMode.vsHuman ? '楚' : '楚 (${'common.player'.tr()})',
                         JanggiColor.cho,
                         choLeftPosition,
                         choRightPosition,
@@ -702,7 +702,7 @@ class _JanggiScreenState extends State<JanggiScreen> {
                     // 플레이어가 한
                     Expanded(
                       child: _buildPositionSelector(
-                        widget.gameMode == JanggiGameMode.vsHuman ? '한' : '한 (플레이어)',
+                        widget.gameMode == JanggiGameMode.vsHuman ? '漢' : '漢 (${'common.player'.tr()})',
                         JanggiColor.han,
                         hanLeftPosition,
                         hanRightPosition,
@@ -718,7 +718,7 @@ class _JanggiScreenState extends State<JanggiScreen> {
                     // 컴퓨터가 한
                     Expanded(
                       child: _buildComputerPositionDisplay(
-                        '한 (컴퓨터)',
+                        '漢 (${'common.computer'.tr()})',
                         JanggiColor.han,
                         hanLeftPosition,
                         hanRightPosition,
@@ -835,7 +835,7 @@ class _JanggiScreenState extends State<JanggiScreen> {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             _buildPositionButton(
-              '마상',
+              'games.janggi.maSang'.tr(),
               MaSangPosition.maSang,
               position,
               color,
@@ -843,7 +843,7 @@ class _JanggiScreenState extends State<JanggiScreen> {
             ),
             const SizedBox(width: 4),
             _buildPositionButton(
-              '상마',
+              'games.janggi.sangMa'.tr(),
               MaSangPosition.sangMa,
               position,
               color,
@@ -954,7 +954,7 @@ class _JanggiScreenState extends State<JanggiScreen> {
   }
 
   Widget _buildPositionLabel(String side, MaSangPosition pos, Color color) {
-    final posName = pos == MaSangPosition.maSang ? '마상' : '상마';
+    final posName = pos == MaSangPosition.maSang ? 'games.janggi.maSang'.tr() : 'games.janggi.sangMa'.tr();
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
       decoration: BoxDecoration(
@@ -3328,20 +3328,20 @@ class _JanggiScreenState extends State<JanggiScreen> {
     final currentLabel = currentTurn == JanggiColor.cho ? choLabel : hanLabel;
 
     if (isSetupPhase) {
-      status = '마상 배치 선택 중...';
+      status = 'games.janggi.selectingPosition'.tr();
       bgColor = Colors.blueGrey;
     } else if (isGameOver) {
       status = '$winner ${'common.win'.tr()}!';
       bgColor = Colors.purple;
     } else if (isThinking) {
       status = useGeminiAI && geminiService != null
-          ? 'Gemini AI 생각 중...'
-          : '컴퓨터 생각 중...';
+          ? 'games.janggi.geminiThinking'.tr()
+          : 'games.janggi.thinking'.tr();
       bgColor = useGeminiAI && geminiService != null
           ? Colors.indigo
           : const Color(0xFFD2691E);
     } else if (isInCheck) {
-      status = '$currentLabel 장군!';
+      status = '$currentLabel ${'games.janggi.check'.tr()}!';
       bgColor = Colors.red.shade700;
     } else {
       status = '$currentLabel ${'common.turn'.tr()}';
