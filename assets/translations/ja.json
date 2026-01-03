@@ -460,6 +460,7 @@
       "failCount": "失敗回数: {count}回",
       "completed": "完成！",
       "boardNum": "ボード{num}",
+      "tapCellToEdit": "セルをタップすると編集画面に移動します",
       "rulesTitle": "数独 ルール",
       "rulesObjective": "ゲーム目標",
       "rulesObjectiveDesc": "9x9のマスすべてを1〜9の数字で埋めましょう！",

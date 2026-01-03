@@ -442,6 +442,7 @@
       "failCount": "失败次数: {count}次",
       "completed": "完成！",
       "boardNum": "棋盘{num}",
+      "tapCellToEdit": "点击格子进入编辑画面",
       "rulesTitle": "数独游戏规则",
       "rulesObjective": "游戏目标",
       "rulesObjectiveDesc": "将9x9格子中的所有空格填入1-9的数字！",

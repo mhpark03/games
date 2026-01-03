@@ -460,6 +460,7 @@
       "failCount": "Failures: {count}",
       "completed": "Completed!",
       "boardNum": "Board {num}",
+      "tapCellToEdit": "Tap a cell to open the edit screen",
       "rulesTitle": "Sudoku Rules",
       "rulesObjective": "Objective",
       "rulesObjectiveDesc": "Fill all empty cells in the 9x9 grid with numbers 1-9!",

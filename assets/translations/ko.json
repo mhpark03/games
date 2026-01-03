@@ -460,6 +460,7 @@
       "failCount": "실패 횟수: {count}회",
       "completed": "완료!",
       "boardNum": "보드 {num}",
+      "tapCellToEdit": "셀을 탭하면 편집 화면으로 이동합니다",
       "rulesTitle": "스도쿠 게임 규칙",
       "rulesObjective": "게임 목표",
       "rulesObjectiveDesc": "9x9 격자의 모든 빈 칸을 1~9 숫자로 채우세요!",

@@ -244,18 +244,18 @@ class _SamuraiGameScreenState extends State<SamuraiGameScreen>
       context: context,
       barrierDismissible: false,
       builder: (context) => AlertDialog(
-        title: const Text('축하합니다! 🎉'),
+        title: Text('${'common.congratulations'.tr()} 🎉'),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text('사무라이 스도쿠를 완성했습니다!'),
+            Text('games.sudoku.samuraiCompletedMessage'.tr()),
             const SizedBox(height: 16),
             Row(
               children: [
                 const Icon(Icons.timer, size: 20, color: Colors.blue),
                 const SizedBox(width: 8),
-                Text('소요 시간: ${_formatTime(_elapsedSeconds)}'),
+                Text('common.elapsedTime'.tr(namedArgs: {'time': _formatTime(_elapsedSeconds)})),
               ],
             ),
             const SizedBox(height: 8),
@@ -263,7 +263,7 @@ class _SamuraiGameScreenState extends State<SamuraiGameScreen>
               children: [
                 const Icon(Icons.close, size: 20, color: Colors.red),
                 const SizedBox(width: 8),
-                Text('실패 횟수: $_failureCount회'),
+                Text('common.failureCount'.tr(namedArgs: {'count': '$_failureCount'})),
               ],
             ),
           ],
@@ -285,20 +285,20 @@ class _SamuraiGameScreenState extends State<SamuraiGameScreen>
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('난이도 선택'),
+        title: Text('dialog.selectDifficulty'.tr()),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: SamuraiDifficulty.values.map((difficulty) {
             String label;
             switch (difficulty) {
               case SamuraiDifficulty.easy:
-                label = '쉬움';
+                label = 'common.easy'.tr();
                 break;
               case SamuraiDifficulty.medium:
-                label = '보통';
+                label = 'common.normal'.tr();
                 break;
               case SamuraiDifficulty.hard:
-                label = '어려움';
+                label = 'common.hard'.tr();
                 break;
             }
             return ListTile(
@@ -326,11 +326,11 @@ class _SamuraiGameScreenState extends State<SamuraiGameScreen>
   String _getDifficultyText() {
     switch (_selectedDifficulty) {
       case SamuraiDifficulty.easy:
-        return '쉬움';
+        return 'common.easy'.tr();
       case SamuraiDifficulty.medium:
-        return '보통';
+        return 'common.normal'.tr();
       case SamuraiDifficulty.hard:
-        return '어려움';
+        return 'common.hard'.tr();
     }
   }
 
@@ -351,7 +351,7 @@ class _SamuraiGameScreenState extends State<SamuraiGameScreen>
   Widget _buildPortraitLayout(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('사무라이 스도쿠'),
+        title: Text('games.sudoku.samuraiName'.tr()),
         backgroundColor: Colors.deepPurple,
         foregroundColor: Colors.white,
         actions: [
@@ -363,21 +363,21 @@ class _SamuraiGameScreenState extends State<SamuraiGameScreen>
           TextButton.icon(
             onPressed: _showDifficultyDialog,
             icon: const Icon(Icons.refresh, color: Colors.white, size: 20),
-            label: const Text(
-              '새 게임',
-              style: TextStyle(color: Colors.white),
+            label: Text(
+              'app.newGame'.tr(),
+              style: const TextStyle(color: Colors.white),
             ),
           ),
         ],
       ),
       body: _isLoading
-          ? const Center(
+          ? Center(
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  CircularProgressIndicator(),
-                  SizedBox(height: 16),
-                  Text('퍼즐 생성 중...'),
+                  const CircularProgressIndicator(),
+                  const SizedBox(height: 16),
+                  Text('common.generatingPuzzle'.tr()),
                 ],
               ),
             )
@@ -400,7 +400,7 @@ class _SamuraiGameScreenState extends State<SamuraiGameScreen>
                     Padding(
                       padding: const EdgeInsets.only(bottom: 8),
                       child: Text(
-                        '셀을 탭하면 편집 화면으로 이동합니다',
+                        'games.sudoku.tapCellToEdit'.tr(),
                         style: TextStyle(
                           fontSize: 14,
                           color: Colors.grey.shade600,
@@ -435,13 +435,13 @@ class _SamuraiGameScreenState extends State<SamuraiGameScreen>
     if (_isLoading) {
       return Scaffold(
         backgroundColor: Colors.deepPurple.shade900,
-        body: const Center(
+        body: Center(
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              CircularProgressIndicator(color: Colors.white),
-              SizedBox(height: 16),
-              Text('퍼즐 생성 중...', style: TextStyle(color: Colors.white)),
+              const CircularProgressIndicator(color: Colors.white),
+              const SizedBox(height: 16),
+              Text('common.generatingPuzzle'.tr(), style: const TextStyle(color: Colors.white)),
             ],
           ),
         ),
@@ -517,7 +517,7 @@ class _SamuraiGameScreenState extends State<SamuraiGameScreen>
                         _buildCircleButton(
                           icon: Icons.arrow_back,
                           onPressed: () => Navigator.pop(context),
-                          tooltip: '뒤로가기',
+                          tooltip: 'common.back'.tr(),
                         ),
                         const SizedBox(width: 8),
                         Container(
@@ -526,9 +526,9 @@ class _SamuraiGameScreenState extends State<SamuraiGameScreen>
                             color: Colors.black.withValues(alpha: 0.5),
                             borderRadius: BorderRadius.circular(20),
                           ),
-                          child: const Text(
-                            '사무라이 스도쿠',
-                            style: TextStyle(
+                          child: Text(
+                            'games.sudoku.samuraiName'.tr(),
+                            style: const TextStyle(
                               color: Colors.white,
                               fontSize: 16,
                               fontWeight: FontWeight.bold,
@@ -540,7 +540,7 @@ class _SamuraiGameScreenState extends State<SamuraiGameScreen>
                     Padding(
                       padding: const EdgeInsets.only(left: 52, top: 4),
                       child: Text(
-                        '셀을 탭하면 편집 화면으로 이동합니다',
+                        'games.sudoku.tapCellToEdit'.tr(),
                         style: TextStyle(
                           fontSize: 11,
                           color: Colors.white.withValues(alpha: 0.7),
@@ -557,7 +557,7 @@ class _SamuraiGameScreenState extends State<SamuraiGameScreen>
                 child: _buildCircleButton(
                   icon: Icons.refresh,
                   onPressed: _showDifficultyDialog,
-                  tooltip: '새 게임',
+                  tooltip: 'app.newGame'.tr(),
                 ),
               ),
             ],
@@ -692,7 +692,7 @@ class _SamuraiGameScreenState extends State<SamuraiGameScreen>
             ),
             const SizedBox(height: 16),
             Text(
-              '일시정지',
+              'common.pause'.tr(),
               style: TextStyle(
                 fontSize: 24,
                 fontWeight: FontWeight.bold,
@@ -701,7 +701,7 @@ class _SamuraiGameScreenState extends State<SamuraiGameScreen>
             ),
             const SizedBox(height: 8),
             Text(
-              '재개 버튼을 눌러 계속하세요',
+              'common.resumeMessage'.tr(),
               style: TextStyle(
                 fontSize: 14,
                 color: Colors.grey.shade600,
