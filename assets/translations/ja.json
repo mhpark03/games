@@ -89,7 +89,15 @@
       "youWin": "おめでとうございます！勝利しました！",
       "player1": "プレイヤー1",
       "player2": "プレイヤー2",
-      "rulesTitle": "五目並べ ルール"
+      "rulesTitle": "五目並べ ルール",
+      "rulesObjective": "🎯 ゲーム目標",
+      "rulesObjectiveDesc": "縦、横、斜めのいずれかの方向に\n自分の石を5つ先に並べれば勝利！",
+      "rulesHowToPlay": "🎮 遊び方",
+      "rulesHowToPlayDesc": "• 黒が先手です\n• 交互に空いている場所に石を置きます\n• 一度置いた石は動かせません",
+      "rulesForbidden": "⚫ 禁じ手（黒のみ適用）",
+      "rulesForbiddenDesc": "• 三三禁止：同時に開いた3が2つできる手\n• 四四禁止：同時に4が2つできる手\n• 長連禁止：6つ以上連続で置く手",
+      "rulesTips": "💡 ヒント",
+      "rulesTipsDesc": "開いた4（両端が塞がれていない4）を作れば\n相手は防ぐことができず勝利します！"
     },
     "othello": {
       "name": "オセロ",
@@ -113,7 +121,15 @@
       "player1": "プレイヤー1",
       "player2": "プレイヤー2",
       "turn": "ターン",
-      "rulesTitle": "オセロ ルール"
+      "rulesTitle": "オセロ ルール",
+      "rulesObjective": "🎯 ゲーム目標",
+      "rulesObjectiveDesc": "ゲーム終了時に自分の石が\n多ければ勝利です！",
+      "rulesHowToPlay": "🎮 遊び方",
+      "rulesHowToPlayDesc": "• 黒が先手です\n• 相手の石を自分の石で挟んで\n  裏返せる場所にのみ置けます\n• 置ける場所がなければパスします",
+      "rulesFlipping": "🔄 裏返しルール",
+      "rulesFlippingDesc": "• 縦・横・斜めすべての方向で可能\n• 一度に複数方向を裏返せます\n• 必ず1枚以上裏返さないと置けません",
+      "rulesTips": "💡 戦略のヒント",
+      "rulesTipsDesc": "• 角を取ると絶対に裏返されません\n• 辺も有利な位置です\n• 中盤まで少なく裏返す方が有利な場合も"
     },
     "chess": {
       "name": "チェス",
@@ -146,7 +162,15 @@
       "hanWins": "漢の勝利！",
       "player1": "プレイヤー1",
       "player2": "プレイヤー2",
-      "rulesTitle": "チャンギ ルール"
+      "rulesTitle": "チャンギ ルール",
+      "rulesObjective": "ゲーム目標",
+      "rulesObjectiveDesc": "相手の宮（王）を詰みにすれば勝利！\n（宮が将軍から逃げられない状態）",
+      "rulesPieceMovement": "駒の動き",
+      "rulesPieceMovementDesc": "• 宮：宮城内で1マス移動\n• 車：縦横無制限\n• 包：縦横に他の駒を飛び越えて移動\n• 馬：縦横1マス＋斜め1マス\n• 象：縦横1マス＋斜め2マス\n• 士：宮城内で1マス移動\n• 卒/兵：前/左/右に1マス",
+      "rulesSpecial": "特殊ルール",
+      "rulesSpecialDesc": "• 将軍：相手の宮を攻撃している状態\n• 詰み：将軍から逃げられない状態\n• ビッチャン：両方の宮が向かい合うと先に動いた方が不利\n• 包は包を飛び越えたり取ったりできない",
+      "rulesTips": "ヒント",
+      "rulesTipsDesc": "• 車が最も強力な駒です\n• 包は他の駒がないと攻撃できません\n• 馬と象の経路に駒があると移動不可"
     },
     "solitaire": {
       "name": "ソリティア",
@@ -175,19 +199,39 @@
       "flags": "旗",
       "mineExploded": "地雷爆発！",
       "cleared": "クリア！",
-      "rulesTitle": "マインスイーパー ルール"
+      "rulesTitle": "マインスイーパー ルール",
+      "rulesObjective": "ゲーム目標",
+      "rulesObjectiveDesc": "地雷のないすべてのマスを開ければ勝利！\n地雷を踏むとゲームオーバー！",
+      "rulesControls": "操作方法",
+      "rulesControlsDesc": "• タップ：マスを開ける\n• 長押し：旗を立てる/外す\n• 数字マスを長押し：周囲を一括で開ける",
+      "rulesNumbers": "数字の意味",
+      "rulesNumbersDesc": "数字は周囲8マスにある\n地雷の数を表しています。\n例：\"3\"なら周囲に地雷が3個",
+      "rulesTips": "ヒント",
+      "rulesTipsDesc": "• 最初のクリックは絶対に地雷ではありません\n• 旗で地雷の位置をマークしましょう\n• 詰まったらヒントを使いましょう",
+      "difficulty": "難易度",
+      "progress": "進捗"
     },
     "baseball": {
       "name": "数字野球",
       "subtitle": "Hit and Blow",
       "description": "相手が決めた数字を当てるゲームです。ストライクとボールのヒントを活用してください。",
       "strike": "ストライク",
+      "strikeDesc": "数字と位置が一致",
       "ball": "ボール",
+      "ballDesc": "数字のみ一致",
       "out": "アウト",
       "guess": "推測",
       "attempts": "試行回数",
       "correct": "正解！",
-      "rulesTitle": "数字野球 ルール"
+      "rulesTitle": "数字野球 ルール",
+      "rulesObjective": "ゲーム目標",
+      "rulesObjectiveDesc": "コンピュータが決めた3桁の数字を当てましょう！\n各数字は0〜9の中で重複しません。",
+      "rulesStrikeBall": "ストライク & ボール",
+      "rulesStrikeBallDesc": "• ストライク(S): 数字と位置が両方正解\n• ボール(B): 数字は正解だが位置が違う\n• アウト: 一致する数字がない",
+      "rulesExample": "例",
+      "rulesExampleDesc": "正解が「123」の場合:\n• 123 → 3S 0B (正解!)\n• 132 → 1S 2B\n• 456 → 0S 0B (アウト)",
+      "rulesTips": "ヒント",
+      "rulesTipsDesc": "• まずボールのヒントで数字を見つけましょう\n• 見つけた数字の位置を変えてみましょう\n• ヒント機能を使って助けを得ましょう"
     },
     "onecard": {
       "name": "ワンカード",
@@ -197,7 +241,19 @@
       "drawCard": "カードを引く",
       "uno": "ワンカード！",
       "winner": "{player}の勝利！",
-      "rulesTitle": "ワンカード ルール"
+      "rulesTitle": "ワンカード ルール",
+      "rulesObjective": "🎯 ゲーム目標",
+      "rulesObjectiveDesc": "手札を先にすべて出した人が勝利！\n残り1枚になったら「ワンカード」と宣言してください。",
+      "rulesHowToPlay": "🎮 遊び方",
+      "rulesHowToPlayDesc": "• 同じ数字または同じスートのカードを出せます\n• 出せるカードがなければ山札から1枚引きます\n• 反時計回りに順番が回ります",
+      "rulesAttackCards": "⚔️ 攻撃カード",
+      "rulesAttackCardsDesc": "• 2：+2枚引き（重ねがけ可能）\n• A：+3枚引き（♠Aは+5枚）\n• 黒ジョーカー：+5枚引き\n• カラージョーカー：+7枚引き（防御不可）",
+      "rulesDefense": "🛡️ 攻撃の防御",
+      "rulesDefenseDesc": "• 2攻撃→2、同じスートのA、ジョーカーで防御\n• A攻撃→A、ジョーカーで防御\n• 黒ジョーカー→カラージョーカーのみで防御\n• カラージョーカー→防御不可！\n• 防御すると攻撃が累積して次の人へ",
+      "rulesSpecialCards": "⚡ 特殊カード",
+      "rulesSpecialCardsDesc": "• 7：スート変更可能\n• J：次の人をスキップ\n• Q：進行方向を逆転\n• K：連続2ターンスキップ",
+      "rulesTips": "💡 ヒント",
+      "rulesTipsDesc": "• 攻撃には同等以上の攻撃カードで防御\n• ジョーカーは強力ですが大切に使いましょう\n• 最後の1枚でワンカードを忘れるとペナルティ！"
     },
     "yutnori": {
       "name": "ユンノリ",
@@ -250,7 +306,15 @@
       "sum": "合計",
       "row": "行",
       "column": "列",
-      "rulesTitle": "ナンバーサムズ ルール"
+      "rulesTitle": "ナンバーサムズ ルール",
+      "rulesObjective": "ゲーム目標",
+      "rulesObjectiveDesc": "行と列の合計ヒントを使って空欄を埋めてください！",
+      "rulesBasic": "基本ルール",
+      "rulesBasicDesc": "• 各行に1〜Nが1回ずつ（N=盤面サイズ）\n• 各列に1〜Nが1回ずつ\n• 重複する数字は使用不可",
+      "rulesSumHints": "合計ヒント",
+      "rulesSumHintsDesc": "• 行/列の端に表示される数字が合計ヒント\n• その行/列の特定のマスの合計を示します\n• ヒントのないマスは合計に含まれません",
+      "rulesTips": "ヒント",
+      "rulesTipsDesc": "• 小さい合計から解いてみましょう\n• 行と列のヒントを組み合わせて使いましょう\n• 消去法で可能な数字を絞り込みましょう"
     }
   },
   "dialog": {

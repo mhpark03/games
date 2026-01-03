@@ -89,7 +89,15 @@
       "youWin": "축하합니다! 당신이 이겼습니다!",
       "player1": "플레이어 1",
       "player2": "플레이어 2",
-      "rulesTitle": "오목 게임 규칙"
+      "rulesTitle": "오목 게임 규칙",
+      "rulesObjective": "🎯 게임 목표",
+      "rulesObjectiveDesc": "가로, 세로, 대각선 중 한 방향으로\n자신의 돌 5개를 먼저 연속으로 놓으면 승리!",
+      "rulesHowToPlay": "🎮 게임 방법",
+      "rulesHowToPlayDesc": "• 흑이 먼저 시작합니다\n• 번갈아가며 빈 곳에 돌을 놓습니다\n• 한 번 놓은 돌은 움직일 수 없습니다",
+      "rulesForbidden": "⚫ 금수 규칙 (흑만 적용)",
+      "rulesForbiddenDesc": "• 삼삼 금지: 동시에 열린 3이 2개 생기는 수\n• 사사 금지: 동시에 4가 2개 생기는 수\n• 장목 금지: 6개 이상 연속으로 놓는 수",
+      "rulesTips": "💡 팁",
+      "rulesTipsDesc": "열린 4(양쪽이 막히지 않은 4)를 만들면\n상대가 막을 수 없어 승리합니다!"
     },
     "othello": {
       "name": "오델로",
@@ -113,7 +121,15 @@
       "player1": "플레이어 1",
       "player2": "플레이어 2",
       "turn": "차례",
-      "rulesTitle": "오델로 게임 규칙"
+      "rulesTitle": "오델로 게임 규칙",
+      "rulesObjective": "🎯 게임 목표",
+      "rulesObjectiveDesc": "게임이 끝났을 때 자신의 돌이\n더 많으면 승리합니다!",
+      "rulesHowToPlay": "🎮 게임 방법",
+      "rulesHowToPlayDesc": "• 흑이 먼저 시작합니다\n• 상대 돌을 자신의 돌 사이에 끼워\n  뒤집을 수 있는 곳에만 놓을 수 있습니다\n• 놓을 곳이 없으면 턴을 넘깁니다",
+      "rulesFlipping": "🔄 뒤집기 규칙",
+      "rulesFlippingDesc": "• 가로, 세로, 대각선 모든 방향 가능\n• 한 번에 여러 방향 뒤집기 가능\n• 반드시 1개 이상 뒤집어야 놓을 수 있음",
+      "rulesTips": "💡 전략 팁",
+      "rulesTipsDesc": "• 코너를 차지하면 절대 뒤집히지 않습니다\n• 가장자리도 유리한 위치입니다\n• 중반까지는 적게 뒤집는 게 유리할 수 있음"
     },
     "chess": {
       "name": "체스",
@@ -134,7 +150,15 @@
       "blackWins": "흑이 이겼습니다!",
       "player1": "플레이어 1",
       "player2": "플레이어 2",
-      "rulesTitle": "체스 게임 규칙"
+      "rulesTitle": "체스 게임 규칙",
+      "rulesObjective": "게임 목표",
+      "rulesObjectiveDesc": "상대방의 킹을 체크메이트하면 승리!\n(킹이 잡히는 것을 피할 수 없는 상태)",
+      "rulesBasicMoves": "기물 이동",
+      "rulesBasicMovesDesc": "킹(K): 모든 방향 1칸\n퀸(Q): 모든 방향 무제한\n룩(R): 가로/세로 무제한\n비숍(B): 대각선 무제한\n나이트(N): L자 이동 (다른 기물 뛰어넘기 가능)\n폰(P): 전진 1칸, 첫 이동 시 2칸 가능",
+      "rulesSpecialMoves": "특수 규칙",
+      "rulesSpecialMovesDesc": "캐슬링: 킹과 룩의 특수 이동\n앙파상: 폰의 특수 잡기\n프로모션: 폰이 끝에 도달하면 승격",
+      "rulesTips": "무승부 조건",
+      "rulesTipsDesc": "스테일메이트: 이동할 수 없지만 체크가 아닌 상태\n기물 부족: 체크메이트 불가능한 기물만 남음"
     },
     "janggi": {
       "name": "장기",
@@ -146,7 +170,15 @@
       "hanWins": "한 승리!",
       "player1": "플레이어 1",
       "player2": "플레이어 2",
-      "rulesTitle": "장기 게임 규칙"
+      "rulesTitle": "장기 게임 규칙",
+      "rulesObjective": "게임 목표",
+      "rulesObjectiveDesc": "상대방의 궁(왕)을 외통수로 잡으면 승리!\n(궁이 장군을 피할 수 없는 상태)",
+      "rulesPieceMovement": "기물 이동",
+      "rulesPieceMovementDesc": "• 궁: 궁성 안에서 1칸 이동\n• 차: 가로/세로 무제한\n• 포: 가로/세로로 다른 기물 뛰어넘어 이동\n• 마: 가로/세로 1칸 + 대각선 1칸\n• 상: 가로/세로 1칸 + 대각선 2칸\n• 사: 궁성 안에서 1칸 이동\n• 졸/병: 앞/좌/우로 1칸",
+      "rulesSpecial": "특수 규칙",
+      "rulesSpecialDesc": "• 장군: 상대 궁을 공격하는 상태\n• 외통수: 장군을 피할 수 없는 상태\n• 빅장: 양측 궁이 마주보면 먼저 비킨 쪽이 불리\n• 포는 포를 뛰어넘거나 잡을 수 없음",
+      "rulesTips": "팁",
+      "rulesTipsDesc": "• 차가 가장 강력한 기물입니다\n• 포는 다른 기물이 있어야 공격 가능\n• 마와 상의 경로에 기물이 있으면 이동 불가"
     },
     "solitaire": {
       "name": "솔리테어",
@@ -165,7 +197,15 @@
       "youWin": "승리했습니다!",
       "movesCount": "이동: {count}",
       "timeElapsed": "시간: {time}",
-      "rulesTitle": "솔리테어 게임 규칙"
+      "rulesTitle": "솔리테어 게임 규칙",
+      "rulesObjective": "게임 목표",
+      "rulesObjectiveDesc": "4개의 에이스 파일에 무늬별로\nA부터 K까지 순서대로 카드를 쌓으세요!",
+      "rulesHowToPlay": "게임 방법",
+      "rulesHowToPlayDesc": "• 테이블: 빨강↔검정 교대로 내림차순 쌓기\n• 에이스 파일: 같은 무늬로 오름차순 쌓기\n• 덱을 탭하여 새 카드 뒤집기\n• K만 빈 테이블 칸에 놓을 수 있음",
+      "rulesCardMove": "카드 이동",
+      "rulesCardMoveDesc": "• 앞면 카드를 드래그하여 이동\n• 여러 장을 한 번에 이동 가능\n• 더블탭으로 자동 이동 (에이스 파일)",
+      "rulesTips": "팁",
+      "rulesTipsDesc": "• 에이스가 나오면 바로 위로 올리세요\n• 뒷면 카드를 빨리 뒤집는 것이 중요\n• 1장/3장 모드로 난이도 조절 가능"
     },
     "minesweeper": {
       "name": "지뢰찾기",
@@ -175,19 +215,39 @@
       "flags": "깃발",
       "mineExploded": "지뢰 폭발!",
       "cleared": "클리어!",
-      "rulesTitle": "지뢰찾기 게임 규칙"
+      "rulesTitle": "지뢰찾기 게임 규칙",
+      "rulesObjective": "게임 목표",
+      "rulesObjectiveDesc": "지뢰가 없는 모든 칸을 열면 승리!\n지뢰를 밟으면 게임 오버!",
+      "rulesControls": "조작 방법",
+      "rulesControlsDesc": "• 탭: 칸 열기\n• 길게 누르기: 깃발 꽂기/제거\n• 숫자 칸 길게 누르기: 주변 한번에 열기",
+      "rulesNumbers": "숫자의 의미",
+      "rulesNumbersDesc": "숫자는 주변 8칸에 있는\n지뢰의 개수를 나타냅니다.\n예: \"3\"이면 주변에 지뢰 3개",
+      "rulesTips": "팁",
+      "rulesTipsDesc": "• 첫 클릭은 절대 지뢰가 아닙니다\n• 깃발로 지뢰 위치를 표시하세요\n• 힌트를 사용해 막힐 때 도움받기",
+      "difficulty": "난이도",
+      "progress": "진행률"
     },
     "baseball": {
       "name": "숫자야구",
       "subtitle": "Baseball",
       "description": "상대방이 정한 숫자를 맞추는 게임입니다. 스트라이크와 볼 힌트를 활용하세요.",
       "strike": "스트라이크",
+      "strikeDesc": "숫자와 위치 일치",
       "ball": "볼",
+      "ballDesc": "숫자만 일치",
       "out": "아웃",
       "guess": "추측",
       "attempts": "시도 횟수",
       "correct": "정답!",
-      "rulesTitle": "숫자야구 게임 규칙"
+      "rulesTitle": "숫자야구 게임 규칙",
+      "rulesObjective": "게임 목표",
+      "rulesObjectiveDesc": "컴퓨터가 정한 3자리 숫자를 맞추세요!\n각 숫자는 0~9 중 서로 다른 숫자입니다.",
+      "rulesStrikeBall": "스트라이크 & 볼",
+      "rulesStrikeBallDesc": "• 스트라이크(S): 숫자와 위치 모두 맞음\n• 볼(B): 숫자는 맞지만 위치가 다름\n• 아웃: 맞는 숫자가 하나도 없음",
+      "rulesExample": "예시",
+      "rulesExampleDesc": "정답이 \"123\"일 때:\n• 123 → 3S 0B (정답!)\n• 132 → 1S 2B\n• 456 → 0S 0B (아웃)",
+      "rulesTips": "팁",
+      "rulesTipsDesc": "• 볼 힌트로 숫자를 먼저 찾으세요\n• 찾은 숫자의 위치를 바꿔보세요\n• 힌트를 사용해 도움을 받으세요"
     },
     "onecard": {
       "name": "원카드",
@@ -197,7 +257,19 @@
       "drawCard": "카드 뽑기",
       "uno": "원카드!",
       "winner": "{player} 승리!",
-      "rulesTitle": "원카드 게임 규칙"
+      "rulesTitle": "원카드 게임 규칙",
+      "rulesObjective": "🎯 게임 목표",
+      "rulesObjectiveDesc": "손에 든 카드를 먼저 모두 버리면 승리!\n마지막 1장일 때 \"원카드\"를 외쳐야 합니다.",
+      "rulesHowToPlay": "🎮 게임 방법",
+      "rulesHowToPlayDesc": "• 같은 숫자 또는 같은 무늬 카드를 낼 수 있음\n• 낼 카드가 없으면 덱에서 1장 뽑기\n• 반시계 방향으로 차례가 돌아감",
+      "rulesAttackCards": "⚔️ 공격 카드",
+      "rulesAttackCardsDesc": "• 2: +2장 뽑기 (중첩 가능)\n• A: +3장 뽑기 (♠A는 +5장)\n• 흑백조커: +5장 뽑기\n• 컬러조커: +7장 뽑기 (방어 불가)",
+      "rulesDefense": "🛡️ 공격 방어",
+      "rulesDefenseDesc": "• 2 공격 → 2, 같은무늬 A, 조커로 방어\n• A 공격 → A, 조커로 방어\n• 흑백조커 → 컬러조커로만 방어\n• 컬러조커 → 방어 불가!\n• 방어 시 공격이 누적되어 다음 사람에게",
+      "rulesSpecialCards": "⚡ 특수 카드",
+      "rulesSpecialCardsDesc": "• 7: 무늬 변경 가능\n• J: 다음 사람 건너뛰기\n• Q: 진행 방향 바꾸기\n• K: 연속 2턴 건너뛰기",
+      "rulesTips": "💡 팁",
+      "rulesTipsDesc": "• 공격이 오면 같거나 더 강한 공격 카드로 방어\n• 조커는 강력하지만 아껴서 사용하세요\n• 마지막 1장에서 원카드를 놓치면 벌칙!"
     },
     "yutnori": {
       "name": "윷놀이",
@@ -250,7 +322,15 @@
       "sum": "합계",
       "row": "행",
       "column": "열",
-      "rulesTitle": "넘버 썸즈 게임 규칙"
+      "rulesTitle": "넘버 썸즈 게임 규칙",
+      "rulesObjective": "게임 목표",
+      "rulesObjectiveDesc": "행과 열의 합계 힌트를 이용하여 빈 칸을 채우세요!",
+      "rulesBasic": "기본 규칙",
+      "rulesBasicDesc": "• 각 행에 1~N이 한 번씩 (N=보드 크기)\n• 각 열에 1~N이 한 번씩\n• 중복 숫자 사용 불가",
+      "rulesSumHints": "합계 힌트",
+      "rulesSumHintsDesc": "• 행/열 끝에 표시된 숫자가 합계 힌트\n• 해당 행/열의 특정 칸들의 합계를 나타냄\n• 힌트가 없는 칸은 합계에 포함 안 됨",
+      "rulesTips": "팁",
+      "rulesTipsDesc": "• 작은 합계부터 풀어보세요\n• 행과 열 힌트를 함께 활용하세요\n• 소거법으로 가능한 숫자를 줄이세요"
     }
   },
   "dialog": {

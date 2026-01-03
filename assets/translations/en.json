@@ -89,7 +89,15 @@
       "youWin": "Congratulations! You won!",
       "player1": "Player 1",
       "player2": "Player 2",
-      "rulesTitle": "Gomoku Rules"
+      "rulesTitle": "Gomoku Rules",
+      "rulesObjective": "🎯 Objective",
+      "rulesObjectiveDesc": "Be the first to place 5 stones in a row\nhorizontally, vertically, or diagonally!",
+      "rulesHowToPlay": "🎮 How to Play",
+      "rulesHowToPlayDesc": "• Black plays first\n• Take turns placing stones on empty spaces\n• Stones cannot be moved once placed",
+      "rulesForbidden": "⚫ Forbidden Moves (Black only)",
+      "rulesForbiddenDesc": "• Double-three: Creating two open threes at once\n• Double-four: Creating two fours at once\n• Overline: Placing 6 or more stones in a row",
+      "rulesTips": "💡 Tips",
+      "rulesTipsDesc": "Create an open four (unblocked on both ends)\nand your opponent cannot defend!"
     },
     "othello": {
       "name": "Othello",
@@ -113,7 +121,15 @@
       "player1": "Player 1",
       "player2": "Player 2",
       "turn": "Turn",
-      "rulesTitle": "Othello Rules"
+      "rulesTitle": "Othello Rules",
+      "rulesObjective": "🎯 Objective",
+      "rulesObjectiveDesc": "Have more discs than your opponent\nwhen the game ends to win!",
+      "rulesHowToPlay": "🎮 How to Play",
+      "rulesHowToPlayDesc": "• Black plays first\n• Place discs to sandwich opponent's discs\n  between your own to flip them\n• Pass if you have no valid moves",
+      "rulesFlipping": "🔄 Flipping Rules",
+      "rulesFlippingDesc": "• Flip horizontally, vertically, or diagonally\n• Multiple directions can be flipped at once\n• You must flip at least one disc to place",
+      "rulesTips": "💡 Strategy Tips",
+      "rulesTipsDesc": "• Corners cannot be flipped once captured\n• Edges are also advantageous positions\n• Flipping fewer discs early can be beneficial"
     },
     "chess": {
       "name": "Chess",
@@ -134,7 +150,15 @@
       "blackWins": "Black wins!",
       "player1": "Player 1",
       "player2": "Player 2",
-      "rulesTitle": "Chess Rules"
+      "rulesTitle": "Chess Rules",
+      "rulesObjective": "Objective",
+      "rulesObjectiveDesc": "Checkmate your opponent's king to win!\n(The king cannot escape capture)",
+      "rulesBasicMoves": "Piece Movement",
+      "rulesBasicMovesDesc": "King (K): One square in any direction\nQueen (Q): Any number of squares in any direction\nRook (R): Any number of squares horizontally/vertically\nBishop (B): Any number of squares diagonally\nKnight (N): L-shaped move (can jump over pieces)\nPawn (P): One square forward, two squares on first move",
+      "rulesSpecialMoves": "Special Rules",
+      "rulesSpecialMovesDesc": "Castling: Special king and rook move\nEn Passant: Special pawn capture\nPromotion: Pawn reaching the end gets promoted",
+      "rulesTips": "Draw Conditions",
+      "rulesTipsDesc": "Stalemate: No legal moves but not in check\nInsufficient Material: Not enough pieces to checkmate"
     },
     "janggi": {
       "name": "Janggi",
@@ -146,7 +170,15 @@
       "hanWins": "Han Wins!",
       "player1": "Player 1",
       "player2": "Player 2",
-      "rulesTitle": "Janggi Rules"
+      "rulesTitle": "Janggi Rules",
+      "rulesObjective": "Objective",
+      "rulesObjectiveDesc": "Checkmate the opponent's General (King) to win!\n(When the General cannot escape from check)",
+      "rulesPieceMovement": "Piece Movement",
+      "rulesPieceMovementDesc": "• General: 1 space within the palace\n• Chariot: Unlimited horizontal/vertical\n• Cannon: Jumps over pieces to move/capture\n• Horse: 1 space + 1 diagonal\n• Elephant: 1 space + 2 diagonal\n• Guard: 1 space within the palace\n• Soldier: 1 space forward/left/right",
+      "rulesSpecial": "Special Rules",
+      "rulesSpecialDesc": "• Check: Attacking the opponent's General\n• Checkmate: General cannot escape check\n• Bikjang: When Generals face each other directly\n• Cannon cannot jump over or capture another Cannon",
+      "rulesTips": "Tips",
+      "rulesTipsDesc": "• The Chariot is the most powerful piece\n• Cannon needs another piece to jump over\n• Horse and Elephant are blocked by pieces in their path"
     },
     "solitaire": {
       "name": "Solitaire",
@@ -175,19 +207,39 @@
       "flags": "Flags",
       "mineExploded": "Mine Exploded!",
       "cleared": "Cleared!",
-      "rulesTitle": "Minesweeper Rules"
+      "rulesTitle": "Minesweeper Rules",
+      "rulesObjective": "Objective",
+      "rulesObjectiveDesc": "Reveal all cells without mines to win!\nStep on a mine and it's game over!",
+      "rulesControls": "Controls",
+      "rulesControlsDesc": "• Tap: Reveal cell\n• Long press: Place/remove flag\n• Long press on number: Reveal surrounding cells",
+      "rulesNumbers": "Number Meaning",
+      "rulesNumbersDesc": "Numbers indicate how many mines\nare in the surrounding 8 cells.\nExample: \"3\" means 3 nearby mines",
+      "rulesTips": "Tips",
+      "rulesTipsDesc": "• First click is never a mine\n• Use flags to mark mine locations\n• Use hints when you're stuck",
+      "difficulty": "Difficulty",
+      "progress": "Progress"
     },
     "baseball": {
       "name": "Number Baseball",
       "subtitle": "Bulls and Cows",
       "description": "Guess the hidden number using strike and ball hints.",
       "strike": "Strike",
+      "strikeDesc": "Correct number and position",
       "ball": "Ball",
+      "ballDesc": "Correct number only",
       "out": "Out",
       "guess": "Guess",
       "attempts": "Attempts",
       "correct": "Correct!",
-      "rulesTitle": "Number Baseball Rules"
+      "rulesTitle": "Number Baseball Rules",
+      "rulesObjective": "Objective",
+      "rulesObjectiveDesc": "Guess the 3-digit number chosen by the computer!\nEach digit is unique, from 0 to 9.",
+      "rulesStrikeBall": "Strike & Ball",
+      "rulesStrikeBallDesc": "• Strike (S): Correct digit in correct position\n• Ball (B): Correct digit in wrong position\n• Out: No matching digits",
+      "rulesExample": "Example",
+      "rulesExampleDesc": "If the answer is \"123\":\n• 123 → 3S 0B (Correct!)\n• 132 → 1S 2B\n• 456 → 0S 0B (Out)",
+      "rulesTips": "Tips",
+      "rulesTipsDesc": "• Use ball hints to find the correct digits first\n• Then try different positions for those digits\n• Use hints for extra help"
     },
     "onecard": {
       "name": "One Card",
@@ -197,7 +249,19 @@
       "drawCard": "Draw Card",
       "uno": "One Card!",
       "winner": "{player} Wins!",
-      "rulesTitle": "One Card Rules"
+      "rulesTitle": "One Card Rules",
+      "rulesObjective": "🎯 Objective",
+      "rulesObjectiveDesc": "Be the first to discard all your cards!\nYou must say \"One Card\" when you have one card left.",
+      "rulesHowToPlay": "🎮 How to Play",
+      "rulesHowToPlayDesc": "• Play a card with the same number or suit\n• Draw one card from the deck if you can't play\n• Turns proceed counter-clockwise",
+      "rulesAttackCards": "⚔️ Attack Cards",
+      "rulesAttackCardsDesc": "• 2: Draw +2 cards (stackable)\n• A: Draw +3 cards (♠A is +5)\n• Black Joker: Draw +5 cards\n• Color Joker: Draw +7 cards (unblockable)",
+      "rulesDefense": "🛡️ Defense",
+      "rulesDefenseDesc": "• Against 2 → Defend with 2, same-suit A, or Joker\n• Against A → Defend with A or Joker\n• Against Black Joker → Only Color Joker\n• Against Color Joker → Cannot defend!\n• Defense stacks the attack to the next player",
+      "rulesSpecialCards": "⚡ Special Cards",
+      "rulesSpecialCardsDesc": "• 7: Change suit\n• J: Skip next player\n• Q: Reverse direction\n• K: Skip 2 consecutive turns",
+      "rulesTips": "💡 Tips",
+      "rulesTipsDesc": "• Defend attacks with equal or stronger attack cards\n• Use Jokers wisely - they're powerful\n• Missing \"One Card\" on your last card results in a penalty!"
     },
     "yutnori": {
       "name": "Yutnori",
@@ -250,7 +314,15 @@
       "sum": "Sum",
       "row": "Row",
       "column": "Column",
-      "rulesTitle": "Number Sums Rules"
+      "rulesTitle": "Number Sums Rules",
+      "rulesObjective": "Objective",
+      "rulesObjectiveDesc": "Use the row and column sum hints to fill in the blanks!",
+      "rulesBasic": "Basic Rules",
+      "rulesBasicDesc": "• Each row contains 1 to N once (N = board size)\n• Each column contains 1 to N once\n• No duplicate numbers allowed",
+      "rulesSumHints": "Sum Hints",
+      "rulesSumHintsDesc": "• Numbers at the end of rows/columns are sum hints\n• They indicate the sum of specific cells in that row/column\n• Cells without hints are not included in the sum",
+      "rulesTips": "Tips",
+      "rulesTipsDesc": "• Start with smaller sums\n• Use both row and column hints together\n• Use elimination to narrow down possible numbers"
     }
   },
   "dialog": {

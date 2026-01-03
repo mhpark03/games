@@ -2636,9 +2636,9 @@ class _YutnoriScreenState extends State<YutnoriScreen>
                         color: Colors.red.shade700,
                         borderRadius: BorderRadius.circular(4),
                       ),
-                      child: const Text(
-                        '출발/골인',
-                        style: TextStyle(
+                      child: Text(
+                        'games.yutnori.startGoal'.tr(),
+                        style: const TextStyle(
                           color: Colors.white,
                           fontSize: 10,
                           fontWeight: FontWeight.bold,
@@ -2654,7 +2654,7 @@ class _YutnoriScreenState extends State<YutnoriScreen>
                       children: [
                         Icon(Icons.arrow_upward, color: Colors.blue.shade700, size: 18),
                         Text(
-                          '진행',
+                          'games.yutnori.progress'.tr(),
                           style: TextStyle(
                             color: Colors.blue.shade700,
                             fontSize: 9,
@@ -3460,9 +3460,9 @@ class _YutnoriScreenState extends State<YutnoriScreen>
           if (waitingPieces.isNotEmpty)
             Column(
               children: [
-                const Text(
-                  '대기',
-                  style: TextStyle(fontSize: 10, color: Colors.grey),
+                Text(
+                  'games.yutnori.waiting'.tr(),
+                  style: const TextStyle(fontSize: 10, color: Colors.grey),
                 ),
                 const SizedBox(height: 4),
                 Wrap(
@@ -3519,7 +3519,7 @@ class _YutnoriScreenState extends State<YutnoriScreen>
           mainAxisSize: MainAxisSize.min,
           children: [
             Text(
-              '$rank등: ',
+              '${'games.yutnori.rankPlace'.tr(args: [rank.toString()])}: ',
               style: TextStyle(
                 fontSize: 14,
                 fontWeight: isPlayer ? FontWeight.bold : FontWeight.normal,

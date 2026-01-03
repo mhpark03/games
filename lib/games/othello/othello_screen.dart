@@ -1286,65 +1286,57 @@ class _OthelloScreenState extends State<OthelloScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             mainAxisSize: MainAxisSize.min,
-            children: const [
+            children: [
               Text(
-                '🎯 게임 목표',
-                style: TextStyle(
+                'games.othello.rulesObjective'.tr(),
+                style: const TextStyle(
                   color: Colors.white,
                   fontWeight: FontWeight.bold,
                 ),
               ),
-              SizedBox(height: 4),
+              const SizedBox(height: 4),
               Text(
-                '게임이 끝났을 때 자신의 돌이\n'
-                '더 많으면 승리합니다!',
-                style: TextStyle(color: Colors.white70, fontSize: 13),
+                'games.othello.rulesObjectiveDesc'.tr(),
+                style: const TextStyle(color: Colors.white70, fontSize: 13),
               ),
-              SizedBox(height: 12),
+              const SizedBox(height: 12),
               Text(
-                '🎮 게임 방법',
-                style: TextStyle(
+                'games.othello.rulesHowToPlay'.tr(),
+                style: const TextStyle(
                   color: Colors.white,
                   fontWeight: FontWeight.bold,
                 ),
               ),
-              SizedBox(height: 4),
+              const SizedBox(height: 4),
               Text(
-                '• 흑이 먼저 시작합니다\n'
-                '• 상대 돌을 자신의 돌 사이에 끼워\n'
-                '  뒤집을 수 있는 곳에만 놓을 수 있습니다\n'
-                '• 놓을 곳이 없으면 턴을 넘깁니다',
-                style: TextStyle(color: Colors.white70, fontSize: 13),
+                'games.othello.rulesHowToPlayDesc'.tr(),
+                style: const TextStyle(color: Colors.white70, fontSize: 13),
               ),
-              SizedBox(height: 12),
+              const SizedBox(height: 12),
               Text(
-                '🔄 뒤집기 규칙',
-                style: TextStyle(
+                'games.othello.rulesFlipping'.tr(),
+                style: const TextStyle(
                   color: Colors.white,
                   fontWeight: FontWeight.bold,
                 ),
               ),
-              SizedBox(height: 4),
+              const SizedBox(height: 4),
               Text(
-                '• 가로, 세로, 대각선 모든 방향 가능\n'
-                '• 한 번에 여러 방향 뒤집기 가능\n'
-                '• 반드시 1개 이상 뒤집어야 놓을 수 있음',
-                style: TextStyle(color: Colors.white70, fontSize: 13),
+                'games.othello.rulesFlippingDesc'.tr(),
+                style: const TextStyle(color: Colors.white70, fontSize: 13),
               ),
-              SizedBox(height: 12),
+              const SizedBox(height: 12),
               Text(
-                '💡 전략 팁',
-                style: TextStyle(
+                'games.othello.rulesTips'.tr(),
+                style: const TextStyle(
                   color: Colors.white,
                   fontWeight: FontWeight.bold,
                 ),
               ),
-              SizedBox(height: 4),
+              const SizedBox(height: 4),
               Text(
-                '• 코너를 차지하면 절대 뒤집히지 않습니다\n'
-                '• 가장자리도 유리한 위치입니다\n'
-                '• 중반까지는 적게 뒤집는 게 유리할 수 있음',
-                style: TextStyle(color: Colors.white70, fontSize: 13),
+                'games.othello.rulesTipsDesc'.tr(),
+                style: const TextStyle(color: Colors.white70, fontSize: 13),
               ),
             ],
           ),

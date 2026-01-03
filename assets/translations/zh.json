@@ -89,7 +89,15 @@
       "youWin": "恭喜！你赢了！",
       "player1": "玩家1",
       "player2": "玩家2",
-      "rulesTitle": "五子棋游戏规则"
+      "rulesTitle": "五子棋游戏规则",
+      "rulesObjective": "🎯 游戏目标",
+      "rulesObjectiveDesc": "在横、竖、斜任意方向上\n先将自己的棋子连成5个即可获胜！",
+      "rulesHowToPlay": "🎮 游戏方法",
+      "rulesHowToPlayDesc": "• 黑方先行\n• 双方轮流在空位落子\n• 落子后不能移动",
+      "rulesForbidden": "⚫ 禁手规则（仅限黑方）",
+      "rulesForbiddenDesc": "• 三三禁手：同时形成两个活三\n• 四四禁手：同时形成两个四\n• 长连禁手：连成6子或以上",
+      "rulesTips": "💡 提示",
+      "rulesTipsDesc": "形成活四（两端都未被堵住的四）\n对手将无法防守，必胜！"
     },
     "othello": {
       "name": "黑白棋",
@@ -113,7 +121,15 @@
       "player1": "玩家1",
       "player2": "玩家2",
       "turn": "回合",
-      "rulesTitle": "黑白棋游戏规则"
+      "rulesTitle": "黑白棋游戏规则",
+      "rulesObjective": "🎯 游戏目标",
+      "rulesObjectiveDesc": "游戏结束时拥有更多棋子\n的一方获胜！",
+      "rulesHowToPlay": "🎮 游戏方法",
+      "rulesHowToPlayDesc": "• 黑方先行\n• 将对方棋子夹在自己棋子之间\n  才能落子并翻转\n• 无处可落时跳过回合",
+      "rulesFlipping": "🔄 翻转规则",
+      "rulesFlippingDesc": "• 可横向、纵向、斜向翻转\n• 可同时翻转多个方向\n• 必须至少翻转一枚棋子才能落子",
+      "rulesTips": "💡 策略提示",
+      "rulesTipsDesc": "• 占据角落后永远不会被翻转\n• 边缘也是有利位置\n• 中盘前少翻棋子可能更有利"
     },
     "chess": {
       "name": "国际象棋",
@@ -175,7 +191,17 @@
       "flags": "旗帜",
       "mineExploded": "地雷爆炸！",
       "cleared": "通关！",
-      "rulesTitle": "扫雷游戏规则"
+      "rulesTitle": "扫雷游戏规则",
+      "rulesObjective": "游戏目标",
+      "rulesObjectiveDesc": "揭开所有没有地雷的格子即可获胜！\n踩到地雷游戏结束！",
+      "rulesControls": "操作方法",
+      "rulesControlsDesc": "• 点击：揭开格子\n• 长按：插旗/取消插旗\n• 长按数字格：一次性揭开周围格子",
+      "rulesNumbers": "数字含义",
+      "rulesNumbersDesc": "数字表示周围8个格子中\n地雷的数量。\n例如：\"3\"表示周围有3个地雷",
+      "rulesTips": "提示",
+      "rulesTipsDesc": "• 第一次点击绝对不会是地雷\n• 用旗帜标记地雷位置\n• 遇到困难时使用提示功能",
+      "difficulty": "难度",
+      "progress": "进度"
     },
     "baseball": {
       "name": "数字棒球",
@@ -197,7 +223,19 @@
       "drawCard": "抽牌",
       "uno": "单张牌！",
       "winner": "{player}获胜！",
-      "rulesTitle": "单张牌游戏规则"
+      "rulesTitle": "单张牌游戏规则",
+      "rulesObjective": "🎯 游戏目标",
+      "rulesObjectiveDesc": "先出完手牌的玩家获胜！\n剩最后1张牌时必须喊"单张牌"。",
+      "rulesHowToPlay": "🎮 游戏方法",
+      "rulesHowToPlayDesc": "• 可以出相同数字或相同花色的牌\n• 没有可出的牌时从牌堆抽1张\n• 按逆时针方向轮流出牌",
+      "rulesAttackCards": "⚔️ 攻击牌",
+      "rulesAttackCardsDesc": "• 2：抽+2张（可叠加）\n• A：抽+3张（♠A为+5张）\n• 黑白鬼牌：抽+5张\n• 彩色鬼牌：抽+7张（无法防御）",
+      "rulesDefense": "🛡️ 防御攻击",
+      "rulesDefenseDesc": "• 2攻击→用2、同花色A、鬼牌防御\n• A攻击→用A、鬼牌防御\n• 黑白鬼牌→只能用彩色鬼牌防御\n• 彩色鬼牌→无法防御！\n• 防御后攻击叠加传给下一位",
+      "rulesSpecialCards": "⚡ 特殊牌",
+      "rulesSpecialCardsDesc": "• 7：可以更换花色\n• J：跳过下一位玩家\n• Q：改变出牌方向\n• K：连续跳过2个回合",
+      "rulesTips": "💡 技巧",
+      "rulesTipsDesc": "• 用同等或更强的攻击牌防御攻击\n• 鬼牌很强大，但要谨慎使用\n• 最后1张牌忘喊"单张牌"会受罚！"
     },
     "yutnori": {
       "name": "掷柶",
@@ -212,7 +250,15 @@
       "throw": "投掷",
       "selectPiece": "选择棋子",
       "goal": "终点",
-      "rulesTitle": "掷柶游戏规则"
+      "rulesTitle": "掷柶游戏规则",
+      "rulesObjective": "游戏目标",
+      "rulesObjectiveDesc": "先将4个棋子全部送达终点即可获胜！",
+      "rulesYutResults": "柶棒结果",
+      "rulesYutResultsDesc": "• 道：移动1格\n• 盖：移动2格\n• 杰：移动3格\n• 柶：移动4格 + 再投一次\n• 莫：移动5格 + 再投一次\n• 后道：后退1格 (-1)",
+      "rulesSpecial": "特殊规则",
+      "rulesSpecialDesc": "• 在角落停下可走捷径\n• 吃掉对方棋子可再投一次\n• 可叠放己方棋子（一起移动）\n• 被叠放的棋子被吃掉时全部回到起点",
+      "rulesTips": "提示",
+      "rulesTipsDesc": "• 积极利用角落捷径\n• 叠放棋子更安全\n• 吃掉对方棋子获得额外回合！"
     },
     "hula": {
       "name": "花图",
@@ -250,7 +296,15 @@
       "sum": "总和",
       "row": "行",
       "column": "列",
-      "rulesTitle": "数字求和游戏规则"
+      "rulesTitle": "数字求和游戏规则",
+      "rulesObjective": "游戏目标",
+      "rulesObjectiveDesc": "利用行列的求和提示填充空格！",
+      "rulesBasic": "基本规则",
+      "rulesBasicDesc": "• 每行包含1到N各一次（N=棋盘大小）\n• 每列包含1到N各一次\n• 不允许重复数字",
+      "rulesSumHints": "求和提示",
+      "rulesSumHintsDesc": "• 行/列末端的数字是求和提示\n• 表示该行/列中特定格子的总和\n• 没有提示的格子不计入求和",
+      "rulesTips": "提示",
+      "rulesTipsDesc": "• 从较小的求和开始解题\n• 结合行和列的提示一起使用\n• 使用排除法缩小可能的数字范围"
     }
   },
   "dialog": {

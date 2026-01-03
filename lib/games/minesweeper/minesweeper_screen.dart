@@ -448,11 +448,11 @@ class _MinesweeperScreenState extends State<MinesweeperScreen> {
   String _getDifficultyText() {
     switch (widget.difficulty) {
       case MinesweeperDifficulty.easy:
-        return '초급';
+        return 'common.easy'.tr();
       case MinesweeperDifficulty.medium:
-        return '중급';
+        return 'common.normal'.tr();
       case MinesweeperDifficulty.hard:
-        return '고급';
+        return 'common.hard'.tr();
     }
   }
 
@@ -773,13 +773,13 @@ class _MinesweeperScreenState extends State<MinesweeperScreen> {
                       icon: Icons.grid_on,
                       iconColor: Colors.blueGrey,
                       value: _getDifficultyText(),
-                      label: '난이도',
+                      label: 'games.minesweeper.difficulty'.tr(),
                     ),
                     _buildInfoItem(
                       icon: Icons.check_circle,
                       iconColor: Colors.green,
                       value: '$revealedCount/${rows * cols - totalMines}',
-                      label: '진행률',
+                      label: 'games.minesweeper.progress'.tr(),
                     ),
                   ],
                 ),
@@ -816,14 +816,14 @@ class _MinesweeperScreenState extends State<MinesweeperScreen> {
             icon: Icons.grid_on,
             iconColor: Colors.blueGrey,
             value: _getDifficultyText(),
-            label: '난이도',
+            label: 'games.minesweeper.difficulty'.tr(),
           ),
           const SizedBox(height: 12),
           _buildInfoItem(
             icon: Icons.check_circle,
             iconColor: Colors.green,
             value: '$revealedCount/${rows * cols - totalMines}',
-            label: '진행률',
+            label: 'games.minesweeper.progress'.tr(),
           ),
         ],
       ),
@@ -1031,64 +1031,57 @@ class _MinesweeperScreenState extends State<MinesweeperScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             mainAxisSize: MainAxisSize.min,
-            children: const [
+            children: [
               Text(
-                '🎯 게임 목표',
-                style: TextStyle(
+                '🎯 ${'games.minesweeper.rulesObjective'.tr()}',
+                style: const TextStyle(
                   color: Colors.white,
                   fontWeight: FontWeight.bold,
                 ),
               ),
-              SizedBox(height: 4),
+              const SizedBox(height: 4),
               Text(
-                '지뢰가 없는 모든 칸을 열면 승리!\n'
-                '지뢰를 밟으면 게임 오버!',
-                style: TextStyle(color: Colors.white70, fontSize: 13),
+                'games.minesweeper.rulesObjectiveDesc'.tr(),
+                style: const TextStyle(color: Colors.white70, fontSize: 13),
               ),
-              SizedBox(height: 12),
+              const SizedBox(height: 12),
               Text(
-                '🎮 조작 방법',
-                style: TextStyle(
+                '🎮 ${'games.minesweeper.rulesControls'.tr()}',
+                style: const TextStyle(
                   color: Colors.white,
                   fontWeight: FontWeight.bold,
                 ),
               ),
-              SizedBox(height: 4),
+              const SizedBox(height: 4),
               Text(
-                '• 탭: 칸 열기\n'
-                '• 길게 누르기: 깃발 꽂기/제거\n'
-                '• 숫자 칸 길게 누르기: 주변 한번에 열기',
-                style: TextStyle(color: Colors.white70, fontSize: 13),
+                'games.minesweeper.rulesControlsDesc'.tr(),
+                style: const TextStyle(color: Colors.white70, fontSize: 13),
               ),
-              SizedBox(height: 12),
+              const SizedBox(height: 12),
               Text(
-                '🔢 숫자의 의미',
-                style: TextStyle(
+                '🔢 ${'games.minesweeper.rulesNumbers'.tr()}',
+                style: const TextStyle(
                   color: Colors.white,
                   fontWeight: FontWeight.bold,
                 ),
               ),
-              SizedBox(height: 4),
+              const SizedBox(height: 4),
               Text(
-                '숫자는 주변 8칸에 있는\n'
-                '지뢰의 개수를 나타냅니다.\n'
-                '예: "3"이면 주변에 지뢰 3개',
-                style: TextStyle(color: Colors.white70, fontSize: 13),
+                'games.minesweeper.rulesNumbersDesc'.tr(),
+                style: const TextStyle(color: Colors.white70, fontSize: 13),
               ),
-              SizedBox(height: 12),
+              const SizedBox(height: 12),
               Text(
-                '💡 팁',
-                style: TextStyle(
+                '💡 ${'games.minesweeper.rulesTips'.tr()}',
+                style: const TextStyle(
                   color: Colors.white,
                   fontWeight: FontWeight.bold,
                 ),
               ),
-              SizedBox(height: 4),
+              const SizedBox(height: 4),
               Text(
-                '• 첫 클릭은 절대 지뢰가 아닙니다\n'
-                '• 깃발로 지뢰 위치를 표시하세요\n'
-                '• 힌트를 사용해 막힐 때 도움받기',
-                style: TextStyle(color: Colors.white70, fontSize: 13),
+                'games.minesweeper.rulesTipsDesc'.tr(),
+                style: const TextStyle(color: Colors.white70, fontSize: 13),
               ),
             ],
           ),
