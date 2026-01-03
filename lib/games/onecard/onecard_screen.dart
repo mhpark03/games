@@ -2096,7 +2096,7 @@ class _OneCardScreenState extends State<OneCardScreen> with TickerProviderStateM
                     ),
                   ),
                   Text(
-                    card.isBlackJoker ? '(흑백)' : '(컬러)',
+                    card.isBlackJoker ? 'games.onecard.blackJoker'.tr() : 'games.onecard.colorJoker'.tr(),
                     style: TextStyle(
                       color: card.isBlackJoker ? Colors.grey.shade600 : Colors.red.shade400,
                       fontSize: 6 * size,

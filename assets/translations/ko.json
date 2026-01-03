@@ -313,7 +313,9 @@
       "bankruptcy": "파산! 카드가 {count}장이 되었습니다",
       "computerReceivedCards": "{name}: {count}장을 받았습니다",
       "computerDrewCard": "{name}: 1장을 뽑았습니다",
-      "computerBankruptcy": "{name} 파산! 카드가 {count}장이 되었습니다"
+      "computerBankruptcy": "{name} 파산! 카드가 {count}장이 되었습니다",
+      "blackJoker": "(흑백)",
+      "colorJoker": "(컬러)"
     },
     "yutnori": {
       "name": "윷놀이",

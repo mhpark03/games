@@ -313,7 +313,9 @@
       "bankruptcy": "Bankruptcy! You now have {count} cards",
       "computerReceivedCards": "{name}: Received {count} cards",
       "computerDrewCard": "{name}: Drew 1 card",
-      "computerBankruptcy": "{name} Bankruptcy! Now has {count} cards"
+      "computerBankruptcy": "{name} Bankruptcy! Now has {count} cards",
+      "blackJoker": "(B&W)",
+      "colorJoker": "(Color)"
     },
     "yutnori": {
       "name": "Yutnori",

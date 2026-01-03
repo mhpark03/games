@@ -313,7 +313,9 @@
       "bankruptcy": "破産！カードが{count}枚になりました",
       "computerReceivedCards": "{name}: {count}枚を受け取りました",
       "computerDrewCard": "{name}: 1枚引きました",
-      "computerBankruptcy": "{name}破産！カードが{count}枚になりました"
+      "computerBankruptcy": "{name}破産！カードが{count}枚になりました",
+      "blackJoker": "(白黒)",
+      "colorJoker": "(カラー)"
     },
     "yutnori": {
       "name": "ユンノリ",

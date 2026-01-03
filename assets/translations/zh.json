@@ -295,7 +295,9 @@
       "bankruptcy": "破产！手牌达到{count}张",
       "computerReceivedCards": "{name}: 收到{count}张牌",
       "computerDrewCard": "{name}: 抽了1张牌",
-      "computerBankruptcy": "{name}破产！手牌达到{count}张"
+      "computerBankruptcy": "{name}破产！手牌达到{count}张",
+      "blackJoker": "(黑白)",
+      "colorJoker": "(彩色)"
     },
     "yutnori": {
       "name": "掷柶",
