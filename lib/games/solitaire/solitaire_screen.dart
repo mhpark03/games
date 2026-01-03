@@ -1760,13 +1760,26 @@ class _SolitaireScreenState extends State<SolitaireScreen> {
       child: showPartial
           ? Padding(
               padding: const EdgeInsets.only(left: 3, top: 2),
-              child: Text(
-                '${card.rankString}${card.suitString}',
-                style: TextStyle(
-                  color: card.suitColor,
-                  fontSize: _largeCardMode ? (cardWidth * 0.25) : (cardWidth * 0.22),
-                  fontWeight: FontWeight.bold,
-                ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    card.rankString,
+                    style: TextStyle(
+                      color: card.suitColor,
+                      fontSize: _largeCardMode ? (cardWidth * 0.25) : (cardWidth * 0.22),
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  Text(
+                    card.suitString,
+                    style: TextStyle(
+                      color: card.suitColor,
+                      fontSize: _largeCardMode ? (cardWidth * 0.22) : (cardWidth * 0.18),
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ],
               ),
             )
           : _largeCardMode
@@ -1812,14 +1825,28 @@ class _SolitaireScreenState extends State<SolitaireScreen> {
           // 상단: 숫자 + 무늬 (크게 표시)
           Align(
             alignment: Alignment.topLeft,
-            child: Text(
-              '${card.rankString}${card.suitString}',
-              style: TextStyle(
-                color: card.suitColor,
-                fontSize: cardWidth * 0.27,  // 동적 글자 크기
-                fontWeight: FontWeight.bold,
-                height: 1.0,
-              ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  card.rankString,
+                  style: TextStyle(
+                    color: card.suitColor,
+                    fontSize: cardWidth * 0.27,
+                    fontWeight: FontWeight.bold,
+                    height: 1.0,
+                  ),
+                ),
+                Text(
+                  card.suitString,
+                  style: TextStyle(
+                    color: card.suitColor,
+                    fontSize: cardWidth * 0.24,
+                    fontWeight: FontWeight.bold,
+                    height: 1.0,
+                  ),
+                ),
+              ],
             ),
           ),
           // 중앙: 큰 무늬 하나
