@@ -222,7 +222,15 @@
       "youWin": "你赢了！",
       "movesCount": "步数: {count}",
       "timeElapsed": "时间: {time}",
-      "rulesTitle": "纸牌游戏规则"
+      "rulesTitle": "纸牌游戏规则",
+      "rulesObjective": "游戏目标",
+      "rulesObjectiveDesc": "将所有牌按花色从A到K\n依次叠放到4个基础堆上！",
+      "rulesHowToPlay": "游戏方法",
+      "rulesHowToPlayDesc": "• 桌面牌堆：红黑交替降序叠放\n• 基础堆：同花色升序叠放\n• 点击牌堆翻新牌\n• 只有K可以放在空桌面位置",
+      "rulesCardMove": "移动牌",
+      "rulesCardMoveDesc": "• 拖动正面牌进行移动\n• 可一次移动多张牌\n• 双击自动移动到基础堆",
+      "rulesTips": "技巧",
+      "rulesTipsDesc": "• A出现后立即移到基础堆\n• 优先翻开背面的牌\n• 使用翻1张/翻3张模式调整难度"
     },
     "minesweeper": {
       "name": "扫雷",

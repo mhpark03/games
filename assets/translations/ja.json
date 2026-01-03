@@ -230,7 +230,15 @@
       "youWin": "勝利！",
       "movesCount": "手数: {count}",
       "timeElapsed": "時間: {time}",
-      "rulesTitle": "ソリティア ルール"
+      "rulesTitle": "ソリティア ルール",
+      "rulesObjective": "ゲーム目標",
+      "rulesObjectiveDesc": "4つの組札に、スートごとに\nAからKまで順番にカードを重ねましょう！",
+      "rulesHowToPlay": "遊び方",
+      "rulesHowToPlayDesc": "• 場札：赤↔黒を交互に降順で重ねる\n• 組札：同じスートで昇順に重ねる\n• 山札をタップして新しいカードをめくる\n• Kのみ空いた場札に置ける",
+      "rulesCardMove": "カードの移動",
+      "rulesCardMoveDesc": "• 表向きのカードをドラッグして移動\n• 複数枚を一度に移動可能\n• ダブルタップで組札へ自動移動",
+      "rulesTips": "ヒント",
+      "rulesTipsDesc": "• Aは見つけたらすぐ組札へ\n• 裏向きカードを早く表にすることが大切\n• 1枚引き/3枚引きモードで難易度調整"
     },
     "minesweeper": {
       "name": "マインスイーパー",
