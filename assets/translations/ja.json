@@ -92,7 +92,7 @@
     },
     "janggi": {
       "name": "チャンギ",
-      "subtitle": "韓国将棋",
+      "subtitle": "Janggi",
       "description": "韓国の伝統的なボードゲームです。相手の将を取れば勝利です。",
       "cho": "楚",
       "han": "漢",
@@ -148,7 +148,7 @@
     },
     "yutnori": {
       "name": "ユンノリ",
-      "subtitle": "韓国すごろく",
+      "subtitle": "Yutnori",
       "description": "韓国の伝統的なボードゲームです。ユッを投げて駒を動かし、すべての駒をゴールさせれば勝利です。",
       "do": "ト",
       "gae": "ケ",
@@ -162,7 +162,7 @@
     },
     "hula": {
       "name": "フラ",
-      "subtitle": "花札ゲーム",
+      "subtitle": "Hula",
       "description": "花札カードゲームです。カードを組み合わせて、最初にすべてのカードを出した人が勝ちです。",
       "meld": "メルド",
       "thankYou": "テンキュー",
