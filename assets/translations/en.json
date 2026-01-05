@@ -67,7 +67,10 @@
     "select": "Select",
     "remove": "Remove",
     "answer": "Answer",
-    "confirm": "Confirm"
+    "confirm": "Confirm",
+    "zoomIn": "Zoom In",
+    "zoomOut": "Zoom Out",
+    "resetZoom": "Reset Zoom"
   },
   "games": {
     "tetris": {

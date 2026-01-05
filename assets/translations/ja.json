@@ -67,7 +67,10 @@
     "select": "選択",
     "remove": "削除",
     "answer": "答え",
-    "confirm": "確認"
+    "confirm": "確認",
+    "zoomIn": "拡大",
+    "zoomOut": "縮小",
+    "resetZoom": "元のサイズ"
   },
   "games": {
     "tetris": {

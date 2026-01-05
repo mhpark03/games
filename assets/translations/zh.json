@@ -67,7 +67,10 @@
     "select": "选择",
     "remove": "删除",
     "answer": "答案",
-    "confirm": "确认"
+    "confirm": "确认",
+    "zoomIn": "放大",
+    "zoomOut": "缩小",
+    "resetZoom": "原始大小"
   },
   "games": {
     "tetris": {

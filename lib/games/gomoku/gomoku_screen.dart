@@ -65,7 +65,10 @@ class GomokuScreen extends StatefulWidget {
 
 class _GomokuScreenState extends State<GomokuScreen> {
   static const int boardSize = 15;
-  late List<List<Stone>> board;
+  List<List<Stone>> board = List.generate(
+    boardSize,
+    (_) => List.generate(boardSize, (_) => Stone.none),
+  );
   bool isBlackTurn = true; // 흑돌 차례 여부
   bool gameOver = false;
   String gameMessage = '';
@@ -73,6 +76,10 @@ class _GomokuScreenState extends State<GomokuScreen> {
   int? lastMoveRow; // 마지막 수 행
   int? lastMoveCol; // 마지막 수 열
   List<List<int>> moveHistory = []; // 수 히스토리 (되돌리기용)
+
+  // 확대/축소 컨트롤러
+  final TransformationController _transformationController = TransformationController();
+  double _currentScale = 1.0;
 
   // 현재 플레이어가 두는 돌 색상
   Stone get currentPlayerStone => isBlackTurn ? Stone.black : Stone.white;
@@ -430,6 +437,12 @@ class _GomokuScreenState extends State<GomokuScreen> {
           style: const TextStyle(color: Colors.white70, fontSize: 16),
         ),
         actions: [
+          TextButton(
+            onPressed: () {
+              Navigator.pop(context);
+            },
+            child: Text('common.confirm'.tr()),
+          ),
           TextButton(
             onPressed: () {
               Navigator.pop(context);
@@ -1083,7 +1096,32 @@ class _GomokuScreenState extends State<GomokuScreen> {
 
   @override
   void dispose() {
+    _transformationController.dispose();
     super.dispose();
+  }
+
+  // 확대 기능
+  void _zoomIn() {
+    setState(() {
+      _currentScale = (_currentScale * 1.5).clamp(1.0, 3.0);
+      _transformationController.value = Matrix4.identity()..scale(_currentScale);
+    });
+  }
+
+  // 축소 기능
+  void _zoomOut() {
+    setState(() {
+      _currentScale = (_currentScale / 1.5).clamp(1.0, 3.0);
+      _transformationController.value = Matrix4.identity()..scale(_currentScale);
+    });
+  }
+
+  // 원래 크기로 복원
+  void _resetZoom() {
+    setState(() {
+      _currentScale = 1.0;
+      _transformationController.value = Matrix4.identity();
+    });
   }
 
   @override
@@ -1166,14 +1204,25 @@ class _GomokuScreenState extends State<GomokuScreen> {
             ),
             Expanded(
               child: Center(
-                child: AspectRatio(
-                  aspectRatio: 1,
-                  child: _buildGameBoard(),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    AspectRatio(
+                      aspectRatio: 1,
+                      child: _buildGameBoard(),
+                    ),
+                    // 확대/축소 버튼 (바둑판 바로 밑)
+                    Padding(
+                      padding: const EdgeInsets.only(top: 4.0),
+                      child: _buildZoomControls(),
+                    ),
+                  ],
                 ),
               ),
             ),
+            // 범례
             Padding(
-              padding: const EdgeInsets.all(16.0),
+              padding: const EdgeInsets.only(bottom: 12.0),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: _buildLegendByMode(),
@@ -1234,14 +1283,24 @@ class _GomokuScreenState extends State<GomokuScreen> {
                       ),
                     ),
                   ),
-                  // 가운데: 게임 보드 (최대 크기)
+                  // 가운데: 게임 보드 + 확대/축소 버튼
                   LayoutBuilder(
                     builder: (context, constraints) {
                       final size = constraints.maxHeight;
-                      return SizedBox(
-                        width: size,
-                        height: size,
-                        child: _buildGameBoard(),
+                      return Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          SizedBox(
+                            width: size,
+                            height: size,
+                            child: _buildGameBoard(),
+                          ),
+                          // 확대/축소 버튼 (세로 배치)
+                          Padding(
+                            padding: const EdgeInsets.only(left: 8.0),
+                            child: _buildVerticalZoomControls(),
+                          ),
+                        ],
                       );
                     },
                   ),
@@ -1438,40 +1497,135 @@ class _GomokuScreenState extends State<GomokuScreen> {
 
   // 게임 보드 위젯
   Widget _buildGameBoard() {
-    return Container(
-      margin: const EdgeInsets.all(8),
-      decoration: BoxDecoration(
-        color: const Color(0xFFDEB887),
-        borderRadius: BorderRadius.circular(8),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.5),
-            blurRadius: 15,
-            offset: const Offset(0, 8),
-          ),
-        ],
-      ),
-      child: CustomPaint(
-        painter: BoardPainter(),
-        child: GridView.builder(
-          physics: const NeverScrollableScrollPhysics(),
-          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-            crossAxisCount: boardSize,
-          ),
-          itemCount: boardSize * boardSize,
-          itemBuilder: (context, index) {
-            int row = index ~/ boardSize;
-            int col = index % boardSize;
-            return GestureDetector(
-              onTap: () => _placeStone(row, col),
-              child: Container(
-                color: Colors.transparent,
-                child: Center(
-                  child: _buildStone(row, col),
+    return InteractiveViewer(
+      transformationController: _transformationController,
+      minScale: 1.0,
+      maxScale: 3.0,
+      onInteractionEnd: (details) {
+        // 핀치 줌 후 현재 스케일 동기화
+        final scale = _transformationController.value.getMaxScaleOnAxis();
+        setState(() {
+          _currentScale = scale;
+        });
+      },
+      child: Container(
+        margin: const EdgeInsets.all(8),
+        decoration: BoxDecoration(
+          color: const Color(0xFFDEB887),
+          borderRadius: BorderRadius.circular(8),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.5),
+              blurRadius: 15,
+              offset: const Offset(0, 8),
+            ),
+          ],
+        ),
+        child: CustomPaint(
+          painter: BoardPainter(),
+          child: GridView.builder(
+            physics: const NeverScrollableScrollPhysics(),
+            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+              crossAxisCount: boardSize,
+            ),
+            itemCount: boardSize * boardSize,
+            itemBuilder: (context, index) {
+              int row = index ~/ boardSize;
+              int col = index % boardSize;
+              return GestureDetector(
+                onTap: () => _placeStone(row, col),
+                child: Container(
+                  color: Colors.transparent,
+                  child: Center(
+                    child: _buildStone(row, col),
+                  ),
                 ),
+              );
+            },
+          ),
+        ),
+      ),
+    );
+  }
+
+  // 확대/축소 버튼 그룹 위젯 (가로 배치 - 세로 모드용)
+  Widget _buildZoomControls() {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        _buildZoomButton(
+          icon: Icons.remove,
+          onPressed: _currentScale > 1.0 ? _zoomOut : null,
+          tooltip: 'common.zoomOut'.tr(),
+        ),
+        const SizedBox(width: 8),
+        _buildZoomButton(
+          icon: Icons.refresh,
+          onPressed: _currentScale != 1.0 ? _resetZoom : null,
+          tooltip: 'common.resetZoom'.tr(),
+        ),
+        const SizedBox(width: 8),
+        _buildZoomButton(
+          icon: Icons.add,
+          onPressed: _currentScale < 3.0 ? _zoomIn : null,
+          tooltip: 'common.zoomIn'.tr(),
+        ),
+      ],
+    );
+  }
+
+  // 확대/축소 버튼 그룹 위젯 (세로 배치 - 가로 모드용)
+  Widget _buildVerticalZoomControls() {
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        _buildZoomButton(
+          icon: Icons.add,
+          onPressed: _currentScale < 3.0 ? _zoomIn : null,
+          tooltip: 'common.zoomIn'.tr(),
+        ),
+        const SizedBox(height: 8),
+        _buildZoomButton(
+          icon: Icons.refresh,
+          onPressed: _currentScale != 1.0 ? _resetZoom : null,
+          tooltip: 'common.resetZoom'.tr(),
+        ),
+        const SizedBox(height: 8),
+        _buildZoomButton(
+          icon: Icons.remove,
+          onPressed: _currentScale > 1.0 ? _zoomOut : null,
+          tooltip: 'common.zoomOut'.tr(),
+        ),
+      ],
+    );
+  }
+
+  // 확대/축소 버튼 위젯
+  Widget _buildZoomButton({
+    required IconData icon,
+    required VoidCallback? onPressed,
+    required String tooltip,
+  }) {
+    final isEnabled = onPressed != null;
+    return Opacity(
+      opacity: isEnabled ? 1.0 : 0.4,
+      child: Material(
+        color: Colors.black.withValues(alpha: 0.6),
+        shape: const CircleBorder(),
+        child: InkWell(
+          onTap: onPressed,
+          customBorder: const CircleBorder(),
+          child: Tooltip(
+            message: tooltip,
+            child: Container(
+              padding: const EdgeInsets.all(10),
+              child: Icon(
+                icon,
+                color: Colors.white,
+                size: 24,
               ),
-            );
-          },
+            ),
+          ),
         ),
       ),
     );
