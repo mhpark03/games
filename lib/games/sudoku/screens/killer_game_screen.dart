@@ -420,6 +420,11 @@ class _KillerGameScreenState extends State<KillerGameScreen>
           _applyHint(row, col);
         }
       },
+      onAdNotAvailable: () {
+        if (mounted) {
+          _applyHint(row, col);
+        }
+      },
     );
   }
 

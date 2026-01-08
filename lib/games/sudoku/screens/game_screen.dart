@@ -434,6 +434,11 @@ class _GameScreenState extends State<GameScreen> with WidgetsBindingObserver {
           _applyHint(row, col);
         }
       },
+      onAdNotAvailable: () {
+        if (mounted) {
+          _applyHint(row, col);
+        }
+      },
     );
   }
 
@@ -752,6 +757,11 @@ class _GameScreenState extends State<GameScreen> with WidgetsBindingObserver {
       },
       onAdDismissed: () {
         if (mounted && rewardEarned) {
+          _applyFillAllNotes();
+        }
+      },
+      onAdNotAvailable: () {
+        if (mounted) {
           _applyFillAllNotes();
         }
       },

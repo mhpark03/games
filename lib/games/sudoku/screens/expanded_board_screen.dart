@@ -961,6 +961,11 @@ class _ExpandedBoardScreenState extends State<ExpandedBoardScreen> {
           _applyFillAllNotes();
         }
       },
+      onAdNotAvailable: () {
+        if (mounted) {
+          _applyFillAllNotes();
+        }
+      },
     );
   }
 
@@ -1158,6 +1163,11 @@ class _ExpandedBoardScreenState extends State<ExpandedBoardScreen> {
       },
       onAdDismissed: () {
         if (mounted && rewardEarned) {
+          _applyHint(row, col);
+        }
+      },
+      onAdNotAvailable: () {
+        if (mounted) {
           _applyHint(row, col);
         }
       },

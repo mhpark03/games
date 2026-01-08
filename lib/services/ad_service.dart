@@ -14,8 +14,15 @@ class AdService {
   BannerAd? _bannerAd;
   bool _isBannerLoaded = false;
 
-  // 광고 단위 ID
+  // 광고 단위 ID (디버그 모드에서는 테스트 ID 사용)
   String get rewardedAdUnitId {
+    if (kDebugMode) {
+      // 테스트 광고 ID
+      return Platform.isAndroid
+          ? 'ca-app-pub-3940256099942544/5224354917'
+          : 'ca-app-pub-3940256099942544/1712485313';
+    }
+    // 실제 광고 ID
     if (Platform.isAndroid) {
       return 'ca-app-pub-8361977398389047/3216947358'; // Android 보상형
     } else if (Platform.isIOS) {
@@ -25,6 +32,13 @@ class AdService {
   }
 
   String get bannerAdUnitId {
+    if (kDebugMode) {
+      // 테스트 광고 ID
+      return Platform.isAndroid
+          ? 'ca-app-pub-3940256099942544/6300978111'
+          : 'ca-app-pub-3940256099942544/2934735716';
+    }
+    // 실제 광고 ID
     if (Platform.isAndroid) {
       return 'ca-app-pub-8361977398389047/1127832458'; // Android 배너
     } else if (Platform.isIOS) {
@@ -67,12 +81,18 @@ class AdService {
   }
 
   // 보상형 광고 표시
+  /// [onUserEarnedReward] 광고 시청 완료 시 호출되는 콜백
+  /// [onAdDismissed] 광고가 닫혔을 때 호출되는 콜백
+  /// [onAdNotAvailable] 광고가 준비되지 않았을 때 호출되는 콜백
+  /// 반환값: 광고가 표시되었으면 true, 아니면 false
   Future<bool> showRewardedAd({
     required Function(AdWithoutView, RewardItem) onUserEarnedReward,
     Function()? onAdDismissed,
+    Function()? onAdNotAvailable,
   }) async {
     if (_rewardedAd == null) {
       loadRewardedAd();
+      onAdNotAvailable?.call();
       return false;
     }
 
@@ -98,8 +118,8 @@ class AdService {
         _rewardedAd = null;
         // 실패 시에도 몰입 모드 유지
         SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersiveSticky);
-        // 광고 실패 시에도 콜백 호출 (사용자 책임 아님)
-        onAdDismissed?.call();
+        // 광고 실패 시 콜백 호출
+        onAdNotAvailable?.call();
         loadRewardedAd();
       },
     );
