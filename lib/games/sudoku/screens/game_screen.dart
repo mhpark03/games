@@ -186,12 +186,19 @@ class _GameScreenState extends State<GameScreen> with WidgetsBindingObserver {
         if (!_gameState.isFixed[row][col]) {
           // 빠른 입력 + 메모 모드: 메모로 입력
           if (controlState.isNoteMode) {
-            if (_gameState.currentBoard[row][col] == 0) {
-              // Undo 히스토리에 저장
-              _gameState.saveToUndoHistory(row, col);
-              _gameState.toggleNote(row, col, controlState.quickInputNumber!);
-              _gameState = _gameState.copyWith(selectedRow: row, selectedCol: col);
+            // Undo 히스토리에 저장
+            _gameState.saveToUndoHistory(row, col);
+
+            // 셀에 숫자가 있으면 먼저 지우기
+            if (_gameState.currentBoard[row][col] != 0) {
+              List<List<int>> newBoard =
+                  _gameState.currentBoard.map((r) => List<int>.from(r)).toList();
+              newBoard[row][col] = 0;
+              _gameState = _gameState.copyWith(currentBoard: newBoard);
             }
+
+            _gameState.toggleNote(row, col, controlState.quickInputNumber!);
+            _gameState = _gameState.copyWith(selectedRow: row, selectedCol: col);
           } else {
             // 빠른 입력 모드만: 일반 숫자 입력
             int number = controlState.quickInputNumber!;
@@ -271,11 +278,18 @@ class _GameScreenState extends State<GameScreen> with WidgetsBindingObserver {
 
       // 메모 모드일 때
       if (isNoteMode) {
-        if (_gameState.currentBoard[row][col] == 0) {
-          // Undo 히스토리에 저장
-          _gameState.saveToUndoHistory(row, col);
-          _gameState.toggleNote(row, col, number);
+        // Undo 히스토리에 저장
+        _gameState.saveToUndoHistory(row, col);
+
+        // 셀에 숫자가 있으면 먼저 지우기
+        if (_gameState.currentBoard[row][col] != 0) {
+          List<List<int>> newBoard =
+              _gameState.currentBoard.map((r) => List<int>.from(r)).toList();
+          newBoard[row][col] = 0;
+          _gameState = _gameState.copyWith(currentBoard: newBoard);
         }
+
+        _gameState.toggleNote(row, col, number);
         return;
       }
 
