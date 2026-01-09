@@ -808,9 +808,9 @@ class BubbleGamePainter extends CustomPainter {
       points.add(Offset(x, y));
     }
 
-    // 점선 그리기 (힌트 모드 - 시안색으로 밝게 표시)
+    // 점선 그리기 (힌트 모드 - 슈팅 볼 색상으로 밝게 표시)
     final dotPaint = Paint()
-      ..color = const Color(0xFF00D9FF)
+      ..color = color.withValues(alpha: 0.9)
       ..strokeWidth = 6.0
       ..strokeCap = StrokeCap.round;
 
