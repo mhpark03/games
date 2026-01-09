@@ -725,10 +725,16 @@ class BubbleGamePainter extends CustomPainter {
       );
     }
 
-    // 조준선 (힌트 모드일 때만 표시)
-    if (showHint && game.currentBubble != null && !game.isShooting) {
+    // 조준선
+    if (game.currentBubble != null && !game.isShooting) {
       final bubbleColor = getBubbleColor(game.currentBubble!.color);
-      _drawAimLine(canvas, size, baseBubbleRadius, bubbleColor);
+      if (showHint) {
+        // 힌트 모드: 전체 경로 표시
+        _drawAimLine(canvas, size, baseBubbleRadius, bubbleColor);
+      } else {
+        // 기본 모드: 짧은 방향 표시선
+        _drawShortAimLine(canvas, baseBubbleRadius, bubbleColor);
+      }
     }
 
     // 발사대 (현재 버블 색상으로)
@@ -837,6 +843,38 @@ class BubbleGamePainter extends CustomPainter {
         traveled += dotSpacing / 2;
         draw = !draw;
       }
+    }
+  }
+
+  void _drawShortAimLine(Canvas canvas, double bubbleRadius, Color color) {
+    // 짧은 방향 표시선 (벽에 닿지 않는 길이)
+    final shooterX = game.shooterX;
+    final shooterY = game.shooterY;
+    final vx = cos(game.aimAngle);
+    final vy = sin(game.aimAngle);
+
+    // 짧은 길이 (발사대에서 약 80픽셀)
+    const lineLength = 80.0;
+
+    final dotPaint = Paint()
+      ..color = color.withValues(alpha: 0.6)
+      ..strokeWidth = 4.0
+      ..strokeCap = StrokeCap.round;
+
+    const dotRadius = 4.0;
+    const dotSpacing = 12.0;
+
+    double traveled = bubbleRadius + 10; // 발사대 바깥에서 시작
+    while (traveled < lineLength) {
+      final x = shooterX + vx * traveled;
+      final y = shooterY + vy * traveled;
+
+      canvas.drawCircle(
+        Offset(x, y),
+        dotRadius,
+        dotPaint,
+      );
+      traveled += dotSpacing;
     }
   }
 
