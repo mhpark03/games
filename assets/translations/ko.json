@@ -545,11 +545,11 @@
       "rulesObjective": "🎯 목표",
       "rulesObjectiveDesc": "빨간색 시작점에서 노란색 도착점까지 미로를 탈출하세요.",
       "rulesControls": "🎮 조작 방법",
-      "rulesControlsDesc": "• 화면 하단의 방향 버튼을 탭하여 이동\n• 키보드: 방향키 또는 WASD로 이동",
+      "rulesControlsDesc": "• 화면의 방향 버튼을 탭하여 이동\n• 키보드: 방향키 또는 WASD로 이동",
       "rulesButtons": "🔘 버튼 설명",
-      "rulesButtonsDesc": "• 리셋: 현재 미로의 시작점으로 돌아갑니다\n• 새 미로: 새로운 미로를 생성합니다",
+      "rulesButtonsDesc": "• 💡 힌트: 출구까지 경로를 표시합니다 (광고 시청)\n• 🔄 새 게임: 새로운 미로를 생성합니다",
       "rulesTips": "💡 팁",
-      "rulesTipsDesc": "• 막다른 길을 기억하고 다른 경로를 시도하세요\n• 벽을 따라가는 방법도 효과적입니다"
+      "rulesTipsDesc": "• 막다른 길을 기억하고 다른 경로를 시도하세요\n• 벽을 따라가는 방법도 효과적입니다\n• 막히면 힌트를 사용해 경로를 확인하세요"
     },
     "mole": {
       "name": "두더지 잡기",

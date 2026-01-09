@@ -383,7 +383,7 @@ class _MazeScreenState extends State<MazeScreen> {
                         );
                       },
                     ),
-                    const SizedBox(height: 16),
+                    const SizedBox(height: 88),
                   ],
                 ),
               ),
@@ -455,7 +455,7 @@ class _MazeScreenState extends State<MazeScreen> {
                         );
                       },
                     ),
-                    const SizedBox(height: 16),
+                    const SizedBox(height: 88),
                   ],
                 ),
               ),
