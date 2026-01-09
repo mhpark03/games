@@ -8,7 +8,12 @@ import 'widgets/maze_widget.dart';
 enum MazeDifficulty { easy, medium, hard }
 
 class MazeScreen extends StatefulWidget {
-  const MazeScreen({super.key});
+  final MazeDifficulty difficulty;
+
+  const MazeScreen({
+    super.key,
+    this.difficulty = MazeDifficulty.medium,
+  });
 
   @override
   State<MazeScreen> createState() => _MazeScreenState();
@@ -16,7 +21,7 @@ class MazeScreen extends StatefulWidget {
 
 class _MazeScreenState extends State<MazeScreen> {
   late Maze maze;
-  MazeDifficulty difficulty = MazeDifficulty.medium;
+  late MazeDifficulty difficulty;
   int moves = 0;
   int elapsedSeconds = 0;
   Timer? timer;
@@ -26,6 +31,7 @@ class _MazeScreenState extends State<MazeScreen> {
   @override
   void initState() {
     super.initState();
+    difficulty = widget.difficulty;
     _initializeMaze();
     _startTimer();
   }
@@ -156,16 +162,6 @@ class _MazeScreenState extends State<MazeScreen> {
     return '${minutes.toString().padLeft(2, '0')}:${secs.toString().padLeft(2, '0')}';
   }
 
-  void _changeDifficulty(MazeDifficulty newDifficulty) {
-    if (difficulty != newDifficulty) {
-      setState(() {
-        difficulty = newDifficulty;
-        _initializeMaze();
-      });
-      _startTimer();
-    }
-  }
-
   KeyEventResult _handleKeyEvent(FocusNode node, KeyEvent event) {
     if (event is KeyDownEvent) {
       switch (event.logicalKey) {
@@ -210,7 +206,6 @@ class _MazeScreenState extends State<MazeScreen> {
             child: Column(
               children: [
                 _buildHeader(),
-                _buildDifficultySelector(),
                 Expanded(
                   child: Padding(
                     padding: const EdgeInsets.all(16),
@@ -312,46 +307,6 @@ class _MazeScreenState extends State<MazeScreen> {
             ],
           ),
         ],
-      ),
-    );
-  }
-
-  Widget _buildDifficultySelector() {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          _buildDifficultyButton('common.easy'.tr(), MazeDifficulty.easy),
-          const SizedBox(width: 8),
-          _buildDifficultyButton('common.normal'.tr(), MazeDifficulty.medium),
-          const SizedBox(width: 8),
-          _buildDifficultyButton('common.hard'.tr(), MazeDifficulty.hard),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildDifficultyButton(String label, MazeDifficulty level) {
-    final isSelected = difficulty == level;
-    return GestureDetector(
-      onTap: () => _changeDifficulty(level),
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
-        decoration: BoxDecoration(
-          color: isSelected ? Colors.purple : Colors.grey.shade900,
-          borderRadius: BorderRadius.circular(20),
-          border: Border.all(
-            color: isSelected ? Colors.purple : Colors.grey.shade700,
-          ),
-        ),
-        child: Text(
-          label,
-          style: TextStyle(
-            color: isSelected ? Colors.white : Colors.white70,
-            fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-          ),
-        ),
       ),
     );
   }

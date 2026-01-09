@@ -24,8 +24,6 @@ import 'games/number_sums/screens/number_sums_game_screen.dart' as number_sums;
 import 'games/number_sums/models/number_sums_generator.dart' as number_sums;
 import 'games/number_sums/services/game_storage.dart' as number_sums;
 import 'games/maze/maze_screen.dart';
-import 'games/mole/mole_screen.dart';
-import 'games/bubble/bubble_screen.dart';
 import 'services/ad_service.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
 
@@ -1687,6 +1685,132 @@ class _HomeScreenState extends State<HomeScreen> {
           context,
           MaterialPageRoute(
             builder: (context) => MinesweeperScreen(
+              difficulty: difficulty,
+            ),
+          ),
+        );
+      },
+      borderRadius: BorderRadius.circular(12),
+      child: Container(
+        width: double.infinity,
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        decoration: BoxDecoration(
+          color: color.withValues(alpha: 0.1),
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(
+            color: color.withValues(alpha: 0.5),
+            width: 1,
+          ),
+        ),
+        child: Row(
+          children: [
+            Icon(icon, color: color, size: 28),
+            const SizedBox(width: 12),
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  title,
+                  style: TextStyle(
+                    color: color,
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                Text(
+                  subtitle,
+                  style: TextStyle(
+                    color: Colors.grey.shade400,
+                    fontSize: 12,
+                  ),
+                ),
+              ],
+            ),
+            const Spacer(),
+            Icon(
+              Icons.arrow_forward_ios,
+              color: color.withValues(alpha: 0.7),
+              size: 16,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // 미로찾기 난이도 선택 다이얼로그
+  void _showMazeDifficultyDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          backgroundColor: Colors.grey.shade900,
+          insetPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+            side: BorderSide(color: Colors.purple.withValues(alpha: 0.5), width: 2),
+          ),
+          title: Text(
+            'dialog.selectDifficulty'.tr(),
+            style: const TextStyle(
+              color: Colors.purple,
+              fontWeight: FontWeight.bold,
+            ),
+            textAlign: TextAlign.center,
+          ),
+          content: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                _buildMazeDifficultyButton(
+                  context,
+                  title: 'common.easy'.tr(),
+                  subtitle: '25x25',
+                  icon: Icons.sentiment_satisfied,
+                  color: Colors.green,
+                  difficulty: MazeDifficulty.easy,
+                ),
+                const SizedBox(height: 12),
+                _buildMazeDifficultyButton(
+                  context,
+                  title: 'common.normal'.tr(),
+                  subtitle: '35x35',
+                  icon: Icons.sentiment_neutral,
+                  color: Colors.orange,
+                  difficulty: MazeDifficulty.medium,
+                ),
+                const SizedBox(height: 12),
+                _buildMazeDifficultyButton(
+                  context,
+                  title: 'common.hard'.tr(),
+                  subtitle: '51x51',
+                  icon: Icons.sentiment_very_dissatisfied,
+                  color: Colors.red,
+                  difficulty: MazeDifficulty.hard,
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildMazeDifficultyButton(
+    BuildContext context, {
+    required String title,
+    required String subtitle,
+    required IconData icon,
+    required Color color,
+    required MazeDifficulty difficulty,
+  }) {
+    return InkWell(
+      onTap: () {
+        Navigator.pop(context);
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => MazeScreen(
               difficulty: difficulty,
             ),
           ),
@@ -3475,40 +3599,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                 icon: Icons.grid_4x4,
                                 color: Colors.purple,
                                 description: 'games.maze.description'.tr(),
-                                onTap: () => Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder: (context) => const MazeScreen(),
-                                  ),
-                                ),
-                              ),
-                              _buildGameTile(
-                                context,
-                                title: 'games.mole.name'.tr(),
-                                subtitle: 'games.mole.subtitle'.tr(),
-                                icon: Icons.pets,
-                                color: Colors.brown,
-                                description: 'games.mole.description'.tr(),
-                                onTap: () => Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder: (context) => const MoleScreen(),
-                                  ),
-                                ),
-                              ),
-                              _buildGameTile(
-                                context,
-                                title: 'games.bubble.name'.tr(),
-                                subtitle: 'games.bubble.subtitle'.tr(),
-                                icon: Icons.bubble_chart,
-                                color: Colors.cyan,
-                                description: 'games.bubble.description'.tr(),
-                                onTap: () => Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder: (context) => const BubbleScreen(),
-                                  ),
-                                ),
+                                onTap: () => _showMazeDifficultyDialog(context),
                               ),
                             ],
                           );
