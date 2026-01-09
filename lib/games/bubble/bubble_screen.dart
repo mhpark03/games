@@ -633,8 +633,12 @@ class _BubbleScreenState extends State<BubbleScreen> {
                 game.aim(details.localPosition.dx, details.localPosition.dy);
                 setState(() {});
               },
-              onTapUp: (details) {
-                game.aim(details.localPosition.dx, details.localPosition.dy);
+              onPanEnd: (details) {
+                // 드래그 종료 시 발사
+                game.shoot();
+              },
+              onTap: () {
+                // 탭 시 현재 방향으로 발사 (방향 변경 없음)
                 game.shoot();
               },
               child: CustomPaint(
@@ -721,18 +725,20 @@ class BubbleGamePainter extends CustomPainter {
       );
     }
 
-    // 조준선 (힌트 모드이거나 발사 중이 아닐 때)
-    final shouldDrawAimLine = showHint || (!game.isShooting && game.currentBubble != null);
-    if (shouldDrawAimLine && game.currentBubble != null) {
+    // 조준선 (힌트 모드일 때만 표시)
+    if (showHint && game.currentBubble != null && !game.isShooting) {
       final bubbleColor = getBubbleColor(game.currentBubble!.color);
-      _drawAimLine(canvas, size, baseBubbleRadius, bubbleColor, showHint);
+      _drawAimLine(canvas, size, baseBubbleRadius, bubbleColor);
     }
 
-    // 발사대
-    _drawShooter(canvas, size, bubbleScale);
+    // 발사대 (현재 버블 색상으로)
+    final shooterColor = game.currentBubble != null
+        ? getBubbleColor(game.currentBubble!.color)
+        : const Color(0xFF4A4A6A);
+    _drawShooter(canvas, size, bubbleScale, shooterColor);
   }
 
-  void _drawAimLine(Canvas canvas, Size size, double bubbleRadius, Color color, bool isHintMode) {
+  void _drawAimLine(Canvas canvas, Size size, double bubbleRadius, Color color) {
     final cellWidth = size.width / BubbleShooterGame.cols;
     final cellHeight = bubbleRadius * 2 * 0.866;
 
@@ -796,16 +802,14 @@ class BubbleGamePainter extends CustomPainter {
       points.add(Offset(x, y));
     }
 
-    // 점선 그리기 (힌트 모드에서는 더 밝고 크게)
-    final alpha = isHintMode ? 1.0 : 0.8;
-    final lineWidth = isHintMode ? 6.0 : 4.0;
-    final dotRadiusValue = isHintMode ? 7.0 : 5.0;
-    final dotSpacing = isHintMode ? 16.0 : 18.0;
-
+    // 점선 그리기 (힌트 모드 - 시안색으로 밝게 표시)
     final dotPaint = Paint()
-      ..color = isHintMode ? const Color(0xFF00D9FF) : color.withValues(alpha: alpha)
-      ..strokeWidth = lineWidth
+      ..color = const Color(0xFF00D9FF)
+      ..strokeWidth = 6.0
       ..strokeCap = StrokeCap.round;
+
+    const dotRadiusValue = 7.0;
+    const dotSpacing = 16.0;
 
     for (int i = 0; i < points.length - 1; i++) {
       final start = points[i];
@@ -870,24 +874,39 @@ class BubbleGamePainter extends CustomPainter {
     );
   }
 
-  void _drawShooter(Canvas canvas, Size size, double scale) {
+  void _drawShooter(Canvas canvas, Size size, double scale, Color bubbleColor) {
     final shooterX = game.shooterX;
     final shooterY = game.shooterY;
 
-    // 발사대 베이스
+    // 발사대 베이스 (현재 버블 색상)
     final basePaint = Paint()
-      ..color = const Color(0xFF4A4A6A)
+      ..color = bubbleColor
       ..style = PaintingStyle.fill;
 
+    // 그림자
+    canvas.drawCircle(
+      Offset(shooterX, shooterY + 12 * scale),
+      30 * scale,
+      Paint()..color = Colors.black.withValues(alpha: 0.3),
+    );
+
+    // 메인 베이스
     canvas.drawCircle(
       Offset(shooterX, shooterY + 10 * scale),
       30 * scale,
       basePaint,
     );
 
+    // 하이라이트
+    canvas.drawCircle(
+      Offset(shooterX - 8 * scale, shooterY + 5 * scale),
+      8 * scale,
+      Paint()..color = Colors.white.withValues(alpha: 0.4),
+    );
+
     // 발사대 포신
     final barrelPaint = Paint()
-      ..color = const Color(0xFF6A6A8A)
+      ..color = Color.lerp(bubbleColor, Colors.black, 0.3)!
       ..strokeWidth = 12 * scale
       ..strokeCap = StrokeCap.round;
 
