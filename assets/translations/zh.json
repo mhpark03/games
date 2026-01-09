@@ -593,7 +593,9 @@
       "rulesScoring": "💯 得分",
       "rulesScoringDesc": "• 连接3个泡泡：基础分\n• 连接越多分数越高\n• 掉落的泡泡也有额外分数",
       "rulesTips": "💡 提示",
-      "rulesTipsDesc": "• 可以利用墙壁反弹\n• 消除上方泡泡会使下方泡泡掉落\n• 泡泡触底则游戏结束！"
+      "rulesTipsDesc": "• 可以利用墙壁反弹\n• 消除上方泡泡会使下方泡泡掉落\n• 泡泡触底则游戏结束！",
+      "hintTitle": "瞄准辅助线",
+      "hintMessage": "观看广告后将始终显示泡泡的移动轨迹。\n(持续到游戏结束)"
     }
   },
   "dialog": {
