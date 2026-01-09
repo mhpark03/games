@@ -540,7 +540,16 @@
       "movesLabel": "Moves",
       "timeLabel": "Time",
       "reset": "Reset",
-      "newMaze": "New Maze"
+      "newMaze": "New Maze",
+      "rulesTitle": "How to Play Maze",
+      "rulesObjective": "🎯 Objective",
+      "rulesObjectiveDesc": "Navigate from the red starting point to the yellow destination to escape the maze.",
+      "rulesControls": "🎮 Controls",
+      "rulesControlsDesc": "• Tap the direction buttons at the bottom to move\n• Keyboard: Use arrow keys or WASD to move",
+      "rulesButtons": "🔘 Buttons",
+      "rulesButtonsDesc": "• Reset: Return to the starting point of the current maze\n• New Maze: Generate a new maze",
+      "rulesTips": "💡 Tips",
+      "rulesTipsDesc": "• Remember dead ends and try different paths\n• Following the wall can be an effective strategy"
     },
     "mole": {
       "name": "Whack-a-Mole",

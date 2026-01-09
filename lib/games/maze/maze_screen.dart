@@ -201,14 +201,54 @@ class _MazeScreenState extends State<MazeScreen> {
       child: GestureDetector(
         onTap: () => _focusNode.requestFocus(),
         child: Scaffold(
-          backgroundColor: Colors.black,
+          backgroundColor: Colors.grey.shade900,
+          appBar: AppBar(
+            backgroundColor: Colors.purple.shade800,
+            foregroundColor: Colors.white,
+            title: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Icon(Icons.grid_4x4, color: Colors.purpleAccent),
+                const SizedBox(width: 8),
+                Flexible(
+                  child: Text(
+                    'games.maze.name'.tr(),
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 18,
+                      color: Colors.purple.shade100,
+                    ),
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+              ],
+            ),
+            centerTitle: true,
+            actions: [
+              IconButton(
+                icon: const Icon(Icons.help_outline),
+                onPressed: _showRulesDialog,
+                tooltip: 'app.rules'.tr(),
+              ),
+              IconButton(
+                icon: const Icon(Icons.refresh),
+                onPressed: _resetGame,
+                tooltip: 'app.restart'.tr(),
+              ),
+              IconButton(
+                icon: const Icon(Icons.casino),
+                onPressed: _newGame,
+                tooltip: 'app.newGame'.tr(),
+              ),
+            ],
+          ),
           body: SafeArea(
             child: Column(
               children: [
-                _buildHeader(),
+                _buildInfoPanel(),
                 Expanded(
                   child: Padding(
-                    padding: const EdgeInsets.all(16),
+                    padding: const EdgeInsets.all(8),
                     child: Center(
                       child: MazeWidget(
                         maze: maze,
@@ -227,84 +267,100 @@ class _MazeScreenState extends State<MazeScreen> {
     );
   }
 
-  Widget _buildHeader() {
+  Widget _buildInfoPanel() {
     return Container(
       padding: const EdgeInsets.all(16),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
         children: [
           Row(
+            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
             children: [
-              IconButton(
-                onPressed: () => Navigator.of(context).pop(),
-                icon: const Icon(Icons.arrow_back, color: Colors.white),
+              _buildInfoItem(
+                icon: Icons.directions_walk,
+                iconColor: Colors.purple,
+                value: moves.toString(),
+                label: 'games.maze.movesLabel'.tr(),
               ),
-              const SizedBox(width: 8),
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'games.maze.name'.tr(),
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 24,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  Text(
-                    'games.maze.subtitle'.tr(),
-                    style: TextStyle(
-                      color: Colors.white.withValues(alpha: 0.6),
-                      fontSize: 12,
-                    ),
-                  ),
-                ],
+              _buildInfoItem(
+                icon: Icons.timer,
+                iconColor: Colors.orange,
+                value: _formatTime(elapsedSeconds),
+                label: 'games.maze.timeLabel'.tr(),
               ),
             ],
           ),
-          Row(
-            children: [
-              _buildStatCard('games.maze.movesLabel'.tr(), moves.toString(), Icons.directions_walk),
-              const SizedBox(width: 12),
-              _buildStatCard('games.maze.timeLabel'.tr(), _formatTime(elapsedSeconds), Icons.timer),
-            ],
-          ),
+          if (isGameWon) ...[
+            const SizedBox(height: 12),
+            _buildResultMessage(),
+          ],
         ],
       ),
     );
   }
 
-  Widget _buildStatCard(String label, String value, IconData icon) {
+  Widget _buildInfoItem({
+    required IconData icon,
+    required Color iconColor,
+    required String value,
+    required String label,
+  }) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Icon(icon, color: iconColor, size: 24),
+        const SizedBox(width: 8),
+        Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              value,
+              style: const TextStyle(
+                color: Colors.white,
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            Text(
+              label,
+              style: TextStyle(
+                color: Colors.grey.shade400,
+                fontSize: 12,
+              ),
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+
+  Widget _buildResultMessage() {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
       decoration: BoxDecoration(
-        color: Colors.grey.shade900,
+        color: Colors.green.withValues(alpha: 0.2),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.purple.withValues(alpha: 0.3)),
+        border: Border.all(
+          color: Colors.green,
+          width: 2,
+        ),
       ),
       child: Row(
+        mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(icon, color: Colors.purple, size: 20),
-          const SizedBox(width: 8),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                label,
-                style: TextStyle(
-                  color: Colors.white.withValues(alpha: 0.6),
-                  fontSize: 10,
-                ),
-              ),
-              Text(
-                value,
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-            ],
+          const Icon(
+            Icons.emoji_events,
+            color: Colors.amber,
+            size: 28,
+          ),
+          const SizedBox(width: 12),
+          Text(
+            'common.win'.tr(),
+            style: const TextStyle(
+              color: Colors.green,
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+            ),
           ),
         ],
       ),
@@ -314,27 +370,13 @@ class _MazeScreenState extends State<MazeScreen> {
   Widget _buildControls() {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16),
-      child: Column(
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
         children: [
-          // 방향 버튼 한 줄 배치
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-            children: [
-              _buildControlButton(Icons.arrow_back, () => _movePlayer(const Position(0, -1))),
-              _buildControlButton(Icons.arrow_upward, () => _movePlayer(const Position(-1, 0))),
-              _buildControlButton(Icons.arrow_downward, () => _movePlayer(const Position(1, 0))),
-              _buildControlButton(Icons.arrow_forward, () => _movePlayer(const Position(0, 1))),
-            ],
-          ),
-          const SizedBox(height: 16),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              _buildActionButton('games.maze.reset'.tr(), Icons.refresh, _resetGame),
-              const SizedBox(width: 16),
-              _buildActionButton('games.maze.newMaze'.tr(), Icons.casino, _newGame),
-            ],
-          ),
+          _buildControlButton(Icons.arrow_back, () => _movePlayer(const Position(0, -1))),
+          _buildControlButton(Icons.arrow_upward, () => _movePlayer(const Position(-1, 0))),
+          _buildControlButton(Icons.arrow_downward, () => _movePlayer(const Position(1, 0))),
+          _buildControlButton(Icons.arrow_forward, () => _movePlayer(const Position(0, 1))),
         ],
       ),
     );
@@ -344,10 +386,10 @@ class _MazeScreenState extends State<MazeScreen> {
     return GestureDetector(
       onTap: onPressed,
       child: Container(
-        width: 52,
-        height: 52,
+        width: 56,
+        height: 56,
         decoration: BoxDecoration(
-          color: Colors.grey.shade900,
+          color: Colors.grey.shade800,
           borderRadius: BorderRadius.circular(12),
           border: Border.all(color: Colors.purple.withValues(alpha: 0.5)),
         ),
@@ -356,27 +398,72 @@ class _MazeScreenState extends State<MazeScreen> {
     );
   }
 
-  Widget _buildActionButton(String label, IconData icon, VoidCallback onPressed) {
-    return GestureDetector(
-      onTap: onPressed,
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-        decoration: BoxDecoration(
-          color: Colors.grey.shade900,
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: Colors.purple.withValues(alpha: 0.3)),
+  void _showRulesDialog() {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: Colors.grey.shade900,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
         ),
-        child: Row(
-          children: [
-            Icon(icon, color: Colors.white70, size: 20),
-            const SizedBox(width: 8),
-            Text(
-              label,
-              style: const TextStyle(color: Colors.white70, fontSize: 14),
-            ),
-          ],
+        title: Text(
+          'games.maze.rulesTitle'.tr(),
+          style: const TextStyle(color: Colors.purple),
         ),
+        content: SingleChildScrollView(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              _buildRuleSection(
+                'games.maze.rulesObjective'.tr(),
+                'games.maze.rulesObjectiveDesc'.tr(),
+              ),
+              const SizedBox(height: 12),
+              _buildRuleSection(
+                'games.maze.rulesControls'.tr(),
+                'games.maze.rulesControlsDesc'.tr(),
+              ),
+              const SizedBox(height: 12),
+              _buildRuleSection(
+                'games.maze.rulesButtons'.tr(),
+                'games.maze.rulesButtonsDesc'.tr(),
+              ),
+              const SizedBox(height: 12),
+              _buildRuleSection(
+                'games.maze.rulesTips'.tr(),
+                'games.maze.rulesTipsDesc'.tr(),
+              ),
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text('app.confirm'.tr()),
+          ),
+        ],
       ),
+    );
+  }
+
+  Widget _buildRuleSection(String title, String description) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          title,
+          style: const TextStyle(
+            color: Colors.white,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        const SizedBox(height: 4),
+        Text(
+          description,
+          style: const TextStyle(color: Colors.white70, fontSize: 13),
+        ),
+      ],
     );
   }
 }
