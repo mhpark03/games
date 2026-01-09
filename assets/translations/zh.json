@@ -540,7 +540,16 @@
       "movesLabel": "移动",
       "timeLabel": "时间",
       "reset": "重置",
-      "newMaze": "新迷宫"
+      "newMaze": "新迷宫",
+      "rulesTitle": "迷宫游戏说明",
+      "rulesObjective": "🎯 目标",
+      "rulesObjectiveDesc": "从红色起点导航到黄色终点，逃出迷宫。",
+      "rulesControls": "🎮 操作方法",
+      "rulesControlsDesc": "• 点击底部的方向按钮移动\n• 键盘：使用方向键或WASD移动",
+      "rulesButtons": "🔘 按钮说明",
+      "rulesButtonsDesc": "• 重置：返回当前迷宫的起点\n• 新迷宫：生成一个新的迷宫",
+      "rulesTips": "💡 提示",
+      "rulesTipsDesc": "• 记住死胡同，尝试不同的路径\n• 沿着墙壁走也是一种有效的策略"
     },
     "mole": {
       "name": "打地鼠",

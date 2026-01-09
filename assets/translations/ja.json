@@ -540,7 +540,16 @@
       "movesLabel": "移動",
       "timeLabel": "時間",
       "reset": "リセット",
-      "newMaze": "新しい迷路"
+      "newMaze": "新しい迷路",
+      "rulesTitle": "迷路の遊び方",
+      "rulesObjective": "🎯 目標",
+      "rulesObjectiveDesc": "赤いスタート地点から黄色いゴールまで迷路を脱出してください。",
+      "rulesControls": "🎮 操作方法",
+      "rulesControlsDesc": "• 画面下部の方向ボタンをタップして移動\n• キーボード：矢印キーまたはWASDで移動",
+      "rulesButtons": "🔘 ボタン説明",
+      "rulesButtonsDesc": "• リセット：現在の迷路のスタート地点に戻ります\n• 新しい迷路：新しい迷路を生成します",
+      "rulesTips": "💡 ヒント",
+      "rulesTipsDesc": "• 行き止まりを覚えて別のルートを試しましょう\n• 壁に沿って進む方法も効果的です"
     },
     "mole": {
       "name": "モグラたたき",
