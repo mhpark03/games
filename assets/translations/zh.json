@@ -563,7 +563,16 @@
       "seconds": "秒",
       "highScore": "最高",
       "playing": "游戏中...",
-      "start": "开始游戏"
+      "start": "开始游戏",
+      "rulesTitle": "游戏说明",
+      "rulesObjective": "🎯 目标",
+      "rulesObjectiveDesc": "在30秒内尽可能多地打地鼠！",
+      "rulesControls": "🎮 操作方法",
+      "rulesControlsDesc": "• 地鼠出现时快速点击\n• 地鼠会很快躲起来",
+      "rulesScoring": "💯 得分",
+      "rulesScoringDesc": "• 每只地鼠1分\n• 点击越快，抓得越多",
+      "rulesTips": "💡 提示",
+      "rulesTipsDesc": "• 注意观察整个屏幕\n• 学习地鼠出现的规律\n• 保持手指靠近屏幕"
     },
     "bubble": {
       "name": "泡泡射手",
@@ -575,7 +584,16 @@
       "score": "得分",
       "highScore": "最高",
       "next": "NEXT",
-      "retry": "重试"
+      "retry": "重试",
+      "rulesTitle": "游戏说明",
+      "rulesObjective": "🎯 目标",
+      "rulesObjectiveDesc": "连接3个或更多相同颜色的泡泡来消除所有泡泡！",
+      "rulesControls": "🎮 操作方法",
+      "rulesControlsDesc": "• 触摸屏幕瞄准方向\n• 松开发射泡泡\n• 也可以点击发射按钮",
+      "rulesScoring": "💯 得分",
+      "rulesScoringDesc": "• 连接3个泡泡：基础分\n• 连接越多分数越高\n• 掉落的泡泡也有额外分数",
+      "rulesTips": "💡 提示",
+      "rulesTipsDesc": "• 可以利用墙壁反弹\n• 消除上方泡泡会使下方泡泡掉落\n• 泡泡触底则游戏结束！"
     }
   },
   "dialog": {

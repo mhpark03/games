@@ -563,7 +563,16 @@
       "seconds": "秒",
       "highScore": "最高",
       "playing": "プレイ中...",
-      "start": "ゲーム開始"
+      "start": "ゲーム開始",
+      "rulesTitle": "遊び方",
+      "rulesObjective": "🎯 目標",
+      "rulesObjectiveDesc": "30秒でできるだけ多くのモグラを捕まえよう！",
+      "rulesControls": "🎮 操作方法",
+      "rulesControlsDesc": "• モグラが出てきたら素早くタップ\n• モグラはすぐに隠れます",
+      "rulesScoring": "💯 スコア",
+      "rulesScoringDesc": "• モグラ1匹で1点\n• 速くタップするほど多く捕まえられます",
+      "rulesTips": "💡 ヒント",
+      "rulesTipsDesc": "• 画面全体を見ましょう\n• モグラのパターンを覚えましょう\n• 指を画面の近くに保ちましょう"
     },
     "bubble": {
       "name": "バブルシューター",
@@ -575,7 +584,16 @@
       "score": "スコア",
       "highScore": "最高",
       "next": "NEXT",
-      "retry": "リトライ"
+      "retry": "リトライ",
+      "rulesTitle": "遊び方",
+      "rulesObjective": "🎯 目標",
+      "rulesObjectiveDesc": "同じ色のバブルを3つ以上繋げてすべて消そう！",
+      "rulesControls": "🎮 操作方法",
+      "rulesControlsDesc": "• 画面をタッチして狙いを定める\n• 離すとバブルが発射されます\n• 発射ボタンでも発射できます",
+      "rulesScoring": "💯 スコア",
+      "rulesScoringDesc": "• バブル3つ連結: 基本点\n• 多く繋げるほど高得点\n• 落ちるバブルもボーナス点",
+      "rulesTips": "💡 ヒント",
+      "rulesTipsDesc": "• 壁を使って跳ね返せます\n• 上のバブルを消すと下も落ちます\n• バブルが底に着くとゲームオーバー！"
     }
   },
   "dialog": {

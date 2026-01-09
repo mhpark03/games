@@ -563,7 +563,16 @@
       "seconds": "초",
       "highScore": "최고",
       "playing": "게임 진행 중...",
-      "start": "게임 시작"
+      "start": "게임 시작",
+      "rulesTitle": "두더지 잡기 게임 방법",
+      "rulesObjective": "🎯 목표",
+      "rulesObjectiveDesc": "30초 안에 최대한 많은 두더지를 잡으세요!",
+      "rulesControls": "🎮 조작 방법",
+      "rulesControlsDesc": "• 두더지가 나타나면 빠르게 탭하세요\n• 두더지는 잠시 후 다시 숨습니다",
+      "rulesScoring": "💯 점수",
+      "rulesScoringDesc": "• 두더지 1마리당 1점\n• 빠르게 잡을수록 더 많이 잡을 수 있어요",
+      "rulesTips": "💡 팁",
+      "rulesTipsDesc": "• 화면 전체를 주시하세요\n• 두더지가 나타나는 패턴을 파악하세요\n• 손가락을 화면 가까이 유지하세요"
     },
     "bubble": {
       "name": "버블 슈터",
@@ -575,7 +584,16 @@
       "score": "점수",
       "highScore": "최고",
       "next": "NEXT",
-      "retry": "다시 하기"
+      "retry": "다시 하기",
+      "rulesTitle": "버블 슈터 게임 방법",
+      "rulesObjective": "🎯 목표",
+      "rulesObjectiveDesc": "같은 색 버블 3개 이상을 연결하여 모든 버블을 제거하세요!",
+      "rulesControls": "🎮 조작 방법",
+      "rulesControlsDesc": "• 화면을 터치하여 조준 방향을 정하세요\n• 터치를 떼면 버블이 발사됩니다\n• 발사 버튼을 눌러도 발사할 수 있어요",
+      "rulesScoring": "💯 점수",
+      "rulesScoringDesc": "• 버블 3개 연결: 기본 점수\n• 더 많이 연결할수록 높은 점수\n• 떨어지는 버블도 추가 점수",
+      "rulesTips": "💡 팁",
+      "rulesTipsDesc": "• 벽을 이용해 반사시킬 수 있어요\n• 위쪽 버블을 먼저 제거하면 아래 버블도 떨어집니다\n• 버블이 바닥에 닿으면 게임 오버!"
     }
   },
   "dialog": {
