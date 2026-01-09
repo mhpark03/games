@@ -241,70 +241,318 @@ class _MazeScreenState extends State<MazeScreen> {
       onKeyEvent: _handleKeyEvent,
       child: GestureDetector(
         onTap: () => _focusNode.requestFocus(),
-        child: Scaffold(
-          backgroundColor: Colors.grey.shade900,
-          appBar: AppBar(
-            backgroundColor: Colors.purple.shade800,
-            foregroundColor: Colors.white,
-            title: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                const Icon(Icons.grid_4x4, color: Colors.purpleAccent),
-                const SizedBox(width: 8),
-                Flexible(
-                  child: Text(
-                    'games.maze.name'.tr(),
-                    style: TextStyle(
-                      fontWeight: FontWeight.bold,
-                      fontSize: 18,
-                      color: Colors.purple.shade100,
-                    ),
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ),
-              ],
-            ),
-            centerTitle: true,
-            actions: [
-              IconButton(
-                icon: const Icon(Icons.help_outline),
-                onPressed: _showRulesDialog,
-                tooltip: 'app.rules'.tr(),
-              ),
-              IconButton(
-                icon: const Icon(Icons.lightbulb_outline),
-                onPressed: !isGameWon ? _showHintAdDialog : null,
-                tooltip: 'common.hint'.tr(),
-              ),
-              IconButton(
-                icon: const Icon(Icons.replay),
-                onPressed: _newGame,
-                tooltip: 'app.newGame'.tr(),
-              ),
-            ],
-          ),
-          body: SafeArea(
-            child: Column(
-              children: [
-                _buildInfoPanel(),
-                Expanded(
-                  child: Padding(
-                    padding: const EdgeInsets.all(8),
-                    child: Center(
-                      child: MazeWidget(
-                        maze: maze,
-                        onMove: _movePlayer,
-                        hintPath: hintPath,
-                      ),
-                    ),
-                  ),
-                ),
-                _buildControls(),
-                const SizedBox(height: 8),
-              ],
-            ),
-          ),
+        child: OrientationBuilder(
+          builder: (context, orientation) {
+            if (orientation == Orientation.landscape) {
+              return _buildLandscapeLayout();
+            } else {
+              return _buildPortraitLayout();
+            }
+          },
         ),
+      ),
+    );
+  }
+
+  Widget _buildPortraitLayout() {
+    return Scaffold(
+      backgroundColor: Colors.grey.shade900,
+      appBar: AppBar(
+        backgroundColor: Colors.purple.shade800,
+        foregroundColor: Colors.white,
+        title: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Icon(Icons.grid_4x4, color: Colors.purpleAccent),
+            const SizedBox(width: 8),
+            Flexible(
+              child: Text(
+                'games.maze.name'.tr(),
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 18,
+                  color: Colors.purple.shade100,
+                ),
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+          ],
+        ),
+        centerTitle: true,
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.help_outline),
+            onPressed: _showRulesDialog,
+            tooltip: 'app.rules'.tr(),
+          ),
+          IconButton(
+            icon: const Icon(Icons.lightbulb_outline),
+            onPressed: !isGameWon ? _showHintAdDialog : null,
+            tooltip: 'common.hint'.tr(),
+          ),
+          IconButton(
+            icon: const Icon(Icons.replay),
+            onPressed: _newGame,
+            tooltip: 'app.newGame'.tr(),
+          ),
+        ],
+      ),
+      body: SafeArea(
+        child: Column(
+          children: [
+            _buildInfoPanel(),
+            Expanded(
+              child: Padding(
+                padding: const EdgeInsets.all(8),
+                child: Center(
+                  child: MazeWidget(
+                    maze: maze,
+                    onMove: _movePlayer,
+                    hintPath: hintPath,
+                  ),
+                ),
+              ),
+            ),
+            _buildControls(),
+            const SizedBox(height: 8),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildLandscapeLayout() {
+    return Scaffold(
+      backgroundColor: Colors.grey.shade900,
+      body: SafeArea(
+        child: Row(
+          children: [
+            // 왼쪽 패널: 뒤로가기, 제목, 왼쪽/위 방향 버튼
+            Expanded(
+              flex: 2,
+              child: Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: Column(
+                  children: [
+                    // 뒤로가기 + 제목
+                    Row(
+                      children: [
+                        _buildCircleButton(
+                          icon: Icons.arrow_back,
+                          onPressed: () => Navigator.pop(context),
+                        ),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: Text(
+                            'games.maze.name'.tr(),
+                            style: TextStyle(
+                              color: Colors.purple.shade100,
+                              fontWeight: FontWeight.bold,
+                              fontSize: 18,
+                            ),
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 16),
+                    // 이동 정보
+                    _buildLandscapeInfoBox('games.maze.movesLabel'.tr(), moves.toString()),
+                    const SizedBox(height: 8),
+                    // 시간 정보
+                    _buildLandscapeInfoBox('games.maze.timeLabel'.tr(), _formatTime(elapsedSeconds)),
+                    const Spacer(),
+                    // 왼쪽 컨트롤: 왼쪽 → 위
+                    LayoutBuilder(
+                      builder: (context, constraints) {
+                        final buttonSize = (constraints.maxWidth / 2.5).clamp(45.0, 60.0);
+                        return Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                          children: [
+                            _buildLandscapeControlButton(
+                              Icons.arrow_back,
+                              () => _movePlayer(const Position(0, -1)),
+                              buttonSize,
+                            ),
+                            _buildLandscapeControlButton(
+                              Icons.arrow_upward,
+                              () => _movePlayer(const Position(-1, 0)),
+                              buttonSize,
+                            ),
+                          ],
+                        );
+                      },
+                    ),
+                    const SizedBox(height: 16),
+                  ],
+                ),
+              ),
+            ),
+            // 중앙: 미로 보드
+            Expanded(
+              flex: 3,
+              child: Center(
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 8),
+                  child: MazeWidget(
+                    maze: maze,
+                    onMove: _movePlayer,
+                    hintPath: hintPath,
+                  ),
+                ),
+              ),
+            ),
+            // 오른쪽 패널: 버튼들, 아래/오른쪽 방향 버튼
+            Expanded(
+              flex: 2,
+              child: Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: Column(
+                  children: [
+                    // 도움말 + 힌트 + 새게임 버튼
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.end,
+                      children: [
+                        _buildCircleButton(
+                          icon: Icons.help_outline,
+                          onPressed: _showRulesDialog,
+                        ),
+                        const SizedBox(width: 4),
+                        _buildCircleButton(
+                          icon: Icons.lightbulb_outline,
+                          onPressed: !isGameWon ? _showHintAdDialog : null,
+                          color: !isGameWon ? Colors.amber : Colors.white30,
+                        ),
+                        const SizedBox(width: 4),
+                        _buildCircleButton(
+                          icon: Icons.replay,
+                          onPressed: _newGame,
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 16),
+                    // 결과 메시지
+                    if (isGameWon) _buildCompactResultMessage(),
+                    const Spacer(),
+                    // 오른쪽 컨트롤: 아래 → 오른쪽
+                    LayoutBuilder(
+                      builder: (context, constraints) {
+                        final buttonSize = (constraints.maxWidth / 2.5).clamp(45.0, 60.0);
+                        return Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                          children: [
+                            _buildLandscapeControlButton(
+                              Icons.arrow_downward,
+                              () => _movePlayer(const Position(1, 0)),
+                              buttonSize,
+                            ),
+                            _buildLandscapeControlButton(
+                              Icons.arrow_forward,
+                              () => _movePlayer(const Position(0, 1)),
+                              buttonSize,
+                            ),
+                          ],
+                        );
+                      },
+                    ),
+                    const SizedBox(height: 16),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildCircleButton({
+    required IconData icon,
+    required VoidCallback? onPressed,
+    Color? color,
+  }) {
+    return Container(
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        color: Colors.grey.shade800,
+      ),
+      child: IconButton(
+        icon: Icon(icon, color: color ?? Colors.white70),
+        onPressed: onPressed,
+        iconSize: 20,
+      ),
+    );
+  }
+
+  Widget _buildLandscapeInfoBox(String label, String value) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      decoration: BoxDecoration(
+        color: Colors.black26,
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: Colors.purple.withValues(alpha: 0.3)),
+      ),
+      child: Column(
+        children: [
+          Text(
+            label,
+            style: TextStyle(
+              color: Colors.grey.shade400,
+              fontSize: 10,
+            ),
+          ),
+          Text(
+            value,
+            style: const TextStyle(
+              color: Colors.white,
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildLandscapeControlButton(IconData icon, VoidCallback onPressed, double size) {
+    return GestureDetector(
+      onTap: onPressed,
+      child: Container(
+        width: size,
+        height: size,
+        decoration: BoxDecoration(
+          color: Colors.grey.shade800,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: Colors.purple.withValues(alpha: 0.5)),
+        ),
+        child: Icon(icon, color: Colors.purple, size: size * 0.5),
+      ),
+    );
+  }
+
+  Widget _buildCompactResultMessage() {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      decoration: BoxDecoration(
+        color: Colors.green.withValues(alpha: 0.2),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Colors.green, width: 2),
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const Icon(Icons.emoji_events, color: Colors.amber, size: 28),
+          const SizedBox(height: 4),
+          Text(
+            'common.win'.tr(),
+            style: const TextStyle(
+              color: Colors.green,
+              fontSize: 14,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+        ],
       ),
     );
   }
