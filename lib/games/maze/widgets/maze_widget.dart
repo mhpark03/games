@@ -4,8 +4,14 @@ import '../models/maze.dart';
 class MazeWidget extends StatefulWidget {
   final Maze maze;
   final void Function(Position direction)? onMove;
+  final List<Position>? hintPath;
 
-  const MazeWidget({super.key, required this.maze, this.onMove});
+  const MazeWidget({
+    super.key,
+    required this.maze,
+    this.onMove,
+    this.hintPath,
+  });
 
   @override
   State<MazeWidget> createState() => _MazeWidgetState();
@@ -86,7 +92,10 @@ class _MazeWidgetState extends State<MazeWidget> {
               child: ClipRRect(
                 borderRadius: BorderRadius.circular(6),
                 child: CustomPaint(
-                  painter: MazePainter(maze: widget.maze),
+                  painter: MazePainter(
+                    maze: widget.maze,
+                    hintPath: widget.hintPath,
+                  ),
                   size: Size.infinite,
                 ),
               ),
@@ -100,8 +109,9 @@ class _MazeWidgetState extends State<MazeWidget> {
 
 class MazePainter extends CustomPainter {
   final Maze maze;
+  final List<Position>? hintPath;
 
-  MazePainter({required this.maze});
+  MazePainter({required this.maze, this.hintPath});
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -175,6 +185,46 @@ class MazePainter extends CustomPainter {
             break;
         }
       }
+    }
+
+    // 힌트 경로 그리기
+    if (hintPath != null && hintPath!.length > 1) {
+      final hintPaint = Paint()
+        ..color = const Color(0xFF4CAF50).withValues(alpha: 0.7)
+        ..strokeWidth = cellWidth * 0.3
+        ..strokeCap = StrokeCap.round
+        ..style = PaintingStyle.stroke;
+
+      final path = Path();
+      final firstPos = hintPath!.first;
+      path.moveTo(
+        firstPos.col * cellWidth + cellWidth / 2,
+        firstPos.row * cellHeight + cellHeight / 2,
+      );
+
+      for (int i = 1; i < hintPath!.length; i++) {
+        final pos = hintPath![i];
+        path.lineTo(
+          pos.col * cellWidth + cellWidth / 2,
+          pos.row * cellHeight + cellHeight / 2,
+        );
+      }
+
+      canvas.drawPath(path, hintPaint);
+
+      // 도착점에 화살표 표시
+      final lastPos = hintPath!.last;
+      final arrowPaint = Paint()
+        ..color = const Color(0xFF4CAF50)
+        ..style = PaintingStyle.fill;
+      canvas.drawCircle(
+        Offset(
+          lastPos.col * cellWidth + cellWidth / 2,
+          lastPos.row * cellHeight + cellHeight / 2,
+        ),
+        cellWidth * 0.2,
+        arrowPaint,
+      );
     }
   }
 

@@ -4,6 +4,7 @@ import 'package:flutter/services.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'models/maze.dart';
 import 'widgets/maze_widget.dart';
+import '../../services/ad_service.dart';
 
 enum MazeDifficulty { easy, medium, hard }
 
@@ -27,6 +28,7 @@ class _MazeScreenState extends State<MazeScreen> {
   Timer? timer;
   bool isGameWon = false;
   final FocusNode _focusNode = FocusNode();
+  List<Position>? hintPath;
 
   @override
   void initState() {
@@ -49,6 +51,7 @@ class _MazeScreenState extends State<MazeScreen> {
     moves = 0;
     elapsedSeconds = 0;
     isGameWon = false;
+    hintPath = null;
   }
 
   (int, int) _getMazeSize() {
@@ -79,6 +82,7 @@ class _MazeScreenState extends State<MazeScreen> {
     setState(() {
       if (maze.movePlayer(direction)) {
         moves++;
+        hintPath = null; // 이동 시 힌트 숨기기
         if (maze.isGameWon) {
           isGameWon = true;
           timer?.cancel();
@@ -144,6 +148,56 @@ class _MazeScreenState extends State<MazeScreen> {
       _initializeMaze();
     });
     _startTimer();
+  }
+
+  // 힌트 광고 다이얼로그
+  void _showHintAdDialog() {
+    if (isGameWon) return;
+
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: Colors.grey.shade900,
+        title: Text('dialog.hintTitle'.tr(), style: const TextStyle(color: Colors.white)),
+        content: Text(
+          'dialog.hintMessage'.tr(),
+          style: const TextStyle(color: Colors.white70),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text('app.cancel'.tr()),
+          ),
+          ElevatedButton(
+            onPressed: () async {
+              Navigator.pop(context);
+              final adService = AdService();
+              final result = await adService.showRewardedAd(
+                onUserEarnedReward: (ad, reward) {
+                  _useHint();
+                },
+              );
+              if (!result && mounted) {
+                // 광고가 없어도 기능 실행
+                _useHint();
+                adService.loadRewardedAd();
+              }
+            },
+            child: Text('common.watchAd'.tr()),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // 힌트 사용: 경로 표시
+  void _useHint() {
+    if (isGameWon) return;
+
+    setState(() {
+      hintPath = maze.findPathToEnd();
+    });
+    HapticFeedback.mediumImpact();
   }
 
   String _formatTime(int seconds) {
@@ -218,6 +272,11 @@ class _MazeScreenState extends State<MazeScreen> {
                 tooltip: 'app.rules'.tr(),
               ),
               IconButton(
+                icon: const Icon(Icons.lightbulb_outline),
+                onPressed: !isGameWon ? _showHintAdDialog : null,
+                tooltip: 'common.hint'.tr(),
+              ),
+              IconButton(
                 icon: const Icon(Icons.replay),
                 onPressed: _newGame,
                 tooltip: 'app.newGame'.tr(),
@@ -235,6 +294,7 @@ class _MazeScreenState extends State<MazeScreen> {
                       child: MazeWidget(
                         maze: maze,
                         onMove: _movePlayer,
+                        hintPath: hintPath,
                       ),
                     ),
                   ),
