@@ -156,4 +156,39 @@ class Maze {
     _generateMaze();
     visitedPath.clear();  // 경로 초기화
   }
+
+  // BFS로 현재 위치에서 도착점까지의 최단 경로 찾기
+  List<Position>? findPathToEnd() {
+    final queue = <List<Position>>[];
+    final visited = <Position>{};
+
+    queue.add([playerPos]);
+    visited.add(playerPos);
+
+    final directions = [
+      const Position(-1, 0),
+      const Position(1, 0),
+      const Position(0, -1),
+      const Position(0, 1),
+    ];
+
+    while (queue.isNotEmpty) {
+      final path = queue.removeAt(0);
+      final current = path.last;
+
+      if (current == endPos) {
+        return path;
+      }
+
+      for (final dir in directions) {
+        final next = current + dir;
+        if (!visited.contains(next) && canMoveTo(next)) {
+          visited.add(next);
+          queue.add([...path, next]);
+        }
+      }
+    }
+
+    return null; // 경로를 찾을 수 없음
+  }
 }
