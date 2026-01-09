@@ -528,6 +528,45 @@
       "rulesSumHintsDesc": "• 行/列の端に表示される数字が合計ヒント\n• その行/列の特定のマスの合計を示します\n• ヒントのないマスは合計に含まれません",
       "rulesTips": "ヒント",
       "rulesTipsDesc": "• 小さい合計から解いてみましょう\n• 行と列のヒントを組み合わせて使いましょう\n• 消去法で可能な数字を絞り込みましょう"
+    },
+    "maze": {
+      "name": "迷路",
+      "subtitle": "Maze",
+      "description": "迷路を脱出してゴールデンスターに到達しよう！",
+      "congratulations": "おめでとう！",
+      "escaped": "迷路を脱出しました！",
+      "moves": "移動回数: {count}",
+      "time": "所要時間: {time}",
+      "movesLabel": "移動",
+      "timeLabel": "時間",
+      "reset": "リセット",
+      "newMaze": "新しい迷路"
+    },
+    "mole": {
+      "name": "モグラたたき",
+      "subtitle": "モグラをタップ！",
+      "description": "30秒でできるだけ多くのモグラを捕まえよう！",
+      "gameOver": "ゲーム終了！",
+      "finalScore": "スコア: {score}",
+      "highScoreLabel": "ハイスコア: {score}",
+      "score": "スコア",
+      "time": "時間",
+      "seconds": "秒",
+      "highScore": "最高",
+      "playing": "プレイ中...",
+      "start": "ゲーム開始"
+    },
+    "bubble": {
+      "name": "バブルシューター",
+      "subtitle": "同じ色のバブルを3つ揃えよう！",
+      "description": "同じ色のバブルを3つ以上繋げて消そう！",
+      "gameOver": "ゲーム終了！",
+      "finalScore": "スコア: {score}",
+      "highScoreLabel": "ハイスコア: {score}",
+      "score": "スコア",
+      "highScore": "最高",
+      "next": "NEXT",
+      "retry": "リトライ"
     }
   },
   "dialog": {
