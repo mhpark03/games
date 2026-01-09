@@ -167,13 +167,22 @@ class _MoleScreenState extends State<MoleScreen> {
             ),
           ),
         ),
-        // 오른쪽 패널: 최고점수, 시작 버튼
+        // 오른쪽 패널: 도움말, 최고점수, 시작 버튼
         Expanded(
           flex: 2,
           child: Padding(
             padding: const EdgeInsets.all(8.0),
             child: Column(
               children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  children: [
+                    _buildCircleButton(
+                      icon: Icons.help_outline,
+                      onPressed: _showRulesDialog,
+                    ),
+                  ],
+                ),
                 const SizedBox(height: 8),
                 _buildLandscapeInfoBox('games.mole.highScore'.tr(), highScore.toString(), Icons.emoji_events),
                 const SizedBox(height: 16),
@@ -297,8 +306,82 @@ class _MoleScreenState extends State<MoleScreen> {
               ),
             ],
           ),
+          const Spacer(),
+          IconButton(
+            onPressed: _showRulesDialog,
+            icon: const Icon(Icons.help_outline, color: Colors.white),
+          ),
         ],
       ),
+    );
+  }
+
+  void _showRulesDialog() {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: Colors.grey.shade900,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+        ),
+        title: Text(
+          'games.mole.rulesTitle'.tr(),
+          style: const TextStyle(color: Color(0xFFFFD700)),
+        ),
+        content: SingleChildScrollView(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              _buildRuleSection(
+                'games.mole.rulesObjective'.tr(),
+                'games.mole.rulesObjectiveDesc'.tr(),
+              ),
+              const SizedBox(height: 12),
+              _buildRuleSection(
+                'games.mole.rulesControls'.tr(),
+                'games.mole.rulesControlsDesc'.tr(),
+              ),
+              const SizedBox(height: 12),
+              _buildRuleSection(
+                'games.mole.rulesScoring'.tr(),
+                'games.mole.rulesScoringDesc'.tr(),
+              ),
+              const SizedBox(height: 12),
+              _buildRuleSection(
+                'games.mole.rulesTips'.tr(),
+                'games.mole.rulesTipsDesc'.tr(),
+              ),
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text('app.confirm'.tr()),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildRuleSection(String title, String description) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          title,
+          style: const TextStyle(
+            color: Colors.white,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        const SizedBox(height: 4),
+        Text(
+          description,
+          style: const TextStyle(color: Colors.white70, fontSize: 13),
+        ),
+      ],
     );
   }
 

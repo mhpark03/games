@@ -563,7 +563,16 @@
       "seconds": "s",
       "highScore": "Best",
       "playing": "Playing...",
-      "start": "Start Game"
+      "start": "Start Game",
+      "rulesTitle": "How to Play",
+      "rulesObjective": "🎯 Objective",
+      "rulesObjectiveDesc": "Catch as many moles as you can in 30 seconds!",
+      "rulesControls": "🎮 Controls",
+      "rulesControlsDesc": "• Tap quickly when a mole appears\n• Moles will hide again after a moment",
+      "rulesScoring": "💯 Scoring",
+      "rulesScoringDesc": "• 1 point per mole\n• The faster you tap, the more you can catch",
+      "rulesTips": "💡 Tips",
+      "rulesTipsDesc": "• Watch the entire screen\n• Learn the mole patterns\n• Keep your finger close to the screen"
     },
     "bubble": {
       "name": "Bubble Shooter",
@@ -575,7 +584,16 @@
       "score": "Score",
       "highScore": "Best",
       "next": "NEXT",
-      "retry": "Retry"
+      "retry": "Retry",
+      "rulesTitle": "How to Play",
+      "rulesObjective": "🎯 Objective",
+      "rulesObjectiveDesc": "Connect 3 or more same color bubbles to clear them all!",
+      "rulesControls": "🎮 Controls",
+      "rulesControlsDesc": "• Touch the screen to aim\n• Release to shoot the bubble\n• Or tap the shoot button",
+      "rulesScoring": "💯 Scoring",
+      "rulesScoringDesc": "• 3 bubbles matched: base points\n• More matches = higher score\n• Falling bubbles give bonus points",
+      "rulesTips": "💡 Tips",
+      "rulesTipsDesc": "• Use walls to bounce shots\n• Clear top bubbles to drop those below\n• Game over if bubbles reach the bottom!"
     }
   },
   "dialog": {
