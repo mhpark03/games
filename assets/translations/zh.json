@@ -570,7 +570,7 @@
       "rulesControls": "🎮 操作方法",
       "rulesControlsDesc": "• 地鼠出现时快速点击\n• 地鼠会很快躲起来",
       "rulesScoring": "💯 得分",
-      "rulesScoringDesc": "• 每只地鼠1分\n• 点击越快，抓得越多",
+      "rulesScoringDesc": "• 每只地鼠10分\n• 点击越快，抓得越多",
       "rulesTips": "💡 提示",
       "rulesTipsDesc": "• 注意观察整个屏幕\n• 学习地鼠出现的规律\n• 保持手指靠近屏幕"
     },

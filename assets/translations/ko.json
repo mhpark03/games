@@ -570,7 +570,7 @@
       "rulesControls": "🎮 조작 방법",
       "rulesControlsDesc": "• 두더지가 나타나면 빠르게 탭하세요\n• 두더지는 잠시 후 다시 숨습니다",
       "rulesScoring": "💯 점수",
-      "rulesScoringDesc": "• 두더지 1마리당 1점\n• 빠르게 잡을수록 더 많이 잡을 수 있어요",
+      "rulesScoringDesc": "• 두더지 1마리당 10점\n• 빠르게 잡을수록 더 많이 잡을 수 있어요",
       "rulesTips": "💡 팁",
       "rulesTipsDesc": "• 화면 전체를 주시하세요\n• 두더지가 나타나는 패턴을 파악하세요\n• 손가락을 화면 가까이 유지하세요"
     },
