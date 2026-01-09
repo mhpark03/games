@@ -593,7 +593,9 @@
       "rulesScoring": "💯 Scoring",
       "rulesScoringDesc": "• 3 bubbles matched: base points\n• More matches = higher score\n• Falling bubbles give bonus points",
       "rulesTips": "💡 Tips",
-      "rulesTipsDesc": "• Use walls to bounce shots\n• Clear top bubbles to drop those below\n• Game over if bubbles reach the bottom!"
+      "rulesTipsDesc": "• Use walls to bounce shots\n• Clear top bubbles to drop those below\n• Game over if bubbles reach the bottom!",
+      "hintTitle": "Aim Guide",
+      "hintMessage": "Watch an ad to always display the bubble's trajectory.\n(Lasts until game over)"
     }
   },
   "dialog": {

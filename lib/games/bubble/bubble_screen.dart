@@ -3,6 +3,7 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'models/bubble_game.dart';
+import '../../services/ad_service.dart';
 
 class BubbleScreen extends StatefulWidget {
   const BubbleScreen({super.key});
@@ -16,6 +17,8 @@ class _BubbleScreenState extends State<BubbleScreen> {
   int highScore = 0;
   Timer? gameLoop;
   Size? gameSize;
+  bool showHintLine = false; // 힌트 안내선 표시 여부
+  bool isLandscape = false; // 현재 화면 방향
 
   @override
   void initState() {
@@ -38,10 +41,73 @@ class _BubbleScreenState extends State<BubbleScreen> {
     super.dispose();
   }
 
+  void _resetGame() {
+    setState(() {
+      showHintLine = false;
+      game.reset();
+    });
+  }
+
+  void _showHintAdDialog() {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: Colors.grey.shade900,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+        ),
+        title: Text(
+          'games.bubble.hintTitle'.tr(),
+          style: const TextStyle(color: Color(0xFF00D9FF)),
+        ),
+        content: Text(
+          'games.bubble.hintMessage'.tr(),
+          style: const TextStyle(color: Colors.white70),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text(
+              'common.cancel'.tr(),
+              style: const TextStyle(color: Colors.grey),
+            ),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFF00D9FF),
+            ),
+            onPressed: () async {
+              Navigator.pop(context);
+              final adService = AdService();
+              final result = await adService.showRewardedAd(
+                onUserEarnedReward: (ad, reward) {
+                  setState(() {
+                    showHintLine = true;
+                  });
+                },
+              );
+              if (!result && mounted) {
+                setState(() {
+                  showHintLine = true;
+                });
+                adService.loadRewardedAd();
+              }
+            },
+            child: Text(
+              'common.watchAd'.tr(),
+              style: const TextStyle(color: Colors.black),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   void _showGameOverDialog() {
     if (game.score > highScore) {
       highScore = game.score;
     }
+    showHintLine = false; // 게임 종료 시 힌트 초기화
 
     showDialog(
       context: context,
@@ -77,7 +143,7 @@ class _BubbleScreenState extends State<BubbleScreen> {
           TextButton(
             onPressed: () {
               Navigator.of(context).pop();
-              game.reset();
+              _resetGame();
             },
             child: Text(
               'games.bubble.retry'.tr(),
@@ -115,7 +181,8 @@ class _BubbleScreenState extends State<BubbleScreen> {
       body: SafeArea(
         child: OrientationBuilder(
           builder: (context, orientation) {
-            if (orientation == Orientation.landscape) {
+            isLandscape = orientation == Orientation.landscape;
+            if (isLandscape) {
               return _buildLandscapeLayout();
             } else {
               return _buildPortraitLayout();
@@ -180,15 +247,15 @@ class _BubbleScreenState extends State<BubbleScreen> {
             ),
           ),
         ),
-        // 중앙: 게임 영역
+        // 중앙: 게임 영역 (flex 3으로 축소)
         Expanded(
-          flex: 4,
+          flex: 3,
           child: Padding(
             padding: const EdgeInsets.symmetric(vertical: 8),
             child: _buildGameArea(),
           ),
         ),
-        // 오른쪽 패널: 새 게임, 도움말, 다음 버블
+        // 오른쪽 패널: 새 게임, 힌트, 도움말, 다음 버블
         Expanded(
           flex: 2,
           child: Padding(
@@ -200,7 +267,12 @@ class _BubbleScreenState extends State<BubbleScreen> {
                   children: [
                     _buildCircleButton(
                       icon: Icons.refresh,
-                      onPressed: () => game.reset(),
+                      onPressed: _resetGame,
+                    ),
+                    const SizedBox(width: 8),
+                    _buildCircleButton(
+                      icon: Icons.lightbulb_outline,
+                      onPressed: showHintLine ? null : _showHintAdDialog,
                     ),
                     const SizedBox(width: 8),
                     _buildCircleButton(
@@ -223,15 +295,19 @@ class _BubbleScreenState extends State<BubbleScreen> {
 
   Widget _buildCircleButton({
     required IconData icon,
-    required VoidCallback onPressed,
+    required VoidCallback? onPressed,
   }) {
+    final isDisabled = onPressed == null;
     return Container(
       decoration: BoxDecoration(
         shape: BoxShape.circle,
-        color: Colors.grey.shade800,
+        color: isDisabled ? Colors.grey.shade900 : Colors.grey.shade800,
       ),
       child: IconButton(
-        icon: Icon(icon, color: Colors.white70),
+        icon: Icon(
+          icon,
+          color: isDisabled ? const Color(0xFF00D9FF) : Colors.white70,
+        ),
         onPressed: onPressed,
         iconSize: 20,
       ),
@@ -341,8 +417,15 @@ class _BubbleScreenState extends State<BubbleScreen> {
           ),
           const Spacer(),
           IconButton(
-            onPressed: () => game.reset(),
+            onPressed: _resetGame,
             icon: const Icon(Icons.refresh, color: Colors.white),
+          ),
+          IconButton(
+            onPressed: showHintLine ? null : _showHintAdDialog,
+            icon: Icon(
+              Icons.lightbulb_outline,
+              color: showHintLine ? const Color(0xFF00D9FF) : Colors.white,
+            ),
           ),
           IconButton(
             onPressed: _showRulesDialog,
@@ -523,6 +606,9 @@ class _BubbleScreenState extends State<BubbleScreen> {
   }
 
   Widget _buildGameArea() {
+    // 가로모드에서는 버블 크기를 줄임
+    final bubbleScale = isLandscape ? 0.7 : 1.0;
+
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 8),
       decoration: BoxDecoration(
@@ -535,9 +621,11 @@ class _BubbleScreenState extends State<BubbleScreen> {
         child: LayoutBuilder(
           builder: (context, constraints) {
             gameSize = Size(constraints.maxWidth, constraints.maxHeight);
+            // 가로모드에서는 발사대 위치를 더 아래로
+            final shooterOffset = isLandscape ? 30 : 40;
             game.setShooterPosition(
               constraints.maxWidth / 2,
-              constraints.maxHeight - 40,
+              constraints.maxHeight - shooterOffset,
             );
 
             return GestureDetector(
@@ -553,6 +641,8 @@ class _BubbleScreenState extends State<BubbleScreen> {
                 painter: BubbleGamePainter(
                   game: game,
                   getBubbleColor: _getBubbleColor,
+                  showHint: showHintLine,
+                  bubbleScale: bubbleScale,
                 ),
                 size: Size.infinite,
               ),
@@ -568,14 +658,21 @@ class _BubbleScreenState extends State<BubbleScreen> {
 class BubbleGamePainter extends CustomPainter {
   final BubbleShooterGame game;
   final Color Function(BubbleColor) getBubbleColor;
+  final bool showHint;
+  final double bubbleScale;
 
-  BubbleGamePainter({required this.game, required this.getBubbleColor});
+  BubbleGamePainter({
+    required this.game,
+    required this.getBubbleColor,
+    this.showHint = false,
+    this.bubbleScale = 1.0,
+  });
 
   @override
   void paint(Canvas canvas, Size size) {
     final cellWidth = size.width / BubbleShooterGame.cols;
-    final cellHeight = BubbleShooterGame.bubbleRadius * 2 * 0.866;
-    final bubbleRadius = BubbleShooterGame.bubbleRadius;
+    final baseBubbleRadius = BubbleShooterGame.bubbleRadius * bubbleScale;
+    final cellHeight = baseBubbleRadius * 2 * 0.866;
 
     // 그리드 버블 그리기
     for (int row = 0; row < BubbleShooterGame.rows; row++) {
@@ -585,9 +682,9 @@ class BubbleGamePainter extends CustomPainter {
 
         final offset = (row % 2 == 1) ? cellWidth / 2 : 0;
         final x = col * cellWidth + cellWidth / 2 + offset;
-        final y = row * cellHeight + bubbleRadius;
+        final y = row * cellHeight + baseBubbleRadius;
 
-        _drawBubble(canvas, x, y, bubbleRadius, getBubbleColor(bubble.color));
+        _drawBubble(canvas, x, y, baseBubbleRadius, getBubbleColor(bubble.color));
       }
     }
 
@@ -597,7 +694,7 @@ class BubbleGamePainter extends CustomPainter {
         canvas,
         game.shootingBubble!.x,
         game.shootingBubble!.y,
-        bubbleRadius,
+        baseBubbleRadius,
         getBubbleColor(game.shootingBubble!.color),
       );
     }
@@ -608,7 +705,7 @@ class BubbleGamePainter extends CustomPainter {
         canvas,
         bubble.x,
         bubble.y,
-        bubbleRadius * 0.9,
+        baseBubbleRadius * 0.9,
         getBubbleColor(bubble.color).withValues(alpha: 0.8),
       );
     }
@@ -619,24 +716,25 @@ class BubbleGamePainter extends CustomPainter {
         canvas,
         bubble.x,
         bubble.y,
-        bubbleRadius * 0.7,
+        baseBubbleRadius * 0.7,
         getBubbleColor(bubble.color).withValues(alpha: 0.6),
       );
     }
 
-    // 조준선
-    if (!game.isShooting && game.currentBubble != null) {
+    // 조준선 (힌트 모드이거나 발사 중이 아닐 때)
+    final shouldDrawAimLine = showHint || (!game.isShooting && game.currentBubble != null);
+    if (shouldDrawAimLine && game.currentBubble != null) {
       final bubbleColor = getBubbleColor(game.currentBubble!.color);
-      _drawAimLine(canvas, size, bubbleRadius, bubbleColor);
+      _drawAimLine(canvas, size, baseBubbleRadius, bubbleColor, showHint);
     }
 
     // 발사대
-    _drawShooter(canvas, size);
+    _drawShooter(canvas, size, bubbleScale);
   }
 
-  void _drawAimLine(Canvas canvas, Size size, double bubbleRadius, Color color) {
+  void _drawAimLine(Canvas canvas, Size size, double bubbleRadius, Color color, bool isHintMode) {
     final cellWidth = size.width / BubbleShooterGame.cols;
-    final cellHeight = BubbleShooterGame.bubbleRadius * 2 * 0.866;
+    final cellHeight = bubbleRadius * 2 * 0.866;
 
     // 경로 포인트 계산
     final points = <Offset>[];
@@ -698,14 +796,16 @@ class BubbleGamePainter extends CustomPainter {
       points.add(Offset(x, y));
     }
 
-    // 점선 그리기 (현재 버블 색상으로)
-    final dotPaint = Paint()
-      ..color = color.withValues(alpha: 0.8)
-      ..strokeWidth = 4
-      ..strokeCap = StrokeCap.round;
+    // 점선 그리기 (힌트 모드에서는 더 밝고 크게)
+    final alpha = isHintMode ? 1.0 : 0.8;
+    final lineWidth = isHintMode ? 6.0 : 4.0;
+    final dotRadiusValue = isHintMode ? 7.0 : 5.0;
+    final dotSpacing = isHintMode ? 16.0 : 18.0;
 
-    const dotSpacing = 18.0;
-    const dotRadius = 5.0;
+    final dotPaint = Paint()
+      ..color = isHintMode ? const Color(0xFF00D9FF) : color.withValues(alpha: alpha)
+      ..strokeWidth = lineWidth
+      ..strokeCap = StrokeCap.round;
 
     for (int i = 0; i < points.length - 1; i++) {
       final start = points[i];
@@ -726,7 +826,7 @@ class BubbleGamePainter extends CustomPainter {
         if (draw) {
           canvas.drawCircle(
             Offset(start.dx + unitX * traveled, start.dy + unitY * traveled),
-            dotRadius,
+            dotRadiusValue,
             dotPaint,
           );
         }
@@ -770,7 +870,7 @@ class BubbleGamePainter extends CustomPainter {
     );
   }
 
-  void _drawShooter(Canvas canvas, Size size) {
+  void _drawShooter(Canvas canvas, Size size, double scale) {
     final shooterX = game.shooterX;
     final shooterY = game.shooterY;
 
@@ -780,22 +880,22 @@ class BubbleGamePainter extends CustomPainter {
       ..style = PaintingStyle.fill;
 
     canvas.drawCircle(
-      Offset(shooterX, shooterY + 10),
-      30,
+      Offset(shooterX, shooterY + 10 * scale),
+      30 * scale,
       basePaint,
     );
 
     // 발사대 포신
     final barrelPaint = Paint()
       ..color = const Color(0xFF6A6A8A)
-      ..strokeWidth = 12
+      ..strokeWidth = 12 * scale
       ..strokeCap = StrokeCap.round;
 
     canvas.drawLine(
       Offset(shooterX, shooterY),
       Offset(
-        shooterX + cos(game.aimAngle) * 40,
-        shooterY + sin(game.aimAngle) * 40,
+        shooterX + cos(game.aimAngle) * 40 * scale,
+        shooterY + sin(game.aimAngle) * 40 * scale,
       ),
       barrelPaint,
     );
