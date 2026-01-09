@@ -3377,13 +3377,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                   color: Colors.grey.shade400,
                                 ),
                               ),
-                              Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  _buildLanguageButton(context),
-                                  _buildExitButton(context),
-                                ],
-                              ),
+                              _buildExitButton(context),
                             ],
                           )
                         : Row(
@@ -3420,13 +3414,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                   ],
                                 ),
                               ),
-                              Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  _buildLanguageButton(context),
-                                  _buildExitButton(context),
-                                ],
-                              ),
+                              _buildExitButton(context),
                             ],
                           ),
                   ),
