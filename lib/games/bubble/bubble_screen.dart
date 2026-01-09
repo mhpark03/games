@@ -732,8 +732,8 @@ class BubbleGamePainter extends CustomPainter {
         // 힌트 모드: 전체 경로 표시
         _drawAimLine(canvas, size, baseBubbleRadius, bubbleColor);
       } else {
-        // 기본 모드: 짧은 방향 표시선
-        _drawShortAimLine(canvas, baseBubbleRadius, bubbleColor);
+        // 기본 모드: 짧은 방향 표시선 (가로모드에서는 절반)
+        _drawShortAimLine(canvas, baseBubbleRadius, bubbleColor, bubbleScale);
       }
     }
 
@@ -846,15 +846,15 @@ class BubbleGamePainter extends CustomPainter {
     }
   }
 
-  void _drawShortAimLine(Canvas canvas, double bubbleRadius, Color color) {
+  void _drawShortAimLine(Canvas canvas, double bubbleRadius, Color color, double scale) {
     // 짧은 방향 표시선 (벽에 닿지 않는 길이)
     final shooterX = game.shooterX;
     final shooterY = game.shooterY;
     final vx = cos(game.aimAngle);
     final vy = sin(game.aimAngle);
 
-    // 방향 표시선 길이 (발사대에서 약 240픽셀)
-    const lineLength = 240.0;
+    // 방향 표시선 길이 (세로: 240px, 가로: 120px)
+    final lineLength = scale < 1.0 ? 120.0 : 240.0;
 
     final dotPaint = Paint()
       ..color = color.withValues(alpha: 0.6)
