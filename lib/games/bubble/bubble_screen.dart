@@ -136,7 +136,6 @@ class _BubbleScreenState extends State<BubbleScreen> {
         Expanded(
           child: _buildGameArea(),
         ),
-        _buildShooterArea(),
         const SizedBox(height: 16),
       ],
     );
@@ -189,7 +188,7 @@ class _BubbleScreenState extends State<BubbleScreen> {
             child: _buildGameArea(),
           ),
         ),
-        // 오른쪽 패널: 도움말, 다음 버블, 발사 버튼, 리셋
+        // 오른쪽 패널: 새 게임, 도움말, 다음 버블
         Expanded(
           flex: 2,
           child: Padding(
@@ -200,24 +199,20 @@ class _BubbleScreenState extends State<BubbleScreen> {
                   mainAxisAlignment: MainAxisAlignment.end,
                   children: [
                     _buildCircleButton(
+                      icon: Icons.refresh,
+                      onPressed: () => game.reset(),
+                    ),
+                    const SizedBox(width: 8),
+                    _buildCircleButton(
                       icon: Icons.help_outline,
                       onPressed: _showRulesDialog,
                     ),
                   ],
                 ),
-                const SizedBox(height: 8),
+                const SizedBox(height: 16),
                 // 다음 버블
                 _buildLandscapeNextBubble(),
                 const Spacer(),
-                // 발사 버튼
-                _buildLandscapeShootButton(),
-                const SizedBox(height: 16),
-                // 리셋 버튼
-                _buildCircleButton(
-                  icon: Icons.refresh,
-                  onPressed: () => game.reset(),
-                ),
-                const SizedBox(height: 16),
               ],
             ),
           ),
@@ -314,33 +309,6 @@ class _BubbleScreenState extends State<BubbleScreen> {
     );
   }
 
-  Widget _buildLandscapeShootButton() {
-    return GestureDetector(
-      onTap: () => game.shoot(),
-      child: Container(
-        width: 60,
-        height: 60,
-        decoration: BoxDecoration(
-          shape: BoxShape.circle,
-          color: game.currentBubble != null
-              ? _getBubbleColor(game.currentBubble!.color)
-              : Colors.grey,
-          border: Border.all(color: Colors.white, width: 3),
-          boxShadow: [
-            BoxShadow(
-              color: (game.currentBubble != null
-                      ? _getBubbleColor(game.currentBubble!.color)
-                      : Colors.grey)
-                  .withValues(alpha: 0.5),
-              blurRadius: 12,
-              spreadRadius: 2,
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
   Widget _buildHeader() {
     return Container(
       padding: const EdgeInsets.all(16),
@@ -372,6 +340,10 @@ class _BubbleScreenState extends State<BubbleScreen> {
             ],
           ),
           const Spacer(),
+          IconButton(
+            onPressed: () => game.reset(),
+            icon: const Icon(Icons.refresh, color: Colors.white),
+          ),
           IconButton(
             onPressed: _showRulesDialog,
             icon: const Icon(Icons.help_outline, color: Colors.white),
@@ -458,6 +430,56 @@ class _BubbleScreenState extends State<BubbleScreen> {
         children: [
           _buildStatCard('games.bubble.score'.tr(), game.score.toString(), Icons.star),
           _buildStatCard('games.bubble.highScore'.tr(), highScore.toString(), Icons.emoji_events),
+          // 다음 버블
+          _buildNextBubbleCard(),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildNextBubbleCard() {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      decoration: BoxDecoration(
+        color: Colors.grey.shade900,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Colors.cyan.withValues(alpha: 0.3)),
+      ),
+      child: Row(
+        children: [
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'games.bubble.next'.tr(),
+                style: TextStyle(
+                  color: Colors.white.withValues(alpha: 0.6),
+                  fontSize: 10,
+                ),
+              ),
+              const SizedBox(height: 2),
+            ],
+          ),
+          const SizedBox(width: 8),
+          Container(
+            width: 28,
+            height: 28,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: game.nextBubble != null
+                  ? _getBubbleColor(game.nextBubble!.color)
+                  : Colors.grey,
+              boxShadow: [
+                BoxShadow(
+                  color: (game.nextBubble != null
+                          ? _getBubbleColor(game.nextBubble!.color)
+                          : Colors.grey)
+                      .withValues(alpha: 0.5),
+                  blurRadius: 6,
+                ),
+              ],
+            ),
+          ),
         ],
       ),
     );
@@ -541,86 +563,6 @@ class _BubbleScreenState extends State<BubbleScreen> {
     );
   }
 
-  Widget _buildShooterArea() {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-        children: [
-          // 다음 버블
-          Column(
-            children: [
-              Text(
-                'games.bubble.next'.tr(),
-                style: const TextStyle(color: Colors.white60, fontSize: 12),
-              ),
-              const SizedBox(height: 4),
-              Container(
-                width: 40,
-                height: 40,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: game.nextBubble != null
-                      ? _getBubbleColor(game.nextBubble!.color)
-                      : Colors.grey,
-                  boxShadow: [
-                    BoxShadow(
-                      color: (game.nextBubble != null
-                              ? _getBubbleColor(game.nextBubble!.color)
-                              : Colors.grey)
-                          .withValues(alpha: 0.5),
-                      blurRadius: 8,
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-          // 발사 버튼
-          GestureDetector(
-            onTap: () => game.shoot(),
-            child: Container(
-              width: 80,
-              height: 80,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: game.currentBubble != null
-                    ? _getBubbleColor(game.currentBubble!.color)
-                    : Colors.grey,
-                border: Border.all(color: Colors.white, width: 3),
-                boxShadow: [
-                  BoxShadow(
-                    color: (game.currentBubble != null
-                            ? _getBubbleColor(game.currentBubble!.color)
-                            : Colors.grey)
-                        .withValues(alpha: 0.5),
-                    blurRadius: 12,
-                    spreadRadius: 2,
-                  ),
-                ],
-              ),
-            ),
-          ),
-          // 새 게임
-          GestureDetector(
-            onTap: () => game.reset(),
-            child: Container(
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: Colors.grey.shade800,
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: const Icon(
-                Icons.refresh,
-                color: Colors.white70,
-                size: 28,
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
 }
 
 class BubbleGamePainter extends CustomPainter {
