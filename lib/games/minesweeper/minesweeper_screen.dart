@@ -445,17 +445,6 @@ class _MinesweeperScreenState extends State<MinesweeperScreen> {
     MinesweeperScreen.clearSavedGame();
   }
 
-  String _getDifficultyText() {
-    switch (widget.difficulty) {
-      case MinesweeperDifficulty.easy:
-        return 'common.easy'.tr();
-      case MinesweeperDifficulty.medium:
-        return 'common.normal'.tr();
-      case MinesweeperDifficulty.hard:
-        return 'common.hard'.tr();
-    }
-  }
-
   Color _getNumberColor(int number) {
     switch (number) {
       case 1:
@@ -778,12 +767,6 @@ class _MinesweeperScreenState extends State<MinesweeperScreen> {
                       label: 'games.minesweeper.mines'.tr(),
                     ),
                     _buildInfoItem(
-                      icon: Icons.grid_on,
-                      iconColor: Colors.blueGrey,
-                      value: _getDifficultyText(),
-                      label: 'games.minesweeper.difficulty'.tr(),
-                    ),
-                    _buildInfoItem(
                       icon: Icons.check_circle,
                       iconColor: Colors.green,
                       value: '$revealedCount/${rows * cols - totalMines}',
@@ -818,13 +801,6 @@ class _MinesweeperScreenState extends State<MinesweeperScreen> {
             iconColor: Colors.red,
             value: '${totalMines - flagCount}',
             label: 'games.minesweeper.mines'.tr(),
-          ),
-          const SizedBox(height: 12),
-          _buildInfoItem(
-            icon: Icons.grid_on,
-            iconColor: Colors.blueGrey,
-            value: _getDifficultyText(),
-            label: 'games.minesweeper.difficulty'.tr(),
           ),
           const SizedBox(height: 12),
           _buildInfoItem(
