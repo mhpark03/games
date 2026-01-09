@@ -23,6 +23,9 @@ import 'games/sudoku/services/game_storage.dart' as sudoku;
 import 'games/number_sums/screens/number_sums_game_screen.dart' as number_sums;
 import 'games/number_sums/models/number_sums_generator.dart' as number_sums;
 import 'games/number_sums/services/game_storage.dart' as number_sums;
+import 'games/maze/maze_screen.dart';
+import 'games/mole/mole_screen.dart';
+import 'games/bubble/bubble_screen.dart';
 import 'services/ad_service.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
 
@@ -3464,6 +3467,48 @@ class _HomeScreenState extends State<HomeScreen> {
                                 color: Colors.deepOrange.shade700,
                                 description: 'games.numberSums.description'.tr(),
                                 onTap: () => _showNumberSumsDialog(context),
+                              ),
+                              _buildGameTile(
+                                context,
+                                title: 'games.maze.name'.tr(),
+                                subtitle: 'games.maze.subtitle'.tr(),
+                                icon: Icons.grid_4x4,
+                                color: Colors.purple,
+                                description: 'games.maze.description'.tr(),
+                                onTap: () => Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) => const MazeScreen(),
+                                  ),
+                                ),
+                              ),
+                              _buildGameTile(
+                                context,
+                                title: 'games.mole.name'.tr(),
+                                subtitle: 'games.mole.subtitle'.tr(),
+                                icon: Icons.pets,
+                                color: Colors.brown,
+                                description: 'games.mole.description'.tr(),
+                                onTap: () => Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) => const MoleScreen(),
+                                  ),
+                                ),
+                              ),
+                              _buildGameTile(
+                                context,
+                                title: 'games.bubble.name'.tr(),
+                                subtitle: 'games.bubble.subtitle'.tr(),
+                                icon: Icons.bubble_chart,
+                                color: Colors.cyan,
+                                description: 'games.bubble.description'.tr(),
+                                onTap: () => Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) => const BubbleScreen(),
+                                  ),
+                                ),
                               ),
                             ],
                           );

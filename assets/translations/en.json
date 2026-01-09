@@ -528,6 +528,45 @@
       "rulesSumHintsDesc": "• Numbers at the end of rows/columns are sum hints\n• They indicate the sum of specific cells in that row/column\n• Cells without hints are not included in the sum",
       "rulesTips": "Tips",
       "rulesTipsDesc": "• Start with smaller sums\n• Use both row and column hints together\n• Use elimination to narrow down possible numbers"
+    },
+    "maze": {
+      "name": "Maze",
+      "subtitle": "Maze",
+      "description": "Escape the maze and reach the golden star!",
+      "congratulations": "Congratulations!",
+      "escaped": "You escaped the maze!",
+      "moves": "Moves: {count}",
+      "time": "Time: {time}",
+      "movesLabel": "Moves",
+      "timeLabel": "Time",
+      "reset": "Reset",
+      "newMaze": "New Maze"
+    },
+    "mole": {
+      "name": "Whack-a-Mole",
+      "subtitle": "Tap the moles!",
+      "description": "Catch as many moles as you can in 30 seconds!",
+      "gameOver": "Game Over!",
+      "finalScore": "Score: {score}",
+      "highScoreLabel": "High Score: {score}",
+      "score": "Score",
+      "time": "Time",
+      "seconds": "s",
+      "highScore": "Best",
+      "playing": "Playing...",
+      "start": "Start Game"
+    },
+    "bubble": {
+      "name": "Bubble Shooter",
+      "subtitle": "Match 3 same color bubbles!",
+      "description": "Connect 3 or more same color bubbles to pop them!",
+      "gameOver": "Game Over!",
+      "finalScore": "Score: {score}",
+      "highScoreLabel": "High Score: {score}",
+      "score": "Score",
+      "highScore": "Best",
+      "next": "NEXT",
+      "retry": "Retry"
     }
   },
   "dialog": {

@@ -528,6 +528,45 @@
       "rulesSumHintsDesc": "• 행/열 끝에 표시된 숫자가 합계 힌트\n• 해당 행/열의 특정 칸들의 합계를 나타냄\n• 힌트가 없는 칸은 합계에 포함 안 됨",
       "rulesTips": "팁",
       "rulesTipsDesc": "• 작은 합계부터 풀어보세요\n• 행과 열 힌트를 함께 활용하세요\n• 소거법으로 가능한 숫자를 줄이세요"
+    },
+    "maze": {
+      "name": "미로찾기",
+      "subtitle": "Maze",
+      "description": "미로를 탈출하여 골든 스타에 도달하세요!",
+      "congratulations": "축하합니다!",
+      "escaped": "미로를 탈출했습니다!",
+      "moves": "이동 횟수: {count}",
+      "time": "소요 시간: {time}",
+      "movesLabel": "이동",
+      "timeLabel": "시간",
+      "reset": "리셋",
+      "newMaze": "새 미로"
+    },
+    "mole": {
+      "name": "두더지 잡기",
+      "subtitle": "두더지를 탭하세요!",
+      "description": "30초 안에 최대한 많은 두더지를 잡으세요!",
+      "gameOver": "게임 종료!",
+      "finalScore": "점수: {score}",
+      "highScoreLabel": "최고 점수: {score}",
+      "score": "점수",
+      "time": "시간",
+      "seconds": "초",
+      "highScore": "최고",
+      "playing": "게임 진행 중...",
+      "start": "게임 시작"
+    },
+    "bubble": {
+      "name": "버블 슈터",
+      "subtitle": "같은 색 버블 3개를 맞추세요!",
+      "description": "같은 색 버블 3개 이상을 연결하여 터뜨리세요!",
+      "gameOver": "게임 종료!",
+      "finalScore": "점수: {score}",
+      "highScoreLabel": "최고 점수: {score}",
+      "score": "점수",
+      "highScore": "최고",
+      "next": "NEXT",
+      "retry": "다시 하기"
     }
   },
   "dialog": {

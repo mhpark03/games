@@ -528,6 +528,45 @@
       "rulesSumHintsDesc": "• 行/列末端的数字是求和提示\n• 表示该行/列中特定格子的总和\n• 没有提示的格子不计入求和",
       "rulesTips": "提示",
       "rulesTipsDesc": "• 从较小的求和开始解题\n• 结合行和列的提示一起使用\n• 使用排除法缩小可能的数字范围"
+    },
+    "maze": {
+      "name": "迷宫",
+      "subtitle": "Maze",
+      "description": "逃出迷宫，到达金色星星！",
+      "congratulations": "恭喜！",
+      "escaped": "你逃出了迷宫！",
+      "moves": "移动次数: {count}",
+      "time": "用时: {time}",
+      "movesLabel": "移动",
+      "timeLabel": "时间",
+      "reset": "重置",
+      "newMaze": "新迷宫"
+    },
+    "mole": {
+      "name": "打地鼠",
+      "subtitle": "点击地鼠！",
+      "description": "在30秒内尽可能多地打地鼠！",
+      "gameOver": "游戏结束！",
+      "finalScore": "得分: {score}",
+      "highScoreLabel": "最高分: {score}",
+      "score": "得分",
+      "time": "时间",
+      "seconds": "秒",
+      "highScore": "最高",
+      "playing": "游戏中...",
+      "start": "开始游戏"
+    },
+    "bubble": {
+      "name": "泡泡射手",
+      "subtitle": "匹配3个相同颜色的泡泡！",
+      "description": "连接3个或更多相同颜色的泡泡来消除它们！",
+      "gameOver": "游戏结束！",
+      "finalScore": "得分: {score}",
+      "highScoreLabel": "最高分: {score}",
+      "score": "得分",
+      "highScore": "最高",
+      "next": "NEXT",
+      "retry": "重试"
     }
   },
   "dialog": {

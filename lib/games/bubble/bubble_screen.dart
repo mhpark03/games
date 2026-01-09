@@ -1,0 +1,579 @@
+import 'dart:async';
+import 'dart:math';
+import 'package:flutter/material.dart';
+import 'package:easy_localization/easy_localization.dart';
+import 'models/bubble_game.dart';
+
+class BubbleScreen extends StatefulWidget {
+  const BubbleScreen({super.key});
+
+  @override
+  State<BubbleScreen> createState() => _BubbleScreenState();
+}
+
+class _BubbleScreenState extends State<BubbleScreen> {
+  late BubbleShooterGame game;
+  int highScore = 0;
+  Timer? gameLoop;
+  Size? gameSize;
+
+  @override
+  void initState() {
+    super.initState();
+    game = BubbleShooterGame();
+    game.onUpdate = () => setState(() {});
+    game.onGameOver = _showGameOverDialog;
+
+    // 게임 루프 시작
+    gameLoop = Timer.periodic(const Duration(milliseconds: 16), (_) {
+      if (gameSize != null) {
+        game.update(gameSize!.width, gameSize!.height);
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    gameLoop?.cancel();
+    super.dispose();
+  }
+
+  void _showGameOverDialog() {
+    if (game.score > highScore) {
+      highScore = game.score;
+    }
+
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => AlertDialog(
+        backgroundColor: Colors.grey.shade900,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+          side: BorderSide(color: Colors.cyan.withValues(alpha: 0.5), width: 2),
+        ),
+        title: Text(
+          'games.bubble.gameOver'.tr(),
+          textAlign: TextAlign.center,
+          style: const TextStyle(color: Color(0xFFFFD700), fontSize: 28),
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Icon(Icons.bubble_chart, color: Color(0xFF00D9FF), size: 64),
+            const SizedBox(height: 16),
+            Text(
+              'games.bubble.finalScore'.tr(namedArgs: {'score': game.score.toString()}),
+              style: const TextStyle(color: Colors.white, fontSize: 24),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'games.bubble.highScoreLabel'.tr(namedArgs: {'score': highScore.toString()}),
+              style: const TextStyle(color: Colors.white70, fontSize: 16),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () {
+              Navigator.of(context).pop();
+              game.reset();
+            },
+            child: Text(
+              'games.bubble.retry'.tr(),
+              style: const TextStyle(color: Color(0xFF00D9FF), fontSize: 16),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Color _getBubbleColor(BubbleColor color) {
+    switch (color) {
+      case BubbleColor.red:
+        return Colors.red;
+      case BubbleColor.blue:
+        return Colors.blue;
+      case BubbleColor.green:
+        return Colors.green;
+      case BubbleColor.yellow:
+        return Colors.amber;
+      case BubbleColor.purple:
+        return Colors.purple;
+      case BubbleColor.orange:
+        return Colors.orange;
+      case BubbleColor.empty:
+        return Colors.transparent;
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: Colors.black,
+      body: SafeArea(
+        child: Column(
+          children: [
+            _buildHeader(),
+            const SizedBox(height: 8),
+            _buildScoreBoard(),
+            const SizedBox(height: 8),
+            Expanded(
+              child: _buildGameArea(),
+            ),
+            _buildShooterArea(),
+            const SizedBox(height: 16),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildHeader() {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      child: Row(
+        children: [
+          IconButton(
+            onPressed: () => Navigator.of(context).pop(),
+            icon: const Icon(Icons.arrow_back, color: Colors.white),
+          ),
+          const SizedBox(width: 8),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'games.bubble.name'.tr(),
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 24,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              Text(
+                'games.bubble.subtitle'.tr(),
+                style: const TextStyle(
+                  color: Colors.white60,
+                  fontSize: 12,
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildScoreBoard() {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+        children: [
+          _buildStatCard('games.bubble.score'.tr(), game.score.toString(), Icons.star),
+          _buildStatCard('games.bubble.highScore'.tr(), highScore.toString(), Icons.emoji_events),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildStatCard(String label, String value, IconData icon) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+      decoration: BoxDecoration(
+        color: Colors.grey.shade900,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Colors.cyan.withValues(alpha: 0.3)),
+      ),
+      child: Row(
+        children: [
+          Icon(icon, color: const Color(0xFF00D9FF), size: 20),
+          const SizedBox(width: 8),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                label,
+                style: TextStyle(
+                  color: Colors.white.withValues(alpha: 0.6),
+                  fontSize: 10,
+                ),
+              ),
+              Text(
+                value,
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildGameArea() {
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 8),
+      decoration: BoxDecoration(
+        color: Colors.grey.shade900,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: Colors.cyan.withValues(alpha: 0.3), width: 2),
+      ),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(14),
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            gameSize = Size(constraints.maxWidth, constraints.maxHeight);
+            game.setShooterPosition(
+              constraints.maxWidth / 2,
+              constraints.maxHeight - 40,
+            );
+
+            return GestureDetector(
+              onPanUpdate: (details) {
+                game.aim(details.localPosition.dx, details.localPosition.dy);
+                setState(() {});
+              },
+              onTapUp: (details) {
+                game.aim(details.localPosition.dx, details.localPosition.dy);
+                game.shoot();
+              },
+              child: CustomPaint(
+                painter: BubbleGamePainter(
+                  game: game,
+                  getBubbleColor: _getBubbleColor,
+                ),
+                size: Size.infinite,
+              ),
+            );
+          },
+        ),
+      ),
+    );
+  }
+
+  Widget _buildShooterArea() {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+        children: [
+          // 다음 버블
+          Column(
+            children: [
+              Text(
+                'games.bubble.next'.tr(),
+                style: const TextStyle(color: Colors.white60, fontSize: 12),
+              ),
+              const SizedBox(height: 4),
+              Container(
+                width: 40,
+                height: 40,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: game.nextBubble != null
+                      ? _getBubbleColor(game.nextBubble!.color)
+                      : Colors.grey,
+                  boxShadow: [
+                    BoxShadow(
+                      color: (game.nextBubble != null
+                              ? _getBubbleColor(game.nextBubble!.color)
+                              : Colors.grey)
+                          .withValues(alpha: 0.5),
+                      blurRadius: 8,
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          // 발사 버튼
+          GestureDetector(
+            onTap: () => game.shoot(),
+            child: Container(
+              width: 80,
+              height: 80,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: game.currentBubble != null
+                    ? _getBubbleColor(game.currentBubble!.color)
+                    : Colors.grey,
+                border: Border.all(color: Colors.white, width: 3),
+                boxShadow: [
+                  BoxShadow(
+                    color: (game.currentBubble != null
+                            ? _getBubbleColor(game.currentBubble!.color)
+                            : Colors.grey)
+                        .withValues(alpha: 0.5),
+                    blurRadius: 12,
+                    spreadRadius: 2,
+                  ),
+                ],
+              ),
+            ),
+          ),
+          // 새 게임
+          GestureDetector(
+            onTap: () => game.reset(),
+            child: Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: Colors.grey.shade800,
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: const Icon(
+                Icons.refresh,
+                color: Colors.white70,
+                size: 28,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class BubbleGamePainter extends CustomPainter {
+  final BubbleShooterGame game;
+  final Color Function(BubbleColor) getBubbleColor;
+
+  BubbleGamePainter({required this.game, required this.getBubbleColor});
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final cellWidth = size.width / BubbleShooterGame.cols;
+    final cellHeight = BubbleShooterGame.bubbleRadius * 2 * 0.866;
+    final bubbleRadius = BubbleShooterGame.bubbleRadius;
+
+    // 그리드 버블 그리기
+    for (int row = 0; row < BubbleShooterGame.rows; row++) {
+      for (int col = 0; col < BubbleShooterGame.cols; col++) {
+        final bubble = game.grid[row][col];
+        if (bubble == null) continue;
+
+        final offset = (row % 2 == 1) ? cellWidth / 2 : 0;
+        final x = col * cellWidth + cellWidth / 2 + offset;
+        final y = row * cellHeight + bubbleRadius;
+
+        _drawBubble(canvas, x, y, bubbleRadius, getBubbleColor(bubble.color));
+      }
+    }
+
+    // 발사 중인 버블
+    if (game.shootingBubble != null) {
+      _drawBubble(
+        canvas,
+        game.shootingBubble!.x,
+        game.shootingBubble!.y,
+        bubbleRadius,
+        getBubbleColor(game.shootingBubble!.color),
+      );
+    }
+
+    // 떨어지는 버블
+    for (final bubble in game.fallingBubbles) {
+      _drawBubble(
+        canvas,
+        bubble.x,
+        bubble.y,
+        bubbleRadius * 0.9,
+        getBubbleColor(bubble.color).withValues(alpha: 0.8),
+      );
+    }
+
+    // 터지는 버블
+    for (final bubble in game.poppingBubbles) {
+      _drawBubble(
+        canvas,
+        bubble.x,
+        bubble.y,
+        bubbleRadius * 0.7,
+        getBubbleColor(bubble.color).withValues(alpha: 0.6),
+      );
+    }
+
+    // 조준선
+    if (!game.isShooting && game.currentBubble != null) {
+      final bubbleColor = getBubbleColor(game.currentBubble!.color);
+      _drawAimLine(canvas, size, bubbleRadius, bubbleColor);
+    }
+
+    // 발사대
+    _drawShooter(canvas, size);
+  }
+
+  void _drawAimLine(Canvas canvas, Size size, double bubbleRadius, Color color) {
+    final cellWidth = size.width / BubbleShooterGame.cols;
+    final cellHeight = BubbleShooterGame.bubbleRadius * 2 * 0.866;
+
+    // 경로 포인트 계산
+    final points = <Offset>[];
+    double x = game.shooterX;
+    double y = game.shooterY;
+    double vx = cos(game.aimAngle);
+    double vy = sin(game.aimAngle);
+
+    points.add(Offset(x, y));
+
+    // 경로 추적 (벽 반사 및 버블 충돌 포함)
+    bool hitBubble = false;
+    for (int step = 0; step < 500 && !hitBubble; step++) {
+      x += vx * 2;
+      y += vy * 2;
+
+      // 좌우 벽 반사
+      if (x < bubbleRadius) {
+        x = bubbleRadius;
+        vx = -vx;
+        points.add(Offset(x, y));
+      } else if (x > size.width - bubbleRadius) {
+        x = size.width - bubbleRadius;
+        vx = -vx;
+        points.add(Offset(x, y));
+      }
+
+      // 상단 도달 시 종료
+      if (y < bubbleRadius) {
+        points.add(Offset(x, bubbleRadius));
+        break;
+      }
+
+      // 버블과 충돌 체크
+      for (int row = 0; row < BubbleShooterGame.rows; row++) {
+        for (int col = 0; col < BubbleShooterGame.cols; col++) {
+          if (game.grid[row][col] == null) continue;
+
+          final offset = (row % 2 == 1) ? cellWidth / 2 : 0;
+          final bx = col * cellWidth + cellWidth / 2 + offset;
+          final by = row * cellHeight + bubbleRadius;
+
+          final dx = x - bx;
+          final dy = y - by;
+          final dist = sqrt(dx * dx + dy * dy);
+
+          if (dist < bubbleRadius * 1.9) {
+            points.add(Offset(x, y));
+            hitBubble = true;
+            break;
+          }
+        }
+        if (hitBubble) break;
+      }
+    }
+
+    // 마지막 점 추가
+    if (!hitBubble && points.last.dy > bubbleRadius) {
+      points.add(Offset(x, y));
+    }
+
+    // 점선 그리기 (현재 버블 색상으로)
+    final dotPaint = Paint()
+      ..color = color.withValues(alpha: 0.8)
+      ..strokeWidth = 4
+      ..strokeCap = StrokeCap.round;
+
+    const dotSpacing = 18.0;
+    const dotRadius = 5.0;
+
+    for (int i = 0; i < points.length - 1; i++) {
+      final start = points[i];
+      final end = points[i + 1];
+
+      final dx = end.dx - start.dx;
+      final dy = end.dy - start.dy;
+      final distance = sqrt(dx * dx + dy * dy);
+      if (distance < 1) continue;
+
+      final unitX = dx / distance;
+      final unitY = dy / distance;
+
+      double traveled = 0;
+      bool draw = true;
+
+      while (traveled < distance) {
+        if (draw) {
+          canvas.drawCircle(
+            Offset(start.dx + unitX * traveled, start.dy + unitY * traveled),
+            dotRadius,
+            dotPaint,
+          );
+        }
+        traveled += dotSpacing / 2;
+        draw = !draw;
+      }
+    }
+  }
+
+  void _drawBubble(Canvas canvas, double x, double y, double radius, Color color) {
+    // 그림자
+    canvas.drawCircle(
+      Offset(x, y + 2),
+      radius,
+      Paint()..color = Colors.black.withValues(alpha: 0.3),
+    );
+
+    // 메인 버블
+    final gradient = RadialGradient(
+      center: const Alignment(-0.3, -0.3),
+      colors: [
+        Color.lerp(color, Colors.white, 0.3)!,
+        color,
+        Color.lerp(color, Colors.black, 0.2)!,
+      ],
+    );
+
+    canvas.drawCircle(
+      Offset(x, y),
+      radius,
+      Paint()..shader = gradient.createShader(
+        Rect.fromCircle(center: Offset(x, y), radius: radius),
+      ),
+    );
+
+    // 하이라이트
+    canvas.drawCircle(
+      Offset(x - radius * 0.3, y - radius * 0.3),
+      radius * 0.25,
+      Paint()..color = Colors.white.withValues(alpha: 0.6),
+    );
+  }
+
+  void _drawShooter(Canvas canvas, Size size) {
+    final shooterX = game.shooterX;
+    final shooterY = game.shooterY;
+
+    // 발사대 베이스
+    final basePaint = Paint()
+      ..color = const Color(0xFF4A4A6A)
+      ..style = PaintingStyle.fill;
+
+    canvas.drawCircle(
+      Offset(shooterX, shooterY + 10),
+      30,
+      basePaint,
+    );
+
+    // 발사대 포신
+    final barrelPaint = Paint()
+      ..color = const Color(0xFF6A6A8A)
+      ..strokeWidth = 12
+      ..strokeCap = StrokeCap.round;
+
+    canvas.drawLine(
+      Offset(shooterX, shooterY),
+      Offset(
+        shooterX + cos(game.aimAngle) * 40,
+        shooterY + sin(game.aimAngle) * 40,
+      ),
+      barrelPaint,
+    );
+  }
+
+  @override
+  bool shouldRepaint(covariant BubbleGamePainter oldDelegate) => true;
+}
