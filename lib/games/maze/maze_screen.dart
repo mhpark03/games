@@ -146,16 +146,6 @@ class _MazeScreenState extends State<MazeScreen> {
     _startTimer();
   }
 
-  void _resetGame() {
-    setState(() {
-      maze.reset();
-      moves = 0;
-      elapsedSeconds = 0;
-      isGameWon = false;
-    });
-    _startTimer();
-  }
-
   String _formatTime(int seconds) {
     final minutes = seconds ~/ 60;
     final secs = seconds % 60;
@@ -180,9 +170,6 @@ class _MazeScreenState extends State<MazeScreen> {
         case LogicalKeyboardKey.arrowRight:
         case LogicalKeyboardKey.keyD:
           _movePlayer(const Position(0, 1));
-          return KeyEventResult.handled;
-        case LogicalKeyboardKey.keyR:
-          _resetGame();
           return KeyEventResult.handled;
         case LogicalKeyboardKey.keyN:
           _newGame();
@@ -231,12 +218,7 @@ class _MazeScreenState extends State<MazeScreen> {
                 tooltip: 'app.rules'.tr(),
               ),
               IconButton(
-                icon: const Icon(Icons.refresh),
-                onPressed: _resetGame,
-                tooltip: 'app.restart'.tr(),
-              ),
-              IconButton(
-                icon: const Icon(Icons.casino),
+                icon: const Icon(Icons.replay),
                 onPressed: _newGame,
                 tooltip: 'app.newGame'.tr(),
               ),
