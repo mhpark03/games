@@ -82,10 +82,11 @@ class _MazeScreenState extends State<MazeScreen> {
     setState(() {
       if (maze.movePlayer(direction)) {
         moves++;
-        hintPath = null; // 이동 시 힌트 숨기기
+        // 힌트는 새 게임 시작 또는 클리어할 때까지 유지
         if (maze.isGameWon) {
           isGameWon = true;
           timer?.cancel();
+          hintPath = null; // 게임 클리어 시 힌트 숨기기
           _showWinDialog();
         }
       }
