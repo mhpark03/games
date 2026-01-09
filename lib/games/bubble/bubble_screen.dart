@@ -853,8 +853,8 @@ class BubbleGamePainter extends CustomPainter {
     final vx = cos(game.aimAngle);
     final vy = sin(game.aimAngle);
 
-    // 짧은 길이 (발사대에서 약 80픽셀)
-    const lineLength = 80.0;
+    // 방향 표시선 길이 (발사대에서 약 240픽셀)
+    const lineLength = 240.0;
 
     final dotPaint = Paint()
       ..color = color.withValues(alpha: 0.6)
