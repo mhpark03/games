@@ -113,17 +113,219 @@ class _BubbleScreenState extends State<BubbleScreen> {
     return Scaffold(
       backgroundColor: Colors.black,
       body: SafeArea(
-        child: Column(
-          children: [
-            _buildHeader(),
-            const SizedBox(height: 8),
-            _buildScoreBoard(),
-            const SizedBox(height: 8),
-            Expanded(
-              child: _buildGameArea(),
+        child: OrientationBuilder(
+          builder: (context, orientation) {
+            if (orientation == Orientation.landscape) {
+              return _buildLandscapeLayout();
+            } else {
+              return _buildPortraitLayout();
+            }
+          },
+        ),
+      ),
+    );
+  }
+
+  Widget _buildPortraitLayout() {
+    return Column(
+      children: [
+        _buildHeader(),
+        const SizedBox(height: 8),
+        _buildScoreBoard(),
+        const SizedBox(height: 8),
+        Expanded(
+          child: _buildGameArea(),
+        ),
+        _buildShooterArea(),
+        const SizedBox(height: 16),
+      ],
+    );
+  }
+
+  Widget _buildLandscapeLayout() {
+    return Row(
+      children: [
+        // 왼쪽 패널: 뒤로가기, 제목, 점수
+        Expanded(
+          flex: 2,
+          child: Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: Column(
+              children: [
+                Row(
+                  children: [
+                    _buildCircleButton(
+                      icon: Icons.arrow_back,
+                      onPressed: () => Navigator.pop(context),
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        'games.bubble.name'.tr(),
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 18,
+                        ),
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 16),
+                _buildLandscapeInfoBox('games.bubble.score'.tr(), game.score.toString(), Icons.star),
+                const SizedBox(height: 8),
+                _buildLandscapeInfoBox('games.bubble.highScore'.tr(), highScore.toString(), Icons.emoji_events),
+                const Spacer(),
+              ],
             ),
-            _buildShooterArea(),
-            const SizedBox(height: 16),
+          ),
+        ),
+        // 중앙: 게임 영역
+        Expanded(
+          flex: 4,
+          child: Padding(
+            padding: const EdgeInsets.symmetric(vertical: 8),
+            child: _buildGameArea(),
+          ),
+        ),
+        // 오른쪽 패널: 다음 버블, 발사 버튼, 리셋
+        Expanded(
+          flex: 2,
+          child: Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: Column(
+              children: [
+                const SizedBox(height: 8),
+                // 다음 버블
+                _buildLandscapeNextBubble(),
+                const Spacer(),
+                // 발사 버튼
+                _buildLandscapeShootButton(),
+                const SizedBox(height: 16),
+                // 리셋 버튼
+                _buildCircleButton(
+                  icon: Icons.refresh,
+                  onPressed: () => game.reset(),
+                ),
+                const SizedBox(height: 16),
+              ],
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildCircleButton({
+    required IconData icon,
+    required VoidCallback onPressed,
+  }) {
+    return Container(
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        color: Colors.grey.shade800,
+      ),
+      child: IconButton(
+        icon: Icon(icon, color: Colors.white70),
+        onPressed: onPressed,
+        iconSize: 20,
+      ),
+    );
+  }
+
+  Widget _buildLandscapeInfoBox(String label, String value, IconData icon) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      decoration: BoxDecoration(
+        color: Colors.grey.shade900,
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: Colors.cyan.withValues(alpha: 0.3)),
+      ),
+      child: Row(
+        children: [
+          Icon(icon, color: const Color(0xFF00D9FF), size: 18),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  label,
+                  style: TextStyle(
+                    color: Colors.white.withValues(alpha: 0.6),
+                    fontSize: 10,
+                  ),
+                ),
+                Text(
+                  value,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildLandscapeNextBubble() {
+    return Column(
+      children: [
+        Text(
+          'games.bubble.next'.tr(),
+          style: const TextStyle(color: Colors.white60, fontSize: 12),
+        ),
+        const SizedBox(height: 4),
+        Container(
+          width: 36,
+          height: 36,
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            color: game.nextBubble != null
+                ? _getBubbleColor(game.nextBubble!.color)
+                : Colors.grey,
+            boxShadow: [
+              BoxShadow(
+                color: (game.nextBubble != null
+                        ? _getBubbleColor(game.nextBubble!.color)
+                        : Colors.grey)
+                    .withValues(alpha: 0.5),
+                blurRadius: 8,
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildLandscapeShootButton() {
+    return GestureDetector(
+      onTap: () => game.shoot(),
+      child: Container(
+        width: 60,
+        height: 60,
+        decoration: BoxDecoration(
+          shape: BoxShape.circle,
+          color: game.currentBubble != null
+              ? _getBubbleColor(game.currentBubble!.color)
+              : Colors.grey,
+          border: Border.all(color: Colors.white, width: 3),
+          boxShadow: [
+            BoxShadow(
+              color: (game.currentBubble != null
+                      ? _getBubbleColor(game.currentBubble!.color)
+                      : Colors.grey)
+                  .withValues(alpha: 0.5),
+              blurRadius: 12,
+              spreadRadius: 2,
+            ),
           ],
         ),
       ),
