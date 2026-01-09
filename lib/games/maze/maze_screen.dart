@@ -516,18 +516,10 @@ class _MazeScreenState extends State<MazeScreen> {
   }
 
   Widget _buildLandscapeControlButton(IconData icon, VoidCallback onPressed, double size) {
-    return GestureDetector(
-      onTap: onPressed,
-      child: Container(
-        width: size,
-        height: size,
-        decoration: BoxDecoration(
-          color: Colors.grey.shade800,
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: Colors.purple.withValues(alpha: 0.5)),
-        ),
-        child: Icon(icon, color: Colors.purple, size: size * 0.5),
-      ),
+    return _MazeHoldButton(
+      icon: icon,
+      onPressed: onPressed,
+      size: size,
     );
   }
 
@@ -673,18 +665,10 @@ class _MazeScreenState extends State<MazeScreen> {
   }
 
   Widget _buildControlButton(IconData icon, VoidCallback onPressed) {
-    return GestureDetector(
-      onTap: onPressed,
-      child: Container(
-        width: 56,
-        height: 56,
-        decoration: BoxDecoration(
-          color: Colors.grey.shade800,
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: Colors.purple.withValues(alpha: 0.5)),
-        ),
-        child: Icon(icon, color: Colors.purple, size: 28),
-      ),
+    return _MazeHoldButton(
+      icon: icon,
+      onPressed: onPressed,
+      size: 56,
     );
   }
 
@@ -754,6 +738,67 @@ class _MazeScreenState extends State<MazeScreen> {
           style: const TextStyle(color: Colors.white70, fontSize: 13),
         ),
       ],
+    );
+  }
+}
+
+/// 롱프레스 시 연속 이동을 지원하는 방향 버튼 위젯
+class _MazeHoldButton extends StatefulWidget {
+  final IconData icon;
+  final VoidCallback onPressed;
+  final double size;
+  final Duration initialDelay;
+  final Duration repeatInterval;
+
+  const _MazeHoldButton({
+    required this.icon,
+    required this.onPressed,
+    this.size = 56,
+    this.initialDelay = const Duration(milliseconds: 200),
+    this.repeatInterval = const Duration(milliseconds: 80),
+  });
+
+  @override
+  State<_MazeHoldButton> createState() => _MazeHoldButtonState();
+}
+
+class _MazeHoldButtonState extends State<_MazeHoldButton> {
+  bool _isPressed = false;
+
+  void _startHold() {
+    _isPressed = true;
+    widget.onPressed();
+    _scheduleRepeat();
+  }
+
+  void _scheduleRepeat() async {
+    await Future.delayed(widget.initialDelay);
+    while (_isPressed && mounted) {
+      widget.onPressed();
+      await Future.delayed(widget.repeatInterval);
+    }
+  }
+
+  void _stopHold() {
+    _isPressed = false;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTapDown: (_) => _startHold(),
+      onTapUp: (_) => _stopHold(),
+      onTapCancel: () => _stopHold(),
+      child: Container(
+        width: widget.size,
+        height: widget.size,
+        decoration: BoxDecoration(
+          color: Colors.grey.shade800,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: Colors.purple.withValues(alpha: 0.5)),
+        ),
+        child: Icon(widget.icon, color: Colors.purple, size: widget.size * 0.5),
+      ),
     );
   }
 }
