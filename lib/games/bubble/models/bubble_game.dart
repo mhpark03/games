@@ -287,15 +287,24 @@ class BubbleShooterGame {
   List<(int, int)> _getNeighbors(int row, int col) {
     final neighbors = <(int, int)>[];
 
-    // 8방향 모두 체크 (더 관대한 연결 판정)
-    neighbors.add((row - 1, col));     // 상
-    neighbors.add((row + 1, col));     // 하
-    neighbors.add((row, col - 1));     // 좌
-    neighbors.add((row, col + 1));     // 우
-    neighbors.add((row - 1, col - 1)); // 좌상
-    neighbors.add((row - 1, col + 1)); // 우상
-    neighbors.add((row + 1, col - 1)); // 좌하
-    neighbors.add((row + 1, col + 1)); // 우하
+    // 육각형 그리드 이웃 (홀수/짝수 행에 따라 다름)
+    if (row % 2 == 0) {
+      // 짝수 행
+      neighbors.add((row - 1, col - 1)); // 좌상
+      neighbors.add((row - 1, col));     // 우상
+      neighbors.add((row, col - 1));     // 좌
+      neighbors.add((row, col + 1));     // 우
+      neighbors.add((row + 1, col - 1)); // 좌하
+      neighbors.add((row + 1, col));     // 우하
+    } else {
+      // 홀수 행 (오프셋 있음)
+      neighbors.add((row - 1, col));     // 좌상
+      neighbors.add((row - 1, col + 1)); // 우상
+      neighbors.add((row, col - 1));     // 좌
+      neighbors.add((row, col + 1));     // 우
+      neighbors.add((row + 1, col));     // 좌하
+      neighbors.add((row + 1, col + 1)); // 우하
+    }
 
     return neighbors;
   }
