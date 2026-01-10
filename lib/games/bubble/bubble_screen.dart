@@ -26,6 +26,7 @@ class _BubbleScreenState extends State<BubbleScreen> {
     game = BubbleShooterGame();
     game.onUpdate = () => setState(() {});
     game.onGameOver = _showGameOverDialog;
+    game.onGameWon = _showGameWonDialog;
 
     // 게임 루프 시작
     gameLoop = Timer.periodic(const Duration(milliseconds: 16), (_) {
@@ -148,6 +149,58 @@ class _BubbleScreenState extends State<BubbleScreen> {
             child: Text(
               'games.bubble.retry'.tr(),
               style: const TextStyle(color: Color(0xFF00D9FF), fontSize: 16),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showGameWonDialog() {
+    if (game.score > highScore) {
+      highScore = game.score;
+    }
+    showHintLine = false; // 게임 종료 시 힌트 초기화
+
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => AlertDialog(
+        backgroundColor: Colors.grey.shade900,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+          side: BorderSide(color: Colors.green.withValues(alpha: 0.5), width: 2),
+        ),
+        title: Text(
+          'games.bubble.gameWon'.tr(),
+          textAlign: TextAlign.center,
+          style: const TextStyle(color: Color(0xFF00FF00), fontSize: 28),
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Icon(Icons.celebration, color: Color(0xFFFFD700), size: 64),
+            const SizedBox(height: 16),
+            Text(
+              'games.bubble.finalScore'.tr(namedArgs: {'score': game.score.toString()}),
+              style: const TextStyle(color: Colors.white, fontSize: 24),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'games.bubble.highScoreLabel'.tr(namedArgs: {'score': highScore.toString()}),
+              style: const TextStyle(color: Colors.white70, fontSize: 16),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () {
+              Navigator.of(context).pop();
+              _resetGame();
+            },
+            child: Text(
+              'games.bubble.playAgain'.tr(),
+              style: const TextStyle(color: Color(0xFF00FF00), fontSize: 16),
             ),
           ),
         ],
