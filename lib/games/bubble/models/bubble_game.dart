@@ -38,6 +38,7 @@ class BubbleShooterGame {
 
   int score = 0;
   bool isGameOver = false;
+  bool isGameWon = false;
   bool isShooting = false;
 
   List<Bubble> fallingBubbles = [];
@@ -45,6 +46,7 @@ class BubbleShooterGame {
 
   void Function()? onUpdate;
   void Function()? onGameOver;
+  void Function()? onGameWon;
 
   BubbleShooterGame() {
     _initGame();
@@ -53,6 +55,7 @@ class BubbleShooterGame {
   void _initGame() {
     score = 0;
     isGameOver = false;
+    isGameWon = false;
     isShooting = false;
     fallingBubbles.clear();
     poppingBubbles.clear();
@@ -375,6 +378,23 @@ class BubbleShooterGame {
         onGameOver?.call();
         return;
       }
+    }
+
+    // 모든 버블이 제거되면 승리
+    bool hasAnyBubble = false;
+    for (int row = 0; row < rows; row++) {
+      for (int col = 0; col < cols; col++) {
+        if (grid[row][col] != null) {
+          hasAnyBubble = true;
+          break;
+        }
+      }
+      if (hasAnyBubble) break;
+    }
+
+    if (!hasAnyBubble) {
+      isGameWon = true;
+      onGameWon?.call();
     }
   }
 
