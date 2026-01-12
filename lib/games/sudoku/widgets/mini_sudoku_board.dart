@@ -36,7 +36,22 @@ class MiniSudokuBoard extends StatelessWidget {
     );
   }
 
+  /// 보드 3, 4에서 보드 2와 겹치는 영역인지 확인
+  /// 이 영역은 투명하게 처리하여 보드 2의 값이 보이도록 함
+  bool _shouldBeTransparent(int row, int col) {
+    // 보드 3의 우상단 3x3 (보드 2의 좌하단과 겹침)
+    if (boardIndex == 3 && row < 3 && col >= 6) return true;
+    // 보드 4의 좌상단 3x3 (보드 2의 우하단과 겹침)
+    if (boardIndex == 4 && row < 3 && col < 3) return true;
+    return false;
+  }
+
   Widget _buildCell(int row, int col) {
+    // 보드 3, 4의 겹치는 영역은 투명하게 처리
+    if (_shouldBeTransparent(row, col)) {
+      return const SizedBox.expand();
+    }
+
     int value = board[row][col];
     bool fixed = isFixed[row][col];
     bool isSelected = gameState.isSelectedCell(boardIndex, row, col);
