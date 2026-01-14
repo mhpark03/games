@@ -638,7 +638,7 @@ class _OneCardScreenState extends State<OneCardScreen> with TickerProviderStateM
       // 승리 체크
       if (playerHand.isEmpty) {
         gameOver = true;
-        winner = 'common.player'.tr();
+        winner = _getBankruptcyWinner();
         return;
       }
       for (int i = 0; i < computerHands.length; i++) {
@@ -844,7 +844,7 @@ class _OneCardScreenState extends State<OneCardScreen> with TickerProviderStateM
         // 파산 체크
         if (computerHand.length >= bankruptcyLimit) {
           gameOver = true;
-          winner = 'common.player'.tr();
+          winner = _getBankruptcyWinner();
           pendingMessage = 'games.onecard.computerBankruptcy'.tr(namedArgs: {'name': computerName, 'count': '${computerHand.length}'});
           return;
         }
