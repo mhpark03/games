@@ -929,6 +929,97 @@ class _HulaScreenState extends State<HulaScreen> with TickerProviderStateMixin {
   // 7 카드인지 확인
   bool _isSeven(PlayingCard card) => card.rank == 7;
 
+
+  // 특정 무늬의 7이 멜드로 등록되었는지 확인
+  bool _isSevenRegistered(Suit suit) {
+    // 플레이어 멜드에서 확인
+    for (final meld in playerMelds) {
+      if (meld.cards.any((c) => c.rank == 7 && c.suit == suit)) {
+        return true;
+      }
+    }
+    // 컴퓨터 멜드에서 확인
+    for (final melds in computerMelds) {
+      for (final meld in melds) {
+        if (meld.cards.any((c) => c.rank == 7 && c.suit == suit)) {
+          return true;
+        }
+      }
+    }
+    return false;
+  }
+
+  // 특정 숫자의 카드가 멜드에 몇 장 있는지 확인
+  int _countMeldedCards(int rank) {
+    int count = 0;
+    // 플레이어 멜드에서 확인
+    for (final meld in playerMelds) {
+      count += meld.cards.where((c) => c.rank == rank).length;
+    }
+    // 컴퓨터 멜드에서 확인
+    for (final melds in computerMelds) {
+      for (final meld in melds) {
+        count += meld.cards.where((c) => c.rank == rank).length;
+      }
+    }
+    return count;
+  }
+
+  // 등록된 런에 붙일 가능성 계산 (중간 카드가 남아있으면 보너스)
+  double _calculateRunAttachPotential(PlayingCard card) {
+    double bonus = 0;
+
+    // 모든 멜드에서 런 확인
+    final allMelds = [...playerMelds];
+    for (final melds in computerMelds) {
+      allMelds.addAll(melds);
+    }
+
+    for (final meld in allMelds) {
+      if (!meld.isRun || meld.cards.isEmpty) continue;
+      if (meld.cards.first.suit != card.suit) continue;
+
+      // 런의 최소/최대 랭크 찾기
+      final ranks = meld.cards.map((c) => c.rank).toList()..sort();
+      final minRank = ranks.first;
+      final maxRank = ranks.last;
+
+      // 카드가 런에서 1칸 떨어져 있으면 (바로 붙일 수 있음)
+      if (card.rank == minRank - 1 || card.rank == maxRank + 1) {
+        bonus += 30; // 바로 붙일 수 있음
+      }
+      // 카드가 런에서 2칸 떨어져 있으면 (중간 카드 필요)
+      else if (card.rank == minRank - 2 || card.rank == maxRank + 2) {
+        // 중간 카드가 남아있는지 확인 (각 무늬당 1장뿐)
+        final bridgeRank = card.rank < minRank ? minRank - 1 : maxRank + 1;
+        final bridgeUsed = discardPile.where((c) => c.rank == bridgeRank && c.suit == card.suit).length +
+            _countMeldedCardsWithSuit(bridgeRank, card.suit);
+
+        if (bridgeUsed == 0) {
+          // 중간 카드가 남아있음 - 붙일 가능성 있음
+          bonus += 25;
+        }
+        // bridgeUsed >= 1: 중간 카드가 사라짐 - 보너스 없음 (일반 단독 카드로 처리)
+      }
+    }
+
+    return bonus;
+  }
+
+  // 특정 숫자와 무늬의 카드가 멜드에 있는지 확인
+  int _countMeldedCardsWithSuit(int rank, Suit suit) {
+    int count = 0;
+    for (final meld in playerMelds) {
+      count += meld.cards.where((c) => c.rank == rank && c.suit == suit).length;
+    }
+    for (final melds in computerMelds) {
+      for (final meld in melds) {
+        count += meld.cards.where((c) => c.rank == rank && c.suit == suit).length;
+      }
+    }
+    return count;
+  }
+
   // 땡큐 가능 여부 확인 (버린 카드를 가져와서 바로 등록 가능한지)
   // 주의: 새로운 멜드 등록이 가능할 때만 가져올 수 있음 (붙이기만 가능하면 안됨)
   bool _canThankYou() {
@@ -1168,13 +1259,65 @@ class _HulaScreenState extends State<HulaScreen> with TickerProviderStateMixin {
         keepScore += 1000;
       }
 
-      // 2. 같은 숫자 카드 개수 (Group 가능성)
-      final sameRankCount = hand.where((c) => c.rank == card.rank).length;
-      if (sameRankCount >= 2) {
-        keepScore += sameRankCount * 30; // 2장: 60, 3장: 90
+      // 2. 6/8 카드: 같은 무늬의 7이 등록되지 않았으면 높은 우선순위
+      if ((card.rank == 6 || card.rank == 8) && !_isSevenRegistered(card.suit)) {
+        keepScore += 80;
       }
 
-      // 3. 같은 무늬 연속 카드 (Run 가능성)
+      // 3. 5/9 카드: 같은 무늬의 7이 등록되지 않았으면 두 번째 우선순위
+      if ((card.rank == 5 || card.rank == 9) && !_isSevenRegistered(card.suit)) {
+        keepScore += 60;
+      }
+
+      // 4. 같은 숫자 카드 개수 (Group 가능성)
+      final sameRankCount = hand.where((c) => c.rank == card.rank).length;
+      if (sameRankCount >= 2) {
+        // 그룹 가능성 확인: 이미 멜드된 같은 랭크 카드 수
+        final meldedCount = _countMeldedCards(card.rank);
+
+        if (meldedCount >= 2) {
+          // 그룹 불가능 - 단독 카드처럼 처리
+          // A/2/3 보너스
+          if (card.rank == 1) {
+            keepScore += 50;
+          } else if (card.rank == 2) {
+            keepScore += 45;
+          } else if (card.rank == 3) {
+            keepScore += 40;
+          } else if (card.rank < 5 || card.rank > 9) {
+            // 5-9 제외한 기타 단독 카드: 역순 (K=4, Q=8, J=12, ... 4=40)
+            keepScore += (14 - card.rank) * 4;
+          }
+        } else {
+          // 그룹 가능성 있음
+          keepScore += sameRankCount * 30; // 2장: 60, 3장: 90
+
+          // K/Q/J 페어는 다른 플레이어가 버릴 확률이 높아 보너스
+          if (card.rank >= 11 && card.rank <= 13) {
+            keepScore += 40;
+          }
+
+          // 이미 멜드된 카드가 있으면 확률 감소
+          if (meldedCount == 1) {
+            keepScore -= 20;
+          }
+        }
+      } else {
+        // 단독 카드 처리
+        // A/2/3은 스톱 상황에서 유리
+        if (card.rank == 1) {
+          keepScore += 50;
+        } else if (card.rank == 2) {
+          keepScore += 45;
+        } else if (card.rank == 3) {
+          keepScore += 40;
+        } else if (card.rank < 5 || card.rank > 9) {
+          // 5-9 제외한 기타 단독 카드: 역순 (K=4, Q=8, J=12, ... 4=40)
+          keepScore += (14 - card.rank) * 4;
+        }
+      }
+
+      // 5. 같은 무늬 연속 카드 (Run 가능성)
       final sameSuitCards = hand.where((c) => c.suit == card.suit).toList();
       if (sameSuitCards.length >= 2) {
         sameSuitCards.sort((a, b) => a.rank.compareTo(b.rank));
@@ -1194,7 +1337,10 @@ class _HulaScreenState extends State<HulaScreen> with TickerProviderStateMixin {
         }
       }
 
-      // 4. 버린 더미에서 같은 카드 확인 (확률 계산)
+      // 6. 등록된 런에 붙일 가능성 계산
+      keepScore += _calculateRunAttachPotential(card);
+
+      // 7. 버린 더미에서 같은 카드 확인 (확률 계산)
       // 같은 숫자가 이미 많이 버려졌으면 Group 확률 낮음
       final discardedSameRank =
           discardPile.where((c) => c.rank == card.rank).length;
@@ -1211,7 +1357,7 @@ class _HulaScreenState extends State<HulaScreen> with TickerProviderStateMixin {
         keepScore -= 15 * discardedNeeded;
       }
 
-      // 5. 카드 점수 (낮은 점수 카드 유지 선호)
+      // 8. 카드 점수 (낮은 점수 카드 유지 선호)
       keepScore -= card.point * 2;
 
       scores[card] = keepScore;
