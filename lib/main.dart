@@ -83,9 +83,10 @@ void main() async {
   // 다국어 지원 초기화
   await EasyLocalization.ensureInitialized();
 
-  // AdMob 초기화
-  await AdService.initialize();
-  AdService().loadRewardedAd();
+  // AdMob 초기화 (비동기로 진행하여 스플래시 화면 먼저 표시)
+  AdService.initialize().then((_) {
+    AdService().loadRewardedAd();
+  });
 
   SystemChrome.setPreferredOrientations([
     DeviceOrientation.portraitUp,
