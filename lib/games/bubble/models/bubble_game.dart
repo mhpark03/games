@@ -274,6 +274,8 @@ class BubbleShooterGame {
       final c = current.$2;
 
       if (r < 0 || r >= rows || c < 0 || c >= cols) continue;
+      // 홀수 행의 마지막 열은 존재하지 않음
+      if (r % 2 == 1 && c == cols - 1) continue;
       if (connected.contains((r, c))) continue;
       if (grid[r][c] == null || grid[r][c]!.color != color) continue;
 
@@ -318,6 +320,8 @@ class BubbleShooterGame {
       final r = neighbor.$1;
       final c = neighbor.$2;
       if (r < 0 || r >= rows || c < 0 || c >= cols) continue;
+      // 홀수 행의 마지막 열은 존재하지 않음
+      if (r % 2 == 1 && c == cols - 1) continue;
       if (grid[r][c] != null) return true;
     }
     return false;
@@ -341,6 +345,8 @@ class BubbleShooterGame {
       final c = current.$2;
 
       if (r < 0 || r >= rows || c < 0 || c >= cols) continue;
+      // 홀수 행의 마지막 열은 존재하지 않음
+      if (r % 2 == 1 && c == cols - 1) continue;
       if (attached.contains((r, c))) continue;
       if (grid[r][c] == null) continue;
 

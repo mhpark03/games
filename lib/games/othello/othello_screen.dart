@@ -462,6 +462,125 @@ class _OthelloScreenState extends State<OthelloScreen> {
       winner = 'common.draw'.tr();
     }
     gameMessage = '$winner ($blackCount : $whiteCount)';
+
+    // 게임 종료 다이얼로그 표시
+    Future.microtask(() => _showGameOverDialog());
+  }
+
+  void _showGameOverDialog() {
+    final isDraw = blackCount == whiteCount;
+    final isVsPerson = widget.gameMode == OthelloGameMode.vsPerson;
+
+    // 대인전 모드에서는 승자 표시, 컴퓨터 모드에서는 승/패 표시
+    IconData icon;
+    Color iconColor;
+    String title;
+
+    if (isDraw) {
+      icon = Icons.handshake;
+      iconColor = Colors.grey;
+      title = 'common.draw'.tr();
+    } else if (isVsPerson) {
+      icon = Icons.emoji_events;
+      iconColor = Colors.amber;
+      title = blackCount > whiteCount ? 'games.othello.blackWins'.tr() : 'games.othello.whiteWins'.tr();
+    } else {
+      icon = _isUserWin ? Icons.emoji_events : Icons.sentiment_dissatisfied;
+      iconColor = _isUserWin ? Colors.amber : Colors.red;
+      title = _isUserWin ? 'common.win'.tr() : 'common.lose'.tr();
+    }
+
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => AlertDialog(
+        backgroundColor: Colors.grey.shade900,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+        ),
+        title: Row(
+          children: [
+            Icon(icon, color: iconColor, size: 28),
+            const SizedBox(width: 8),
+            Text(
+              title,
+              style: TextStyle(
+                color: iconColor,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ],
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              gameMessage,
+              style: const TextStyle(color: Colors.white70, fontSize: 16),
+            ),
+            const SizedBox(height: 16),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                _buildScoreItem(Colors.black, blackCount),
+                const SizedBox(width: 24),
+                _buildScoreItem(Colors.white, whiteCount),
+              ],
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () {
+              Navigator.pop(context);
+            },
+            child: Text('common.confirm'.tr()),
+          ),
+          TextButton(
+            onPressed: () {
+              Navigator.pop(context);
+              Navigator.pop(context);
+            },
+            child: Text('app.close'.tr()),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              Navigator.pop(context);
+              _resetGame();
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.green.shade700,
+            ),
+            child: Text('app.newGame'.tr()),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildScoreItem(Color color, int count) {
+    return Column(
+      children: [
+        Container(
+          width: 40,
+          height: 40,
+          decoration: BoxDecoration(
+            color: color,
+            shape: BoxShape.circle,
+            border: Border.all(color: Colors.grey, width: 2),
+          ),
+        ),
+        const SizedBox(height: 8),
+        Text(
+          '$count',
+          style: const TextStyle(
+            color: Colors.white,
+            fontSize: 24,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+      ],
+    );
   }
 
   final Random _random = Random();

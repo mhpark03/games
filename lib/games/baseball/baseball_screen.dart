@@ -482,6 +482,16 @@ class _BaseballScreenState extends State<BaseballScreen> {
   }
 
   Widget _buildLandscapeLayout() {
+    final screenWidth = MediaQuery.of(context).size.width;
+    final screenHeight = MediaQuery.of(context).size.height;
+
+    // 동적 크기 계산
+    final scaleFactor = min(screenHeight / 400, screenWidth / 900).clamp(1.0, 2.5);
+
+    // 패널 너비 동적 계산
+    final leftPanelWidth = (screenWidth * 0.18).clamp(160.0, 320.0);
+    final rightPanelWidth = (screenWidth * 0.28).clamp(220.0, 400.0);
+
     return Scaffold(
       body: Container(
         color: Colors.grey.shade900,
@@ -490,43 +500,43 @@ class _BaseballScreenState extends State<BaseballScreen> {
             children: [
               // 왼쪽 패널: 뒤로가기, 제목, 정보
               SizedBox(
-                width: 140,
+                width: leftPanelWidth,
                 child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    const SizedBox(height: 8),
                     Row(
                       children: [
                         IconButton(
-                          icon: const Icon(Icons.arrow_back, color: Colors.white70),
+                          icon: Icon(Icons.arrow_back, color: Colors.white70, size: 24 * scaleFactor),
                           onPressed: () => Navigator.pop(context),
                         ),
                       ],
                     ),
-                    const SizedBox(height: 8),
-                    const Icon(Icons.sports_baseball, color: Colors.deepOrange, size: 28),
-                    const SizedBox(height: 4),
+                    SizedBox(height: 8 * scaleFactor),
+                    Icon(Icons.sports_baseball, color: Colors.deepOrange, size: 32 * scaleFactor),
+                    SizedBox(height: 4 * scaleFactor),
                     Text(
                       'games.baseball.name'.tr(),
                       style: TextStyle(
                         fontWeight: FontWeight.bold,
-                        fontSize: 18,
+                        fontSize: 20 * scaleFactor,
                         color: Colors.orange.shade100,
                       ),
                       textAlign: TextAlign.center,
                     ),
-                    const SizedBox(height: 16),
-                    _buildCompactInfo(),
-                    const SizedBox(height: 12),
+                    SizedBox(height: 20 * scaleFactor),
+                    _buildCompactInfo(scaleFactor: scaleFactor),
+                    SizedBox(height: 16 * scaleFactor),
                     // 힌트 버튼
                     if (!gameOver)
                       GestureDetector(
                         onTap: _showHintAdDialog,
                         child: Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                          margin: const EdgeInsets.symmetric(horizontal: 8),
+                          padding: EdgeInsets.symmetric(horizontal: 16 * scaleFactor, vertical: 10 * scaleFactor),
+                          margin: EdgeInsets.symmetric(horizontal: 8 * scaleFactor),
                           decoration: BoxDecoration(
                             color: Colors.amber.withValues(alpha: 0.2),
-                            borderRadius: BorderRadius.circular(8),
+                            borderRadius: BorderRadius.circular(8 * scaleFactor),
                             border: Border.all(
                               color: Colors.amber.withValues(alpha: 0.5),
                             ),
@@ -534,28 +544,27 @@ class _BaseballScreenState extends State<BaseballScreen> {
                           child: Row(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
-                              const Icon(
+                              Icon(
                                 Icons.lightbulb_outline,
                                 color: Colors.amber,
-                                size: 18,
+                                size: 20 * scaleFactor,
                               ),
-                              const SizedBox(width: 6),
+                              SizedBox(width: 6 * scaleFactor),
                               Text(
                                 'common.hint'.tr(),
-                                style: const TextStyle(
+                                style: TextStyle(
                                   color: Colors.amber,
                                   fontWeight: FontWeight.bold,
-                                  fontSize: 13,
+                                  fontSize: 15 * scaleFactor,
                                 ),
                               ),
                             ],
                           ),
                         ),
                       ),
-                    const Spacer(),
                     if (gameOver) ...[
-                      _buildCompactResultMessage(),
-                      const SizedBox(height: 8),
+                      SizedBox(height: 16 * scaleFactor),
+                      _buildCompactResultMessage(scaleFactor: scaleFactor),
                     ],
                   ],
                 ),
@@ -563,35 +572,39 @@ class _BaseballScreenState extends State<BaseballScreen> {
               // 중앙: 기록 목록
               Expanded(
                 child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 24),
-                  child: _buildGuessHistory(isLandscape: true),
+                  padding: EdgeInsets.symmetric(horizontal: 24 * scaleFactor),
+                  child: _buildGuessHistory(isLandscape: true, scaleFactor: scaleFactor),
                 ),
               ),
               // 오른쪽 패널: 입력 박스 + 숫자 버튼
               SizedBox(
-                width: 210,
+                width: rightPanelWidth,
                 child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    const SizedBox(height: 8),
                     Row(
                       mainAxisAlignment: MainAxisAlignment.end,
                       children: [
                         IconButton(
-                          icon: const Icon(Icons.refresh, color: Colors.white70),
+                          icon: Icon(Icons.help_outline, color: Colors.white70, size: 24 * scaleFactor),
+                          onPressed: _showRulesDialog,
+                        ),
+                        IconButton(
+                          icon: Icon(Icons.refresh, color: Colors.white70, size: 24 * scaleFactor),
                           onPressed: _restartGame,
                         ),
                       ],
                     ),
-                    const Spacer(),
+                    SizedBox(height: 16 * scaleFactor),
                     // 입력 박스
                     if (!gameOver)
                       Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
-                        child: _buildDigitBoxes(isLandscape: true),
+                        padding: EdgeInsets.symmetric(horizontal: 8 * scaleFactor, vertical: 8 * scaleFactor),
+                        child: _buildDigitBoxes(isLandscape: true, scaleFactor: scaleFactor),
                       ),
+                    SizedBox(height: 8 * scaleFactor),
                     // 숫자 패드 (3x4)
-                    if (!gameOver) _buildNumberPad(isLandscape: true),
-                    const Spacer(),
+                    if (!gameOver) _buildNumberPad(isLandscape: true, scaleFactor: scaleFactor),
                   ],
                 ),
               ),
@@ -602,25 +615,27 @@ class _BaseballScreenState extends State<BaseballScreen> {
     );
   }
 
-  Widget _buildDigitBoxes({bool isLandscape = false}) {
-    final boxSize = isLandscape ? 40.0 : 56.0;
-    final fontSize = isLandscape ? 20.0 : 32.0;
+  Widget _buildDigitBoxes({bool isLandscape = false, double scaleFactor = 1.0}) {
+    final baseBoxSize = isLandscape ? 40.0 : 56.0;
+    final baseFontSize = isLandscape ? 20.0 : 32.0;
+    final boxSize = baseBoxSize * scaleFactor;
+    final fontSize = baseFontSize * scaleFactor;
 
     return Column(
       children: [
         if (errorMessage != null)
           Container(
-            margin: const EdgeInsets.only(bottom: 8),
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+            margin: EdgeInsets.only(bottom: 8 * scaleFactor),
+            padding: EdgeInsets.symmetric(horizontal: 12 * scaleFactor, vertical: 6 * scaleFactor),
             decoration: BoxDecoration(
               color: Colors.red.withValues(alpha: 0.2),
-              borderRadius: BorderRadius.circular(8),
+              borderRadius: BorderRadius.circular(8 * scaleFactor),
             ),
             child: Text(
               errorMessage!,
               style: TextStyle(
                 color: Colors.red,
-                fontSize: isLandscape ? 11 : 13,
+                fontSize: (isLandscape ? 11 : 13) * scaleFactor,
               ),
             ),
           ),
@@ -644,21 +659,21 @@ class _BaseballScreenState extends State<BaseballScreen> {
               child: Container(
                 width: boxSize,
                 height: boxSize,
-                margin: EdgeInsets.symmetric(horizontal: isLandscape ? 3 : 6),
+                margin: EdgeInsets.symmetric(horizontal: (isLandscape ? 3 : 6) * scaleFactor),
                 decoration: BoxDecoration(
                   color: isRevealed
                       ? Colors.amber.withValues(alpha: 0.2)
                       : isSelected
                           ? Colors.deepOrange.withValues(alpha: 0.2)
                           : Colors.grey.shade800,
-                  borderRadius: BorderRadius.circular(isLandscape ? 8 : 12),
+                  borderRadius: BorderRadius.circular((isLandscape ? 8 : 12) * scaleFactor),
                   border: Border.all(
                     color: isRevealed
                         ? Colors.amber
                         : isSelected
                             ? Colors.deepOrange
                             : Colors.grey.shade600,
-                    width: (isSelected || isRevealed) ? 3 : 2,
+                    width: ((isSelected || isRevealed) ? 3 : 2) * scaleFactor,
                   ),
                 ),
                 child: Center(
@@ -679,9 +694,9 @@ class _BaseballScreenState extends State<BaseballScreen> {
     );
   }
 
-  Widget _buildNumberPad({bool isLandscape = false}) {
+  Widget _buildNumberPad({bool isLandscape = false, double scaleFactor = 1.0}) {
     if (isLandscape) {
-      return _buildLandscapeNumberPad();
+      return _buildLandscapeNumberPad(scaleFactor: scaleFactor);
     }
     return _buildPortraitNumberPad();
   }
@@ -769,17 +784,17 @@ class _BaseballScreenState extends State<BaseballScreen> {
     );
   }
 
-  Widget _buildLandscapeNumberPad() {
-    const buttonSize = 44.0;
-    const fontSize = 18.0;
-    const spacing = 4.0;
+  Widget _buildLandscapeNumberPad({double scaleFactor = 1.0}) {
+    final buttonSize = 44.0 * scaleFactor;
+    final fontSize = 18.0 * scaleFactor;
+    final spacing = 4.0 * scaleFactor;
 
     return Container(
-      padding: const EdgeInsets.all(6),
-      margin: const EdgeInsets.symmetric(horizontal: 4),
+      padding: EdgeInsets.all(6 * scaleFactor),
+      margin: EdgeInsets.symmetric(horizontal: 4 * scaleFactor),
       decoration: BoxDecoration(
         color: Colors.grey.shade800,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(12 * scaleFactor),
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
@@ -789,19 +804,19 @@ class _BaseballScreenState extends State<BaseballScreen> {
             mainAxisAlignment: MainAxisAlignment.center,
             children: [1, 2, 3].map((n) => _buildNumberButton(n, buttonSize, fontSize, spacing)).toList(),
           ),
-          const SizedBox(height: spacing),
+          SizedBox(height: spacing),
           // 4, 5, 6
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [4, 5, 6].map((n) => _buildNumberButton(n, buttonSize, fontSize, spacing)).toList(),
           ),
-          const SizedBox(height: spacing),
+          SizedBox(height: spacing),
           // 7, 8, 9
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [7, 8, 9].map((n) => _buildNumberButton(n, buttonSize, fontSize, spacing)).toList(),
           ),
-          const SizedBox(height: spacing),
+          SizedBox(height: spacing),
           // 삭제, 0, 백스페이스
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
@@ -823,22 +838,22 @@ class _BaseballScreenState extends State<BaseballScreen> {
               ),
             ],
           ),
-          const SizedBox(height: spacing + 2),
+          SizedBox(height: spacing + 2 * scaleFactor),
           // 확인 버튼
           GestureDetector(
             onTap: _submitGuess,
             child: Container(
               width: buttonSize * 3 + spacing * 4,
               height: buttonSize,
-              margin: const EdgeInsets.all(spacing / 2),
+              margin: EdgeInsets.all(spacing / 2),
               decoration: BoxDecoration(
                 color: Colors.deepOrange,
-                borderRadius: BorderRadius.circular(8),
+                borderRadius: BorderRadius.circular(8 * scaleFactor),
               ),
               child: Center(
                 child: Text(
                   'common.confirm'.tr(),
-                  style: const TextStyle(
+                  style: TextStyle(
                     color: Colors.white,
                     fontSize: fontSize,
                     fontWeight: FontWeight.bold,
@@ -934,59 +949,64 @@ class _BaseballScreenState extends State<BaseballScreen> {
     );
   }
 
-  Widget _buildCompactInfo() {
+  Widget _buildCompactInfo({double scaleFactor = 1.0}) {
+    final iconSize = 18.0 * scaleFactor;
+    final fontSize = 16.0 * scaleFactor;
+    final padding = 14.0 * scaleFactor;
+    final spacing = 10.0 * scaleFactor;
+
     return Container(
-      padding: const EdgeInsets.all(12),
-      margin: const EdgeInsets.symmetric(horizontal: 8),
+      padding: EdgeInsets.all(padding),
+      margin: EdgeInsets.symmetric(horizontal: 8 * scaleFactor),
       decoration: BoxDecoration(
         color: Colors.black38,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(12 * scaleFactor),
       ),
       child: Column(
         children: [
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              const Icon(Icons.tag, color: Colors.deepOrange, size: 16),
-              const SizedBox(width: 4),
+              Icon(Icons.tag, color: Colors.deepOrange, size: iconSize),
+              SizedBox(width: 4 * scaleFactor),
               Text(
                 _getDifficultyText(),
-                style: const TextStyle(
+                style: TextStyle(
                   color: Colors.white,
                   fontWeight: FontWeight.bold,
-                  fontSize: 14,
+                  fontSize: fontSize,
                 ),
               ),
             ],
           ),
-          const SizedBox(height: 8),
+          SizedBox(height: spacing),
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              const Icon(Icons.format_list_numbered, color: Colors.blue, size: 16),
-              const SizedBox(width: 4),
+              Icon(Icons.format_list_numbered, color: Colors.blue, size: iconSize),
+              SizedBox(width: 4 * scaleFactor),
               Text(
                 '${guessHistory.length}/$maxAttempts',
-                style: const TextStyle(
+                style: TextStyle(
                   color: Colors.white,
                   fontWeight: FontWeight.bold,
-                  fontSize: 14,
+                  fontSize: fontSize,
                 ),
               ),
             ],
           ),
-          const SizedBox(height: 8),
+          SizedBox(height: spacing),
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              const Icon(Icons.lightbulb_outline, color: Colors.amber, size: 16),
-              const SizedBox(width: 4),
+              Icon(Icons.lightbulb_outline, color: Colors.amber, size: iconSize),
+              SizedBox(width: 4 * scaleFactor),
               Text(
                 _getHintedAnswer(),
-                style: const TextStyle(
+                style: TextStyle(
                   color: Colors.white,
                   fontWeight: FontWeight.bold,
-                  fontSize: 14,
+                  fontSize: fontSize,
                 ),
               ),
             ],
@@ -996,18 +1016,18 @@ class _BaseballScreenState extends State<BaseballScreen> {
     );
   }
 
-  Widget _buildCompactResultMessage() {
+  Widget _buildCompactResultMessage({double scaleFactor = 1.0}) {
     return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 8),
-      padding: const EdgeInsets.all(12),
+      margin: EdgeInsets.symmetric(horizontal: 8 * scaleFactor),
+      padding: EdgeInsets.all(14 * scaleFactor),
       decoration: BoxDecoration(
         color: gameWon
             ? Colors.green.withValues(alpha: 0.2)
             : Colors.red.withValues(alpha: 0.2),
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(12 * scaleFactor),
         border: Border.all(
           color: gameWon ? Colors.green : Colors.red,
-          width: 2,
+          width: 2 * scaleFactor,
         ),
       ),
       child: Column(
@@ -1015,14 +1035,14 @@ class _BaseballScreenState extends State<BaseballScreen> {
           Icon(
             gameWon ? Icons.emoji_events : Icons.sentiment_very_dissatisfied,
             color: gameWon ? Colors.amber : Colors.red,
-            size: 24,
+            size: 28 * scaleFactor,
           ),
-          const SizedBox(height: 4),
+          SizedBox(height: 4 * scaleFactor),
           Text(
             gameWon ? 'games.baseball.correct'.tr() : 'common.gameOver'.tr(),
             style: TextStyle(
               color: gameWon ? Colors.green : Colors.red,
-              fontSize: 14,
+              fontSize: 16 * scaleFactor,
               fontWeight: FontWeight.bold,
             ),
           ),
@@ -1030,7 +1050,7 @@ class _BaseballScreenState extends State<BaseballScreen> {
             gameWon ? 'games.baseball.attempts'.tr(args: [guessHistory.length.toString()]) : secretNumber,
             style: TextStyle(
               color: Colors.grey.shade400,
-              fontSize: 12,
+              fontSize: 14 * scaleFactor,
             ),
           ),
         ],
@@ -1146,7 +1166,11 @@ class _BaseballScreenState extends State<BaseballScreen> {
     );
   }
 
-  Widget _buildGuessHistory({bool isLandscape = false}) {
+  Widget _buildGuessHistory({bool isLandscape = false, double scaleFactor = 1.0}) {
+    final iconSize = (isLandscape ? 48.0 : 64.0) * scaleFactor;
+    final titleFontSize = (isLandscape ? 14.0 : 18.0) * scaleFactor;
+    final subtitleFontSize = (isLandscape ? 11.0 : 14.0) * scaleFactor;
+
     if (guessHistory.isEmpty) {
       return Center(
         child: Column(
@@ -1154,23 +1178,23 @@ class _BaseballScreenState extends State<BaseballScreen> {
           children: [
             Icon(
               Icons.sports_baseball,
-              size: isLandscape ? 48 : 64,
+              size: iconSize,
               color: Colors.grey.shade700,
             ),
-            const SizedBox(height: 16),
+            SizedBox(height: 16 * scaleFactor),
             Text(
               'games.baseball.guessInstruction'.tr(namedArgs: {'count': '$digitCount'}),
               style: TextStyle(
                 color: Colors.grey.shade500,
-                fontSize: isLandscape ? 14 : 18,
+                fontSize: titleFontSize,
               ),
             ),
-            const SizedBox(height: 8),
+            SizedBox(height: 8 * scaleFactor),
             Text(
               'games.baseball.noDuplicates'.tr(),
               style: TextStyle(
                 color: Colors.grey.shade600,
-                fontSize: isLandscape ? 11 : 14,
+                fontSize: subtitleFontSize,
               ),
             ),
           ],
@@ -1179,36 +1203,40 @@ class _BaseballScreenState extends State<BaseballScreen> {
     }
 
     return ListView.builder(
-      padding: EdgeInsets.symmetric(horizontal: isLandscape ? 8 : 16, vertical: 8),
+      padding: EdgeInsets.symmetric(horizontal: (isLandscape ? 8 : 16) * scaleFactor, vertical: 8 * scaleFactor),
       itemCount: guessHistory.length,
       reverse: true,
       itemBuilder: (context, index) {
         final result = guessHistory[guessHistory.length - 1 - index];
         final attemptNumber = guessHistory.length - index;
-        return _buildGuessCard(result, attemptNumber, isLandscape: isLandscape);
+        return _buildGuessCard(result, attemptNumber, isLandscape: isLandscape, scaleFactor: scaleFactor);
       },
     );
   }
 
-  Widget _buildGuessCard(GuessResult result, int attemptNumber, {bool isLandscape = false}) {
+  Widget _buildGuessCard(GuessResult result, int attemptNumber, {bool isLandscape = false, double scaleFactor = 1.0}) {
+    final circleSize = (isLandscape ? 24.0 : 32.0) * scaleFactor;
+    final guessFontSize = (isLandscape ? 18.0 : 24.0) * scaleFactor;
+    final numberFontSize = (isLandscape ? 12.0 : 14.0) * scaleFactor;
+
     return Container(
-      margin: const EdgeInsets.only(bottom: 8),
-      padding: EdgeInsets.all(isLandscape ? 8 : 12),
+      margin: EdgeInsets.only(bottom: 8 * scaleFactor),
+      padding: EdgeInsets.all((isLandscape ? 8 : 12) * scaleFactor),
       decoration: BoxDecoration(
         color: result.isCorrect
             ? Colors.green.withValues(alpha: 0.2)
             : Colors.grey.shade800,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(12 * scaleFactor),
         border: result.isCorrect
-            ? Border.all(color: Colors.green, width: 2)
+            ? Border.all(color: Colors.green, width: 2 * scaleFactor)
             : null,
       ),
       child: Row(
         children: [
           // 시도 번호
           Container(
-            width: isLandscape ? 24 : 32,
-            height: isLandscape ? 24 : 32,
+            width: circleSize,
+            height: circleSize,
             decoration: BoxDecoration(
               color: Colors.deepOrange.withValues(alpha: 0.3),
               shape: BoxShape.circle,
@@ -1219,20 +1247,20 @@ class _BaseballScreenState extends State<BaseballScreen> {
                 style: TextStyle(
                   color: Colors.deepOrange,
                   fontWeight: FontWeight.bold,
-                  fontSize: isLandscape ? 12 : 14,
+                  fontSize: numberFontSize,
                 ),
               ),
             ),
           ),
-          SizedBox(width: isLandscape ? 8 : 12),
+          SizedBox(width: (isLandscape ? 8 : 12) * scaleFactor),
           // 추측한 숫자
           Text(
             result.guess,
             style: TextStyle(
               color: Colors.white,
-              fontSize: isLandscape ? 18 : 24,
+              fontSize: guessFontSize,
               fontWeight: FontWeight.bold,
-              letterSpacing: isLandscape ? 4 : 8,
+              letterSpacing: (isLandscape ? 4 : 8) * scaleFactor,
             ),
           ),
           const Spacer(),
@@ -1242,13 +1270,15 @@ class _BaseballScreenState extends State<BaseballScreen> {
             count: result.strikes,
             color: Colors.red,
             isLandscape: isLandscape,
+            scaleFactor: scaleFactor,
           ),
-          SizedBox(width: isLandscape ? 4 : 8),
+          SizedBox(width: (isLandscape ? 4 : 8) * scaleFactor),
           _buildResultBadge(
             label: 'games.baseball.ball'.tr(),
             count: result.balls,
             color: Colors.blue,
             isLandscape: isLandscape,
+            scaleFactor: scaleFactor,
           ),
         ],
       ),
@@ -1260,15 +1290,16 @@ class _BaseballScreenState extends State<BaseballScreen> {
     required int count,
     required Color color,
     bool isLandscape = false,
+    double scaleFactor = 1.0,
   }) {
     return Container(
       padding: EdgeInsets.symmetric(
-        horizontal: isLandscape ? 8 : 12,
-        vertical: isLandscape ? 4 : 6,
+        horizontal: (isLandscape ? 8 : 12) * scaleFactor,
+        vertical: (isLandscape ? 4 : 6) * scaleFactor,
       ),
       decoration: BoxDecoration(
         color: color.withValues(alpha: 0.2),
-        borderRadius: BorderRadius.circular(8),
+        borderRadius: BorderRadius.circular(8 * scaleFactor),
         border: Border.all(color: color.withValues(alpha: 0.5)),
       ),
       child: Row(
@@ -1277,7 +1308,7 @@ class _BaseballScreenState extends State<BaseballScreen> {
             '$count',
             style: TextStyle(
               color: color,
-              fontSize: isLandscape ? 14 : 18,
+              fontSize: (isLandscape ? 14 : 18) * scaleFactor,
               fontWeight: FontWeight.bold,
             ),
           ),
@@ -1285,7 +1316,7 @@ class _BaseballScreenState extends State<BaseballScreen> {
             label,
             style: TextStyle(
               color: color.withValues(alpha: 0.8),
-              fontSize: isLandscape ? 10 : 14,
+              fontSize: (isLandscape ? 10 : 14) * scaleFactor,
             ),
           ),
         ],

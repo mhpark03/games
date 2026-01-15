@@ -217,7 +217,7 @@ class GameControlPanelState extends State<GameControlPanel> {
   // 화면 높이에 따른 크기 계수 계산
   double _getSizeFactor() {
     if (!widget.isCompact || widget.landscapeHeight == null) return 0.0;
-    return ((widget.landscapeHeight! - 300) / 300).clamp(0.0, 1.0);
+    return ((widget.landscapeHeight! - 300) / 600).clamp(0.0, 1.5);
   }
 
   @override
@@ -298,13 +298,13 @@ class GameControlPanelState extends State<GameControlPanel> {
     }
 
     final sizeFactor = _getSizeFactor();
-    final hPadding = widget.isCompact ? (8.0 + sizeFactor * 4.0) : 12.0;
-    final vPadding = widget.isCompact ? (3.0 + sizeFactor * 3.0) : 6.0;
-    final iconSz = widget.isCompact ? (12.0 + sizeFactor * 4.0) : 16.0;
-    final fontSz = widget.isCompact ? (10.0 + sizeFactor * 2.0) : 12.0;
+    final hPadding = widget.isCompact ? (8.0 + sizeFactor * 8.0) : 12.0;
+    final vPadding = widget.isCompact ? (3.0 + sizeFactor * 6.0) : 6.0;
+    final iconSz = widget.isCompact ? (12.0 + sizeFactor * 8.0) : 16.0;
+    final fontSz = widget.isCompact ? (10.0 + sizeFactor * 6.0) : 12.0;
 
     return Container(
-      margin: EdgeInsets.only(bottom: widget.isCompact ? 2 : 8),
+      margin: EdgeInsets.only(bottom: widget.isCompact ? (2.0 + sizeFactor * 4.0) : 8),
       padding: EdgeInsets.symmetric(
         horizontal: hPadding,
         vertical: vPadding,
@@ -341,7 +341,7 @@ class GameControlPanelState extends State<GameControlPanel> {
 
   Widget _buildControlButtons() {
     final sizeFactor = _getSizeFactor();
-    final spacing = widget.isCompact ? (4.0 + sizeFactor * 4.0) : 8.0;
+    final spacing = widget.isCompact ? (4.0 + sizeFactor * 8.0) : 8.0;
 
     return Wrap(
       spacing: spacing,
@@ -392,10 +392,10 @@ class GameControlPanelState extends State<GameControlPanel> {
     required VoidCallback onTap,
   }) {
     final sizeFactor = _getSizeFactor();
-    final hPadding = widget.isCompact ? (8.0 + sizeFactor * 6.0) : 14.0;
-    final vPadding = widget.isCompact ? (4.0 + sizeFactor * 3.0) : 7.0;
-    final iconSz = widget.isCompact ? (12.0 + sizeFactor * 5.0) : 17.0;
-    final fontSz = widget.isCompact ? (10.0 + sizeFactor * 3.0) : 13.0;
+    final hPadding = widget.isCompact ? (8.0 + sizeFactor * 10.0) : 14.0;
+    final vPadding = widget.isCompact ? (4.0 + sizeFactor * 6.0) : 7.0;
+    final iconSz = widget.isCompact ? (12.0 + sizeFactor * 10.0) : 17.0;
+    final fontSz = widget.isCompact ? (10.0 + sizeFactor * 6.0) : 13.0;
 
     return InkWell(
       onTap: onTap,
@@ -406,7 +406,7 @@ class GameControlPanelState extends State<GameControlPanel> {
         ),
         decoration: BoxDecoration(
           color: isActive ? activeColor : Colors.grey.shade200,
-          borderRadius: BorderRadius.circular(6),
+          borderRadius: BorderRadius.circular(6 + sizeFactor * 4),
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,
@@ -416,7 +416,7 @@ class GameControlPanelState extends State<GameControlPanel> {
               size: iconSz,
               color: isActive ? Colors.white : Colors.grey.shade600,
             ),
-            SizedBox(width: widget.isCompact ? 3 : 6),
+            SizedBox(width: widget.isCompact ? (3.0 + sizeFactor * 3.0) : 6),
             Text(
               label,
               style: TextStyle(
@@ -438,10 +438,10 @@ class GameControlPanelState extends State<GameControlPanel> {
     Color? color,
   }) {
     final sizeFactor = _getSizeFactor();
-    final hPadding = widget.isCompact ? (8.0 + sizeFactor * 6.0) : 14.0;
-    final vPadding = widget.isCompact ? (4.0 + sizeFactor * 3.0) : 7.0;
-    final iconSz = widget.isCompact ? (12.0 + sizeFactor * 5.0) : 17.0;
-    final fontSz = widget.isCompact ? (10.0 + sizeFactor * 3.0) : 13.0;
+    final hPadding = widget.isCompact ? (8.0 + sizeFactor * 10.0) : 14.0;
+    final vPadding = widget.isCompact ? (4.0 + sizeFactor * 6.0) : 7.0;
+    final iconSz = widget.isCompact ? (12.0 + sizeFactor * 10.0) : 17.0;
+    final fontSz = widget.isCompact ? (10.0 + sizeFactor * 6.0) : 13.0;
 
     return InkWell(
       onTap: onTap,

@@ -927,8 +927,11 @@ class _GameScreenState extends State<GameScreen> with WidgetsBindingObserver {
                   Builder(
                     builder: (context) {
                       final screenHeight = MediaQuery.of(context).size.height;
+                      // 화면 높이에 따른 동적 패널 너비 계산
+                      final heightFactor = ((screenHeight - 300) / 600).clamp(0.0, 1.5);
+                      final panelWidth = 220.0 + (heightFactor * 80.0); // 220~340
                       return SizedBox(
-                        width: 220,
+                        width: panelWidth,
                         child: Container(
                           margin: const EdgeInsets.symmetric(vertical: 4, horizontal: 4),
                           decoration: BoxDecoration(

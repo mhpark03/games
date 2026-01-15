@@ -36,12 +36,12 @@ class NumberPad extends StatelessWidget {
 
     if (isCompact && landscapeHeight != null) {
       // 가로 모드: 화면 높이에 따라 동적 크기 조정
-      // 높이가 클수록 버튼이 커짐 (300~600 범위 기준)
-      final heightFactor = ((landscapeHeight! - 300) / 300).clamp(0.0, 1.0);
-      buttonSize = 40.0 + (heightFactor * 20.0); // 40~60
-      fontSize = 16.0 + (heightFactor * 8.0);    // 16~24
-      iconSize = 16.0 + (heightFactor * 6.0);    // 16~22
-      spacing = 4.0 + (heightFactor * 4.0);      // 4~8
+      // 높이가 클수록 버튼이 커짐 (300~900 범위 기준)
+      final heightFactor = ((landscapeHeight! - 300) / 600).clamp(0.0, 1.5);
+      buttonSize = 40.0 + (heightFactor * 40.0); // 40~100
+      fontSize = 16.0 + (heightFactor * 16.0);   // 16~40
+      iconSize = 16.0 + (heightFactor * 12.0);   // 16~34
+      spacing = 4.0 + (heightFactor * 8.0);      // 4~16
     } else if (isCompact) {
       buttonSize = 40.0;
       fontSize = 16.0;

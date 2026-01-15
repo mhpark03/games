@@ -279,14 +279,19 @@ class _BubbleScreenState extends State<BubbleScreen> {
                     ),
                     const SizedBox(width: 8),
                     Expanded(
-                      child: Text(
-                        'games.bubble.name'.tr(),
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontWeight: FontWeight.bold,
-                          fontSize: 18,
-                        ),
-                        overflow: TextOverflow.ellipsis,
+                      child: LayoutBuilder(
+                        builder: (context, constraints) {
+                          final titleSize = (constraints.maxWidth * 0.12).clamp(16.0, 24.0);
+                          return Text(
+                            'games.bubble.name'.tr(),
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontWeight: FontWeight.bold,
+                              fontSize: titleSize,
+                            ),
+                            overflow: TextOverflow.ellipsis,
+                          );
+                        },
                       ),
                     ),
                   ],
@@ -368,73 +373,91 @@ class _BubbleScreenState extends State<BubbleScreen> {
   }
 
   Widget _buildLandscapeInfoBox(String label, String value, IconData icon) {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-      decoration: BoxDecoration(
-        color: Colors.grey.shade900,
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: Colors.cyan.withValues(alpha: 0.3)),
-      ),
-      child: Row(
-        children: [
-          Icon(icon, color: const Color(0xFF00D9FF), size: 18),
-          const SizedBox(width: 8),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  label,
-                  style: TextStyle(
-                    color: Colors.white.withValues(alpha: 0.6),
-                    fontSize: 10,
-                  ),
-                ),
-                Text(
-                  value,
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ],
-            ),
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final availableWidth = constraints.maxWidth;
+        final labelSize = (availableWidth * 0.10).clamp(14.0, 20.0);
+        final valueSize = (availableWidth * 0.18).clamp(22.0, 36.0);
+        final iconSize = (availableWidth * 0.15).clamp(24.0, 40.0);
+
+        return Container(
+          width: double.infinity,
+          padding: EdgeInsets.symmetric(
+            horizontal: availableWidth * 0.06,
+            vertical: availableWidth * 0.04,
           ),
-        ],
-      ),
+          decoration: BoxDecoration(
+            color: Colors.grey.shade900,
+            borderRadius: BorderRadius.circular(8),
+            border: Border.all(color: Colors.cyan.withValues(alpha: 0.3)),
+          ),
+          child: Row(
+            children: [
+              Icon(icon, color: const Color(0xFF00D9FF), size: iconSize),
+              SizedBox(width: availableWidth * 0.04),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      label,
+                      style: TextStyle(
+                        color: Colors.white.withValues(alpha: 0.6),
+                        fontSize: labelSize,
+                      ),
+                    ),
+                    Text(
+                      value,
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: valueSize,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        );
+      },
     );
   }
 
   Widget _buildLandscapeNextBubble() {
-    return Column(
-      children: [
-        Text(
-          'games.bubble.next'.tr(),
-          style: const TextStyle(color: Colors.white60, fontSize: 12),
-        ),
-        const SizedBox(height: 4),
-        Container(
-          width: 36,
-          height: 36,
-          decoration: BoxDecoration(
-            shape: BoxShape.circle,
-            color: game.nextBubble != null
-                ? _getBubbleColor(game.nextBubble!.color)
-                : Colors.grey,
-            boxShadow: [
-              BoxShadow(
-                color: (game.nextBubble != null
-                        ? _getBubbleColor(game.nextBubble!.color)
-                        : Colors.grey)
-                    .withValues(alpha: 0.5),
-                blurRadius: 8,
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final labelSize = (constraints.maxWidth * 0.08).clamp(12.0, 18.0);
+        final bubbleSize = (constraints.maxWidth * 0.18).clamp(32.0, 48.0);
+        return Column(
+          children: [
+            Text(
+              'games.bubble.next'.tr(),
+              style: TextStyle(color: Colors.white60, fontSize: labelSize),
+            ),
+            const SizedBox(height: 4),
+            Container(
+              width: bubbleSize,
+              height: bubbleSize,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: game.nextBubble != null
+                    ? _getBubbleColor(game.nextBubble!.color)
+                    : Colors.grey,
+                boxShadow: [
+                  BoxShadow(
+                    color: (game.nextBubble != null
+                            ? _getBubbleColor(game.nextBubble!.color)
+                            : Colors.grey)
+                        .withValues(alpha: 0.5),
+                    blurRadius: 8,
+                  ),
+                ],
               ),
-            ],
-          ),
-        ),
-      ],
+            ),
+          ],
+        );
+      },
     );
   }
 
@@ -728,10 +751,11 @@ class BubbleGamePainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     final cellWidth = size.width / BubbleShooterGame.cols;
-    final baseBubbleRadius = BubbleShooterGame.bubbleRadius * bubbleScale;
-    final cellHeight = baseBubbleRadius * 2 * 0.866;
+    // 게임 로직과 동일한 좌표계 사용 (일관성 유지)
+    final bubbleRadius = cellWidth / 2 * 0.92; // 버블 시각적 크기
+    final cellHeight = BubbleShooterGame.bubbleRadius * 2 * 0.866; // 게임 로직 cellHeight
 
-    // 그리드 버블 그리기
+    // 그리드 버블 그리기 (게임 로직 좌표)
     for (int row = 0; row < BubbleShooterGame.rows; row++) {
       for (int col = 0; col < BubbleShooterGame.cols; col++) {
         final bubble = game.grid[row][col];
@@ -739,19 +763,19 @@ class BubbleGamePainter extends CustomPainter {
 
         final offset = (row % 2 == 1) ? cellWidth / 2 : 0;
         final x = col * cellWidth + cellWidth / 2 + offset;
-        final y = row * cellHeight + baseBubbleRadius;
+        final y = row * cellHeight + BubbleShooterGame.bubbleRadius;
 
-        _drawBubble(canvas, x, y, baseBubbleRadius, getBubbleColor(bubble.color));
+        _drawBubble(canvas, x, y, bubbleRadius, getBubbleColor(bubble.color));
       }
     }
 
-    // 발사 중인 버블
+    // 발사 중인 버블 (게임 로직 좌표 그대로)
     if (game.shootingBubble != null) {
       _drawBubble(
         canvas,
         game.shootingBubble!.x,
         game.shootingBubble!.y,
-        baseBubbleRadius,
+        bubbleRadius,
         getBubbleColor(game.shootingBubble!.color),
       );
     }
@@ -762,7 +786,7 @@ class BubbleGamePainter extends CustomPainter {
         canvas,
         bubble.x,
         bubble.y,
-        baseBubbleRadius * 0.9,
+        bubbleRadius * 0.9,
         getBubbleColor(bubble.color).withValues(alpha: 0.8),
       );
     }
@@ -773,7 +797,7 @@ class BubbleGamePainter extends CustomPainter {
         canvas,
         bubble.x,
         bubble.y,
-        baseBubbleRadius * 0.7,
+        bubbleRadius * 0.7,
         getBubbleColor(bubble.color).withValues(alpha: 0.6),
       );
     }
@@ -783,10 +807,10 @@ class BubbleGamePainter extends CustomPainter {
       final bubbleColor = getBubbleColor(game.currentBubble!.color);
       if (showHint) {
         // 힌트 모드: 전체 경로 표시
-        _drawAimLine(canvas, size, baseBubbleRadius, bubbleColor);
+        _drawAimLine(canvas, size, bubbleRadius, cellHeight, bubbleColor);
       } else {
-        // 기본 모드: 짧은 방향 표시선 (가로모드에서는 절반)
-        _drawShortAimLine(canvas, baseBubbleRadius, bubbleColor, bubbleScale);
+        // 기본 모드: 짧은 방향 표시선
+        _drawShortAimLine(canvas, bubbleRadius, bubbleColor);
       }
     }
 
@@ -794,17 +818,18 @@ class BubbleGamePainter extends CustomPainter {
     final shooterColor = game.currentBubble != null
         ? getBubbleColor(game.currentBubble!.color)
         : const Color(0xFF4A4A6A);
-    _drawShooter(canvas, size, bubbleScale, shooterColor);
+    _drawShooter(canvas, size, bubbleRadius, shooterColor);
   }
 
-  void _drawAimLine(Canvas canvas, Size size, double bubbleRadius, Color color) {
+  void _drawAimLine(Canvas canvas, Size size, double bubbleRadius, double cellHeight, Color color) {
     final cellWidth = size.width / BubbleShooterGame.cols;
-    final cellHeight = bubbleRadius * 2 * 0.866;
+    final gameLogicBubbleRadius = BubbleShooterGame.bubbleRadius;
 
-    // 경로 포인트 계산
+    // 경로 포인트 계산 (게임 로직 좌표)
     final points = <Offset>[];
     double x = game.shooterX;
     double y = game.shooterY;
+
     double vx = cos(game.aimAngle);
     double vy = sin(game.aimAngle);
 
@@ -812,41 +837,41 @@ class BubbleGamePainter extends CustomPainter {
 
     // 경로 추적 (벽 반사 및 버블 충돌 포함)
     bool hitBubble = false;
-    for (int step = 0; step < 500 && !hitBubble; step++) {
-      x += vx * 2;
-      y += vy * 2;
+    for (int step = 0; step < 3000 && !hitBubble; step++) {
+      x += vx * 3;
+      y += vy * 3;
 
-      // 좌우 벽 반사
-      if (x < bubbleRadius) {
-        x = bubbleRadius;
+      // 좌우 벽 반사 (게임 로직과 동일)
+      if (x < gameLogicBubbleRadius) {
+        x = gameLogicBubbleRadius;
         vx = -vx;
         points.add(Offset(x, y));
-      } else if (x > size.width - bubbleRadius) {
-        x = size.width - bubbleRadius;
+      } else if (x > size.width - gameLogicBubbleRadius) {
+        x = size.width - gameLogicBubbleRadius;
         vx = -vx;
         points.add(Offset(x, y));
       }
 
       // 상단 도달 시 종료
-      if (y < bubbleRadius) {
-        points.add(Offset(x, bubbleRadius));
+      if (y < gameLogicBubbleRadius) {
+        points.add(Offset(x, gameLogicBubbleRadius));
         break;
       }
 
-      // 버블과 충돌 체크
+      // 버블과 충돌 체크 (게임 로직 좌표)
       for (int row = 0; row < BubbleShooterGame.rows; row++) {
         for (int col = 0; col < BubbleShooterGame.cols; col++) {
           if (game.grid[row][col] == null) continue;
 
           final offset = (row % 2 == 1) ? cellWidth / 2 : 0;
           final bx = col * cellWidth + cellWidth / 2 + offset;
-          final by = row * cellHeight + bubbleRadius;
+          final by = row * cellHeight + gameLogicBubbleRadius;
 
           final dx = x - bx;
           final dy = y - by;
           final dist = sqrt(dx * dx + dy * dy);
 
-          if (dist < bubbleRadius * 1.9) {
+          if (dist < gameLogicBubbleRadius * 1.8) {
             points.add(Offset(x, y));
             hitBubble = true;
             break;
@@ -857,18 +882,18 @@ class BubbleGamePainter extends CustomPainter {
     }
 
     // 마지막 점 추가
-    if (!hitBubble && points.last.dy > bubbleRadius) {
+    if (!hitBubble && points.last.dy > gameLogicBubbleRadius) {
       points.add(Offset(x, y));
     }
 
-    // 점선 그리기 (힌트 모드 - 슈팅 볼 색상으로 밝게 표시)
+    // 점선 그리기
     final dotPaint = Paint()
       ..color = color.withValues(alpha: 0.9)
       ..strokeWidth = 6.0
       ..strokeCap = StrokeCap.round;
 
-    const dotRadiusValue = 7.0;
-    const dotSpacing = 16.0;
+    final dotRadiusValue = bubbleRadius * 0.25;
+    final dotSpacing = bubbleRadius * 0.6;
 
     for (int i = 0; i < points.length - 1; i++) {
       final start = points[i];
@@ -893,31 +918,31 @@ class BubbleGamePainter extends CustomPainter {
             dotPaint,
           );
         }
-        traveled += dotSpacing / 2;
+        traveled += dotSpacing;
         draw = !draw;
       }
     }
   }
 
-  void _drawShortAimLine(Canvas canvas, double bubbleRadius, Color color, double scale) {
+  void _drawShortAimLine(Canvas canvas, double renderBubbleRadius, Color color) {
     // 짧은 방향 표시선 (벽에 닿지 않는 길이)
     final shooterX = game.shooterX;
-    final shooterY = game.shooterY;
+    final shooterY = game.shooterY; // 화면 좌표 그대로 사용
     final vx = cos(game.aimAngle);
     final vy = sin(game.aimAngle);
 
-    // 방향 표시선 길이 (세로: 240px, 가로: 120px)
-    final lineLength = scale < 1.0 ? 120.0 : 240.0;
+    // 방향 표시선 길이
+    final lineLength = renderBubbleRadius * 8;
 
     final dotPaint = Paint()
       ..color = color.withValues(alpha: 0.6)
       ..strokeWidth = 4.0
       ..strokeCap = StrokeCap.round;
 
-    const dotRadius = 4.0;
-    const dotSpacing = 12.0;
+    final dotRadius = renderBubbleRadius * 0.15;
+    final dotSpacing = renderBubbleRadius * 0.4;
 
-    double traveled = bubbleRadius + 10; // 발사대 바깥에서 시작
+    double traveled = renderBubbleRadius + 10; // 발사대 바깥에서 시작
     while (traveled < lineLength) {
       final x = shooterX + vx * traveled;
       final y = shooterY + vy * traveled;
@@ -965,9 +990,10 @@ class BubbleGamePainter extends CustomPainter {
     );
   }
 
-  void _drawShooter(Canvas canvas, Size size, double scale, Color bubbleColor) {
+  void _drawShooter(Canvas canvas, Size size, double renderBubbleRadius, Color bubbleColor) {
     final shooterX = game.shooterX;
-    final shooterY = game.shooterY;
+    final shooterY = game.shooterY; // 화면 좌표 그대로 사용
+    final shooterSize = renderBubbleRadius * 1.5;
 
     // 발사대 베이스 (현재 버블 색상)
     final basePaint = Paint()
@@ -976,36 +1002,36 @@ class BubbleGamePainter extends CustomPainter {
 
     // 그림자
     canvas.drawCircle(
-      Offset(shooterX, shooterY + 12 * scale),
-      30 * scale,
+      Offset(shooterX, shooterY + shooterSize * 0.4),
+      shooterSize,
       Paint()..color = Colors.black.withValues(alpha: 0.3),
     );
 
     // 메인 베이스
     canvas.drawCircle(
-      Offset(shooterX, shooterY + 10 * scale),
-      30 * scale,
+      Offset(shooterX, shooterY + shooterSize * 0.33),
+      shooterSize,
       basePaint,
     );
 
     // 하이라이트
     canvas.drawCircle(
-      Offset(shooterX - 8 * scale, shooterY + 5 * scale),
-      8 * scale,
+      Offset(shooterX - shooterSize * 0.27, shooterY + shooterSize * 0.17),
+      shooterSize * 0.27,
       Paint()..color = Colors.white.withValues(alpha: 0.4),
     );
 
     // 발사대 포신
     final barrelPaint = Paint()
       ..color = Color.lerp(bubbleColor, Colors.black, 0.3)!
-      ..strokeWidth = 12 * scale
+      ..strokeWidth = shooterSize * 0.4
       ..strokeCap = StrokeCap.round;
 
     canvas.drawLine(
       Offset(shooterX, shooterY),
       Offset(
-        shooterX + cos(game.aimAngle) * 40 * scale,
-        shooterY + sin(game.aimAngle) * 40 * scale,
+        shooterX + cos(game.aimAngle) * shooterSize * 1.33,
+        shooterY + sin(game.aimAngle) * shooterSize * 1.33,
       ),
       barrelPaint,
     );

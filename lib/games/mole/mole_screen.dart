@@ -125,8 +125,9 @@ class _MoleScreenState extends State<MoleScreen> {
         Expanded(
           flex: 2,
           child: Padding(
-            padding: const EdgeInsets.all(8.0),
+            padding: const EdgeInsets.all(12.0),
             child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 Row(
                   children: [
@@ -141,18 +142,17 @@ class _MoleScreenState extends State<MoleScreen> {
                         style: const TextStyle(
                           color: Colors.white,
                           fontWeight: FontWeight.bold,
-                          fontSize: 18,
+                          fontSize: 20,
                         ),
                         overflow: TextOverflow.ellipsis,
                       ),
                     ),
                   ],
                 ),
-                const SizedBox(height: 16),
+                const SizedBox(height: 24),
                 _buildLandscapeInfoBox('games.mole.score'.tr(), game.score.toString(), Icons.star),
-                const SizedBox(height: 8),
+                const SizedBox(height: 12),
                 _buildLandscapeInfoBox('games.mole.time'.tr(), '${game.timeLeft}${'games.mole.seconds'.tr()}', Icons.timer),
-                const Spacer(),
               ],
             ),
           ),
@@ -171,8 +171,9 @@ class _MoleScreenState extends State<MoleScreen> {
         Expanded(
           flex: 2,
           child: Padding(
-            padding: const EdgeInsets.all(8.0),
+            padding: const EdgeInsets.all(12.0),
             child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 Row(
                   mainAxisAlignment: MainAxisAlignment.end,
@@ -183,11 +184,10 @@ class _MoleScreenState extends State<MoleScreen> {
                     ),
                   ],
                 ),
-                const SizedBox(height: 8),
-                _buildLandscapeInfoBox('games.mole.highScore'.tr(), highScore.toString(), Icons.emoji_events),
                 const SizedBox(height: 16),
+                _buildLandscapeInfoBox('games.mole.highScore'.tr(), highScore.toString(), Icons.emoji_events),
+                const SizedBox(height: 20),
                 _buildLandscapeStartButton(),
-                const Spacer(),
               ],
             ),
           ),
@@ -214,65 +214,85 @@ class _MoleScreenState extends State<MoleScreen> {
   }
 
   Widget _buildLandscapeInfoBox(String label, String value, IconData icon) {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-      decoration: BoxDecoration(
-        color: Colors.grey.shade900,
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: Colors.brown.withValues(alpha: 0.3)),
-      ),
-      child: Row(
-        children: [
-          Icon(icon, color: const Color(0xFFFFD700), size: 18),
-          const SizedBox(width: 8),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  label,
-                  style: TextStyle(
-                    color: Colors.white.withValues(alpha: 0.6),
-                    fontSize: 10,
-                  ),
-                ),
-                Text(
-                  value,
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ],
-            ),
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final availableWidth = constraints.maxWidth;
+        final labelSize = (availableWidth * 0.08).clamp(12.0, 18.0);
+        final valueSize = (availableWidth * 0.14).clamp(20.0, 32.0);
+        final iconSize = (availableWidth * 0.12).clamp(20.0, 36.0);
+
+        return Container(
+          width: double.infinity,
+          padding: EdgeInsets.symmetric(
+            horizontal: availableWidth * 0.06,
+            vertical: availableWidth * 0.04,
           ),
-        ],
-      ),
+          decoration: BoxDecoration(
+            color: Colors.grey.shade900,
+            borderRadius: BorderRadius.circular(8),
+            border: Border.all(color: Colors.brown.withValues(alpha: 0.3)),
+          ),
+          child: Row(
+            children: [
+              Icon(icon, color: const Color(0xFFFFD700), size: iconSize),
+              SizedBox(width: availableWidth * 0.04),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      label,
+                      style: TextStyle(
+                        color: Colors.white.withValues(alpha: 0.6),
+                        fontSize: labelSize,
+                      ),
+                    ),
+                    Text(
+                      value,
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: valueSize,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        );
+      },
     );
   }
 
   Widget _buildLandscapeStartButton() {
-    return GestureDetector(
-      onTap: game.isPlaying ? null : _startGame,
-      child: Container(
-        width: double.infinity,
-        padding: const EdgeInsets.symmetric(vertical: 12),
-        decoration: BoxDecoration(
-          color: game.isPlaying ? Colors.grey.shade800 : Colors.brown,
-          borderRadius: BorderRadius.circular(12),
-        ),
-        child: Text(
-          game.isPlaying ? 'games.mole.playing'.tr() : 'games.mole.start'.tr(),
-          textAlign: TextAlign.center,
-          style: const TextStyle(
-            color: Colors.white,
-            fontSize: 14,
-            fontWeight: FontWeight.bold,
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final availableWidth = constraints.maxWidth;
+        final fontSize = (availableWidth * 0.10).clamp(16.0, 24.0);
+        final verticalPadding = (availableWidth * 0.06).clamp(12.0, 20.0);
+
+        return GestureDetector(
+          onTap: game.isPlaying ? null : _startGame,
+          child: Container(
+            width: double.infinity,
+            padding: EdgeInsets.symmetric(vertical: verticalPadding),
+            decoration: BoxDecoration(
+              color: game.isPlaying ? Colors.grey.shade800 : Colors.brown,
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Text(
+              game.isPlaying ? 'games.mole.playing'.tr() : 'games.mole.start'.tr(),
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                color: Colors.white,
+                fontSize: fontSize,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
           ),
-        ),
-      ),
+        );
+      },
     );
   }
 
@@ -463,72 +483,82 @@ class _MoleScreenState extends State<MoleScreen> {
   Widget _buildHole(int index) {
     final hasMole = game.holes[index];
 
-    return GestureDetector(
-      onTap: () {
-        if (game.isPlaying && hasMole) {
-          game.whack(index);
-        }
-      },
-      child: Container(
-        decoration: BoxDecoration(
-          color: const Color(0xFF3D2314),
-          borderRadius: BorderRadius.circular(100),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.5),
-              blurRadius: 4,
-              offset: const Offset(0, 4),
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final holeSize = constraints.maxWidth;
+        final eyesFontSize = (holeSize * 0.28).clamp(16.0, 48.0);
+        final noseFontSize = (holeSize * 0.20).clamp(12.0, 36.0);
+        final margin = holeSize * 0.06;
+        final borderWidth = (holeSize * 0.03).clamp(2.0, 6.0);
+
+        return GestureDetector(
+          onTap: () {
+            if (game.isPlaying && hasMole) {
+              game.whack(index);
+            }
+          },
+          child: Container(
+            decoration: BoxDecoration(
+              color: const Color(0xFF3D2314),
+              borderRadius: BorderRadius.circular(100),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.5),
+                  blurRadius: 4,
+                  offset: const Offset(0, 4),
+                ),
+              ],
             ),
-          ],
-        ),
-        child: AnimatedSwitcher(
-          duration: const Duration(milliseconds: 150),
-          child: hasMole
-              ? Container(
-                  key: const ValueKey('mole'),
-                  decoration: const BoxDecoration(
-                    shape: BoxShape.circle,
-                  ),
-                  child: Center(
-                    child: Container(
-                      width: double.infinity,
-                      height: double.infinity,
-                      margin: const EdgeInsets.all(8),
-                      decoration: BoxDecoration(
-                        color: const Color(0xFF8B6914),
+            child: AnimatedSwitcher(
+              duration: const Duration(milliseconds: 150),
+              child: hasMole
+                  ? Container(
+                      key: const ValueKey('mole'),
+                      decoration: const BoxDecoration(
                         shape: BoxShape.circle,
-                        border: Border.all(
-                          color: const Color(0xFF5D4A1A),
-                          width: 3,
-                        ),
                       ),
-                      child: const Center(
-                        child: Column(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Row(
+                      child: Center(
+                        child: Container(
+                          width: double.infinity,
+                          height: double.infinity,
+                          margin: EdgeInsets.all(margin),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFF8B6914),
+                            shape: BoxShape.circle,
+                            border: Border.all(
+                              color: const Color(0xFF5D4A1A),
+                              width: borderWidth,
+                            ),
+                          ),
+                          child: Center(
+                            child: Column(
                               mainAxisSize: MainAxisSize.min,
                               children: [
-                                Text('👀', style: TextStyle(fontSize: 16)),
+                                Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Text('👀', style: TextStyle(fontSize: eyesFontSize)),
+                                  ],
+                                ),
+                                Text('👃', style: TextStyle(fontSize: noseFontSize)),
                               ],
                             ),
-                            Text('👃', style: TextStyle(fontSize: 12)),
-                          ],
+                          ),
                         ),
                       ),
+                    )
+                  : Container(
+                      key: const ValueKey('empty'),
+                      margin: EdgeInsets.all(holeSize * 0.12),
+                      decoration: const BoxDecoration(
+                        color: Color(0xFF2A1810),
+                        shape: BoxShape.circle,
+                      ),
                     ),
-                  ),
-                )
-              : Container(
-                  key: const ValueKey('empty'),
-                  margin: const EdgeInsets.all(16),
-                  decoration: const BoxDecoration(
-                    color: Color(0xFF2A1810),
-                    shape: BoxShape.circle,
-                  ),
-                ),
-        ),
-      ),
+            ),
+          ),
+        );
+      },
     );
   }
 
