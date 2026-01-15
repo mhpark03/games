@@ -759,6 +759,11 @@ class _ExpandedBoardScreenState extends State<ExpandedBoardScreen> {
       bool isGameComplete = SamuraiSudokuGenerator.areAllBoardsComplete(
           widget.gameState.currentBoards, widget.gameState.solutions);
 
+      // 추가 안전 검사: 모든 보드에 오류가 없는지 확인
+      if (isGameComplete && _hasAnyError()) {
+        isGameComplete = false;
+      }
+
       // 사무라이 화면으로 돌아가기
       Navigator.pop(context, _getResult());
 
@@ -767,6 +772,20 @@ class _ExpandedBoardScreenState extends State<ExpandedBoardScreen> {
         widget.onComplete?.call();
       }
     }
+  }
+
+  /// 모든 보드에 오류가 있는 셀이 있는지 확인
+  bool _hasAnyError() {
+    for (int b = 0; b < 5; b++) {
+      for (int row = 0; row < 9; row++) {
+        for (int col = 0; col < 9; col++) {
+          if (widget.gameState.hasError(b, row, col)) {
+            return true;
+          }
+        }
+      }
+    }
+    return false;
   }
 
   Widget _buildNotesGrid(Set<int> cellNotes) {
