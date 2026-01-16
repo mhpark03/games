@@ -27,6 +27,7 @@ import 'games/maze/maze_screen.dart';
 import 'games/mole/mole_screen.dart';
 import 'games/bubble/bubble_screen.dart';
 import 'services/ad_service.dart';
+import 'services/input_sdk_service.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
 
 // 배너 표시/숨김을 위한 NavigatorObserver
@@ -86,6 +87,11 @@ void main() async {
   // AdMob 초기화 (비동기로 진행하여 스플래시 화면 먼저 표시)
   AdService.initialize().then((_) {
     AdService().loadRewardedAd();
+  });
+
+  // Google Play Games for PC Input SDK 초기화
+  InputSdkService.init().then((_) {
+    InputSdkService.setMenuContext();
   });
 
   SystemChrome.setPreferredOrientations([

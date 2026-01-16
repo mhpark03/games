@@ -4,6 +4,7 @@ import 'package:flutter/services.dart';
 import 'package:easy_localization/easy_localization.dart';
 import '../../services/game_save_service.dart';
 import '../../services/ad_service.dart';
+import '../../services/input_sdk_service.dart';
 
 enum CellState { hidden, revealed, flagged }
 
@@ -82,6 +83,7 @@ class _MinesweeperScreenState extends State<MinesweeperScreen> {
   @override
   void initState() {
     super.initState();
+    InputSdkService.setPuzzleGameContext();
     _setupDifficulty();
     if (widget.resumeGame) {
       _loadGame();

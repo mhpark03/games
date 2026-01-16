@@ -5,6 +5,7 @@ import 'package:easy_localization/easy_localization.dart';
 import 'models/maze.dart';
 import 'widgets/maze_widget.dart';
 import '../../services/ad_service.dart';
+import '../../services/input_sdk_service.dart';
 
 enum MazeDifficulty { easy, medium, hard }
 
@@ -33,6 +34,7 @@ class _MazeScreenState extends State<MazeScreen> {
   @override
   void initState() {
     super.initState();
+    InputSdkService.setPuzzleGameContext();
     difficulty = widget.difficulty;
     _initializeMaze();
     _startTimer();

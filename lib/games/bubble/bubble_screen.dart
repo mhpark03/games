@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'models/bubble_game.dart';
 import '../../services/ad_service.dart';
+import '../../services/input_sdk_service.dart';
 
 class BubbleScreen extends StatefulWidget {
   const BubbleScreen({super.key});
@@ -23,6 +24,7 @@ class _BubbleScreenState extends State<BubbleScreen> {
   @override
   void initState() {
     super.initState();
+    InputSdkService.setActionGameContext();
     game = BubbleShooterGame();
     game.onUpdate = () => setState(() {});
     game.onGameOver = _showGameOverDialog;

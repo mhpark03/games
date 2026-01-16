@@ -4,6 +4,7 @@ import 'package:flutter/services.dart';
 import 'package:easy_localization/easy_localization.dart';
 import '../../services/game_save_service.dart';
 import '../../services/ad_service.dart';
+import '../../services/input_sdk_service.dart';
 
 enum Disc { none, black, white }
 
@@ -84,6 +85,7 @@ class _OthelloScreenState extends State<OthelloScreen> {
   @override
   void initState() {
     super.initState();
+    InputSdkService.setBoardGameContext();
     if (widget.resumeGame) {
       _loadGame();
     } else {

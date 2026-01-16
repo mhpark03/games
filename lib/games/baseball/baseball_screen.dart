@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:easy_localization/easy_localization.dart';
 import '../../services/ad_service.dart';
+import '../../services/input_sdk_service.dart';
 
 enum BaseballDifficulty {
   easy,   // 3자리
@@ -58,6 +59,7 @@ class _BaseballScreenState extends State<BaseballScreen> {
   @override
   void initState() {
     super.initState();
+    InputSdkService.setPuzzleGameContext();
     digitCount = widget.difficulty == BaseballDifficulty.easy ? 3 : 4;
     inputDigits = List.filled(digitCount, null);
     _generateSecretNumber();

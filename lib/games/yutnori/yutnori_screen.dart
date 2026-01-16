@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:easy_localization/easy_localization.dart';
 import '../../services/game_save_service.dart';
+import '../../services/input_sdk_service.dart';
 
 // 윷 결과
 enum YutResult {
@@ -190,6 +191,7 @@ class _YutnoriScreenState extends State<YutnoriScreen>
   @override
   void initState() {
     super.initState();
+    InputSdkService.setBoardGameContext();
     playerCount = widget.playerCount;
     _yutAnimController = AnimationController(
       duration: const Duration(milliseconds: 800),

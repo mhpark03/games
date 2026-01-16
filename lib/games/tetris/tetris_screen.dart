@@ -5,6 +5,7 @@ import 'models/game_board.dart';
 import 'widgets/game_board_widget.dart';
 import 'widgets/next_piece_widget.dart';
 import 'widgets/control_button.dart';
+import '../../services/input_sdk_service.dart';
 
 class TetrisScreen extends StatefulWidget {
   const TetrisScreen({super.key});
@@ -21,6 +22,7 @@ class _TetrisScreenState extends State<TetrisScreen> {
   @override
   void initState() {
     super.initState();
+    InputSdkService.setActionGameContext();
     _gameBoard = GameBoard();
     _gameBoard.addListener(_onGameUpdate);
     _gameBoard.startGame();

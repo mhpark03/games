@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:easy_localization/easy_localization.dart';
 import '../../services/game_save_service.dart';
+import '../../services/input_sdk_service.dart';
 
 // 카드 무늬
 enum Suit { spade, heart, diamond, club }
@@ -243,6 +244,7 @@ class _HulaScreenState extends State<HulaScreen> with TickerProviderStateMixin {
   @override
   void initState() {
     super.initState();
+    InputSdkService.setBoardGameContext();
     playerCount = widget.playerCount;
 
     _animController = AnimationController(

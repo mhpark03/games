@@ -7,6 +7,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../../services/gemini_service.dart';
 import '../../services/game_save_service.dart';
 import '../../services/ad_service.dart';
+import '../../services/input_sdk_service.dart';
 
 enum JanggiPieceType { gung, cha, po, ma, sang, sa, byung }
 
@@ -189,6 +190,7 @@ class _JanggiScreenState extends State<JanggiScreen> {
   @override
   void initState() {
     super.initState();
+    InputSdkService.setBoardGameContext();
     board = List.generate(10, (_) => List.filled(9, null));
     _loadGeminiApiKey();
 

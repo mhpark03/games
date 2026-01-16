@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'models/mole_game.dart';
+import '../../services/input_sdk_service.dart';
 
 class MoleScreen extends StatefulWidget {
   const MoleScreen({super.key});
@@ -16,6 +17,7 @@ class _MoleScreenState extends State<MoleScreen> {
   @override
   void initState() {
     super.initState();
+    InputSdkService.setActionGameContext();
     game = MoleGame();
     game.onUpdate = () => setState(() {});
     game.onGameEnd = _showGameOverDialog;

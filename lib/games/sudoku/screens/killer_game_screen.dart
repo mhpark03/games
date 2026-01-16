@@ -10,6 +10,7 @@ import '../widgets/killer_sudoku_board.dart';
 import '../widgets/game_control_panel.dart';
 import '../widgets/game_status_bar.dart';
 import '../../../services/ad_service.dart';
+import '../../../services/input_sdk_service.dart';
 
 class KillerGameScreen extends StatefulWidget {
   final KillerDifficulty? initialDifficulty;
@@ -47,6 +48,7 @@ class _KillerGameScreenState extends State<KillerGameScreen>
   @override
   void initState() {
     super.initState();
+    InputSdkService.setPuzzleGameContext();
     WidgetsBinding.instance.addObserver(this);
     if (widget.savedGameState != null) {
       _gameState = widget.savedGameState!;

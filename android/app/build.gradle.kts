@@ -48,6 +48,12 @@ android {
     buildTypes {
         release {
             signingConfig = signingConfigs.getByName("release")
+            isMinifyEnabled = true
+            isShrinkResources = true
+            proguardFiles(
+                getDefaultProguardFile("proguard-android-optimize.txt"),
+                "proguard-rules.pro"
+            )
         }
     }
 }
@@ -58,4 +64,6 @@ flutter {
 
 dependencies {
     implementation("androidx.core:core-splashscreen:1.0.1")
+    // Google Play Games Input SDK for PC
+    implementation("com.google.android.libraries.play.games:inputmapping:1.1.1-beta")
 }

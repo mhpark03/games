@@ -6,6 +6,7 @@ import 'dart:async';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../services/game_save_service.dart';
 import '../../services/ad_service.dart';
+import '../../services/input_sdk_service.dart';
 
 enum Suit { hearts, diamonds, clubs, spades }
 
@@ -130,6 +131,7 @@ class _SolitaireScreenState extends State<SolitaireScreen> {
   @override
   void initState() {
     super.initState();
+    InputSdkService.setBoardGameContext();
     _loadCardSizeSetting();
     _checkSavedGame();
   }

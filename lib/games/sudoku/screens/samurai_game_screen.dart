@@ -9,6 +9,7 @@ import '../services/game_storage.dart';
 import '../widgets/samurai_board.dart';
 import '../widgets/game_status_bar.dart';
 import 'expanded_board_screen.dart';
+import '../../../services/input_sdk_service.dart';
 
 class SamuraiGameScreen extends StatefulWidget {
   final SamuraiDifficulty? initialDifficulty;
@@ -48,6 +49,7 @@ class _SamuraiGameScreenState extends State<SamuraiGameScreen>
   @override
   void initState() {
     super.initState();
+    InputSdkService.setPuzzleGameContext();
     WidgetsBinding.instance.addObserver(this);
     if (widget.savedGameState != null) {
       // 저장된 게임 불러오기

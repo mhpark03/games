@@ -10,6 +10,7 @@ import '../widgets/sudoku_board.dart';
 import '../widgets/game_control_panel.dart';
 import '../widgets/game_status_bar.dart';
 import '../../../services/ad_service.dart';
+import '../../../services/input_sdk_service.dart';
 
 class GameScreen extends StatefulWidget {
   final Difficulty? initialDifficulty;
@@ -46,6 +47,7 @@ class _GameScreenState extends State<GameScreen> with WidgetsBindingObserver {
   @override
   void initState() {
     super.initState();
+    InputSdkService.setPuzzleGameContext();
     WidgetsBinding.instance.addObserver(this);
     if (widget.savedGameState != null) {
       // 저장된 게임 불러오기

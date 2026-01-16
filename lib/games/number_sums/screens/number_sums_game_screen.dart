@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:easy_localization/easy_localization.dart';
 import '../../../services/ad_service.dart';
+import '../../../services/input_sdk_service.dart';
 import '../models/number_sums_game_state.dart';
 import '../models/number_sums_generator.dart';
 import '../services/game_storage.dart';
@@ -41,6 +42,7 @@ class _NumberSumsGameScreenState extends State<NumberSumsGameScreen>
   @override
   void initState() {
     super.initState();
+    InputSdkService.setPuzzleGameContext();
     WidgetsBinding.instance.addObserver(this);
     if (widget.savedGameState != null) {
       _gameState = widget.savedGameState!;
