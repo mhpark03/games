@@ -70,7 +70,9 @@
     "confirm": "確認",
     "zoomIn": "拡大",
     "zoomOut": "縮小",
-    "resetZoom": "元のサイズ"
+    "resetZoom": "元のサイズ",
+    "giveUp": "あきらめる",
+    "watchAdRevive": "広告を見て復活"
   },
   "games": {
     "tetris": {
@@ -616,7 +618,8 @@
     "hintModeTitle": "ヒントモード",
     "hintModeMessage": "広告を見てヒントモードを使用しますか？",
     "wrongAnswer": "間違いです",
-    "adWatchContinue": "広告を見て続けますか？"
+    "adWatchContinue": "広告を見て続けますか？",
+    "reviveMessage": "広告を見るとゲームを続けることができます。"
   },
   "vs": {
     "vsComputer": "vs コンピュータ",

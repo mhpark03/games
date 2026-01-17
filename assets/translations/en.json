@@ -70,7 +70,9 @@
     "confirm": "Confirm",
     "zoomIn": "Zoom In",
     "zoomOut": "Zoom Out",
-    "resetZoom": "Reset Zoom"
+    "resetZoom": "Reset Zoom",
+    "giveUp": "Give Up",
+    "watchAdRevive": "Watch Ad to Revive"
   },
   "games": {
     "tetris": {
@@ -616,7 +618,8 @@
     "hintModeTitle": "Hint Mode",
     "hintModeMessage": "Watch an ad to use hint mode?",
     "wrongAnswer": "Wrong Answer",
-    "adWatchContinue": "Watch an ad to continue?"
+    "adWatchContinue": "Watch an ad to continue?",
+    "reviveMessage": "Watch an ad to continue the game."
   },
   "vs": {
     "vsComputer": "vs Computer",

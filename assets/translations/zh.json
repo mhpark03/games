@@ -70,7 +70,9 @@
     "confirm": "确认",
     "zoomIn": "放大",
     "zoomOut": "缩小",
-    "resetZoom": "原始大小"
+    "resetZoom": "原始大小",
+    "giveUp": "放弃",
+    "watchAdRevive": "看广告复活"
   },
   "games": {
     "tetris": {
@@ -616,7 +618,8 @@
     "hintModeTitle": "提示模式",
     "hintModeMessage": "观看广告以使用提示模式？",
     "wrongAnswer": "答案错误",
-    "adWatchContinue": "观看广告继续？"
+    "adWatchContinue": "观看广告继续？",
+    "reviveMessage": "观看广告可以继续游戏。"
   },
   "vs": {
     "vsComputer": "vs 电脑",
