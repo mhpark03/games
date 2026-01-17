@@ -59,18 +59,35 @@ class KillerSudokuBoard extends StatelessWidget {
         cage.sumDisplayCell[0] == row &&
         cage.sumDisplayCell[1] == col;
 
+    // 3x3 경계선: 두껍게 (1.5px, 검정)
+    // 셀 경계선: 얇게 (0.5px, 회색)
+    const double boxBorderWidth = 1.5;
+    const double cellBorderWidth = 0.5;
+    final cellBorderColor = Colors.grey.shade400;
+
+    final bool isLeftBoxBorder = col % 3 == 0 && col != 0;
+    final bool isTopBoxBorder = row % 3 == 0 && row != 0;
+    final bool isRightBoxBorder = (col + 1) % 3 == 0 && col != 8;
+    final bool isBottomBoxBorder = (row + 1) % 3 == 0 && row != 8;
+
     return Container(
       decoration: BoxDecoration(
         border: Border(
+          left: BorderSide(
+            color: isLeftBoxBorder ? Colors.black : (col != 0 ? cellBorderColor : Colors.transparent),
+            width: isLeftBoxBorder ? boxBorderWidth : cellBorderWidth,
+          ),
+          top: BorderSide(
+            color: isTopBoxBorder ? Colors.black : (row != 0 ? cellBorderColor : Colors.transparent),
+            width: isTopBoxBorder ? boxBorderWidth : cellBorderWidth,
+          ),
           right: BorderSide(
-            color:
-                (col + 1) % 3 == 0 && col != 8 ? Colors.black : Colors.transparent,
-            width: 2,
+            color: isRightBoxBorder ? Colors.black : cellBorderColor,
+            width: isRightBoxBorder ? boxBorderWidth : cellBorderWidth,
           ),
           bottom: BorderSide(
-            color:
-                (row + 1) % 3 == 0 && row != 8 ? Colors.black : Colors.transparent,
-            width: 2,
+            color: isBottomBoxBorder ? Colors.black : cellBorderColor,
+            width: isBottomBoxBorder ? boxBorderWidth : cellBorderWidth,
           ),
         ),
       ),
