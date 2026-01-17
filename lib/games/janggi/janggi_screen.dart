@@ -102,9 +102,9 @@ enum JanggiGameMode { vsCho, vsHan, vsHuman }
 
 // AI 난이도 설정
 enum JanggiDifficulty {
-  easy,   // 쉬움: 탐색 깊이 1, 랜덤 수 확률 30%
-  normal, // 보통: 탐색 깊이 2, 랜덤 수 확률 15%
-  hard,   // 어려움: 탐색 깊이 3, 랜덤 수 확률 0%
+  easy,   // 쉬움: 컴퓨터 오른쪽 차 + 왼쪽 포 제거
+  normal, // 보통: 컴퓨터 오른쪽 차 제거
+  hard,   // 어려움: 모든 기물
 }
 
 class JanggiScreen extends StatefulWidget {
@@ -154,6 +154,7 @@ class _JanggiScreenState extends State<JanggiScreen> {
   int? selectedRow;
   int? selectedCol;
   List<List<int>>? validMoves;
+  List<List<int>>? blockedMoves; // 자동 장군이 되는 이동
   bool isGameOver = false;
   String? winner;
   bool isThinking = false;
@@ -336,6 +337,7 @@ class _JanggiScreenState extends State<JanggiScreen> {
       selectedRow = null;
       selectedCol = null;
       validMoves = null;
+      blockedMoves = null;
       winner = null;
       isThinking = false;
     });
@@ -986,6 +988,13 @@ class _JanggiScreenState extends State<JanggiScreen> {
   void _initBoard() {
     board = List.generate(10, (_) => List.filled(9, null));
 
+    // 컴퓨터 색상 결정 (2인 플레이는 핸디캡 없음)
+    final computerColor = widget.gameMode == JanggiGameMode.vsCho
+        ? JanggiColor.cho
+        : widget.gameMode == JanggiGameMode.vsHan
+            ? JanggiColor.han
+            : null;
+
     // 한(상단) 배치 - 마상 위치 적용
     board[0][0] = JanggiPiece(JanggiPieceType.cha, JanggiColor.han);
     // 좌측 마상 (1,2번 위치)
@@ -1006,9 +1015,15 @@ class _JanggiScreenState extends State<JanggiScreen> {
       board[0][6] = JanggiPiece(JanggiPieceType.ma, JanggiColor.han);
       board[0][7] = JanggiPiece(JanggiPieceType.sang, JanggiColor.han);
     }
-    board[0][8] = JanggiPiece(JanggiPieceType.cha, JanggiColor.han);
+    // 한 오른쪽 차 - 핸디캡 적용
+    if (computerColor != JanggiColor.han || _difficulty == JanggiDifficulty.hard) {
+      board[0][8] = JanggiPiece(JanggiPieceType.cha, JanggiColor.han);
+    }
     board[1][4] = JanggiPiece(JanggiPieceType.gung, JanggiColor.han);
-    board[2][1] = JanggiPiece(JanggiPieceType.po, JanggiColor.han);
+    // 한 왼쪽 포 - 핸디캡 적용
+    if (computerColor != JanggiColor.han || _difficulty != JanggiDifficulty.easy) {
+      board[2][1] = JanggiPiece(JanggiPieceType.po, JanggiColor.han);
+    }
     board[2][7] = JanggiPiece(JanggiPieceType.po, JanggiColor.han);
     board[3][0] = JanggiPiece(JanggiPieceType.byung, JanggiColor.han);
     board[3][2] = JanggiPiece(JanggiPieceType.byung, JanggiColor.han);
@@ -1036,9 +1051,15 @@ class _JanggiScreenState extends State<JanggiScreen> {
       board[9][6] = JanggiPiece(JanggiPieceType.ma, JanggiColor.cho);
       board[9][7] = JanggiPiece(JanggiPieceType.sang, JanggiColor.cho);
     }
-    board[9][8] = JanggiPiece(JanggiPieceType.cha, JanggiColor.cho);
+    // 초 오른쪽 차 - 핸디캡 적용
+    if (computerColor != JanggiColor.cho || _difficulty == JanggiDifficulty.hard) {
+      board[9][8] = JanggiPiece(JanggiPieceType.cha, JanggiColor.cho);
+    }
     board[8][4] = JanggiPiece(JanggiPieceType.gung, JanggiColor.cho);
-    board[7][1] = JanggiPiece(JanggiPieceType.po, JanggiColor.cho);
+    // 초 왼쪽 포 - 핸디캡 적용
+    if (computerColor != JanggiColor.cho || _difficulty != JanggiDifficulty.easy) {
+      board[7][1] = JanggiPiece(JanggiPieceType.po, JanggiColor.cho);
+    }
     board[7][7] = JanggiPiece(JanggiPieceType.po, JanggiColor.cho);
     board[6][0] = JanggiPiece(JanggiPieceType.byung, JanggiColor.cho);
     board[6][2] = JanggiPiece(JanggiPieceType.byung, JanggiColor.cho);
@@ -1198,7 +1219,10 @@ class _JanggiScreenState extends State<JanggiScreen> {
       while (newRow >= 0 && newRow < 10 && newCol >= 0 && newCol < 9) {
         final target = board[newRow][newCol];
         if (!jumped) {
-          if (target != null && target.type != JanggiPieceType.po) {
+          if (target != null) {
+            if (target.type == JanggiPieceType.po) {
+              break; // 포는 다른 포를 뛰어넘을 수 없음
+            }
             jumped = true;
           }
         } else {
@@ -1318,18 +1342,17 @@ class _JanggiScreenState extends State<JanggiScreen> {
       int midRow = row + step[0][0];
       int midCol = col + step[0][1];
 
-      if (midRow >= 0 &&
-          midRow < 10 &&
-          midCol >= 0 &&
-          midCol < 9 &&
-          board[midRow][midCol] == null) {
-        int newRow = row + step[1][0];
-        int newCol = col + step[1][1];
+      if (midRow >= 0 && midRow < 10 && midCol >= 0 && midCol < 9) {
+        final midPiece = board[midRow][midCol];
+        if (midPiece == null) {
+          int newRow = row + step[1][0];
+          int newCol = col + step[1][1];
 
-        if (newRow >= 0 && newRow < 10 && newCol >= 0 && newCol < 9) {
-          final target = board[newRow][newCol];
-          if (target == null || target.color != piece.color) {
-            moves.add([newRow, newCol]);
+          if (newRow >= 0 && newRow < 10 && newCol >= 0 && newCol < 9) {
+            final target = board[newRow][newCol];
+            if (target == null || target.color != piece.color) {
+              moves.add([newRow, newCol]);
+            }
           }
         }
       }
@@ -1575,19 +1598,28 @@ class _JanggiScreenState extends State<JanggiScreen> {
 
   // 합법적인 수만 필터링 (장군 회피 필수)
   List<List<int>> _getLegalMoves(int row, int col) {
+    final result = _getMovesWithBlockedInfo(row, col);
+    return result['legal']!;
+  }
+
+  // 합법적인 수와 자동 장군이 되는 수를 분리해서 반환
+  Map<String, List<List<int>>> _getMovesWithBlockedInfo(int row, int col) {
     final piece = board[row][col];
-    if (piece == null) return [];
+    if (piece == null) return {'legal': [], 'blocked': []};
 
     final basicMoves = _getValidMoves(row, col);
     final legalMoves = <List<int>>[];
+    final blockedMoves = <List<int>>[];
 
     for (var move in basicMoves) {
       if (!_wouldBeInCheckAfterMove(row, col, move[0], move[1], piece.color)) {
         legalMoves.add(move);
+      } else {
+        blockedMoves.add(move);
       }
     }
 
-    return legalMoves;
+    return {'legal': legalMoves, 'blocked': blockedMoves};
   }
 
   // 외통수(체크메이트) 확인
@@ -1630,25 +1662,74 @@ class _JanggiScreenState extends State<JanggiScreen> {
           selectedRow = null;
           selectedCol = null;
           validMoves = null;
+          blockedMoves = null;
+        } else if (blockedMoves != null &&
+            blockedMoves!.any((m) => m[0] == row && m[1] == col)) {
+          // 자동 장군이 되는 이동 시도 - 경고 표시
+          _showBlockedMoveAlert();
         } else if (board[row][col]?.color == currentTurn) {
           // 같은 색 다른 말 선택
           selectedRow = row;
           selectedCol = col;
-          validMoves = _getLegalMoves(row, col); // 합법적인 수만 표시
+          final movesInfo = _getMovesWithBlockedInfo(row, col);
+          validMoves = movesInfo['legal'];
+          blockedMoves = movesInfo['blocked'];
         } else {
           selectedRow = null;
           selectedCol = null;
           validMoves = null;
+          blockedMoves = null;
         }
       } else {
         // 새로운 말 선택
         if (board[row][col]?.color == currentTurn) {
           selectedRow = row;
           selectedCol = col;
-          validMoves = _getLegalMoves(row, col); // 합법적인 수만 표시
+          final movesInfo = _getMovesWithBlockedInfo(row, col);
+          validMoves = movesInfo['legal'];
+          blockedMoves = movesInfo['blocked'];
         }
       }
     });
+  }
+
+  void _showBlockedMoveAlert() {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: const Color(0xFFF5DEB3),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+          side: const BorderSide(color: Color(0xFF8B4513), width: 2),
+        ),
+        title: Row(
+          children: [
+            const Icon(Icons.warning_amber_rounded, color: Colors.orange, size: 28),
+            const SizedBox(width: 8),
+            Text(
+              'games.janggi.blockedMove'.tr(),
+              style: const TextStyle(
+                color: Color(0xFF8B4513),
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ],
+        ),
+        content: Text(
+          'games.janggi.blockedMoveDesc'.tr(),
+          style: const TextStyle(color: Color(0xFF5D4037)),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text(
+              'common.confirm'.tr(),
+              style: const TextStyle(color: Color(0xFF8B4513)),
+            ),
+          ),
+        ],
+      ),
+    );
   }
 
   void _movePiece(int fromRow, int fromCol, int toRow, int toCol) {
@@ -1835,6 +1916,7 @@ class _JanggiScreenState extends State<JanggiScreen> {
       selectedRow = null;
       selectedCol = null;
       validMoves = null;
+      blockedMoves = null;
     });
 
     _saveGame();
@@ -1925,39 +2007,21 @@ class _JanggiScreenState extends State<JanggiScreen> {
     });
   }
 
-  // 난이도별 AI 탐색 깊이
-  int get _aiSearchDepth {
-    switch (_difficulty) {
-      case JanggiDifficulty.easy:
-        return 1;
-      case JanggiDifficulty.normal:
-        return 2;
-      case JanggiDifficulty.hard:
-        return 3;
-    }
-  }
+  // AI 탐색 깊이 (모든 난이도 동일)
+  int get _aiSearchDepth => 3;
 
-  // 난이도별 랜덤 수 확률 (0.0 ~ 1.0)
-  double get _randomMoveChance {
-    switch (_difficulty) {
-      case JanggiDifficulty.easy:
-        return 0.30; // 30% 확률로 랜덤 수
-      case JanggiDifficulty.normal:
-        return 0.15; // 15% 확률로 랜덤 수
-      case JanggiDifficulty.hard:
-        return 0.0; // 항상 최선의 수
-    }
-  }
+  // 랜덤 수 확률 (모든 난이도 동일 - 항상 최선의 수)
+  double get _randomMoveChance => 0.0;
 
   // 난이도 이름 반환
   String get _difficultyName {
     switch (_difficulty) {
       case JanggiDifficulty.easy:
-        return 'common.easy'.tr();
+        return 'games.janggi.beginner'.tr();
       case JanggiDifficulty.normal:
-        return 'common.normal'.tr();
+        return 'games.janggi.intermediate'.tr();
       case JanggiDifficulty.hard:
-        return 'common.hard'.tr();
+        return 'games.janggi.advanced'.tr();
     }
   }
 
@@ -2932,6 +2996,7 @@ class _JanggiScreenState extends State<JanggiScreen> {
       selectedRow = null;
       selectedCol = null;
       validMoves = null;
+      blockedMoves = null;
       isGameOver = false;
       winner = null;
       isThinking = false;
@@ -3463,6 +3528,8 @@ class _JanggiScreenState extends State<JanggiScreen> {
     final isSelected = selectedRow == row && selectedCol == col;
     final isValidMove =
         validMoves?.any((m) => m[0] == row && m[1] == col) ?? false;
+    final isBlockedMove =
+        blockedMoves?.any((m) => m[0] == row && m[1] == col) ?? false;
     final isLastMoveFrom = lastMoveFromRow == row && lastMoveFromCol == col;
     final isLastMoveTo = lastMoveToRow == row && lastMoveToCol == col;
 
@@ -3471,6 +3538,8 @@ class _JanggiScreenState extends State<JanggiScreen> {
       bgColor = Colors.yellow.withAlpha(128);
     } else if (isValidMove) {
       bgColor = Colors.green.withAlpha(77);
+    } else if (isBlockedMove) {
+      bgColor = Colors.orange.withAlpha(77);
     } else if (isLastMoveTo) {
       bgColor = Colors.blue.withAlpha(100);
     } else if (isLastMoveFrom) {
@@ -3480,7 +3549,7 @@ class _JanggiScreenState extends State<JanggiScreen> {
     return Container(
       decoration: BoxDecoration(
         color: bgColor ?? Colors.transparent,
-        border: (isLastMoveFrom || isLastMoveTo) && !isSelected && !isValidMove
+        border: (isLastMoveFrom || isLastMoveTo) && !isSelected && !isValidMove && !isBlockedMove
             ? Border.all(color: Colors.blue.withAlpha(180), width: 2)
             : null,
       ),
@@ -3496,7 +3565,16 @@ class _JanggiScreenState extends State<JanggiScreen> {
                       color: Colors.green.withAlpha(179),
                     ),
                   )
-                : null,
+                : isBlockedMove
+                    ? Container(
+                        width: cellWidth * 0.3,
+                        height: cellHeight * 0.3,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          color: Colors.orange.withAlpha(179),
+                        ),
+                      )
+                    : null,
       ),
     );
   }

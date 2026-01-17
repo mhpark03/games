@@ -1218,13 +1218,13 @@ class _HomeScreenState extends State<HomeScreen> {
       if (savedGameMode != JanggiGameMode.vsHuman && savedDifficulty != null) {
         switch (savedDifficulty) {
           case JanggiDifficulty.easy:
-            difficultyText = ' - ${'common.easy'.tr()}';
+            difficultyText = ' - ${'beginner'.tr()}';
             break;
           case JanggiDifficulty.normal:
-            difficultyText = ' - ${'common.normal'.tr()}';
+            difficultyText = ' - ${'intermediate'.tr()}';
             break;
           case JanggiDifficulty.hard:
-            difficultyText = ' - ${'common.hard'.tr()}';
+            difficultyText = ' - ${'advanced'.tr()}';
             break;
         }
       }
@@ -1458,11 +1458,11 @@ class _HomeScreenState extends State<HomeScreen> {
           content: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              _buildJanggiDifficultyButton(context, mode: mode, difficulty: JanggiDifficulty.easy, title: 'common.easy'.tr(), icon: Icons.sentiment_satisfied, color: Colors.green),
+              _buildJanggiDifficultyButton(context, mode: mode, difficulty: JanggiDifficulty.easy, title: 'beginner'.tr(), icon: Icons.sentiment_satisfied, color: Colors.green),
               const SizedBox(height: 12),
-              _buildJanggiDifficultyButton(context, mode: mode, difficulty: JanggiDifficulty.normal, title: 'common.normal'.tr(), icon: Icons.sentiment_neutral, color: Colors.orange),
+              _buildJanggiDifficultyButton(context, mode: mode, difficulty: JanggiDifficulty.normal, title: 'intermediate'.tr(), icon: Icons.sentiment_neutral, color: Colors.orange),
               const SizedBox(height: 12),
-              _buildJanggiDifficultyButton(context, mode: mode, difficulty: JanggiDifficulty.hard, title: 'common.hard'.tr(), icon: Icons.sentiment_very_dissatisfied, color: Colors.red),
+              _buildJanggiDifficultyButton(context, mode: mode, difficulty: JanggiDifficulty.hard, title: 'advanced'.tr(), icon: Icons.sentiment_very_dissatisfied, color: Colors.red),
             ],
           ),
         );
