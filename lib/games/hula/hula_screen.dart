@@ -230,6 +230,10 @@ class _HulaScreenState extends State<HulaScreen> with TickerProviderStateMixin {
   Timer? _computerActionTimer; // 컴퓨터 액션 딜레이 타이머
   static const int _computerActionDelay = 2000; // 컴퓨터 액션 딜레이 (밀리초)
   VoidCallback? _pendingComputerAction; // 대기 후 실행할 컴퓨터 동작
+  bool _thankYouWaiting = false; // 플레이어 땡큐 대기 중
+  int _thankYouCountdown = 0; // 땡큐 대기 카운트다운
+  Timer? _thankYouTimer; // 땡큐 대기 타이머
+  static const int _thankYouWaitSeconds = 5; // 땡큐 대기 시간 (초)
 
   // 점수
   List<int> scores = [];
@@ -264,6 +268,7 @@ class _HulaScreenState extends State<HulaScreen> with TickerProviderStateMixin {
     _messageTimer?.cancel();
     _nextTurnTimer?.cancel();
     _computerActionTimer?.cancel();
+    _thankYouTimer?.cancel();
     _animController.dispose();
     super.dispose();
   }
@@ -739,8 +744,15 @@ class _HulaScreenState extends State<HulaScreen> with TickerProviderStateMixin {
 
   // 땡큐 옵션 실행
   void _executeThankYouOption(ThankYouOption option) {
+    // 땡큐 대기 타이머 취소
+    _thankYouTimer?.cancel();
+    setState(() {
+      _thankYouWaiting = false;
+      _thankYouCountdown = 0;
+    });
+
     // 땡큐 상황: 대기 중에 가져가기
-    if (waitingForNextTurn) {
+    if (waitingForNextTurn || currentTurn != 0) {
       _cancelNextTurnTimer();
       setState(() {
         currentTurn = 0;
@@ -2029,6 +2041,9 @@ class _HulaScreenState extends State<HulaScreen> with TickerProviderStateMixin {
 
   // 땡큐 대기 시작 (플레이어에게 기회 부여)
   void _startThankYouWait() {
+    // 플레이어가 땡큐 가능한지 확인
+    final canPlayerThankYou = _canThankYou();
+
     setState(() {
       currentTurn = (currentTurn + 1) % playerCount;
       hasDrawn = false;
@@ -2038,15 +2053,64 @@ class _HulaScreenState extends State<HulaScreen> with TickerProviderStateMixin {
     _saveGame();
 
     if (currentTurn != 0) {
-      // 컴퓨터 턴: 타이머 없이 바로 진행 (드로우 후 타이머가 동작함)
-      Timer(const Duration(milliseconds: 300), () {
-        if (mounted && !gameOver) {
-          _onNextTurn();
-        }
-      });
+      // 다음이 컴퓨터 턴인데 플레이어가 땡큐 가능하면 대기 시간 부여
+      if (canPlayerThankYou) {
+        _startThankYouCountdown();
+      } else {
+        // 땡큐 불가능하면 바로 진행
+        Timer(const Duration(milliseconds: 300), () {
+          if (mounted && !gameOver) {
+            _onNextTurn();
+          }
+        });
+      }
     } else {
       // 플레이어 턴: 메시지 타이머만 취소 (메시지 유지)
       _messageTimer?.cancel();
+    }
+  }
+
+  // 땡큐 대기 카운트다운 시작
+  void _startThankYouCountdown() {
+    _thankYouTimer?.cancel();
+    setState(() {
+      _thankYouWaiting = true;
+      _thankYouCountdown = _thankYouWaitSeconds;
+    });
+
+    _thankYouTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
+      if (!mounted || gameOver) {
+        timer.cancel();
+        return;
+      }
+
+      setState(() {
+        _thankYouCountdown--;
+      });
+
+      if (_thankYouCountdown <= 0) {
+        timer.cancel();
+        _endThankYouWait();
+      }
+    });
+  }
+
+  // 땡큐 대기 종료 (시간 초과 또는 플레이어가 땡큐/패스)
+  void _endThankYouWait() {
+    _thankYouTimer?.cancel();
+    setState(() {
+      _thankYouWaiting = false;
+      _thankYouCountdown = 0;
+    });
+
+    if (mounted && !gameOver && currentTurn != 0) {
+      // 플레이어 후 순서 컴퓨터 땡큐 확인
+      final afterResult = _checkComputerThankYouAfterPlayer(_lastDiscardTurn);
+      if (afterResult != null) {
+        _executeComputerThankYou(afterResult);
+      } else {
+        _onNextTurn();
+      }
     }
   }
 
@@ -2147,6 +2211,7 @@ class _HulaScreenState extends State<HulaScreen> with TickerProviderStateMixin {
     final melds = computerMelds[computerIndex];
 
     // 훌라 가능성 확인 후 등록 여부 결정 (스톱 위험도 포함)
+    // 훌라 시도 중이면 7도 등록하지 않음 (0점이므로 손해 없음)
     final shouldRegister = _shouldRegisterMelds(hand, melds, computerIndex: computerIndex + 1);
 
     if (!shouldRegister) {
@@ -2157,34 +2222,40 @@ class _HulaScreenState extends State<HulaScreen> with TickerProviderStateMixin {
     // 등록할 멜드 수집
     final meldsToRegister = <Map<String, dynamic>>[];
 
-    // 일반 멜드 찾기
+    // 7 카드 먼저 등록 (가장 우선순위)
     final testHand = List<PlayingCard>.from(hand);
-    List<PlayingCard>? bestMeld;
-    while ((bestMeld = _findBestMeld(testHand)) != null) {
-      final isRun = _isValidRun(bestMeld!);
-      meldsToRegister.add({'cards': List<PlayingCard>.from(bestMeld), 'isRun': isRun, 'type': 'meld'});
-      for (final card in bestMeld) {
-        testHand.remove(card);
-      }
-    }
-
-    // 7 카드 찾기
     final sevens = testHand.where((c) => _isSeven(c)).toList();
-    if (sevens.length >= 3) {
-      final decision = _decideSevensStrategy(sevens, testHand);
-      if (decision == 'group') {
-        meldsToRegister.add({'cards': sevens.take(3).toList(), 'isRun': false, 'type': '7group'});
-        for (final seven in sevens.skip(3)) {
-          meldsToRegister.add({'cards': [seven], 'isRun': false, 'type': '7'});
+    if (sevens.isNotEmpty) {
+      if (sevens.length >= 3) {
+        final decision = _decideSevensStrategy(sevens, testHand);
+        if (decision == 'group') {
+          meldsToRegister.add({'cards': sevens.take(3).toList(), 'isRun': false, 'type': '7group'});
+          for (final seven in sevens.skip(3)) {
+            meldsToRegister.add({'cards': [seven], 'isRun': false, 'type': '7'});
+          }
+        } else {
+          for (final seven in sevens) {
+            meldsToRegister.add({'cards': [seven], 'isRun': false, 'type': '7'});
+          }
         }
       } else {
         for (final seven in sevens) {
           meldsToRegister.add({'cards': [seven], 'isRun': false, 'type': '7'});
         }
       }
-    } else {
+      // testHand에서 7 제거
       for (final seven in sevens) {
-        meldsToRegister.add({'cards': [seven], 'isRun': false, 'type': '7'});
+        testHand.remove(seven);
+      }
+    }
+
+    // 일반 멜드 찾기 (7 카드 제외된 상태)
+    List<PlayingCard>? bestMeld;
+    while ((bestMeld = _findBestMeld(testHand)) != null) {
+      final isRun = _isValidRun(bestMeld!);
+      meldsToRegister.add({'cards': List<PlayingCard>.from(bestMeld), 'isRun': isRun, 'type': 'meld'});
+      for (final card in bestMeld) {
+        testHand.remove(card);
       }
     }
 
@@ -2339,9 +2410,10 @@ class _HulaScreenState extends State<HulaScreen> with TickerProviderStateMixin {
     final hand = computerHands[computerIndex];
     final melds = computerMelds[computerIndex];
 
-    // 손에 7이 있으면 먼저 등록
+    // 손에 7이 있고, 이미 멜드가 있으면 (훌라 불가능) 7 등록
+    // 훌라 시도 중(melds.isEmpty)이면 7을 손에 보유 (0점이므로 손해 없음)
     final sevens = hand.where((c) => _isSeven(c)).toList();
-    if (sevens.isNotEmpty) {
+    if (sevens.isNotEmpty && melds.isNotEmpty) {
       final seven = sevens.first;
       hand.remove(seven);
       melds.add(Meld(cards: [seven], isRun: false));
@@ -3373,42 +3445,83 @@ class _HulaScreenState extends State<HulaScreen> with TickerProviderStateMixin {
                 builder: (context) {
                   // 땡큐 가능: 대기 중이거나 플레이어 턴에서 드로우 안했을 때, 그리고 등록 가능할 때만
                   final canTakeDiscard = discardPile.isNotEmpty &&
-                      ((currentTurn == 0 && !hasDrawn) || waitingForNextTurn) &&
+                      ((currentTurn == 0 && !hasDrawn) || waitingForNextTurn || _thankYouWaiting) &&
                       _canThankYou();
-                  // 땡큐 상태면 주황색, 일반 드로우면 녹색
+                  // 땡큐 대기 중이면 주황색 깜빡임, 일반 땡큐 가능이면 주황색, 일반 드로우면 녹색
                   final borderColor =
-                      waitingForNextTurn && canTakeDiscard
+                      _thankYouWaiting && canTakeDiscard
                           ? Colors.orange
-                          : (canTakeDiscard ? Colors.green : Colors.grey);
+                          : (waitingForNextTurn && canTakeDiscard
+                              ? Colors.orange
+                              : (canTakeDiscard ? Colors.green : Colors.grey));
 
                   return GestureDetector(
                     onTap: canTakeDiscard ? _drawFromDiscard : null,
-                    child: Container(
-                      width: cardWidth,
-                      height: cardHeight,
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(8),
-                        border: Border.all(
-                          color: borderColor,
-                          width: canTakeDiscard ? 3 : 1,
-                        ),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black.withValues(alpha: 0.3),
-                            blurRadius: 8,
-                            offset: const Offset(2, 2),
-                          ),
-                        ],
-                      ),
-                      child: discardPile.isEmpty
-                          ? Center(
-                              child: Text(
-                                'games.hula.discardPile'.tr(),
-                                style: const TextStyle(color: Colors.grey),
+                    child: Stack(
+                      children: [
+                        Container(
+                          width: cardWidth,
+                          height: cardHeight,
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(8),
+                            border: Border.all(
+                              color: borderColor,
+                              width: canTakeDiscard ? 3 : 1,
+                            ),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withValues(alpha: 0.3),
+                                blurRadius: 8,
+                                offset: const Offset(2, 2),
                               ),
-                            )
-                          : _buildCardFace(discardPile.last, small: true),
+                            ],
+                          ),
+                          child: discardPile.isEmpty
+                              ? Center(
+                                  child: Text(
+                                    'games.hula.discardPile'.tr(),
+                                    style: const TextStyle(color: Colors.grey),
+                                  ),
+                                )
+                              : _buildCardFace(discardPile.last, small: true),
+                        ),
+                        // 땡큐 대기 카운트다운 표시
+                        if (_thankYouWaiting && canTakeDiscard)
+                          Positioned(
+                            top: 0,
+                            left: 0,
+                            right: 0,
+                            bottom: 0,
+                            child: Container(
+                              decoration: BoxDecoration(
+                                color: Colors.orange.withValues(alpha: 0.7),
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                              child: Column(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  const Text(
+                                    '땡큐?',
+                                    style: TextStyle(
+                                      color: Colors.white,
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 14,
+                                    ),
+                                  ),
+                                  Text(
+                                    '$_thankYouCountdown',
+                                    style: const TextStyle(
+                                      color: Colors.white,
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 24,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                      ],
                     ),
                   );
                 },
