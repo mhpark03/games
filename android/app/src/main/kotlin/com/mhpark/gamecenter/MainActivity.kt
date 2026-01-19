@@ -2,15 +2,15 @@ package com.mhpark.gamecenter
 
 import android.os.Build
 import android.os.Bundle
+import androidx.activity.enableEdgeToEdge
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
-import io.flutter.embedding.android.FlutterActivity
+import io.flutter.embedding.android.FlutterFragmentActivity
 import io.flutter.embedding.engine.FlutterEngine
 import io.flutter.plugin.common.MethodChannel
 import com.google.android.libraries.play.games.inputmapping.Input
 import com.google.android.libraries.play.games.inputmapping.InputMappingClient
 
-class MainActivity : FlutterActivity() {
-    private var keepSplash = true
+class MainActivity : FlutterFragmentActivity() {
     private var inputMappingClient: InputMappingClient? = null
 
     companion object {
@@ -20,10 +20,12 @@ class MainActivity : FlutterActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         // Android 12+ 스플래시 스크린 설치
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-            val splashScreen = installSplashScreen()
-            // 스플래시를 Flutter UI가 준비될 때까지 유지
-            splashScreen.setKeepOnScreenCondition { keepSplash }
+            installSplashScreen()
         }
+
+        // Edge-to-edge 지원 (Android 15 호환성)
+        enableEdgeToEdge()
+
         super.onCreate(savedInstanceState)
     }
 
@@ -51,12 +53,6 @@ class MainActivity : FlutterActivity() {
                 else -> result.notImplemented()
             }
         }
-    }
-
-    override fun onFlutterUiDisplayed() {
-        // Flutter UI가 표시되면 스플래시 종료
-        keepSplash = false
-        super.onFlutterUiDisplayed()
     }
 
     /**

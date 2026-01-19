@@ -64,6 +64,8 @@ flutter {
 
 dependencies {
     implementation("androidx.core:core-splashscreen:1.0.1")
+    // Edge-to-edge support for Android 15+
+    implementation("androidx.activity:activity-ktx:1.9.3")
     // Google Play Games Input SDK for PC
     implementation("com.google.android.libraries.play.games:inputmapping:1.1.1-beta")
 }
