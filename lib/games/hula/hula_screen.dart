@@ -3480,7 +3480,8 @@ class _HulaScreenState extends State<HulaScreen> with TickerProviderStateMixin {
                           child: discardPile.isEmpty
                               ? Center(
                                   child: Text(
-                                    'games.hula.discardPile'.tr(),
+                                    'games.hula.emptyDiscardPile'.tr(),
+                                    textAlign: TextAlign.center,
                                     style: const TextStyle(color: Colors.grey),
                                   ),
                                 )

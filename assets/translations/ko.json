@@ -426,6 +426,7 @@
       "cardsCount": "{count}장",
       "meldsCount": "{count}멜드",
       "discardPile": "버림",
+      "emptyDiscardPile": "버린 카드\n없음",
       "discardButton": "버리기",
       "stopButton": "스톱",
       "discarded": "버림",

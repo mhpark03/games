@@ -426,6 +426,7 @@
       "cardsCount": "{count}枚",
       "meldsCount": "{count}メルド",
       "discardPile": "捨て札",
+      "emptyDiscardPile": "捨て札\nなし",
       "discardButton": "捨てる",
       "stopButton": "ストップ",
       "discarded": "捨て",
