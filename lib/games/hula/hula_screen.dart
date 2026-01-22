@@ -760,7 +760,15 @@ class _HulaScreenState extends State<HulaScreen> with TickerProviderStateMixin {
       });
     }
 
-    final card = discardPile.removeLast();
+    // ★ option.discardCard를 사용하여 정확한 카드 제거 (타이머로 인한 상태 변경 방지)
+    final card = option.discardCard;
+    // discardPile에서 해당 카드가 마지막에 있는지 확인 후 제거
+    if (discardPile.isNotEmpty && discardPile.last == card) {
+      discardPile.removeLast();
+    } else {
+      // 카드가 없거나 다른 카드면 무시 (이미 다른 처리로 제거됨)
+      return;
+    }
     String meldMessage = '';
 
     switch (option.type) {
@@ -1035,17 +1043,24 @@ class _HulaScreenState extends State<HulaScreen> with TickerProviderStateMixin {
   }
 
   // 땡큐 가능 여부 확인 (버린 카드를 가져와서 바로 등록 가능한지)
-  // 주의: 새로운 멜드 등록이 가능할 때만 가져올 수 있음 (붙이기만 가능하면 안됨)
+  // ★ 7 단독 땡큐 제거 - 3장 이상의 멜드로만 등록 가능
   bool _canThankYou() {
     if (discardPile.isEmpty) return false;
     final card = discardPile.last;
 
-    // 1. 7이면 단독 등록 가능
-    if (_isSeven(card)) return true;
-
-    // 2. 손패와 합쳐서 새로운 멜드 가능한지 확인 (붙이기는 제외)
+    // 손패와 합쳐서 새로운 멜드 가능한지 확인
     final thankYouCards = _findThankYouMeldCards(card);
     if (thankYouCards != null) return true;
+
+    // 기존 멜드에 붙이기 가능한지 확인
+    for (int i = 0; i < playerMelds.length; i++) {
+      if (_canAttachToMeldAtIndex(card, playerMelds, i)) return true;
+    }
+    for (int c = 0; c < computerMelds.length; c++) {
+      for (int i = 0; i < computerMelds[c].length; i++) {
+        if (_canAttachToMeldAtIndex(card, computerMelds[c], i)) return true;
+      }
+    }
 
     return false;
   }
@@ -1117,15 +1132,9 @@ class _HulaScreenState extends State<HulaScreen> with TickerProviderStateMixin {
     final card = discardPile.last;
     final options = <ThankYouOption>[];
 
-    // 1. 7이면 단독 등록 가능
-    if (_isSeven(card)) {
-      options.add(ThankYouOption(
-        type: ThankYouType.seven,
-        discardCard: card,
-      ));
-    }
+    // ★ 7 단독 땡큐 제거 - 3장 이상의 멜드로만 등록 가능
 
-    // 2. 플레이어 멜드에 붙이기 가능
+    // 1. 플레이어 멜드에 붙이기 가능
     for (int i = 0; i < playerMelds.length; i++) {
       if (_canAttachToMeldAtIndex(card, playerMelds, i)) {
         options.add(ThankYouOption(
@@ -1136,7 +1145,7 @@ class _HulaScreenState extends State<HulaScreen> with TickerProviderStateMixin {
       }
     }
 
-    // 3. 컴퓨터 멜드에 붙이기 가능
+    // 2. 컴퓨터 멜드에 붙이기 가능
     for (int c = 0; c < computerMelds.length; c++) {
       for (int i = 0; i < computerMelds[c].length; i++) {
         if (_canAttachToMeldAtIndex(card, computerMelds[c], i)) {
@@ -1150,7 +1159,7 @@ class _HulaScreenState extends State<HulaScreen> with TickerProviderStateMixin {
       }
     }
 
-    // 4. 손패와 합쳐서 새 멜드 생성
+    // 3. 손패와 합쳐서 새 멜드 생성
     options.addAll(_findAllNewMeldOptions(card));
 
     return options;
