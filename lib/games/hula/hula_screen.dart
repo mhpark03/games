@@ -1840,7 +1840,27 @@ class _HulaScreenState extends State<HulaScreen> with TickerProviderStateMixin {
     // 스톱 위험도 계산
     final myIndex = computerIndex ?? 0;
     final stopRisk = _estimateStopRisk(myIndex);
+    final nextTurnStopRisk = _estimateNextTurnStopRisk(myIndex);
     final myHandScore = _calculateHandScore(hand);
+
+    // ★ 7 카드 보유 시 스톱 위험에 더 민감하게 반응
+    final hasSevens = hand.any((c) => _isSeven(c));
+    final sevensCount = hand.where((c) => _isSeven(c)).length;
+
+    // ★ 다음 턴에 스톱 가능성이 높으면 즉시 등록 (눈치 게임)
+    if (nextTurnStopRisk >= 80.0) {
+      return true; // 다음 턴에 스톱 확실시, 즉시 등록
+    }
+
+    // ★ 7을 가지고 있고 스톱 위험이 높으면 즉시 등록
+    if (hasSevens && stopRisk >= 50.0) {
+      return true; // 7이 있으면 더 빨리 등록
+    }
+
+    // ★ 7이 여러 장 있고 스톱 위험이 있으면 등록
+    if (sevensCount >= 2 && stopRisk >= 35.0) {
+      return true; // 7이 2장 이상이면 더 빨리 등록
+    }
 
     // 스톱 위험도가 높으면 등록하여 벌점 최소화
     // 위험도 70% 이상이고 내 손패 점수가 높으면 즉시 등록
@@ -1858,6 +1878,10 @@ class _HulaScreenState extends State<HulaScreen> with TickerProviderStateMixin {
     if (stopRisk > probability && stopRisk >= 40.0) {
       // 단, 훌라가 거의 완성 상태면 (남은 카드 1장) 계속 시도
       if (remainingCount <= 1 && probability >= 50.0) {
+        // ★ 그래도 7이 있고 스톱 위험이 높으면 등록
+        if (hasSevens && stopRisk >= 60.0) {
+          return true;
+        }
         return false; // 훌라 시도 계속
       }
       return true; // 방어적 등록
@@ -1868,6 +1892,10 @@ class _HulaScreenState extends State<HulaScreen> with TickerProviderStateMixin {
     if (probability >= 60.0 && remainingCount <= 3) {
       // 단, 스톱 위험도가 매우 높으면 등록
       if (stopRisk >= 60.0) {
+        return true;
+      }
+      // ★ 7이 있고 다음 턴 스톱 위험이 높으면 등록
+      if (hasSevens && nextTurnStopRisk >= 60.0) {
         return true;
       }
       return false; // 등록 대기
@@ -1882,11 +1910,71 @@ class _HulaScreenState extends State<HulaScreen> with TickerProviderStateMixin {
       if (stopRisk >= 50.0) {
         return true;
       }
+      // ★ 7이 있고 다음 턴 스톱 위험이 높으면 등록
+      if (hasSevens && nextTurnStopRisk >= 50.0) {
+        return true;
+      }
       return false;
     }
 
     // 그 외에는 등록
     return true;
+  }
+
+  // ★ 다음 턴에 스톱될 가능성 계산 (더 공격적인 예측)
+  double _estimateNextTurnStopRisk(int myIndex) {
+    double maxRisk = 0.0;
+
+    // 플레이어(0) 체크
+    if (myIndex != 0) {
+      final risk = _calculateNextTurnStopProbability(playerHand, playerMelds);
+      maxRisk = maxRisk > risk ? maxRisk : risk;
+    }
+
+    // 다른 컴퓨터들 체크
+    for (int i = 0; i < computerHands.length; i++) {
+      if (i + 1 == myIndex) continue; // 자신 제외
+
+      final risk = _calculateNextTurnStopProbability(computerHands[i], computerMelds[i]);
+      maxRisk = maxRisk > risk ? maxRisk : risk;
+    }
+
+    return maxRisk;
+  }
+
+  // 특정 플레이어가 다음 턴에 스톱할 확률 계산
+  double _calculateNextTurnStopProbability(List<PlayingCard> hand, List<Meld> melds) {
+    // 등록이 없으면 스톱 불가 (2배 패널티 감수해야 함)
+    if (melds.isEmpty) return 0.0;
+
+    final handScore = _calculateHandScore(hand);
+
+    // 손패가 2장 이하이고 점수가 5 이하면 거의 확실히 스톱
+    if (hand.length <= 2 && handScore <= 5) {
+      return 95.0;
+    }
+
+    // 손패가 3장 이하이고 점수가 8 이하면 높은 확률
+    if (hand.length <= 3 && handScore <= 8) {
+      return 80.0;
+    }
+
+    // 손패가 4장 이하이고 점수가 10 이하면 중간 확률
+    if (hand.length <= 4 && handScore <= 10) {
+      return 60.0;
+    }
+
+    // 손패가 5장 이하이고 점수가 15 이하면 낮은 확률
+    if (hand.length <= 5 && handScore <= 15) {
+      return 40.0;
+    }
+
+    // 멜드가 많고 손패가 적으면 스톱 가능성
+    if (melds.length >= 3 && hand.length <= 5) {
+      return 35.0 + (5 - hand.length) * 10;
+    }
+
+    return 0.0;
   }
 
   // 7 카드 3장 이상일 때 Group vs Run 전략 결정
@@ -2216,6 +2304,12 @@ class _HulaScreenState extends State<HulaScreen> with TickerProviderStateMixin {
     final hand = computerHands[computerIndex];
     final melds = computerMelds[computerIndex];
 
+    // ★ 스톱 호출 여부 확인 (카드 뽑기 전에만 가능)
+    if (_shouldComputerCallStop(computerIndex)) {
+      _computerCallStop(computerIndex);
+      return;
+    }
+
     // 난이도에 따른 땡큐(드로우) 확률 (쉬움: 50%, 보통: 80%, 어려움: 100%)
     final difficulty = computerDifficulties.length > computerIndex
         ? computerDifficulties[computerIndex]
@@ -2511,12 +2605,6 @@ class _HulaScreenState extends State<HulaScreen> with TickerProviderStateMixin {
 
     if (hand.isEmpty) {
       _endGame(currentTurn);
-      return;
-    }
-
-    // 스톱 호출 여부 확인
-    if (_shouldComputerCallStop(computerIndex)) {
-      _computerCallStop(computerIndex);
       return;
     }
 
@@ -2867,12 +2955,6 @@ class _HulaScreenState extends State<HulaScreen> with TickerProviderStateMixin {
       return;
     }
 
-    // 스톱 호출 여부 확인
-    if (_shouldComputerCallStop(computerIndex)) {
-      _computerCallStop(computerIndex);
-      return;
-    }
-
     // 땡큐 확인: 플레이어 전 순서 컴퓨터는 즉시, 후 순서는 10초 후
     final discardTurn = computerIndex + 1;
     _lastDiscardTurn = discardTurn;
@@ -2932,6 +3014,7 @@ class _HulaScreenState extends State<HulaScreen> with TickerProviderStateMixin {
   // 스톱 선언 (플레이어)
   void _callStop() {
     if (gameOver) return;
+    _showMessage('${'games.hula.player'.tr()} ${'games.hula.stopButton'.tr()}!');
     _calculateScoresAndEnd(stopperIndex: 0); // 플레이어가 스톱
   }
 
@@ -4036,9 +4119,9 @@ class _HulaScreenState extends State<HulaScreen> with TickerProviderStateMixin {
               minimumSize: isLandscape ? const Size(70, 32) : null,
             ),
           ),
-          // 스톱
+          // 스톱 (카드 뽑기 전, 등록된 멜드가 있을 때만 선언 가능)
           ElevatedButton.icon(
-            onPressed: currentTurn == 0 && !gameOver ? _callStop : null,
+            onPressed: currentTurn == 0 && !gameOver && !hasDrawn && playerMelds.isNotEmpty ? _callStop : null,
             icon: Icon(Icons.stop_circle, size: iconSize),
             label: Text('games.hula.stopButton'.tr(), style: TextStyle(fontSize: isLandscape ? 12 : 14)),
             style: ElevatedButton.styleFrom(
