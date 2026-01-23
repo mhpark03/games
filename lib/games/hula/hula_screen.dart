@@ -3105,13 +3105,16 @@ class _HulaScreenState extends State<HulaScreen> with TickerProviderStateMixin {
   void _calculateScoresAndEnd({required int stopperIndex}) {
     // 모든 플레이어 점수 계산
     // 등록(멜드)을 하지 못한 플레이어는 패널티로 점수 두 배
+    // ★ 실제 등록된 카드 수로 확인 (빈 멜드 방지)
+    final playerRegisteredCards = playerMelds.fold<int>(0, (sum, meld) => sum + meld.cards.length);
     scores[0] = _calculateHandScore(playerHand);
-    if (playerMelds.isEmpty) {
+    if (playerRegisteredCards == 0) {
       scores[0] *= 2; // 등록 못한 패널티
     }
     for (int i = 0; i < computerHands.length; i++) {
+      final computerRegisteredCards = computerMelds[i].fold<int>(0, (sum, meld) => sum + meld.cards.length);
       scores[i + 1] = _calculateHandScore(computerHands[i]);
-      if (computerMelds[i].isEmpty) {
+      if (computerRegisteredCards == 0) {
         scores[i + 1] *= 2; // 등록 못한 패널티
       }
     }
@@ -3152,13 +3155,16 @@ class _HulaScreenState extends State<HulaScreen> with TickerProviderStateMixin {
 
   void _endGame(int winnerIdx) {
     // 점수 계산 (등록 못한 플레이어는 패널티로 두 배)
+    // ★ 실제 등록된 카드 수로 확인 (빈 멜드 방지)
+    final playerRegisteredCards = playerMelds.fold<int>(0, (sum, meld) => sum + meld.cards.length);
     scores[0] = _calculateHandScore(playerHand);
-    if (playerMelds.isEmpty) {
+    if (playerRegisteredCards == 0) {
       scores[0] *= 2; // 등록 못한 패널티
     }
     for (int i = 0; i < computerHands.length; i++) {
+      final computerRegisteredCards = computerMelds[i].fold<int>(0, (sum, meld) => sum + meld.cards.length);
       scores[i + 1] = _calculateHandScore(computerHands[i]);
-      if (computerMelds[i].isEmpty) {
+      if (computerRegisteredCards == 0) {
         scores[i + 1] *= 2; // 등록 못한 패널티
       }
     }
