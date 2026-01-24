@@ -650,7 +650,7 @@ class _HulaScreenState extends State<HulaScreen> with TickerProviderStateMixin {
 
     // 플레이어 턴이거나, 대기 중일 때 (땡큐)
     if (currentTurn == 0 && hasDrawn) return;
-    if (currentTurn != 0 && !waitingForNextTurn) return;
+    if (currentTurn != 0 && !waitingForNextTurn && !_thankYouWaiting) return;
 
     // 땡큐 가능 여부 확인 (등록 가능한 경우에만)
     if (!_canThankYou()) return;
