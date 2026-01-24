@@ -3154,19 +3154,37 @@ class _HulaScreenState extends State<HulaScreen> with TickerProviderStateMixin {
   }
 
   void _endGame(int winnerIdx) {
-    // 점수 계산 (등록 못한 플레이어는 패널티로 두 배)
-    // ★ 실제 등록된 카드 수로 확인 (빈 멜드 방지)
-    final playerRegisteredCards = playerMelds.fold<int>(0, (sum, meld) => sum + meld.cards.length);
+    // 손패 점수 계산 (순수 손패 점수, 2배 패널티는 차이 계산 후 적용)
     scores[0] = _calculateHandScore(playerHand);
-    if (playerRegisteredCards == 0) {
-      scores[0] *= 2; // 등록 못한 패널티
-    }
     for (int i = 0; i < computerHands.length; i++) {
-      final computerRegisteredCards = computerMelds[i].fold<int>(0, (sum, meld) => sum + meld.cards.length);
       scores[i + 1] = _calculateHandScore(computerHands[i]);
-      if (computerRegisteredCards == 0) {
-        scores[i + 1] *= 2; // 등록 못한 패널티
+    }
+
+    // 멜드 등록 여부 계산 (등록하지 않은 플레이어는 차이의 2배 패널티)
+    final List<bool> hasMeld = List.generate(playerCount, (i) {
+      if (i == 0) {
+        return playerMelds.fold<int>(0, (sum, meld) => sum + meld.cards.length) > 0;
+      } else {
+        return computerMelds[i - 1].fold<int>(0, (sum, meld) => sum + meld.cards.length) > 0;
       }
+    });
+
+    // 라운드 점수 계산 (차이 계산 후 2배 패널티 적용)
+    final hulaMultiplier = (isHula && winnerIdx == 0) ? 2 : 1;
+    final winnerHandScore = scores[winnerIdx];
+    final roundScores = List.generate(playerCount, (_) => 0);
+
+    for (int i = 0; i < playerCount; i++) {
+      if (i == winnerIdx) continue;
+      final diff = scores[i] - winnerHandScore;
+      // 멜드 등록하지 않은 플레이어는 차이의 2배
+      final noMeldMultiplier = hasMeld[i] ? 1 : 2;
+      roundScores[i] = diff * noMeldMultiplier * hulaMultiplier;
+    }
+
+    // scores 배열에 라운드 점수 저장 (다이얼로그에서 표시)
+    for (int i = 0; i < playerCount; i++) {
+      scores[i] = roundScores[i];
     }
 
     setState(() {
