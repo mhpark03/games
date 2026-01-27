@@ -2325,16 +2325,13 @@ class _HulaScreenState extends State<HulaScreen> with TickerProviderStateMixin {
     final topDiscard = discardPile.isNotEmpty ? discardPile.last : null;
 
     // 버린 카드가 멜드에 도움이 되면 가져오기 (난이도 적용)
+    // ★ 바닥 카드는 손패와 합쳐서 3장 이상의 멜드를 만들 수 있을 때만 가져올 수 있음
+    // 7 카드도 예외 없음 (단독 등록은 자신의 손패에서만 가능)
     bool takeDiscard = false;
     if (topDiscard != null && Random().nextInt(100) < drawDiscardChance) {
-      // 7 카드는 단독 등록 가능하므로 항상 가져오기
-      if (_isSeven(topDiscard)) {
+      final testHand = [...hand, topDiscard];
+      if (_findBestMeld(testHand) != null) {
         takeDiscard = true;
-      } else {
-        final testHand = [...hand, topDiscard];
-        if (_findBestMeld(testHand) != null) {
-          takeDiscard = true;
-        }
       }
     }
 
