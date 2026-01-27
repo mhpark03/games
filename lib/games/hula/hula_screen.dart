@@ -1088,21 +1088,10 @@ class _HulaScreenState extends State<HulaScreen> with TickerProviderStateMixin {
     if (discardPile.isEmpty) return false;
     final card = discardPile.last;
 
-    // 손패와 합쳐서 새로운 멜드 가능한지 확인
+    // ★ 땡큐는 손패 + 버린카드로 새 멜드(3장 이상)를 만들 수 있을 때만 가능
+    // 기존 멜드에 붙이기는 땡큐 조건이 아님
     final thankYouCards = _findThankYouMeldCards(card);
-    if (thankYouCards != null) return true;
-
-    // 기존 멜드에 붙이기 가능한지 확인
-    for (int i = 0; i < playerMelds.length; i++) {
-      if (_canAttachToMeldAtIndex(card, playerMelds, i)) return true;
-    }
-    for (int c = 0; c < computerMelds.length; c++) {
-      for (int i = 0; i < computerMelds[c].length; i++) {
-        if (_canAttachToMeldAtIndex(card, computerMelds[c], i)) return true;
-      }
-    }
-
-    return false;
+    return thankYouCards != null;
   }
 
   // 땡큐 카드와 손패로 만들 수 있는 멜드 카드 찾기 (첫 번째만)
@@ -1167,42 +1156,14 @@ class _HulaScreenState extends State<HulaScreen> with TickerProviderStateMixin {
   }
 
   // 모든 땡큐 옵션 찾기
+  // ★ 땡큐는 손패 + 버린카드로 새 멜드(3장 이상)를 만드는 경우에만 가능
+  // 기존 멜드에 붙이기는 땡큐 옵션이 아님
   List<ThankYouOption> _findAllThankYouOptions() {
     if (discardPile.isEmpty) return [];
     final card = discardPile.last;
-    final options = <ThankYouOption>[];
 
-    // ★ 7 단독 땡큐 제거 - 3장 이상의 멜드로만 등록 가능
-
-    // 1. 플레이어 멜드에 붙이기 가능
-    for (int i = 0; i < playerMelds.length; i++) {
-      if (_canAttachToMeldAtIndex(card, playerMelds, i)) {
-        options.add(ThankYouOption(
-          type: ThankYouType.attachPlayer,
-          discardCard: card,
-          meldIndex: i,
-        ));
-      }
-    }
-
-    // 2. 컴퓨터 멜드에 붙이기 가능
-    for (int c = 0; c < computerMelds.length; c++) {
-      for (int i = 0; i < computerMelds[c].length; i++) {
-        if (_canAttachToMeldAtIndex(card, computerMelds[c], i)) {
-          options.add(ThankYouOption(
-            type: ThankYouType.attachComputer,
-            discardCard: card,
-            meldIndex: i,
-            computerIndex: c,
-          ));
-        }
-      }
-    }
-
-    // 3. 손패와 합쳐서 새 멜드 생성
-    options.addAll(_findAllNewMeldOptions(card));
-
-    return options;
+    // 손패와 합쳐서 새 멜드 생성 옵션만 반환
+    return _findAllNewMeldOptions(card);
   }
 
   // 특정 인덱스의 멜드에 카드를 붙일 수 있는지 확인
@@ -2700,36 +2661,12 @@ class _HulaScreenState extends State<HulaScreen> with TickerProviderStateMixin {
           : 2;
       final thankYouChance = difficulty == 0 ? 50 : (difficulty == 1 ? 80 : 100);
 
-      bool shouldThankYou = false;
-
-      // ★ 7 카드 땡큐 조건: 7 단독은 불가, 3장 이상 멜드를 만들 수 있어야 함
+      // ★ 땡큐는 손패 + 버린카드로 새 멜드(3장 이상)를 만들 수 있을 때만 가능
+      // 기존 멜드에 붙이기는 땡큐 조건이 아님
       final testHand = [...hand, topCard];
-      if (_findBestMeld(testHand) != null) {
-        shouldThankYou = true;
-      }
-      // 7 카드: 기존 멜드에 붙일 수 있는 경우만 땡큐 허용
-      else if (_isSeven(topCard)) {
-        bool canAttach = false;
-        final computerMeldList = computerMelds[computerIndex];
-        if (_canAttachToMeldList(topCard, computerMeldList) >= 0) {
-          canAttach = true;
-        }
-        // 다른 플레이어 멜드 확인
-        if (!canAttach) {
-          for (int otherIdx = 0; otherIdx < computerMelds.length; otherIdx++) {
-            if (otherIdx != computerIndex && _canAttachToMeldList(topCard, computerMelds[otherIdx]) >= 0) {
-              canAttach = true;
-              break;
-            }
-          }
-        }
-        if (!canAttach && _canAttachToMeldList(topCard, playerMelds) >= 0) {
-          canAttach = true;
-        }
-        shouldThankYou = canAttach;
-      }
+      final canMakeMeld = _findBestMeld(testHand) != null;
 
-      if (shouldThankYou) {
+      if (canMakeMeld) {
         // 난이도에 따른 확률 체크
         if (random.nextInt(100) < thankYouChance) {
           return computerIndex;
@@ -2756,11 +2693,6 @@ class _HulaScreenState extends State<HulaScreen> with TickerProviderStateMixin {
 
     // ★ 플레이어 땡큐 대기 상태 해제 (AI가 먼저 땡큐함)
     _thankYouTimer?.cancel();
-    _thankYouWaiting = false;
-    _thankYouCountdown = 0;
-
-    // 땡큐한 컴퓨터의 턴으로 설정
-    currentTurn = computerIndex + 1;
 
     final card = discardPile.removeLast();
     final hand = computerHands[computerIndex];
@@ -2768,7 +2700,13 @@ class _HulaScreenState extends State<HulaScreen> with TickerProviderStateMixin {
     hand.add(card);
     _sortHand(hand);
     _showMessage('games.hula.computerThankYou'.tr(namedArgs: {'num': '${computerIndex + 1}', 'card': '${card.suitSymbol}${card.rankString}'}));
-    setState(() {});
+
+    // ★ 모든 상태 변경을 setState 안에서 수행 (race condition 방지)
+    setState(() {
+      _thankYouWaiting = false;
+      _thankYouCountdown = 0;
+      currentTurn = computerIndex + 1;
+    });
     _saveGame();
 
     // 땡큐 후 바로 등록 단계로 진행 (등록 후 타이머가 동작함)
