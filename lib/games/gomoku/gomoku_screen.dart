@@ -561,31 +561,9 @@ class _GomokuScreenState extends State<GomokuScreen> {
     return candidates[_random.nextInt(candidates.length)];
   }
 
-  // 쉬움 난이도: 랜덤 요소 추가, 일부 위협 무시
+  // 쉬움 난이도
   List<int>? _findMoveEasy(Stone computerStone, Stone userStone) {
-    // 40% 확률로 랜덤 수 두기
-    if (_random.nextDouble() < 0.4) {
-      final emptyPositions = <List<int>>[];
-      for (int i = 0; i < boardSize; i++) {
-        for (int j = 0; j < boardSize; j++) {
-          if (board[i][j] == Stone.none) {
-            emptyPositions.add([i, j]);
-          }
-        }
-      }
-      if (emptyPositions.isNotEmpty) {
-        // 중앙 근처 우선
-        emptyPositions.sort((a, b) {
-          int distA = (a[0] - boardSize ~/ 2).abs() + (a[1] - boardSize ~/ 2).abs();
-          int distB = (b[0] - boardSize ~/ 2).abs() + (b[1] - boardSize ~/ 2).abs();
-          return distA.compareTo(distB);
-        });
-        int index = _random.nextInt(min(5, emptyPositions.length));
-        return emptyPositions[index];
-      }
-    }
-
-    // 컴퓨터가 이길 수 있는지 확인 (항상 승리는 잡음)
+    // 1. 승리 수 (내 5연속 완성)
     for (int i = 0; i < boardSize; i++) {
       for (int j = 0; j < boardSize; j++) {
         if (board[i][j] == Stone.none) {
@@ -599,136 +577,139 @@ class _GomokuScreenState extends State<GomokuScreen> {
       }
     }
 
-    // 50% 확률로만 상대 5연속 막기
-    if (_random.nextDouble() < 0.5) {
-      for (int i = 0; i < boardSize; i++) {
-        for (int j = 0; j < boardSize; j++) {
-          if (board[i][j] == Stone.none) {
-            board[i][j] = userStone;
-            if (_checkWinWithoutHighlight(i, j, userStone)) {
-              board[i][j] = Stone.none;
-              return [i, j];
-            }
-            board[i][j] = Stone.none;
-          }
-        }
-      }
-    }
+    // 2. 상대 4연속 막기
+    List<int>? blockFour = _findFourInRow(userStone);
+    if (blockFour != null) return blockFour;
 
-    // 점수에 노이즈 추가하여 최선의 수 찾기
-    int bestScore = -1;
-    List<int>? bestMove;
-
-    for (int i = 0; i < boardSize; i++) {
-      for (int j = 0; j < boardSize; j++) {
-        if (board[i][j] == Stone.none) {
-          int score = _evaluatePositionForStone(i, j, computerStone, userStone);
-          score += _random.nextInt(50); // 노이즈 추가
-          if (score > bestScore) {
-            bestScore = score;
-            bestMove = [i, j];
-          }
-        }
-      }
-    }
-
-    return bestMove;
-  }
-
-  // 보통 난이도: 기존 AI (균형 잡힌 플레이)
-  List<int>? _findMoveMedium(Stone computerStone, Stone userStone) {
-    int bestScore = -1;
-    List<int>? bestMove;
-
-    // 컴퓨터가 이길 수 있는지 확인
-    for (int i = 0; i < boardSize; i++) {
-      for (int j = 0; j < boardSize; j++) {
-        if (board[i][j] == Stone.none) {
-          board[i][j] = computerStone;
-          if (_checkWinWithoutHighlight(i, j, computerStone)) {
-            board[i][j] = Stone.none;
-            return [i, j];
-          }
-          board[i][j] = Stone.none;
-        }
-      }
-    }
-
-    // 사용자가 이기는 것을 막기
-    for (int i = 0; i < boardSize; i++) {
-      for (int j = 0; j < boardSize; j++) {
-        if (board[i][j] == Stone.none) {
-          board[i][j] = userStone;
-          if (_checkWinWithoutHighlight(i, j, userStone)) {
-            board[i][j] = Stone.none;
-            return [i, j];
-          }
-          board[i][j] = Stone.none;
-        }
-      }
-    }
-
-    // 최선의 위치 찾기
-    for (int i = 0; i < boardSize; i++) {
-      for (int j = 0; j < boardSize; j++) {
-        if (board[i][j] == Stone.none) {
-          int score = _evaluatePositionForStone(i, j, computerStone, userStone);
-          if (score > bestScore) {
-            bestScore = score;
-            bestMove = [i, j];
-          }
-        }
-      }
-    }
-
-    return bestMove;
-  }
-
-  // 어려움 난이도: 강화된 AI (위협 패턴 인식 강화)
-  List<int>? _findMoveHard(Stone computerStone, Stone userStone) {
-    // 컴퓨터가 이길 수 있는지 확인
-    for (int i = 0; i < boardSize; i++) {
-      for (int j = 0; j < boardSize; j++) {
-        if (board[i][j] == Stone.none) {
-          board[i][j] = computerStone;
-          if (_checkWinWithoutHighlight(i, j, computerStone)) {
-            board[i][j] = Stone.none;
-            return [i, j];
-          }
-          board[i][j] = Stone.none;
-        }
-      }
-    }
-
-    // 사용자가 이기는 것을 막기
-    for (int i = 0; i < boardSize; i++) {
-      for (int j = 0; j < boardSize; j++) {
-        if (board[i][j] == Stone.none) {
-          board[i][j] = userStone;
-          if (_checkWinWithoutHighlight(i, j, userStone)) {
-            board[i][j] = Stone.none;
-            return [i, j];
-          }
-          board[i][j] = Stone.none;
-        }
-      }
-    }
-
-    // 양쪽 열린 4 만들기 / 막기
-    List<int>? openFourMove = _findOpenFour(computerStone);
-    if (openFourMove != null) return openFourMove;
-
-    List<int>? blockOpenFour = _findOpenFour(userStone);
-    if (blockOpenFour != null) return blockOpenFour;
-
-    // 양쪽 열린 3 만들기 / 막기
-    List<int>? openThreeMove = _findOpenThree(computerStone);
-    if (openThreeMove != null) return openThreeMove;
-
+    // 3. 상대 열린 3연속 막기
     List<int>? blockOpenThree = _findOpenThree(userStone);
     if (blockOpenThree != null) return blockOpenThree;
 
-    // 강화된 점수 평가
+    // 4. 내 4연속 만들기
+    List<int>? fourMove = _findFourInRow(computerStone);
+    if (fourMove != null) return fourMove;
+
+    // 5. 내 열린 3 만들기
+    List<int>? openThreeMove = _findOpenThree(computerStone);
+    if (openThreeMove != null) return openThreeMove;
+
+    // 6. 공격적 위치 평가 (노이즈 포함)
+    int bestScore = -1;
+    List<int>? bestMove;
+
+    for (int i = 0; i < boardSize; i++) {
+      for (int j = 0; j < boardSize; j++) {
+        if (board[i][j] == Stone.none) {
+          int score = _evaluateLineScore(i, j, computerStone) * 3;
+          score += _random.nextInt(30); // 노이즈 추가
+          int centerDist = (i - boardSize ~/ 2).abs() + (j - boardSize ~/ 2).abs();
+          score += (boardSize - centerDist);
+          if (score > bestScore) {
+            bestScore = score;
+            bestMove = [i, j];
+          }
+        }
+      }
+    }
+
+    return bestMove;
+  }
+
+  // 보통 난이도: 공격 우선 플레이 (한쪽 막힌 수비는 후순위)
+  List<int>? _findMoveMedium(Stone computerStone, Stone userStone) {
+    // 1. 컴퓨터가 이길 수 있는지 확인
+    for (int i = 0; i < boardSize; i++) {
+      for (int j = 0; j < boardSize; j++) {
+        if (board[i][j] == Stone.none) {
+          board[i][j] = computerStone;
+          if (_checkWinWithoutHighlight(i, j, computerStone)) {
+            board[i][j] = Stone.none;
+            return [i, j];
+          }
+          board[i][j] = Stone.none;
+        }
+      }
+    }
+
+    // 2. 상대 4연속 막기
+    List<int>? blockFour = _findFourInRow(userStone);
+    if (blockFour != null) return blockFour;
+
+    // 3. 내 열린 4 만들기
+    List<int>? openFourMove = _findOpenFour(computerStone);
+    if (openFourMove != null) return openFourMove;
+
+    // 4. 상대 열린 3연속 막기 (3x3/4x3 가능성 체크)
+    List<int>? blockOpenThree = _blockOpenThreeSmart(userStone);
+    if (blockOpenThree != null) return blockOpenThree;
+
+    // 5. 내 열린 3 만들기
+    List<int>? openThreeMove = _findOpenThree(computerStone);
+    if (openThreeMove != null) return openThreeMove;
+
+    // 6. 공격 가중치를 높인 위치 평가 (공격 3 : 수비 1)
+    int bestScore = -1;
+    List<int>? bestMove;
+
+    for (int i = 0; i < boardSize; i++) {
+      for (int j = 0; j < boardSize; j++) {
+        if (board[i][j] == Stone.none) {
+          int score = 0;
+          // 중앙 근접 점수
+          int centerDist = (i - boardSize ~/ 2).abs() + (j - boardSize ~/ 2).abs();
+          score += (boardSize - centerDist) * 2;
+          // 공격 점수 (가중치 3배)
+          score += _evaluateLineScore(i, j, computerStone) * 3;
+          // 수비 점수 (가중치 1배 - 한쪽 막힌 것도 낮은 점수)
+          score += _evaluateLineScore(i, j, userStone);
+          if (score > bestScore) {
+            bestScore = score;
+            bestMove = [i, j];
+          }
+        }
+      }
+    }
+
+    return bestMove;
+  }
+
+  // 어려움 난이도: 강화된 AI
+  List<int>? _findMoveHard(Stone computerStone, Stone userStone) {
+    // 1. 승리 수 (내 5연속 완성)
+    for (int i = 0; i < boardSize; i++) {
+      for (int j = 0; j < boardSize; j++) {
+        if (board[i][j] == Stone.none) {
+          board[i][j] = computerStone;
+          if (_checkWinWithoutHighlight(i, j, computerStone)) {
+            board[i][j] = Stone.none;
+            return [i, j];
+          }
+          board[i][j] = Stone.none;
+        }
+      }
+    }
+
+    // 2. 상대 4연속 막기 (한쪽 막힌 것 포함)
+    List<int>? blockFour = _findFourInRow(userStone);
+    if (blockFour != null) return blockFour;
+
+    // 3. 내 열린 4 만들기
+    List<int>? openFourMove = _findOpenFour(computerStone);
+    if (openFourMove != null) return openFourMove;
+
+    // 4. 상대 열린 3연속 막기 (3x3/4x3 가능성 체크)
+    List<int>? blockOpenThree = _blockOpenThreeSmart(userStone);
+    if (blockOpenThree != null) return blockOpenThree;
+
+    // 5. 상대 3x3 또는 4x3 위협 막기
+    List<int>? blockDoubleThreat = _findDoubleThreat(userStone);
+    if (blockDoubleThreat != null) return blockDoubleThreat;
+
+    // 6. 내 열린 3 만들기
+    List<int>? openThreeMove = _findOpenThree(computerStone);
+    if (openThreeMove != null) return openThreeMove;
+
+    // 7. 강화된 점수 평가
     int bestScore = -1;
     List<int>? bestMove;
 
@@ -745,6 +726,214 @@ class _GomokuScreenState extends State<GomokuScreen> {
     }
 
     return bestMove;
+  }
+
+  // 4연속 찾기 (한쪽이라도 열려있으면 막아야 함)
+  List<int>? _findFourInRow(Stone stone) {
+    final directions = [[0, 1], [1, 0], [1, 1], [1, -1]];
+
+    for (int i = 0; i < boardSize; i++) {
+      for (int j = 0; j < boardSize; j++) {
+        if (board[i][j] != Stone.none) continue;
+
+        for (var dir in directions) {
+          int count = 0;
+
+          // 정방향 체크
+          int ni = i + dir[0];
+          int nj = j + dir[1];
+          while (ni >= 0 && ni < boardSize && nj >= 0 && nj < boardSize && board[ni][nj] == stone) {
+            count++;
+            ni += dir[0];
+            nj += dir[1];
+          }
+
+          // 역방향 체크
+          ni = i - dir[0];
+          nj = j - dir[1];
+          while (ni >= 0 && ni < boardSize && nj >= 0 && nj < boardSize && board[ni][nj] == stone) {
+            count++;
+            ni -= dir[0];
+            nj -= dir[1];
+          }
+
+          // 4개 이상 연속이면 이 위치에 두면 5연속 완성/차단
+          if (count >= 4) {
+            return [i, j];
+          }
+        }
+      }
+    }
+    return null;
+  }
+
+  // 열린 3 막을 때 3x3/4x3 가능성 체크하여 최적 위치 반환
+  List<int>? _blockOpenThreeSmart(Stone stone) {
+    final directions = [[0, 1], [1, 0], [1, 1], [1, -1]];
+    List<List<int>> blockingPositions = [];
+
+    // 모든 열린 3 찾기
+    for (int i = 0; i < boardSize; i++) {
+      for (int j = 0; j < boardSize; j++) {
+        if (board[i][j] != Stone.none) continue;
+
+        for (var dir in directions) {
+          int count = 0;
+          int openEnds = 0;
+          List<List<int>> emptyEnds = [];
+
+          // 정방향 체크
+          int ni = i + dir[0];
+          int nj = j + dir[1];
+          while (ni >= 0 && ni < boardSize && nj >= 0 && nj < boardSize && board[ni][nj] == stone) {
+            count++;
+            ni += dir[0];
+            nj += dir[1];
+          }
+          if (ni >= 0 && ni < boardSize && nj >= 0 && nj < boardSize && board[ni][nj] == Stone.none) {
+            openEnds++;
+            emptyEnds.add([ni, nj]);
+          }
+
+          // 역방향 체크
+          ni = i - dir[0];
+          nj = j - dir[1];
+          while (ni >= 0 && ni < boardSize && nj >= 0 && nj < boardSize && board[ni][nj] == stone) {
+            count++;
+            ni -= dir[0];
+            nj -= dir[1];
+          }
+          if (ni >= 0 && ni < boardSize && nj >= 0 && nj < boardSize && board[ni][nj] == Stone.none) {
+            openEnds++;
+            emptyEnds.add([ni, nj]);
+          }
+
+          // 열린 3 발견 (현재 위치 포함해서 3개, 양쪽 열림)
+          if (count == 2 && openEnds == 2) {
+            blockingPositions.add([i, j]);
+            for (var pos in emptyEnds) {
+              blockingPositions.add(pos);
+            }
+          }
+        }
+      }
+    }
+
+    if (blockingPositions.isEmpty) return null;
+
+    // 3x3 또는 4x3 위협을 막을 수 있는 위치 우선
+    for (var pos in blockingPositions) {
+      if (_wouldCreateDoubleThreat(pos[0], pos[1], stone)) {
+        return pos;
+      }
+    }
+
+    // 없으면 첫 번째 위치 반환
+    return blockingPositions.first;
+  }
+
+  // 해당 위치에 돌을 놓으면 3x3 또는 4x3이 되는지 체크
+  bool _wouldCreateDoubleThreat(int row, int col, Stone stone) {
+    board[row][col] = stone;
+
+    int threatCount = 0;
+    bool hasFourThreat = false;
+    final directions = [[0, 1], [1, 0], [1, 1], [1, -1]];
+
+    for (var dir in directions) {
+      int count = 1;
+      int openEnds = 0;
+
+      int ni = row + dir[0];
+      int nj = col + dir[1];
+      while (ni >= 0 && ni < boardSize && nj >= 0 && nj < boardSize && board[ni][nj] == stone) {
+        count++;
+        ni += dir[0];
+        nj += dir[1];
+      }
+      if (ni >= 0 && ni < boardSize && nj >= 0 && nj < boardSize && board[ni][nj] == Stone.none) {
+        openEnds++;
+      }
+
+      ni = row - dir[0];
+      nj = col - dir[1];
+      while (ni >= 0 && ni < boardSize && nj >= 0 && nj < boardSize && board[ni][nj] == stone) {
+        count++;
+        ni -= dir[0];
+        nj -= dir[1];
+      }
+      if (ni >= 0 && ni < boardSize && nj >= 0 && nj < boardSize && board[ni][nj] == Stone.none) {
+        openEnds++;
+      }
+
+      if (count >= 3 && openEnds >= 1) {
+        threatCount++;
+        if (count >= 4) hasFourThreat = true;
+      }
+    }
+
+    board[row][col] = Stone.none;
+
+    return threatCount >= 2 || (hasFourThreat && threatCount >= 1);
+  }
+
+  // 3x3 또는 4x3 위협 찾기 (두 방향에서 동시에 위협이 되는 위치)
+  List<int>? _findDoubleThreat(Stone stone) {
+    for (int i = 0; i < boardSize; i++) {
+      for (int j = 0; j < boardSize; j++) {
+        if (board[i][j] != Stone.none) continue;
+
+        int threatCount = 0;
+        bool hasFourThreat = false;
+
+        // 임시로 돌을 놓고 각 방향의 위협 체크
+        board[i][j] = stone;
+
+        final directions = [[0, 1], [1, 0], [1, 1], [1, -1]];
+        for (var dir in directions) {
+          int count = 1;
+          int openEnds = 0;
+
+          // 정방향 체크
+          int ni = i + dir[0];
+          int nj = j + dir[1];
+          while (ni >= 0 && ni < boardSize && nj >= 0 && nj < boardSize && board[ni][nj] == stone) {
+            count++;
+            ni += dir[0];
+            nj += dir[1];
+          }
+          if (ni >= 0 && ni < boardSize && nj >= 0 && nj < boardSize && board[ni][nj] == Stone.none) {
+            openEnds++;
+          }
+
+          // 역방향 체크
+          ni = i - dir[0];
+          nj = j - dir[1];
+          while (ni >= 0 && ni < boardSize && nj >= 0 && nj < boardSize && board[ni][nj] == stone) {
+            count++;
+            ni -= dir[0];
+            nj -= dir[1];
+          }
+          if (ni >= 0 && ni < boardSize && nj >= 0 && nj < boardSize && board[ni][nj] == Stone.none) {
+            openEnds++;
+          }
+
+          // 열린 3 이상이면 위협
+          if (count >= 3 && openEnds >= 1) {
+            threatCount++;
+            if (count >= 4) hasFourThreat = true;
+          }
+        }
+
+        board[i][j] = Stone.none;
+
+        // 3x3 (열린 3이 2개 이상) 또는 4x3 (4 + 열린 3)
+        if (threatCount >= 2 || (hasFourThreat && threatCount >= 1)) {
+          return [i, j];
+        }
+      }
+    }
+    return null;
   }
 
   // 양쪽 열린 4 찾기 (4개 연속 + 양쪽 빈 칸)
