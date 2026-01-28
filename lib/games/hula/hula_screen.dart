@@ -878,6 +878,12 @@ class _HulaScreenState extends State<HulaScreen> with TickerProviderStateMixin {
       if (isSequential) return true;
     }
 
+    // ★ K-A-2 순환 케이스 (3장인 경우만)
+    // ranks = [1, 2, 13] (A, 2, K 정렬 후)
+    if (cards.length == 3 && ranks.contains(1) && ranks.contains(2) && ranks.contains(13)) {
+      return true;
+    }
+
     return false;
   }
 
@@ -1138,6 +1144,11 @@ class _HulaScreenState extends State<HulaScreen> with TickerProviderStateMixin {
           if (!isSequential && ranks.contains(1)) {
             final highRanks = ranks.map((r) => r == 1 ? 14 : r).toList()..sort();
             isSequential = highRanks[1] == highRanks[0] + 1 && highRanks[2] == highRanks[1] + 1;
+          }
+
+          // ★ K-A-2 순환 케이스
+          if (!isSequential && ranks.contains(1) && ranks.contains(2) && ranks.contains(13)) {
+            isSequential = true;
           }
 
           if (isSequential) {
