@@ -915,6 +915,8 @@ class _HulaScreenState extends State<HulaScreen> with TickerProviderStateMixin {
           if (card.rank == maxRank + 1) return i;
           // A를 14로 취급 (Q-K-A 케이스)
           if (maxRank == 13 && card.rank == 1) return i;
+          // Q-K-A에 2 붙이기 (순환 Run: K-A-2)
+          if (ranks.contains(1) && maxRank == 13 && card.rank == 2) return i;
           // A-2-3에서 A 앞에 K는 안됨 (A가 1로 사용된 경우)
         }
       } else {
