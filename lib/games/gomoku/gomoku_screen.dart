@@ -772,8 +772,11 @@ class _GomokuScreenState extends State<GomokuScreen> {
   // 3. 일반 한칸 건너뛴 패턴
   List<int>? _blockOpenThreeSmart(Stone stone) {
     final directions = [[0, 1], [1, 0], [1, 1], [1, -1]];
-    List<List<int>> criticalGappedPositions = []; // 한칸 건너뛴 + 양끝 열림 (최우선)
-    List<List<int>> consecutivePositions = []; // 연속된 열린 3
+    Stone opponentStone = stone == Stone.black ? Stone.white : Stone.black;
+    List<List<int>> pureConsecutivePositions = []; // 순수 연속 3 (_●●●_) - 최우선
+    List<List<int>> blockedConsecutivePositions = []; // 양끝 막힌 연속 3 (○_●●●_○)
+    List<List<int>> consecutivePositions = []; // 한칸 건너뛴+연속 3 (●_●●●)
+    List<List<int>> criticalGappedPositions = []; // 한칸 건너뛴 + 양끝 열림
     List<List<int>> gappedPositions = []; // 일반 한칸 건너뛴 패턴
 
     // 모든 열린 3 찾기
@@ -816,24 +819,56 @@ class _GomokuScreenState extends State<GomokuScreen> {
 
           int totalCount = countForward + countBackward;
 
-          if (totalCount >= 2) {
-            // 한칸 건너뛴 + 양끝 열림: 빈칸 채우면 양쪽 열린 4연속 (최우선)
-            if (openForward && openBackward && countForward > 0 && countBackward > 0 && totalCount >= 3) {
-              criticalGappedPositions.add([i, j]);
-            }
-            // 연속된 열린 3: 한쪽에만 돌이 있음 (_●●●_의 끝)
-            else if (openForward && openBackward) {
-              if ((countForward >= 2 && countBackward == 0) || (countBackward >= 2 && countForward == 0)) {
-                consecutivePositions.add([i, j]);
+          if (totalCount >= 2 && openForward && openBackward) {
+            // 1. 순수 연속 3 이상: 한쪽에만 돌이 있음 (_●●●_)
+            if ((countForward >= 2 && countBackward == 0) || (countBackward >= 2 && countForward == 0)) {
+              // 양쪽 빈칸 너머에 상대 돌이 있는지 체크 (○_●●●_○ 패턴)
+              bool bothEndsBlocked = true;
+              for (var emptyPos in emptyEnds) {
+                int beyondI = emptyPos[0] + (emptyPos[0] > i ? dir[0] : -dir[0]);
+                int beyondJ = emptyPos[1] + (emptyPos[1] > j ? dir[1] : -dir[1]);
+                if (dir[0] == 0) beyondI = emptyPos[0];
+                if (dir[1] == 0) beyondJ = emptyPos[1];
+                if (emptyPos[0] == i && emptyPos[1] != j) {
+                  beyondJ = emptyPos[1] + (emptyPos[1] > j ? 1 : -1);
+                } else if (emptyPos[1] == j && emptyPos[0] != i) {
+                  beyondI = emptyPos[0] + (emptyPos[0] > i ? 1 : -1);
+                } else {
+                  beyondI = emptyPos[0] + (emptyPos[0] > i ? dir[0] : -dir[0]);
+                  beyondJ = emptyPos[1] + (emptyPos[1] > j ? dir[1] : -dir[1]);
+                }
+                if (beyondI < 0 || beyondI >= boardSize || beyondJ < 0 || beyondJ >= boardSize ||
+                    board[beyondI][beyondJ] != opponentStone) {
+                  bothEndsBlocked = false;
+                  break;
+                }
+              }
+
+              if (bothEndsBlocked && emptyEnds.length >= 2) {
+                blockedConsecutivePositions.add([i, j]);
                 for (var pos in emptyEnds) {
-                  consecutivePositions.add(pos);
+                  blockedConsecutivePositions.add(pos);
+                }
+              } else {
+                pureConsecutivePositions.add([i, j]);
+                for (var pos in emptyEnds) {
+                  pureConsecutivePositions.add(pos);
                 }
               }
             }
-            // 한칸 건너뛴 패턴: 양쪽에 돌이 있고 양쪽 열림 (●_●●의 중간)
-            // 쉬움/보통: 양쪽 열린 것만 막음 (공격 위주)
-            // 중간 빈칸만 추가 (양끝은 제외 - 중간 막기 우선)
-            else if (openForward && openBackward && countForward > 0 && countBackward > 0) {
+            // 2. 한칸 건너뛴+연속 3 이상: 양쪽에 돌, 한쪽이 3개 이상 (●_●●●)
+            else if ((countForward >= 3 || countBackward >= 3) && countForward > 0 && countBackward > 0) {
+              consecutivePositions.add([i, j]);
+              for (var pos in emptyEnds) {
+                consecutivePositions.add(pos);
+              }
+            }
+            // 3. 한칸 건너뛴 + 양끝 열림: 빈칸 채우면 양쪽 열린 4연속
+            else if (countForward > 0 && countBackward > 0 && totalCount >= 3) {
+              criticalGappedPositions.add([i, j]);
+            }
+            // 4. 한칸 건너뛴 패턴: 양쪽에 돌이 있음 (●_●●의 중간)
+            else if (countForward > 0 && countBackward > 0) {
               gappedPositions.add([i, j]);
             }
           }
@@ -841,23 +876,43 @@ class _GomokuScreenState extends State<GomokuScreen> {
       }
     }
 
-    // 1. 연속된 열린 3 먼저 막기 (가장 급함)
+    // 1. 순수 연속 3 먼저 막기 (가장 급함: _●●●_)
+    if (pureConsecutivePositions.isNotEmpty) {
+      return pureConsecutivePositions.first;
+    }
+
+    // 2. 한칸 건너뛴+연속 3 막기 (●_●●●)
     if (consecutivePositions.isNotEmpty) {
       return consecutivePositions.first;
     }
 
-    // 2. 한칸 건너뛴 + 양끝 열림 (막지 않으면 양쪽 열린 4)
+    // 3. 한칸 건너뛴 + 양끝 열림 (막지 않으면 양쪽 열린 4)
     if (criticalGappedPositions.isNotEmpty) {
       return criticalGappedPositions.first;
     }
 
-    // 3. 일반 한칸 건너뛴 패턴 처리
+    // 4. 양끝 막힌 연속 3 (○_●●●_○)
+    if (blockedConsecutivePositions.isNotEmpty) {
+      return blockedConsecutivePositions.first;
+    }
+
+    // 5. 일반 한칸 건너뛴 패턴 처리
     if (gappedPositions.isNotEmpty) {
       return gappedPositions.first;
     }
 
-    // 4. 3x3 가능 위치 (후순위 - 위에서 못 찾았을 때만)
+    // 6. 3x3 가능 위치 (후순위 - 위에서 못 찾았을 때만)
+    for (var pos in pureConsecutivePositions) {
+      if (_wouldCreateDoubleThreat(pos[0], pos[1], stone)) {
+        return pos;
+      }
+    }
     for (var pos in consecutivePositions) {
+      if (_wouldCreateDoubleThreat(pos[0], pos[1], stone)) {
+        return pos;
+      }
+    }
+    for (var pos in blockedConsecutivePositions) {
       if (_wouldCreateDoubleThreat(pos[0], pos[1], stone)) {
         return pos;
       }
@@ -880,7 +935,9 @@ class _GomokuScreenState extends State<GomokuScreen> {
   List<int>? _blockOpenThreeSmartHard(Stone userStone, Stone computerStone) {
     final directions = [[0, 1], [1, 0], [1, 1], [1, -1]];
     List<List<int>> allPositions = []; // 모든 후보 위치 (점수 평가용)
-    List<List<int>> consecutivePositions = []; // 연속된 열린 3
+    List<List<int>> pureConsecutivePositions = []; // 순수 연속 3 (_●●●_) - 최우선
+    List<List<int>> blockedConsecutivePositions = []; // 양끝 막힌 연속 3 (○_●●●_○) - 낮은 우선순위
+    List<List<int>> consecutivePositions = []; // 한칸 건너뛴+연속 3 (●_●●●)
 
     // 모든 열린 3 찾기
     for (int i = 0; i < boardSize; i++) {
@@ -923,21 +980,54 @@ class _GomokuScreenState extends State<GomokuScreen> {
           int totalCount = countForward + countBackward;
 
           if (totalCount >= 2 && openForward && openBackward) {
-            // 한칸 건너뛴 패턴: 중간과 양끝 모두 후보로 (점수 평가)
-            if (countForward > 0 && countBackward > 0 && totalCount >= 3) {
-              allPositions.add([i, j]); // 중간
-              for (var pos in emptyEnds) {
-                allPositions.add(pos); // 양끝
+            // 1. 순수 연속 3 이상: 한쪽에만 돌이 있음 (_●●●_)
+            if ((countForward >= 2 && countBackward == 0) || (countBackward >= 2 && countForward == 0)) {
+              // 양쪽 빈칸 너머에 상대 돌이 있는지 체크 (○_●●●_○ 패턴)
+              bool bothEndsBlocked = true;
+              for (var emptyPos in emptyEnds) {
+                // 빈칸에서 현재 위치 반대 방향으로 한칸 더 체크
+                int beyondI = emptyPos[0] + (emptyPos[0] > i ? dir[0] : -dir[0]);
+                int beyondJ = emptyPos[1] + (emptyPos[1] > j ? dir[1] : -dir[1]);
+                if (dir[0] == 0) beyondI = emptyPos[0];
+                if (dir[1] == 0) beyondJ = emptyPos[1];
+                if (emptyPos[0] == i && emptyPos[1] != j) {
+                  beyondJ = emptyPos[1] + (emptyPos[1] > j ? 1 : -1);
+                } else if (emptyPos[1] == j && emptyPos[0] != i) {
+                  beyondI = emptyPos[0] + (emptyPos[0] > i ? 1 : -1);
+                } else {
+                  beyondI = emptyPos[0] + (emptyPos[0] > i ? dir[0] : -dir[0]);
+                  beyondJ = emptyPos[1] + (emptyPos[1] > j ? dir[1] : -dir[1]);
+                }
+                // 범위 밖이거나 상대 돌이 아니면 열려있음
+                if (beyondI < 0 || beyondI >= boardSize || beyondJ < 0 || beyondJ >= boardSize ||
+                    board[beyondI][beyondJ] != computerStone) {
+                  bothEndsBlocked = false;
+                  break;
+                }
+              }
+
+              if (bothEndsBlocked && emptyEnds.length >= 2) {
+                // 양쪽 다 막힘 -> 낮은 우선순위
+                blockedConsecutivePositions.add([i, j]);
+                for (var pos in emptyEnds) {
+                  blockedConsecutivePositions.add(pos);
+                }
+              } else {
+                // 최우선
+                pureConsecutivePositions.add([i, j]);
+                for (var pos in emptyEnds) {
+                  pureConsecutivePositions.add(pos);
+                }
               }
             }
-            // 연속된 열린 3: 한쪽에만 돌이 있음
-            else if ((countForward >= 2 && countBackward == 0) || (countBackward >= 2 && countForward == 0)) {
+            // 2. 한칸 건너뛴+연속 3 이상: 양쪽에 돌, 한쪽이 3개 이상 (●_●●●)
+            else if ((countForward >= 3 || countBackward >= 3) && countForward > 0 && countBackward > 0) {
               consecutivePositions.add([i, j]);
               for (var pos in emptyEnds) {
                 consecutivePositions.add(pos);
               }
             }
-            // 일반 한칸 건너뛴 (양쪽에 돌, 총 2개)
+            // 3. 한칸 건너뛴 패턴: 양쪽에 돌이 있음 (●_●●)
             else if (countForward > 0 && countBackward > 0) {
               allPositions.add([i, j]); // 중간
               for (var pos in emptyEnds) {
@@ -949,12 +1039,22 @@ class _GomokuScreenState extends State<GomokuScreen> {
       }
     }
 
-    // 1. 연속된 열린 3 먼저 막기 (가장 급함)
+    // 1. 순수 연속 3 먼저 막기 (가장 급함: _●●●_)
+    if (pureConsecutivePositions.isNotEmpty) {
+      return pureConsecutivePositions.first;
+    }
+
+    // 2. 한칸 건너뛴+연속 3 막기 (●_●●●)
     if (consecutivePositions.isNotEmpty) {
       return consecutivePositions.first;
     }
 
-    // 2. 한칸 건너뛴 패턴: 점수 평가로 최적 위치 선택
+    // 3. 양끝 막힌 연속 3 (○_●●●_○)
+    if (blockedConsecutivePositions.isNotEmpty) {
+      return blockedConsecutivePositions.first;
+    }
+
+    // 4. 한칸 건너뛴 패턴: 점수 평가로 최적 위치 선택
     if (allPositions.isNotEmpty) {
       int bestScore = -1;
       List<int>? bestPos;
@@ -977,8 +1077,18 @@ class _GomokuScreenState extends State<GomokuScreen> {
       return bestPos;
     }
 
-    // 3. 3x3 가능 위치 (후순위)
+    // 5. 3x3 가능 위치 (후순위)
+    for (var pos in pureConsecutivePositions) {
+      if (_wouldCreateDoubleThreat(pos[0], pos[1], userStone)) {
+        return pos;
+      }
+    }
     for (var pos in consecutivePositions) {
+      if (_wouldCreateDoubleThreat(pos[0], pos[1], userStone)) {
+        return pos;
+      }
+    }
+    for (var pos in blockedConsecutivePositions) {
       if (_wouldCreateDoubleThreat(pos[0], pos[1], userStone)) {
         return pos;
       }
