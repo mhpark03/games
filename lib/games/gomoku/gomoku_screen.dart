@@ -639,15 +639,15 @@ class _GomokuScreenState extends State<GomokuScreen> {
     List<int>? openFourMove = _findOpenFour(computerStone);
     if (openFourMove != null) return openFourMove;
 
-    // 4. 상대 열린 3연속 막기 (3x3/4x3 가능성 체크)
-    List<int>? blockOpenThree = _blockOpenThreeSmart(userStone);
+    // 4. 상대 열린 3연속 막기 (보통: 점수 평가로 최적 위치 선택)
+    List<int>? blockOpenThree = _blockOpenThreeSmartHard(userStone, computerStone);
     if (blockOpenThree != null) return blockOpenThree;
 
     // 5. 내 열린 3 만들기
     List<int>? openThreeMove = _findOpenThree(computerStone);
     if (openThreeMove != null) return openThreeMove;
 
-    // 6. 공격 가중치를 높인 위치 평가 (공격 3 : 수비 1)
+    // 6. 공격 위주 위치 평가 (수비 점수 제외)
     int bestScore = -1;
     List<int>? bestMove;
 
@@ -658,10 +658,8 @@ class _GomokuScreenState extends State<GomokuScreen> {
           // 중앙 근접 점수
           int centerDist = (i - boardSize ~/ 2).abs() + (j - boardSize ~/ 2).abs();
           score += (boardSize - centerDist) * 2;
-          // 공격 점수 (가중치 3배)
+          // 공격 점수만 (수비 점수 제외 - 공격 위주)
           score += _evaluateLineScore(i, j, computerStone) * 3;
-          // 수비 점수 (가중치 1배 - 한쪽 막힌 것도 낮은 점수)
-          score += _evaluateLineScore(i, j, userStone);
           if (score > bestScore) {
             bestScore = score;
             bestMove = [i, j];
@@ -697,8 +695,8 @@ class _GomokuScreenState extends State<GomokuScreen> {
     List<int>? openFourMove = _findOpenFour(computerStone);
     if (openFourMove != null) return openFourMove;
 
-    // 4. 상대 열린 3연속 막기 (3x3/4x3 가능성 체크)
-    List<int>? blockOpenThree = _blockOpenThreeSmart(userStone);
+    // 4. 상대 열린 3연속 막기 (어려움: 점수 평가로 최적 위치 선택)
+    List<int>? blockOpenThree = _blockOpenThreeSmartHard(userStone, computerStone);
     if (blockOpenThree != null) return blockOpenThree;
 
     // 5. 상대 3x3 또는 4x3 위협 막기
@@ -768,9 +766,15 @@ class _GomokuScreenState extends State<GomokuScreen> {
   }
 
   // 열린 3 막을 때 3x3/4x3 가능성 체크하여 최적 위치 반환
+  // 우선순위:
+  // 1. 한칸 건너뛴 3열 + 양끝 열림 (_●_●●_ → 채우면 양쪽 열린 4)
+  // 2. 연속된 열린 3 (_●●●_)
+  // 3. 일반 한칸 건너뛴 패턴
   List<int>? _blockOpenThreeSmart(Stone stone) {
     final directions = [[0, 1], [1, 0], [1, 1], [1, -1]];
-    List<List<int>> blockingPositions = [];
+    List<List<int>> criticalGappedPositions = []; // 한칸 건너뛴 + 양끝 열림 (최우선)
+    List<List<int>> consecutivePositions = []; // 연속된 열린 3
+    List<List<int>> gappedPositions = []; // 일반 한칸 건너뛴 패턴
 
     // 모든 열린 3 찾기
     for (int i = 0; i < boardSize; i++) {
@@ -778,20 +782,22 @@ class _GomokuScreenState extends State<GomokuScreen> {
         if (board[i][j] != Stone.none) continue;
 
         for (var dir in directions) {
-          int count = 0;
-          int openEnds = 0;
+          int countForward = 0;
+          int countBackward = 0;
+          bool openForward = false;
+          bool openBackward = false;
           List<List<int>> emptyEnds = [];
 
           // 정방향 체크
           int ni = i + dir[0];
           int nj = j + dir[1];
           while (ni >= 0 && ni < boardSize && nj >= 0 && nj < boardSize && board[ni][nj] == stone) {
-            count++;
+            countForward++;
             ni += dir[0];
             nj += dir[1];
           }
           if (ni >= 0 && ni < boardSize && nj >= 0 && nj < boardSize && board[ni][nj] == Stone.none) {
-            openEnds++;
+            openForward = true;
             emptyEnds.add([ni, nj]);
           }
 
@@ -799,37 +805,191 @@ class _GomokuScreenState extends State<GomokuScreen> {
           ni = i - dir[0];
           nj = j - dir[1];
           while (ni >= 0 && ni < boardSize && nj >= 0 && nj < boardSize && board[ni][nj] == stone) {
-            count++;
+            countBackward++;
             ni -= dir[0];
             nj -= dir[1];
           }
           if (ni >= 0 && ni < boardSize && nj >= 0 && nj < boardSize && board[ni][nj] == Stone.none) {
-            openEnds++;
+            openBackward = true;
             emptyEnds.add([ni, nj]);
           }
 
-          // 열린 3 발견 (현재 위치 포함해서 3개, 양쪽 열림)
-          if (count == 2 && openEnds == 2) {
-            blockingPositions.add([i, j]);
-            for (var pos in emptyEnds) {
-              blockingPositions.add(pos);
+          int totalCount = countForward + countBackward;
+
+          if (totalCount >= 2) {
+            // 한칸 건너뛴 + 양끝 열림: 빈칸 채우면 양쪽 열린 4연속 (최우선)
+            if (openForward && openBackward && countForward > 0 && countBackward > 0 && totalCount >= 3) {
+              criticalGappedPositions.add([i, j]);
+            }
+            // 연속된 열린 3: 한쪽에만 돌이 있음 (_●●●_의 끝)
+            else if (openForward && openBackward) {
+              if ((countForward >= 2 && countBackward == 0) || (countBackward >= 2 && countForward == 0)) {
+                consecutivePositions.add([i, j]);
+                for (var pos in emptyEnds) {
+                  consecutivePositions.add(pos);
+                }
+              }
+            }
+            // 한칸 건너뛴 패턴: 양쪽에 돌이 있고 양쪽 열림 (●_●●의 중간)
+            // 쉬움/보통: 양쪽 열린 것만 막음 (공격 위주)
+            // 중간 빈칸만 추가 (양끝은 제외 - 중간 막기 우선)
+            else if (openForward && openBackward && countForward > 0 && countBackward > 0) {
+              gappedPositions.add([i, j]);
             }
           }
         }
       }
     }
 
-    if (blockingPositions.isEmpty) return null;
+    // 1. 연속된 열린 3 먼저 막기 (가장 급함)
+    if (consecutivePositions.isNotEmpty) {
+      return consecutivePositions.first;
+    }
 
-    // 3x3 또는 4x3 위협을 막을 수 있는 위치 우선
-    for (var pos in blockingPositions) {
+    // 2. 한칸 건너뛴 + 양끝 열림 (막지 않으면 양쪽 열린 4)
+    if (criticalGappedPositions.isNotEmpty) {
+      return criticalGappedPositions.first;
+    }
+
+    // 3. 일반 한칸 건너뛴 패턴 처리
+    if (gappedPositions.isNotEmpty) {
+      return gappedPositions.first;
+    }
+
+    // 4. 3x3 가능 위치 (후순위 - 위에서 못 찾았을 때만)
+    for (var pos in consecutivePositions) {
+      if (_wouldCreateDoubleThreat(pos[0], pos[1], stone)) {
+        return pos;
+      }
+    }
+    for (var pos in criticalGappedPositions) {
+      if (_wouldCreateDoubleThreat(pos[0], pos[1], stone)) {
+        return pos;
+      }
+    }
+    for (var pos in gappedPositions) {
       if (_wouldCreateDoubleThreat(pos[0], pos[1], stone)) {
         return pos;
       }
     }
 
-    // 없으면 첫 번째 위치 반환
-    return blockingPositions.first;
+    return null;
+  }
+
+  // 어려움 난이도용: 한칸 건너뛴 패턴에서 점수 평가로 최적 위치 선택
+  List<int>? _blockOpenThreeSmartHard(Stone userStone, Stone computerStone) {
+    final directions = [[0, 1], [1, 0], [1, 1], [1, -1]];
+    List<List<int>> allPositions = []; // 모든 후보 위치 (점수 평가용)
+    List<List<int>> consecutivePositions = []; // 연속된 열린 3
+
+    // 모든 열린 3 찾기
+    for (int i = 0; i < boardSize; i++) {
+      for (int j = 0; j < boardSize; j++) {
+        if (board[i][j] != Stone.none) continue;
+
+        for (var dir in directions) {
+          int countForward = 0;
+          int countBackward = 0;
+          bool openForward = false;
+          bool openBackward = false;
+          List<List<int>> emptyEnds = [];
+
+          // 정방향 체크
+          int ni = i + dir[0];
+          int nj = j + dir[1];
+          while (ni >= 0 && ni < boardSize && nj >= 0 && nj < boardSize && board[ni][nj] == userStone) {
+            countForward++;
+            ni += dir[0];
+            nj += dir[1];
+          }
+          if (ni >= 0 && ni < boardSize && nj >= 0 && nj < boardSize && board[ni][nj] == Stone.none) {
+            openForward = true;
+            emptyEnds.add([ni, nj]);
+          }
+
+          // 역방향 체크
+          ni = i - dir[0];
+          nj = j - dir[1];
+          while (ni >= 0 && ni < boardSize && nj >= 0 && nj < boardSize && board[ni][nj] == userStone) {
+            countBackward++;
+            ni -= dir[0];
+            nj -= dir[1];
+          }
+          if (ni >= 0 && ni < boardSize && nj >= 0 && nj < boardSize && board[ni][nj] == Stone.none) {
+            openBackward = true;
+            emptyEnds.add([ni, nj]);
+          }
+
+          int totalCount = countForward + countBackward;
+
+          if (totalCount >= 2 && openForward && openBackward) {
+            // 한칸 건너뛴 패턴: 중간과 양끝 모두 후보로 (점수 평가)
+            if (countForward > 0 && countBackward > 0 && totalCount >= 3) {
+              allPositions.add([i, j]); // 중간
+              for (var pos in emptyEnds) {
+                allPositions.add(pos); // 양끝
+              }
+            }
+            // 연속된 열린 3: 한쪽에만 돌이 있음
+            else if ((countForward >= 2 && countBackward == 0) || (countBackward >= 2 && countForward == 0)) {
+              consecutivePositions.add([i, j]);
+              for (var pos in emptyEnds) {
+                consecutivePositions.add(pos);
+              }
+            }
+            // 일반 한칸 건너뛴 (양쪽에 돌, 총 2개)
+            else if (countForward > 0 && countBackward > 0) {
+              allPositions.add([i, j]); // 중간
+              for (var pos in emptyEnds) {
+                allPositions.add(pos); // 양끝
+              }
+            }
+          }
+        }
+      }
+    }
+
+    // 1. 연속된 열린 3 먼저 막기 (가장 급함)
+    if (consecutivePositions.isNotEmpty) {
+      return consecutivePositions.first;
+    }
+
+    // 2. 한칸 건너뛴 패턴: 점수 평가로 최적 위치 선택
+    if (allPositions.isNotEmpty) {
+      int bestScore = -1;
+      List<int>? bestPos;
+
+      for (var pos in allPositions) {
+        // 공격 점수 + 수비 점수 합산
+        int score = _evaluateLineScore(pos[0], pos[1], computerStone) * 3; // 공격
+        score += _evaluateLineScore(pos[0], pos[1], userStone) * 2; // 수비
+
+        // 중앙 근접 보너스
+        int centerDist = (pos[0] - boardSize ~/ 2).abs() + (pos[1] - boardSize ~/ 2).abs();
+        score += (boardSize - centerDist);
+
+        if (score > bestScore) {
+          bestScore = score;
+          bestPos = pos;
+        }
+      }
+
+      return bestPos;
+    }
+
+    // 3. 3x3 가능 위치 (후순위)
+    for (var pos in consecutivePositions) {
+      if (_wouldCreateDoubleThreat(pos[0], pos[1], userStone)) {
+        return pos;
+      }
+    }
+    for (var pos in allPositions) {
+      if (_wouldCreateDoubleThreat(pos[0], pos[1], userStone)) {
+        return pos;
+      }
+    }
+
+    return null;
   }
 
   // 해당 위치에 돌을 놓으면 3x3 또는 4x3이 되는지 체크
@@ -982,47 +1142,105 @@ class _GomokuScreenState extends State<GomokuScreen> {
   }
 
   // 양쪽 열린 3 찾기 (3개 연속 + 양쪽 빈 칸)
+  // 우선순위:
+  // 1. 한칸 건너뛴 3열 + 양끝 열림 (_●_●●_ → 채우면 양쪽 열린 4)
+  // 2. 연속된 열린 3 (_●●●_)
+  // 3. 일반 한칸 건너뛴 패턴
   List<int>? _findOpenThree(Stone stone) {
     final directions = [[0, 1], [1, 0], [1, 1], [1, -1]];
 
+    // 1단계: 한칸 건너뛴 3열 + 양끝 열림 (_●_●●_ 패턴)
+    // 빈칸 채우면 양쪽 열린 4연속이 되어 막을 수 없음 → 최우선 막기
     for (int i = 0; i < boardSize; i++) {
       for (int j = 0; j < boardSize; j++) {
         if (board[i][j] != Stone.none) continue;
 
         for (var dir in directions) {
-          int count = 0;
-          int openEnds = 0;
+          int countForward = 0;
+          int countBackward = 0;
+          bool openForward = false;
+          bool openBackward = false;
 
           // 정방향 체크
           int ni = i + dir[0];
           int nj = j + dir[1];
           while (ni >= 0 && ni < boardSize && nj >= 0 && nj < boardSize && board[ni][nj] == stone) {
-            count++;
+            countForward++;
             ni += dir[0];
             nj += dir[1];
           }
           if (ni >= 0 && ni < boardSize && nj >= 0 && nj < boardSize && board[ni][nj] == Stone.none) {
-            openEnds++;
+            openForward = true;
           }
 
           // 역방향 체크
           ni = i - dir[0];
           nj = j - dir[1];
           while (ni >= 0 && ni < boardSize && nj >= 0 && nj < boardSize && board[ni][nj] == stone) {
-            count++;
+            countBackward++;
             ni -= dir[0];
             nj -= dir[1];
           }
           if (ni >= 0 && ni < boardSize && nj >= 0 && nj < boardSize && board[ni][nj] == Stone.none) {
-            openEnds++;
+            openBackward = true;
           }
 
-          if (count == 2 && openEnds == 2) {
+          int totalCount = countForward + countBackward;
+
+          // 한칸 건너뛴 3열 + 양끝 열림: 빈칸 채우면 양쪽 열린 4연속
+          // 예: _●_●●_ (countForward=2, countBackward=1, 양끝 열림)
+          if (openForward && openBackward && countForward > 0 && countBackward > 0 && totalCount >= 3) {
             return [i, j];
           }
         }
       }
     }
+
+    // 2단계: 연속된 열린 3의 끝 찾기 (_●●●_ 패턴의 빈칸)
+    for (int i = 0; i < boardSize; i++) {
+      for (int j = 0; j < boardSize; j++) {
+        if (board[i][j] != Stone.none) continue;
+
+        for (var dir in directions) {
+          int countForward = 0;
+          int countBackward = 0;
+          bool openForward = false;
+          bool openBackward = false;
+
+          // 정방향 체크
+          int ni = i + dir[0];
+          int nj = j + dir[1];
+          while (ni >= 0 && ni < boardSize && nj >= 0 && nj < boardSize && board[ni][nj] == stone) {
+            countForward++;
+            ni += dir[0];
+            nj += dir[1];
+          }
+          if (ni >= 0 && ni < boardSize && nj >= 0 && nj < boardSize && board[ni][nj] == Stone.none) {
+            openForward = true;
+          }
+
+          // 역방향 체크
+          ni = i - dir[0];
+          nj = j - dir[1];
+          while (ni >= 0 && ni < boardSize && nj >= 0 && nj < boardSize && board[ni][nj] == stone) {
+            countBackward++;
+            ni -= dir[0];
+            nj -= dir[1];
+          }
+          if (ni >= 0 && ni < boardSize && nj >= 0 && nj < boardSize && board[ni][nj] == Stone.none) {
+            openBackward = true;
+          }
+
+          // 연속된 열린 3 이상: 한쪽에만 2개 이상 연속, 양쪽 열림
+          if (openForward && openBackward) {
+            if ((countForward >= 2 && countBackward == 0) || (countBackward >= 2 && countForward == 0)) {
+              return [i, j];
+            }
+          }
+        }
+      }
+    }
+
     return null;
   }
 
