@@ -16,13 +16,24 @@ flutter pub get
 flutter run
 
 # 빌드
-flutter build apk          # Android
-flutter build ios          # iOS
-flutter build windows      # Windows
+flutter build apk              # Android APK
+flutter build appbundle        # Android AAB (스토어 배포용)
+flutter build ios              # iOS
+flutter build windows          # Windows
 
 # 분석
 flutter analyze
 ```
+
+## 다국어 지원
+
+`easy_localization` 패키지를 사용하여 4개 언어 지원:
+- `assets/translations/ko.json` - 한국어 (기본)
+- `assets/translations/en.json` - 영어
+- `assets/translations/ja.json` - 일본어
+- `assets/translations/zh.json` - 중국어
+
+사용법: `'key'.tr()` 또는 `context.tr('key')`
 
 ## 아키텍처
 
@@ -221,3 +232,18 @@ void _showAdDialog() {
 스도쿠는 `sudoku/services/game_storage.dart`에서 별도 저장 관리
 - 게임 종류별 독립 저장 (일반, 사무라이, 킬러)
 - main.dart에서 `sudoku.` prefix로 import
+
+## 오목 AI 패턴 우선순위
+
+`lib/games/gomoku/gomoku_screen.dart`에서 AI 패턴 감지 우선순위:
+
+1. **순수 연속 3** (`_●●●_`) - 양쪽 열림, 최우선 차단
+2. **한칸 건너뛴+연속 3** (`●_●●●`) - 한쪽에 3개 이상 연속
+3. **한칸 건너뛴 + 양끝 열림** - 빈칸 채우면 양쪽 열린 4
+4. **양끝 막힌 연속 3** (`○_●●●_○`) - 양쪽 빈칸 너머에 상대돌, 낮은 우선순위
+5. **일반 한칸 건너뛴 패턴** (`●_●●`)
+6. **3x3 가능 위치** - 후순위
+
+### 난이도별 AI 함수
+- 쉬움: `_findOpenThree()` - 기본 패턴 감지
+- 보통/어려움: `_blockOpenThreeSmartHard()` - 점수 평가로 최적 위치 선택
