@@ -111,8 +111,15 @@ class MiniSudokuBoard extends StatelessWidget {
             top: BorderSide(color: Colors.grey.shade300, width: 0.5),
           ),
         ),
-        child: value != 0
-            ? Center(
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            final cellSize = constraints.maxWidth < constraints.maxHeight
+                ? constraints.maxWidth
+                : constraints.maxHeight;
+
+            if (value != 0) {
+              final valueFontSize = (cellSize * 0.55).clamp(10.0, 32.0);
+              return Center(
                 child: FittedBox(
                   fit: BoxFit.scaleDown,
                   child: Padding(
@@ -120,29 +127,30 @@ class MiniSudokuBoard extends StatelessWidget {
                     child: Text(
                       value.toString(),
                       style: TextStyle(
-                        fontSize: 16,
+                        fontSize: valueFontSize,
                         fontWeight: fixed ? FontWeight.bold : FontWeight.normal,
                         color: textColor,
                       ),
                     ),
                   ),
                 ),
-              )
-            : notes.isNotEmpty
-                ? _buildNotesGrid(notes)
-                : const SizedBox.expand(),
+              );
+            } else if (notes.isNotEmpty) {
+              return _buildNotesGrid(notes, cellSize);
+            } else {
+              return const SizedBox.expand();
+            }
+          },
+        ),
       ),
     );
   }
 
-  Widget _buildNotesGrid(Set<int> notes) {
+  Widget _buildNotesGrid(Set<int> notes, double cellSize) {
     // 미니 보드에서는 메모를 간단하게 표시
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        double cellSize = constraints.maxWidth / 3;
-        double fontSize = (cellSize * 0.6).clamp(4.0, 8.0);
+    final fontSize = (cellSize / 3 * 0.6).clamp(4.0, 14.0);
 
-        return Column(
+    return Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: List.generate(3, (row) {
             return Expanded(
@@ -168,8 +176,6 @@ class MiniSudokuBoard extends StatelessWidget {
             );
           }),
         );
-      },
-    );
   }
 
   /// 메모 하이라이트 여부 판단 (선택된 셀의 숫자가 메모에 포함된 경우)

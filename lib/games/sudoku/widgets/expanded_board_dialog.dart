@@ -408,20 +408,31 @@ class _ExpandedBoardDialogState extends State<ExpandedBoardDialog> {
       onTap: () => _onCellTap(row, col, fixed),
       child: Container(
         color: backgroundColor,
-        child: value != 0
-            ? Center(
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            final cellSize = constraints.maxWidth < constraints.maxHeight
+                ? constraints.maxWidth
+                : constraints.maxHeight;
+
+            if (value != 0) {
+              final valueFontSize = (cellSize * 0.55).clamp(14.0, 40.0);
+              return Center(
                 child: Text(
                   value.toString(),
                   style: TextStyle(
-                    fontSize: 22,
+                    fontSize: valueFontSize,
                     fontWeight: fixed ? FontWeight.bold : FontWeight.normal,
                     color: textColor,
                   ),
                 ),
-              )
-            : cellNotes.isNotEmpty
-                ? _buildNotesGrid(cellNotes)
-                : const SizedBox(),
+              );
+            } else if (cellNotes.isNotEmpty) {
+              return _buildNotesGrid(cellNotes, cellSize);
+            } else {
+              return const SizedBox();
+            }
+          },
+        ),
       ),
     );
   }
@@ -460,23 +471,31 @@ class _ExpandedBoardDialogState extends State<ExpandedBoardDialog> {
     });
   }
 
-  Widget _buildNotesGrid(Set<int> cellNotes) {
+  Widget _buildNotesGrid(Set<int> cellNotes, double cellSize) {
+    final fontSize = (cellSize / 3 * 0.55).clamp(6.0, 18.0);
+
     return Padding(
       padding: const EdgeInsets.all(1),
-      child: GridView.count(
-        crossAxisCount: 3,
-        physics: const NeverScrollableScrollPhysics(),
-        children: List.generate(9, (index) {
-          int num = index + 1;
-          bool hasNote = cellNotes.contains(num);
-          return Center(
-            child: Text(
-              hasNote ? num.toString() : '',
-              style: TextStyle(
-                fontSize: 9,
-                color: Colors.blue.shade600,
-                fontWeight: FontWeight.w500,
-              ),
+      child: Column(
+        children: List.generate(3, (rowIndex) {
+          return Expanded(
+            child: Row(
+              children: List.generate(3, (colIndex) {
+                int num = rowIndex * 3 + colIndex + 1;
+                bool hasNote = cellNotes.contains(num);
+                return Expanded(
+                  child: Center(
+                    child: Text(
+                      hasNote ? num.toString() : '',
+                      style: TextStyle(
+                        fontSize: fontSize,
+                        color: Colors.blue.shade600,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ),
+                );
+              }),
             ),
           );
         }),

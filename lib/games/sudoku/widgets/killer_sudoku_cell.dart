@@ -39,40 +39,50 @@ class KillerSudokuCell extends StatelessWidget {
       onTap: onTap,
       child: Container(
         color: backgroundColor,
-        child: Stack(
-          children: [
-            // Cage sum in top-left corner
-            if (cageSum != null)
-              Positioned(
-                left: 1,
-                top: -1,
-                child: Text(
-                  cageSum.toString(),
-                  style: TextStyle(
-                    fontSize: 10,
-                    fontWeight: FontWeight.bold,
-                    color: hasCageError ? Colors.red : const Color(0xFFD84315),
-                  ),
-                ),
-              ),
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            final cellSize = constraints.maxWidth < constraints.maxHeight
+                ? constraints.maxWidth
+                : constraints.maxHeight;
+            final valueFontSize = (cellSize * 0.55).clamp(14.0, 40.0);
+            final sumFontSize = (cellSize * 0.22).clamp(8.0, 18.0);
 
-            // Cell value or notes
-            if (value != 0)
-              Center(
-                child: Text(
-                  value.toString(),
-                  style: TextStyle(
-                    fontSize: 22,
-                    fontWeight: isFixed ? FontWeight.bold : FontWeight.normal,
-                    color: textColor,
+            return Stack(
+              children: [
+                // Cage sum in top-left corner
+                if (cageSum != null)
+                  Positioned(
+                    left: 1,
+                    top: -1,
+                    child: Text(
+                      cageSum.toString(),
+                      style: TextStyle(
+                        fontSize: sumFontSize,
+                        fontWeight: FontWeight.bold,
+                        color: hasCageError ? Colors.red : const Color(0xFFD84315),
+                      ),
+                    ),
                   ),
-                ),
-              )
-            else if (notes.isNotEmpty)
-              _buildNotesGrid()
-            else
-              const SizedBox.expand(),
-          ],
+
+                // Cell value or notes
+                if (value != 0)
+                  Center(
+                    child: Text(
+                      value.toString(),
+                      style: TextStyle(
+                        fontSize: valueFontSize,
+                        fontWeight: isFixed ? FontWeight.bold : FontWeight.normal,
+                        color: textColor,
+                      ),
+                    ),
+                  )
+                else if (notes.isNotEmpty)
+                  _buildNotesGrid(cellSize)
+                else
+                  const SizedBox.expand(),
+              ],
+            );
+          },
         ),
       ),
     );
@@ -94,19 +104,13 @@ class KillerSudokuCell extends StatelessWidget {
     return Colors.blue.shade700;
   }
 
-  Widget _buildNotesGrid() {
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final cellWidth = constraints.maxWidth;
-        final cellHeight = constraints.maxHeight;
-        final minDimension = cellWidth < cellHeight ? cellWidth : cellHeight;
-        final fontSize = (minDimension / 4.2).clamp(6.0, 11.0);
-        // Leave space for cage sum area
-        final topPadding = minDimension * 0.22;
+  Widget _buildNotesGrid(double cellSize) {
+    final fontSize = (cellSize / 4.2).clamp(6.0, 16.0);
+    final topPadding = cellSize * 0.22;
 
-        return Padding(
-          padding:
-              EdgeInsets.only(top: topPadding, left: 1, right: 1, bottom: 1),
+    return Padding(
+      padding:
+          EdgeInsets.only(top: topPadding, left: 1, right: 1, bottom: 1),
           child: Column(
             children: List.generate(3, (rowIndex) {
               return Expanded(
@@ -134,7 +138,5 @@ class KillerSudokuCell extends StatelessWidget {
             }),
           ),
         );
-      },
-    );
   }
 }

@@ -637,20 +637,31 @@ class _ExpandedBoardScreenState extends State<ExpandedBoardScreen> {
       child: SizedBox.expand(
         child: Container(
           color: backgroundColor,
-          child: value != 0
-              ? Center(
+          child: LayoutBuilder(
+            builder: (context, constraints) {
+              final cellSize = constraints.maxWidth < constraints.maxHeight
+                  ? constraints.maxWidth
+                  : constraints.maxHeight;
+
+              if (value != 0) {
+                final valueFontSize = (cellSize * 0.55).clamp(14.0, 40.0);
+                return Center(
                   child: Text(
                     value.toString(),
                     style: TextStyle(
-                      fontSize: 22,
+                      fontSize: valueFontSize,
                       fontWeight: fixed ? FontWeight.bold : FontWeight.normal,
                       color: textColor,
                     ),
                   ),
-                )
-              : cellNotes.isNotEmpty
-                  ? _buildNotesGrid(cellNotes)
-                  : null,
+                );
+              } else if (cellNotes.isNotEmpty) {
+                return _buildNotesGrid(cellNotes, cellSize);
+              } else {
+                return const SizedBox.shrink();
+              }
+            },
+          ),
         ),
       ),
     );
@@ -788,27 +799,21 @@ class _ExpandedBoardScreenState extends State<ExpandedBoardScreen> {
     return false;
   }
 
-  Widget _buildNotesGrid(Set<int> cellNotes) {
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        // 너비와 높이 중 작은 값을 사용하여 오버플로우 방지
-        final size = constraints.maxWidth < constraints.maxHeight
-            ? constraints.maxWidth
-            : constraints.maxHeight;
-        final cellSize = size / 3;
-        final fontSize = (cellSize * 0.55).clamp(6.0, 12.0);
+  Widget _buildNotesGrid(Set<int> cellNotes, double cellSize) {
+    final noteCellSize = cellSize / 3;
+    final fontSize = (noteCellSize * 0.55).clamp(6.0, 18.0);
 
-        return Column(
+    return Column(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: List.generate(3, (row) {
+        return Row(
           mainAxisAlignment: MainAxisAlignment.center,
-          children: List.generate(3, (row) {
-            return Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: List.generate(3, (col) {
-                int num = row * 3 + col + 1;
-                bool hasNote = cellNotes.contains(num);
-                return SizedBox(
-                  width: cellSize,
-                  height: cellSize,
+          children: List.generate(3, (col) {
+            int num = row * 3 + col + 1;
+            bool hasNote = cellNotes.contains(num);
+            return SizedBox(
+              width: noteCellSize,
+              height: noteCellSize,
                   child: Center(
                     child: Text(
                       hasNote ? num.toString() : '',
@@ -824,8 +829,6 @@ class _ExpandedBoardScreenState extends State<ExpandedBoardScreen> {
             );
           }),
         );
-      },
-    );
   }
 
   bool _isSameBox(int row, int col) {
