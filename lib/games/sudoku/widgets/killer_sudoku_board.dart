@@ -35,7 +35,6 @@ class KillerSudokuBoard extends StatelessWidget {
             child: CustomPaint(
               foregroundPainter: CageBorderPainter(
                 cages: gameState.cages,
-                cellSize: cellSize,
               ),
               child: Container(
                 color: Colors.grey.shade800,
