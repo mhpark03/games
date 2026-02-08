@@ -22,58 +22,52 @@ class SudokuBoard extends StatelessWidget {
       aspectRatio: 1,
       child: Container(
         decoration: BoxDecoration(
-          border: Border.all(color: Colors.black, width: 2),
+          border: Border.all(color: Colors.black, width: 3),
         ),
-        child: Column(
-          children: List.generate(9, (row) {
-            return Expanded(
-              child: Row(
-                children: List.generate(9, (col) {
-                  // 3x3 박스 테두리 계산
-                  bool rightBorder = (col + 1) % 3 == 0 && col != 8;
-                  bool bottomBorder = (row + 1) % 3 == 0 && row != 8;
+        child: Container(
+          color: Colors.grey.shade800,
+          child: Column(
+            children: List.generate(9, (row) {
+              return Expanded(
+                child: Row(
+                  children: List.generate(9, (col) {
+                    double rightPadding = (col == 2 || col == 5) ? 2 : 1;
+                    double bottomPadding = (row == 2 || row == 5) ? 2 : 1;
+                    if (col == 8) rightPadding = 0;
+                    if (row == 8) bottomPadding = 0;
 
-                  return Expanded(
-                    child: Container(
-                      decoration: BoxDecoration(
-                        border: Border(
-                          right: BorderSide(
-                            color: rightBorder ? Colors.black : Colors.grey.shade300,
-                            width: rightBorder ? 1.5 : 0.5,
-                          ),
-                          bottom: BorderSide(
-                            color: bottomBorder ? Colors.black : Colors.grey.shade300,
-                            width: bottomBorder ? 1.5 : 0.5,
-                          ),
-                          left: BorderSide(color: Colors.grey.shade300, width: 0.5),
-                          top: BorderSide(color: Colors.grey.shade300, width: 0.5),
+                    return Expanded(
+                      child: Container(
+                        margin: EdgeInsets.only(
+                          right: rightPadding,
+                          bottom: bottomPadding,
+                        ),
+                        child: SudokuCell(
+                          value: gameState.currentBoard[row][col],
+                          isFixed: gameState.isFixed[row][col],
+                          isSelected: gameState.isSelected(row, col),
+                          isHighlighted: !isQuickInputMode &&
+                              (gameState.isSameRowOrCol(row, col) ||
+                                  gameState.isSameBox(row, col)),
+                          isSameValue: !isQuickInputMode &&
+                              gameState.isSameValue(row, col),
+                          hasError: gameState.hasError(row, col),
+                          notes: gameState.notes[row][col],
+                          onTap: () => onCellTap(row, col),
+                          isQuickInputHighlight: isQuickInputMode &&
+                              quickInputNumber != null &&
+                              gameState.currentBoard[row][col] != 0 &&
+                              gameState.currentBoard[row][col] ==
+                                  quickInputNumber,
+                          isQuickInputNoteHighlight: _shouldHighlightNote(row, col),
                         ),
                       ),
-                      child: SudokuCell(
-                        value: gameState.currentBoard[row][col],
-                        isFixed: gameState.isFixed[row][col],
-                        isSelected: gameState.isSelected(row, col),
-                        isHighlighted: !isQuickInputMode &&
-                            (gameState.isSameRowOrCol(row, col) ||
-                                gameState.isSameBox(row, col)),
-                        isSameValue: !isQuickInputMode &&
-                            gameState.isSameValue(row, col),
-                        hasError: gameState.hasError(row, col),
-                        notes: gameState.notes[row][col],
-                        onTap: () => onCellTap(row, col),
-                        isQuickInputHighlight: isQuickInputMode &&
-                            quickInputNumber != null &&
-                            gameState.currentBoard[row][col] != 0 &&
-                            gameState.currentBoard[row][col] ==
-                                quickInputNumber,
-                        isQuickInputNoteHighlight: _shouldHighlightNote(row, col),
-                      ),
-                    ),
-                  );
-                }),
-              ),
-            );
-          }),
+                    );
+                  }),
+                ),
+              );
+            }),
+          ),
         ),
       ),
     );

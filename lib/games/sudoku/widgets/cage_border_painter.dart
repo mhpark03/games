@@ -14,8 +14,8 @@ class CageBorderPainter extends CustomPainter {
     final inset = cSize * 0.06; // 셀 안쪽 여백
 
     final paint = Paint()
-      ..color = const Color(0xFF5B9BD5) // 진한 파란색
-      ..strokeWidth = 1.2
+      ..color = const Color(0xFF666666) // 진한 회색
+      ..strokeWidth = 1.0
       ..style = PaintingStyle.stroke;
 
     // Build lookup map for cage IDs
@@ -165,8 +165,8 @@ class CageBorderPainter extends CustomPainter {
   }
 
   void _drawDashedLine(Canvas canvas, Offset start, Offset end, Paint paint) {
-    const dashLength = 5.0;
-    const gapLength = 3.0;
+    const dashLength = 3.5;
+    const gapLength = 2.5;
 
     final dx = end.dx - start.dx;
     final dy = end.dy - start.dy;

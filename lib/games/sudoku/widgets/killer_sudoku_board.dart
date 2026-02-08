@@ -23,7 +23,7 @@ class KillerSudokuBoard extends StatelessWidget {
       aspectRatio: 1,
       child: Container(
         decoration: BoxDecoration(
-          border: Border.all(color: Colors.black, width: 2),
+          border: Border.all(color: Colors.black, width: 3),
         ),
         child: LayoutBuilder(
           builder: (context, constraints) {
@@ -33,18 +33,32 @@ class KillerSudokuBoard extends StatelessWidget {
                 cages: gameState.cages,
                 cellSize: cellSize,
               ),
-              child: Column(
-                children: List.generate(9, (row) {
-                  return Expanded(
-                    child: Row(
-                      children: List.generate(9, (col) {
-                        return Expanded(
-                          child: _buildCell(row, col),
-                        );
-                      }),
-                    ),
-                  );
-                }),
+              child: Container(
+                color: Colors.grey.shade800,
+                child: Column(
+                  children: List.generate(9, (row) {
+                    return Expanded(
+                      child: Row(
+                        children: List.generate(9, (col) {
+                          double rightPadding = (col == 2 || col == 5) ? 2 : 1;
+                          double bottomPadding = (row == 2 || row == 5) ? 2 : 1;
+                          if (col == 8) rightPadding = 0;
+                          if (row == 8) bottomPadding = 0;
+
+                          return Expanded(
+                            child: Container(
+                              margin: EdgeInsets.only(
+                                right: rightPadding,
+                                bottom: bottomPadding,
+                              ),
+                              child: _buildCell(row, col),
+                            ),
+                          );
+                        }),
+                      ),
+                    );
+                  }),
+                ),
               ),
             );
           },
@@ -59,39 +73,7 @@ class KillerSudokuBoard extends StatelessWidget {
         cage.sumDisplayCell[0] == row &&
         cage.sumDisplayCell[1] == col;
 
-    // 3x3 경계선: 두껍게 (1.5px, 검정)
-    // 셀 경계선: 얇게 (0.5px, 회색)
-    const double boxBorderWidth = 1.5;
-    const double cellBorderWidth = 0.5;
-    final cellBorderColor = Colors.grey.shade400;
-
-    final bool isLeftBoxBorder = col % 3 == 0 && col != 0;
-    final bool isTopBoxBorder = row % 3 == 0 && row != 0;
-    final bool isRightBoxBorder = (col + 1) % 3 == 0 && col != 8;
-    final bool isBottomBoxBorder = (row + 1) % 3 == 0 && row != 8;
-
-    return Container(
-      decoration: BoxDecoration(
-        border: Border(
-          left: BorderSide(
-            color: isLeftBoxBorder ? Colors.black : (col != 0 ? cellBorderColor : Colors.transparent),
-            width: isLeftBoxBorder ? boxBorderWidth : cellBorderWidth,
-          ),
-          top: BorderSide(
-            color: isTopBoxBorder ? Colors.black : (row != 0 ? cellBorderColor : Colors.transparent),
-            width: isTopBoxBorder ? boxBorderWidth : cellBorderWidth,
-          ),
-          right: BorderSide(
-            color: isRightBoxBorder ? Colors.black : cellBorderColor,
-            width: isRightBoxBorder ? boxBorderWidth : cellBorderWidth,
-          ),
-          bottom: BorderSide(
-            color: isBottomBoxBorder ? Colors.black : cellBorderColor,
-            width: isBottomBoxBorder ? boxBorderWidth : cellBorderWidth,
-          ),
-        ),
-      ),
-      child: KillerSudokuCell(
+    return KillerSudokuCell(
         value: gameState.currentBoard[row][col],
         isFixed: gameState.isFixed[row][col],
         isSelected: gameState.isSelected(row, col),
@@ -110,7 +92,6 @@ class KillerSudokuBoard extends StatelessWidget {
             gameState.currentBoard[row][col] != 0 &&
             gameState.currentBoard[row][col] == quickInputNumber,
         isQuickInputNoteHighlight: _shouldHighlightNote(row, col),
-      ),
     );
   }
 

@@ -811,17 +811,21 @@ class _KillerGameScreenState extends State<KillerGameScreen>
                       themeColor: Colors.teal,
                     ),
                     const SizedBox(height: 12),
-                    _isPaused
-                        ? AspectRatio(
-                            aspectRatio: 1,
-                            child: _buildPausedOverlay(),
-                          )
-                        : KillerSudokuBoard(
-                            gameState: _gameState,
-                            onCellTap: _onCellTap,
-                            isQuickInputMode: _isQuickInputMode,
-                            quickInputNumber: _quickInputNumber,
-                          ),
+                    Expanded(
+                      child: Center(
+                        child: _isPaused
+                            ? AspectRatio(
+                                aspectRatio: 1,
+                                child: _buildPausedOverlay(),
+                              )
+                            : KillerSudokuBoard(
+                                gameState: _gameState,
+                                onCellTap: _onCellTap,
+                                isQuickInputMode: _isQuickInputMode,
+                                quickInputNumber: _quickInputNumber,
+                              ),
+                      ),
+                    ),
                     const SizedBox(height: 20),
                     _buildControls(isLandscape: false),
                   ],

@@ -60,8 +60,9 @@ class SudokuGenerator {
       int backup = puzzle[row][col];
       puzzle[row][col] = 0;
 
-      // 논리적으로 풀 수 있는지 확인
-      if (LogicalSolver.canSolveLogically(puzzle)) {
+      // 유일해 + 논리적으로 풀 수 있는지 확인
+      if (_hasUniqueSolution(puzzle) &&
+          LogicalSolver.canSolveLogically(puzzle)) {
         removed++;
       } else {
         // 풀 수 없으면 복원
@@ -76,6 +77,49 @@ class SudokuGenerator {
     }
 
     return null;
+  }
+
+  /// 유일해 검증: 백트래킹으로 해가 2개 이상인지 확인
+  bool _hasUniqueSolution(List<List<int>> puzzle) {
+    List<List<int>> board = puzzle.map((r) => List<int>.from(r)).toList();
+    return _countSolutions(board, 2) == 1;
+  }
+
+  int _countSolutions(List<List<int>> board, int limit) {
+    for (int r = 0; r < 9; r++) {
+      for (int c = 0; c < 9; c++) {
+        if (board[r][c] == 0) {
+          int count = 0;
+          for (int num = 1; num <= 9; num++) {
+            if (_isValidForSolver(board, r, c, num)) {
+              board[r][c] = num;
+              count += _countSolutions(board, limit - count);
+              board[r][c] = 0;
+              if (count >= limit) return count;
+            }
+          }
+          return count;
+        }
+      }
+    }
+    return 1;
+  }
+
+  bool _isValidForSolver(List<List<int>> board, int row, int col, int num) {
+    for (int i = 0; i < 9; i++) {
+      if (board[row][i] == num) return false;
+    }
+    for (int i = 0; i < 9; i++) {
+      if (board[i][col] == num) return false;
+    }
+    int boxRow = (row ~/ 3) * 3;
+    int boxCol = (col ~/ 3) * 3;
+    for (int i = 0; i < 3; i++) {
+      for (int j = 0; j < 3; j++) {
+        if (board[boxRow + i][boxCol + j] == num) return false;
+      }
+    }
+    return true;
   }
 
   /// 간단한 퍼즐 생성 (폴백용) - 박스별 균등 분포

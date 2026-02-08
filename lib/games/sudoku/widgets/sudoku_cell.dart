@@ -63,7 +63,7 @@ class SudokuCell extends StatelessWidget {
                 child: Text(
                   value.toString(),
                   style: TextStyle(
-                    fontSize: 24,
+                    fontSize: 22,
                     fontWeight: isFixed ? FontWeight.bold : FontWeight.normal,
                     color: textColor,
                   ),
@@ -79,9 +79,12 @@ class SudokuCell extends StatelessWidget {
   Widget _buildNotesGrid() {
     return LayoutBuilder(
       builder: (context, constraints) {
-        // 셀 크기에 비례해서 폰트 크기 결정
-        final cellSize = constraints.maxWidth;
-        final fontSize = (cellSize / 4.5).clamp(6.0, 12.0);
+        // 셀 크기에 비례해서 폰트 크기 결정 (확장 화면과 동일)
+        final size = constraints.maxWidth < constraints.maxHeight
+            ? constraints.maxWidth
+            : constraints.maxHeight;
+        final cellSize = size / 3;
+        final fontSize = (cellSize * 0.55).clamp(6.0, 12.0);
 
         return Padding(
           padding: const EdgeInsets.all(1),

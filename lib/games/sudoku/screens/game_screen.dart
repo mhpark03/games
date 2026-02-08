@@ -849,17 +849,19 @@ class _GameScreenState extends State<GameScreen> with WidgetsBindingObserver {
                     ),
                     SizedBox(height: statusBoardGap),
                     Expanded(
-                      child: _isPaused
-                          ? AspectRatio(
-                              aspectRatio: 1,
-                              child: _buildPausedOverlay(),
-                            )
-                          : SudokuBoard(
-                              gameState: _gameState,
-                              onCellTap: _onCellTap,
-                              isQuickInputMode: _isQuickInputMode,
-                              quickInputNumber: _quickInputNumber,
-                            ),
+                      child: Center(
+                        child: _isPaused
+                            ? AspectRatio(
+                                aspectRatio: 1,
+                                child: _buildPausedOverlay(),
+                              )
+                            : SudokuBoard(
+                                gameState: _gameState,
+                                onCellTap: _onCellTap,
+                                isQuickInputMode: _isQuickInputMode,
+                                quickInputNumber: _quickInputNumber,
+                              ),
+                      ),
                     ),
                     SizedBox(height: boardControlGap),
                     _buildControls(isLandscape: false, isSmallScreen: isSmallScreen),

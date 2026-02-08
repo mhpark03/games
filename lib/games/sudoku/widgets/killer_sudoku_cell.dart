@@ -38,30 +38,20 @@ class KillerSudokuCell extends StatelessWidget {
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        decoration: BoxDecoration(
-          color: backgroundColor,
-          border: Border.all(color: Colors.grey.shade300, width: 0.5),
-        ),
+        color: backgroundColor,
         child: Stack(
           children: [
             // Cage sum in top-left corner
             if (cageSum != null)
               Positioned(
                 left: 1,
-                top: 1,
-                child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 2, vertical: 0),
-                  decoration: BoxDecoration(
-                    color: Colors.amber.shade100,
-                    borderRadius: BorderRadius.circular(2),
-                  ),
-                  child: Text(
-                    cageSum.toString(),
-                    style: TextStyle(
-                      fontSize: 9,
-                      fontWeight: FontWeight.bold,
-                      color: hasCageError ? Colors.red : Colors.brown.shade700,
-                    ),
+                top: -1,
+                child: Text(
+                  cageSum.toString(),
+                  style: TextStyle(
+                    fontSize: 10,
+                    fontWeight: FontWeight.bold,
+                    color: hasCageError ? Colors.red : const Color(0xFFD84315),
                   ),
                 ),
               ),
@@ -94,6 +84,7 @@ class KillerSudokuCell extends StatelessWidget {
     if (isQuickInputNoteHighlight) return Colors.green.shade100;
     if (isSameValue && value != 0) return Colors.blue.shade100;
     if (isHighlighted) return Colors.blue.shade50;
+    if (value == 0 && notes.isNotEmpty) return const Color(0xFFF8F6F0);
     return Colors.white;
   }
 
@@ -109,9 +100,9 @@ class KillerSudokuCell extends StatelessWidget {
         final cellWidth = constraints.maxWidth;
         final cellHeight = constraints.maxHeight;
         final minDimension = cellWidth < cellHeight ? cellWidth : cellHeight;
-        final fontSize = (minDimension / 3.8).clamp(7.0, 12.0);
-        // Always leave space for cage sum area (uniform layout)
-        final topPadding = minDimension * 0.30;
+        final fontSize = (minDimension / 4.2).clamp(6.0, 11.0);
+        // Leave space for cage sum area
+        final topPadding = minDimension * 0.22;
 
         return Padding(
           padding:
@@ -130,7 +121,7 @@ class KillerSudokuCell extends StatelessWidget {
                           hasNote ? num.toString() : '',
                           style: TextStyle(
                             fontSize: fontSize,
-                            color: Colors.blueGrey.shade600,
+                            color: Colors.grey.shade600,
                             fontWeight: FontWeight.w600,
                             height: 1.0,
                           ),
