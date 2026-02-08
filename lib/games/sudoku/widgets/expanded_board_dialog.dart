@@ -294,35 +294,40 @@ class _ExpandedBoardDialogState extends State<ExpandedBoardDialog> {
     List<List<bool>> isFixed,
     List<List<Set<int>>> notes,
   ) {
-    return Container(
-      color: Colors.black,
-      child: Column(
-        children: List.generate(9, (row) {
-          return Expanded(
-            child: Row(
-              children: List.generate(9, (col) {
-                // 셀 오른쪽 간격 (3, 6번째 열 뒤에 두꺼운 선)
-                double rightPadding = (col == 2 || col == 5) ? 2 : 1;
-                // 셀 아래쪽 간격 (3, 6번째 행 뒤에 두꺼운 선)
-                double bottomPadding = (row == 2 || row == 5) ? 2 : 1;
-                // 마지막 열/행은 간격 없음
-                if (col == 8) rightPadding = 0;
-                if (row == 8) bottomPadding = 0;
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final cellSize = constraints.maxWidth / 9;
+        final boxGap = (cellSize * 0.03).clamp(1.5, 3.0);
+        final cellGap = (cellSize * 0.015).clamp(0.5, 1.5);
 
-                return Expanded(
-                  child: Container(
-                    margin: EdgeInsets.only(
-                      right: rightPadding,
-                      bottom: bottomPadding,
-                    ),
-                    child: _buildCell(board, isFixed, notes, row, col),
-                  ),
-                );
-              }),
-            ),
-          );
-        }),
-      ),
+        return Container(
+          color: Colors.black,
+          child: Column(
+            children: List.generate(9, (row) {
+              return Expanded(
+                child: Row(
+                  children: List.generate(9, (col) {
+                    double rightPadding = (col == 2 || col == 5) ? boxGap : cellGap;
+                    double bottomPadding = (row == 2 || row == 5) ? boxGap : cellGap;
+                    if (col == 8) rightPadding = 0;
+                    if (row == 8) bottomPadding = 0;
+
+                    return Expanded(
+                      child: Container(
+                        margin: EdgeInsets.only(
+                          right: rightPadding,
+                          bottom: bottomPadding,
+                        ),
+                        child: _buildCell(board, isFixed, notes, row, col),
+                      ),
+                    );
+                  }),
+                ),
+              );
+            }),
+          ),
+        );
+      },
     );
   }
 

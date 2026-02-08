@@ -21,14 +21,18 @@ class KillerSudokuBoard extends StatelessWidget {
   Widget build(BuildContext context) {
     return AspectRatio(
       aspectRatio: 1,
-      child: Container(
-        decoration: BoxDecoration(
-          border: Border.all(color: Colors.black, width: 3),
-        ),
-        child: LayoutBuilder(
-          builder: (context, constraints) {
-            final cellSize = constraints.maxWidth / 9;
-            return CustomPaint(
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          final cellSize = constraints.maxWidth / 9;
+          final borderWidth = (cellSize * 0.04).clamp(2.0, 4.0);
+          final boxGap = (cellSize * 0.03).clamp(1.5, 3.0);
+          final cellGap = (cellSize * 0.015).clamp(0.5, 1.5);
+
+          return Container(
+            decoration: BoxDecoration(
+              border: Border.all(color: Colors.black, width: borderWidth),
+            ),
+            child: CustomPaint(
               foregroundPainter: CageBorderPainter(
                 cages: gameState.cages,
                 cellSize: cellSize,
@@ -40,8 +44,8 @@ class KillerSudokuBoard extends StatelessWidget {
                     return Expanded(
                       child: Row(
                         children: List.generate(9, (col) {
-                          double rightPadding = (col == 2 || col == 5) ? 2 : 1;
-                          double bottomPadding = (row == 2 || row == 5) ? 2 : 1;
+                          double rightPadding = (col == 2 || col == 5) ? boxGap : cellGap;
+                          double bottomPadding = (row == 2 || row == 5) ? boxGap : cellGap;
                           if (col == 8) rightPadding = 0;
                           if (row == 8) bottomPadding = 0;
 
@@ -60,9 +64,9 @@ class KillerSudokuBoard extends StatelessWidget {
                   }),
                 ),
               ),
-            );
-          },
-        ),
+            ),
+          );
+        },
       ),
     );
   }
