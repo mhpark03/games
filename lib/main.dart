@@ -193,12 +193,16 @@ class _GameCenterAppState extends State<GameCenterApp> {
         final bannerHeight = bannerLoaded ? _adService.bannerAd!.size.height.toDouble() : 0.0;
         // 시스템 네비게이션 바 높이 (edgeToEdge 모드에서도 정확한 위치)
         final bottomPadding = mediaQuery.viewPadding.bottom;
+        // 배너 영역 항상 확보 (홈 화면 세로 모드)
+        final reserveBanner = isPortrait && bannerController.isVisible;
+        final effectiveBannerHeight = bannerLoaded ? bannerHeight : 60.0;
+        final contentBottom = reserveBanner ? effectiveBannerHeight + bottomPadding : 0.0;
 
         return Stack(
           children: [
-            // 메인 컨텐츠
+            // 메인 컨텐츠 (배너 영역 항상 확보)
             Positioned.fill(
-              bottom: showBanner ? bannerHeight + bottomPadding : 0,
+              bottom: contentBottom,
               child: child ?? const SizedBox(),
             ),
             // 배너 광고 (viewPadding.bottom 위에 배치)
@@ -3354,7 +3358,7 @@ class _HomeScreenState extends State<HomeScreen> {
               final isLandscape = constraints.maxWidth > constraints.maxHeight;
               return Column(
                 children: [
-                  const SizedBox(height: 20),
+                  SizedBox(height: constraints.maxHeight * 0.02),
                   Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 20),
                     child: isLandscape
@@ -3425,7 +3429,7 @@ class _HomeScreenState extends State<HomeScreen> {
                             ],
                           ),
                   ),
-                  const SizedBox(height: 16),
+                  SizedBox(height: constraints.maxHeight * 0.01),
                   Expanded(
                     child: Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -3433,8 +3437,17 @@ class _HomeScreenState extends State<HomeScreen> {
                         builder: (context, constraints) {
                           final isLandscapeGrid = constraints.maxWidth > constraints.maxHeight;
                           final crossAxisCount = isLandscapeGrid ? 5 : 3;
-                          // 배너 광고 공간을 고려하여 aspectRatio 조정
-                          final aspectRatio = isLandscapeGrid ? 2.3 : 1.05;
+                          // 화면 크기에 맞춰 aspectRatio 동적 계산
+                          final double aspectRatio;
+                          if (isLandscapeGrid) {
+                            aspectRatio = 2.3;
+                          } else {
+                            const itemCount = 18;
+                            final rowCount = (itemCount / crossAxisCount).ceil();
+                            final tileWidth = (constraints.maxWidth - (crossAxisCount - 1) * 6) / crossAxisCount;
+                            final tileHeight = (constraints.maxHeight - (rowCount - 1) * 4) / rowCount;
+                            aspectRatio = (tileWidth / tileHeight).clamp(0.7, 1.5);
+                          }
                           return GridView.count(
                             crossAxisCount: crossAxisCount,
                             mainAxisSpacing: 4,
@@ -3719,53 +3732,65 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
             child: isCompact
                 // 가로모드: 아이콘과 텍스트를 가로로 배치
-                ? Row(
+                ? Padding(
+                    padding: EdgeInsets.symmetric(
+                      horizontal: constraints.maxWidth * 0.06,
+                    ),
+                    child: Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       Container(
-                        padding: const EdgeInsets.all(8),
+                        padding: EdgeInsets.all(constraints.maxHeight * 0.1),
                         decoration: BoxDecoration(
                           color: color.withValues(alpha: 0.2),
                           shape: BoxShape.circle,
                         ),
                         child: Icon(
                           icon,
-                          size: 24,
+                          size: constraints.maxHeight * 0.3,
                           color: color,
                         ),
                       ),
-                      const SizedBox(width: 10),
+                      SizedBox(width: constraints.maxWidth * 0.04),
                       Flexible(
                         child: Column(
                           mainAxisAlignment: MainAxisAlignment.center,
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Text(
-                              title,
-                              style: TextStyle(
-                                fontSize: 13,
-                                fontWeight: FontWeight.bold,
-                                color: color,
-                                letterSpacing: 1,
+                            FittedBox(
+                              fit: BoxFit.scaleDown,
+                              child: Text(
+                                title,
+                                style: TextStyle(
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.bold,
+                                  color: color,
+                                  letterSpacing: 1,
+                                ),
                               ),
-                              overflow: TextOverflow.ellipsis,
                             ),
-                            Text(
-                              subtitle,
-                              style: TextStyle(
-                                fontSize: 10,
-                                color: Colors.grey.shade400,
+                            FittedBox(
+                              fit: BoxFit.scaleDown,
+                              child: Text(
+                                subtitle,
+                                style: TextStyle(
+                                  fontSize: 10,
+                                  color: Colors.grey.shade400,
+                                ),
                               ),
-                              overflow: TextOverflow.ellipsis,
                             ),
                           ],
                         ),
                       ),
                     ],
+                  ),
                   )
                 // 세로모드: 아이콘+한글 가로배치, 영어 아래 배치
                 : Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+                    padding: EdgeInsets.symmetric(
+                      horizontal: constraints.maxWidth * 0.06,
+                      vertical: constraints.maxHeight * 0.06,
+                    ),
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
@@ -3773,39 +3798,43 @@ class _HomeScreenState extends State<HomeScreen> {
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
                             Container(
-                              padding: const EdgeInsets.all(6),
+                              padding: EdgeInsets.all(constraints.maxWidth * 0.04),
                               decoration: BoxDecoration(
                                 color: color.withValues(alpha: 0.2),
                                 shape: BoxShape.circle,
                               ),
                               child: Icon(
                                 icon,
-                                size: 20,
+                                size: constraints.maxWidth * 0.16,
                                 color: color,
                               ),
                             ),
-                            const SizedBox(width: 6),
+                            SizedBox(width: constraints.maxWidth * 0.04),
                             Flexible(
-                              child: Text(
-                                title, // 한글 이름
-                                style: TextStyle(
-                                  fontSize: 14,
-                                  fontWeight: FontWeight.bold,
-                                  color: color,
+                              child: FittedBox(
+                                fit: BoxFit.scaleDown,
+                                child: Text(
+                                  title, // 한글 이름
+                                  style: TextStyle(
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.bold,
+                                    color: color,
+                                  ),
                                 ),
-                                overflow: TextOverflow.ellipsis,
                               ),
                             ),
                           ],
                         ),
-                        const SizedBox(height: 4),
-                        Text(
-                          subtitle, // 영어 이름
-                          style: TextStyle(
-                            fontSize: 10,
-                            color: Colors.grey.shade400,
+                        SizedBox(height: constraints.maxHeight * 0.04),
+                        FittedBox(
+                          fit: BoxFit.scaleDown,
+                          child: Text(
+                            subtitle, // 영어 이름
+                            style: TextStyle(
+                              fontSize: 10,
+                              color: Colors.grey.shade400,
+                            ),
                           ),
-                          overflow: TextOverflow.ellipsis,
                         ),
                       ],
                     ),

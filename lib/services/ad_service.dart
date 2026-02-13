@@ -14,6 +14,21 @@ class AdService {
   BannerAd? _bannerAd;
   bool _isBannerLoaded = false;
 
+  // 보상형 광고 쿨다운 (한번 시청 후 일정 시간 동안 광고 스킵)
+  DateTime? _lastRewardedAdTime;
+  static const Duration rewardedAdCooldown = Duration(minutes: 3);
+
+  /// 마지막 광고 시청 후 쿨다운 기간 내인지 확인
+  bool get isInRewardCooldown {
+    if (_lastRewardedAdTime == null) return false;
+    return DateTime.now().difference(_lastRewardedAdTime!) < rewardedAdCooldown;
+  }
+
+  /// 광고 시청 시간 기록 (쿨다운 시작)
+  void _markRewardedAdWatched() {
+    _lastRewardedAdTime = DateTime.now();
+  }
+
   // 광고 단위 ID (디버그 모드에서는 테스트 ID 사용)
   String get rewardedAdUnitId {
     if (kDebugMode) {
@@ -106,6 +121,7 @@ class AdService {
         debugPrint('사용자가 광고를 닫음');
         ad.dispose();
         _rewardedAd = null;
+        _markRewardedAdWatched();
         // 앱 복귀 시 몰입 모드 유지
         SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersiveSticky);
         onAdDismissed?.call();
@@ -128,7 +144,9 @@ class AdService {
     return true;
   }
 
-  // 배너 광고 로드 (적응형 배너)
+  // 배너 광고 로드 (적응형 배너, 실패 시 표준 배너 폴백)
+  bool _useStandardBanner = false;
+
   Future<void> loadBannerAd({
     Function()? onLoaded,
     bool forceReload = false,
@@ -152,16 +170,25 @@ class AdService {
       _isBannerLoaded = false;
     }
 
-    // 적응형 배너 크기 (화면 너비에 맞춤)
-    final int width = (screenWidth ?? 320).toInt();
-    final AdSize? adSize = await AdSize.getAnchoredAdaptiveBannerAdSize(
-      Orientation.portrait,
-      width,
-    );
-
-    if (adSize == null) {
-      debugPrint('적응형 배너 크기를 가져올 수 없음');
-      return;
+    // 배너 크기 결정
+    AdSize adSize;
+    if (_useStandardBanner) {
+      // 표준 배너 (320x50)
+      adSize = AdSize.banner;
+    } else {
+      // 적응형 배너 크기 (화면 너비에 맞춤)
+      final int width = (screenWidth ?? 320).toInt();
+      final AdSize? adaptiveSize = await AdSize.getAnchoredAdaptiveBannerAdSize(
+        Orientation.portrait,
+        width,
+      );
+      if (adaptiveSize == null) {
+        debugPrint('적응형 배너 크기를 가져올 수 없음, 표준 배너로 폴백');
+        adSize = AdSize.banner;
+        _useStandardBanner = true;
+      } else {
+        adSize = adaptiveSize;
+      }
     }
 
     _bannerAd = BannerAd(
@@ -178,8 +205,16 @@ class AdService {
           ad.dispose();
           _bannerAd = null;
           _isBannerLoaded = false;
-          // 30초 후 재시도
+          // 적응형 배너 실패 시 표준 배너로 폴백 재시도
+          if (!_useStandardBanner) {
+            _useStandardBanner = true;
+            debugPrint('표준 배너(320x50)로 폴백 재시도');
+            loadBannerAd(onLoaded: onLoaded, screenWidth: screenWidth);
+            return;
+          }
+          // 표준 배너도 실패 시 30초 후 재시도
           Future.delayed(const Duration(seconds: 30), () {
+            _useStandardBanner = false; // 다시 적응형부터 시도
             loadBannerAd(onLoaded: onLoaded, screenWidth: screenWidth);
           });
         },

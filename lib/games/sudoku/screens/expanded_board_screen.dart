@@ -935,6 +935,13 @@ class _ExpandedBoardScreenState extends State<ExpandedBoardScreen> {
     // 일시정지 상태에서는 입력 차단
     if (_localIsPaused) return;
 
+    // 쿨다운 기간 내이면 광고 없이 바로 적용
+    final adService = AdService();
+    if (adService.isInRewardCooldown) {
+      _applyFillAllNotes();
+      return;
+    }
+
     // 광고 시청 확인 다이얼로그 표시
     _showFillNotesAdDialog();
   }
