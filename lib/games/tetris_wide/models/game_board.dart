@@ -278,9 +278,21 @@ class GameBoard extends ChangeNotifier {
 
   void _clearLines() {
     lastClearedCells = [];
+
+    // 줄 클리어 → 중력 → 연쇄 클리어 반복
+    bool hadClears = true;
+    while (hadClears) {
+      hadClears = _clearFullRows();
+      if (hadClears) {
+        _applyGravity();
+      }
+    }
+  }
+
+  /// 채워진 줄을 찾아 제거. 클리어된 줄이 있으면 true 반환.
+  bool _clearFullRows() {
     List<int> fullRows = [];
 
-    // 1단계: 채워진 줄 찾기 + 셀 위치 기록
     for (int row = 0; row < rows; row++) {
       bool isLineFull = true;
       for (int col = 0; col < cols; col++) {
@@ -297,7 +309,8 @@ class GameBoard extends ChangeNotifier {
       }
     }
 
-    // 2단계: 줄 제거 (아래→위 순서) 후 빈 줄 삽입
+    if (fullRows.isEmpty) return false;
+
     for (int i = fullRows.length - 1; i >= 0; i--) {
       board.removeAt(fullRows[i]);
     }
@@ -306,28 +319,45 @@ class GameBoard extends ChangeNotifier {
     }
 
     int clearedCount = fullRows.length;
-    if (clearedCount > 0) {
-      linesCleared += clearedCount;
+    linesCleared += clearedCount;
 
-      switch (clearedCount) {
-        case 1:
-          score += 100 * level;
-          break;
-        case 2:
-          score += 300 * level;
-          break;
-        case 3:
-          score += 500 * level;
-          break;
-        case 4:
-          score += 800 * level;
-          break;
+    switch (clearedCount) {
+      case 1:
+        score += 100 * level;
+        break;
+      case 2:
+        score += 300 * level;
+        break;
+      case 3:
+        score += 500 * level;
+        break;
+      default:
+        score += 800 * level;
+        break;
+    }
+
+    int newLevel = startLevel + (linesCleared ~/ 10);
+    if (newLevel > level && newLevel <= maxLevel) {
+      level = newLevel;
+      _restartTimer();
+    }
+
+    return true;
+  }
+
+  /// 각 열에서 빈 칸 아래로 블록을 떨어뜨림
+  void _applyGravity() {
+    for (int col = 0; col < cols; col++) {
+      // 열의 블록을 아래부터 모아서 바닥에 채움
+      List<Color> cells = [];
+      for (int row = rows - 1; row >= 0; row--) {
+        if (board[row][col] != null) {
+          cells.add(board[row][col]!);
+        }
       }
-
-      int newLevel = startLevel + (linesCleared ~/ 10);
-      if (newLevel > level && newLevel <= maxLevel) {
-        level = newLevel;
-        _restartTimer();
+      for (int row = rows - 1; row >= 0; row--) {
+        int idx = rows - 1 - row;
+        board[row][col] = idx < cells.length ? cells[idx] : null;
       }
     }
   }
