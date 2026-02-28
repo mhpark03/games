@@ -254,8 +254,8 @@ class GameBoard extends ChangeNotifier {
 
     _clearLines(affectedCols);
 
-    // 보드가 비었으면 레벨 클리어
-    if (_isBoardEmpty()) {
+    // 남은 줄이 1줄 이하면 레벨 클리어
+    if (remainingRows <= 1) {
       isLevelComplete = true;
       _gameTimer?.cancel();
       notifyListeners();
@@ -273,13 +273,18 @@ class GameBoard extends ChangeNotifier {
     notifyListeners();
   }
 
-  bool _isBoardEmpty() {
+  /// 블록이 존재하는 줄 수
+  int get remainingRows {
+    int count = 0;
     for (int row = 0; row < rows; row++) {
       for (int col = 0; col < cols; col++) {
-        if (board[row][col] != null) return false;
+        if (board[row][col] != null) {
+          count++;
+          break;
+        }
       }
     }
-    return true;
+    return count;
   }
 
   void _clearLines(Set<int> affectedCols) {

@@ -333,7 +333,7 @@ class _TetrisWideScreenState extends State<TetrisWideScreen>
                   const SizedBox(width: 6),
                   Expanded(child: _buildInfoBox('games.tetrisWide.level'.tr(), _gameBoard.level.toString())),
                   const SizedBox(width: 6),
-                  Expanded(child: _buildInfoBox('games.tetrisWide.lines'.tr(), _gameBoard.linesCleared.toString())),
+                  Expanded(child: _buildInfoBox('games.tetrisWide.lines'.tr(), _gameBoard.remainingRows.toString())),
                   const SizedBox(width: 6),
                   InlineNextPieceWidget(piece: _gameBoard.nextPiece),
                 ],
@@ -465,7 +465,7 @@ class _TetrisWideScreenState extends State<TetrisWideScreen>
                         ),
                         const SizedBox(width: 6),
                         Expanded(
-                          child: _buildLandscapeInfoBox('games.tetrisWide.lines'.tr(), _gameBoard.linesCleared.toString()),
+                          child: _buildLandscapeInfoBox('games.tetrisWide.lines'.tr(), _gameBoard.remainingRows.toString()),
                         ),
                       ],
                     ),
