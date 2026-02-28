@@ -1,11 +1,13 @@
 import 'dart:async';
 import 'dart:math';
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'piece.dart';
 
 class GameBoard extends ChangeNotifier {
   final int rows;
   static const int cols = 20;
+  static const String _speedKey = 'tetris_wide_speed';
 
   late List<List<Color?>> board;
 
@@ -17,6 +19,7 @@ class GameBoard extends ChangeNotifier {
   bool isGameOver = false;
   bool isLevelComplete = false;
   bool isPaused = false;
+  int speed = 250;
   Timer? _gameTimer;
 
   final Random _random = Random();
@@ -26,7 +29,25 @@ class GameBoard extends ChangeNotifier {
       rows,
       (_) => List.generate(cols, (_) => null),
     );
+    _loadSpeed();
     _initGame();
+  }
+
+  Future<void> _loadSpeed() async {
+    final prefs = await SharedPreferences.getInstance();
+    speed = prefs.getInt(_speedKey) ?? 250;
+    notifyListeners();
+  }
+
+  Future<void> _saveSpeed() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setInt(_speedKey, speed);
+  }
+
+  void setSpeed(int newSpeed) {
+    speed = newSpeed;
+    _saveSpeed();
+    notifyListeners();
   }
 
   List<ClearedCell> lastClearedCells = [];
@@ -90,7 +111,7 @@ class GameBoard extends ChangeNotifier {
 
   void _startTimer() {
     _gameTimer?.cancel();
-    _gameTimer = Timer.periodic(const Duration(milliseconds: 300), (_) {
+    _gameTimer = Timer.periodic(Duration(milliseconds: speed), (_) {
       if (!isPaused && !isGameOver && !isLevelComplete) {
         moveDown();
       }

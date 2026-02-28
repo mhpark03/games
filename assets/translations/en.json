@@ -134,7 +134,9 @@
       "linesValue": "Lines: {lines}",
       "levelComplete": "Level {level} Clear!",
       "nextLevel": "Next Level",
-      "fillRows": "Fill rows: {rows}"
+      "fillRows": "Fill rows: {rows}",
+      "speedSetting": "Speed Setting",
+      "speedDesc": "Lower value = faster speed"
     },
     "gomoku": {
       "name": "Gomoku",

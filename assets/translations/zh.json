@@ -134,7 +134,9 @@
       "linesValue": "行数: {lines}",
       "levelComplete": "第 {level} 关通过!",
       "nextLevel": "下一关",
-      "fillRows": "填充行: {rows}"
+      "fillRows": "填充行: {rows}",
+      "speedSetting": "速度设置",
+      "speedDesc": "数值越小速度越快"
     },
     "gomoku": {
       "name": "五子棋",

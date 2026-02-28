@@ -134,7 +134,9 @@
       "linesValue": "줄: {lines}",
       "levelComplete": "레벨 {level} 클리어!",
       "nextLevel": "다음 레벨",
-      "fillRows": "채울 줄: {rows}"
+      "fillRows": "채울 줄: {rows}",
+      "speedSetting": "속도 설정",
+      "speedDesc": "값이 작을수록 빠릅니다"
     },
     "gomoku": {
       "name": "오목",

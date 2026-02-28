@@ -156,6 +156,94 @@ class _TetrisWideScreenState extends State<TetrisWideScreen>
     }
   }
 
+  void _showSpeedSettingDialog() {
+    _gameBoard.pauseGame();
+    int tempSpeed = _gameBoard.speed;
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: Colors.grey.shade900,
+        title: Text(
+          'games.tetrisWide.speedSetting'.tr(),
+          style: const TextStyle(color: Colors.cyan, fontWeight: FontWeight.bold),
+          textAlign: TextAlign.center,
+        ),
+        content: StatefulBuilder(
+          builder: (context, setDialogState) => Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                '${tempSpeed}ms',
+                style: const TextStyle(color: Colors.white, fontSize: 32),
+              ),
+              const SizedBox(height: 16),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  IconButton(
+                    icon: const Icon(Icons.remove_circle, color: Colors.cyan, size: 40),
+                    onPressed: tempSpeed < 500
+                        ? () => setDialogState(() => tempSpeed += 50)
+                        : null,
+                  ),
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: Slider(
+                      value: tempSpeed.toDouble(),
+                      min: 50,
+                      max: 500,
+                      divisions: 9,
+                      activeColor: Colors.cyan,
+                      inactiveColor: Colors.grey,
+                      onChanged: (value) {
+                        setDialogState(() => tempSpeed = value.toInt());
+                      },
+                    ),
+                  ),
+                  const SizedBox(width: 16),
+                  IconButton(
+                    icon: const Icon(Icons.add_circle, color: Colors.cyan, size: 40),
+                    onPressed: tempSpeed > 50
+                        ? () => setDialogState(() => tempSpeed -= 50)
+                        : null,
+                  ),
+                ],
+              ),
+              const SizedBox(height: 8),
+              Text(
+                'games.tetrisWide.speedDesc'.tr(),
+                style: TextStyle(color: Colors.grey.shade400, fontSize: 13),
+              ),
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () {
+              Navigator.of(context).pop();
+              _gameBoard.pauseGame();
+            },
+            child: Text(
+              'games.tetrisWide.cancel'.tr(),
+              style: const TextStyle(color: Colors.grey, fontSize: 16),
+            ),
+          ),
+          TextButton(
+            onPressed: () {
+              Navigator.of(context).pop();
+              _gameBoard.setSpeed(tempSpeed);
+              _gameBoard.startGame();
+            },
+            child: Text(
+              'games.tetrisWide.startGame'.tr(),
+              style: const TextStyle(color: Colors.cyan, fontSize: 16),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   void _showLevelCompleteDialog() {
     if (_levelCompleteDialogShown) return;
     _levelCompleteDialogShown = true;
@@ -311,6 +399,10 @@ class _TetrisWideScreenState extends State<TetrisWideScreen>
           IconButton(
             icon: const Icon(Icons.help_outline, color: Colors.white),
             onPressed: _showRulesDialog,
+          ),
+          IconButton(
+            icon: const Icon(Icons.settings, color: Colors.white),
+            onPressed: _showSpeedSettingDialog,
           ),
           IconButton(
             icon: Icon(
@@ -559,6 +651,11 @@ class _TetrisWideScreenState extends State<TetrisWideScreen>
                         _buildCircleButton(
                           icon: Icons.help_outline,
                           onPressed: _showRulesDialog,
+                        ),
+                        const SizedBox(width: 8),
+                        _buildCircleButton(
+                          icon: Icons.settings,
+                          onPressed: _showSpeedSettingDialog,
                         ),
                         const SizedBox(width: 8),
                         _buildCircleButton(

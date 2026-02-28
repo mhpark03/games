@@ -134,7 +134,9 @@
       "linesValue": "ライン: {lines}",
       "levelComplete": "レベル {level} クリア!",
       "nextLevel": "次のレベル",
-      "fillRows": "埋める列: {rows}"
+      "fillRows": "埋める列: {rows}",
+      "speedSetting": "速度設定",
+      "speedDesc": "値が小さいほど速くなります"
     },
     "gomoku": {
       "name": "五目並べ",
