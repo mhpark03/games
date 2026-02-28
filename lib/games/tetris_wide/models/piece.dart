@@ -16,6 +16,7 @@ class Piece {
   });
 
   static const Color blockColor = Color(0xFF4DD0E1);
+  static const Color newBlockColor = Color(0xFF36929E); // 진한 버전 (방금 놓은 블록)
 
   Color get color => blockColor;
 

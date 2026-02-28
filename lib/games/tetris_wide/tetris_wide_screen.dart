@@ -1,4 +1,3 @@
-import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:flutter/services.dart';
@@ -22,7 +21,8 @@ class _TetrisWideScreenState extends State<TetrisWideScreen>
   final FocusNode _focusNode = FocusNode();
   bool _gameOverDialogShown = false;
   bool _levelCompleteDialogShown = false;
-  final List<_Particle> _particles = [];
+  final List<_SlidingRow> _slidingRows = [];
+  final List<_FallingCell> _fallingCells = [];
   Ticker? _ticker;
   Duration _lastTick = Duration.zero;
 
@@ -58,9 +58,20 @@ class _TetrisWideScreenState extends State<TetrisWideScreen>
   }
 
   void _onGameUpdate() {
+    bool hasNewAnimations = false;
     if (_gameBoard.lastClearedCells.isNotEmpty) {
-      _spawnParticles(_gameBoard.lastClearedCells);
+      _startSlideAnimation(_gameBoard.lastClearedCells);
       _gameBoard.lastClearedCells = [];
+      hasNewAnimations = true;
+    }
+    if (_gameBoard.lastFallingCells.isNotEmpty) {
+      _startFallingAnimation(_gameBoard.lastFallingCells);
+      _gameBoard.lastFallingCells = [];
+      hasNewAnimations = true;
+    }
+    // 애니메이션 없으면 즉시 색상 정규화
+    if (!hasNewAnimations && _slidingRows.isEmpty && _fallingCells.isEmpty) {
+      _gameBoard.normalizeNewCells();
     }
     if (_gameBoard.isLevelComplete && !_levelCompleteDialogShown) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -78,42 +89,71 @@ class _TetrisWideScreenState extends State<TetrisWideScreen>
     final dt = (elapsed - _lastTick).inMicroseconds / 1000000.0;
     _lastTick = elapsed;
 
-    for (var p in _particles) {
-      p.update(dt);
+    for (var row in _slidingRows) {
+      row.update(dt);
     }
-    _particles.removeWhere((p) => p.isDead);
+    _slidingRows.removeWhere((r) => r.isDone);
 
-    if (_particles.isEmpty) {
+    for (var cell in _fallingCells) {
+      cell.update(dt);
+    }
+    _fallingCells.removeWhere((c) => c.isDone);
+
+    if (_slidingRows.isEmpty && _fallingCells.isEmpty) {
       _ticker!.stop();
+      _gameBoard.normalizeNewCells();
     }
     setState(() {});
   }
 
-  void _spawnParticles(List<ClearedCell> cells) {
-    final random = Random();
+  void _startSlideAnimation(List<ClearedCell> cells) {
+    // Group cells by row
+    final Map<int, List<Color?>> rowMap = {};
     for (var cell in cells) {
-      final cx = cell.col + 0.5;
-      final cy = cell.row + 0.5;
-      final count = 3 + random.nextInt(3);
-      for (int i = 0; i < count; i++) {
-        final angle = random.nextDouble() * 2 * pi;
-        final speed = 3 + random.nextDouble() * 7;
-        _particles.add(_Particle(
-          x: cx + (random.nextDouble() - 0.5) * 0.3,
-          y: cy + (random.nextDouble() - 0.5) * 0.3,
-          vx: cos(angle) * speed,
-          vy: sin(angle) * speed - 4,
-          size: 0.15 + random.nextDouble() * 0.3,
-          color: cell.color,
-          rotation: random.nextDouble() * pi * 2,
-          rotationSpeed: (random.nextDouble() - 0.5) * 12,
-        ));
-      }
+      rowMap.putIfAbsent(cell.row, () => List.filled(GameBoard.cols, null));
+      rowMap[cell.row]![cell.col] = cell.color;
+    }
+
+    final sortedRows = rowMap.keys.toList()..sort();
+    for (int i = 0; i < sortedRows.length; i++) {
+      final row = sortedRows[i];
+      _slidingRows.add(_SlidingRow(
+        row: row,
+        colors: rowMap[row]!,
+        direction: i % 2 == 0 ? 1 : -1,
+      ));
+    }
+
+    if (!_ticker!.isActive) {
+      _lastTick = Duration.zero;
+      _ticker!.start();
+    }
+  }
+
+  void _startFallingAnimation(List<FallingCell> cells) {
+    for (var cell in cells) {
+      _fallingCells.add(_FallingCell(
+        col: cell.col,
+        fromRow: cell.fromRow,
+        toRow: cell.toRow,
+        color: cell.color,
+      ));
     }
     if (!_ticker!.isActive) {
       _lastTick = Duration.zero;
       _ticker!.start();
     }
+  }
+
+  Set<int>? _getSkipCells() {
+    if (_fallingCells.isEmpty) return null;
+    final set = <int>{};
+    for (var cell in _fallingCells) {
+      if (!cell.isDone) {
+        set.add(cell.toRow * GameBoard.cols + cell.col);
+      }
+    }
+    return set.isEmpty ? null : set;
   }
 
   @override
@@ -448,13 +488,17 @@ class _TetrisWideScreenState extends State<TetrisWideScreen>
                   child: Stack(
                     clipBehavior: Clip.none,
                     children: [
-                      GameBoardWidget(gameBoard: _gameBoard),
-                      if (_particles.isNotEmpty)
+                      GameBoardWidget(gameBoard: _gameBoard, skipCells: _getSkipCells()),
+                      if (_slidingRows.isNotEmpty || _fallingCells.isNotEmpty)
                         Positioned.fill(
                           child: IgnorePointer(
                             child: CustomPaint(
-                              painter: _ParticlePainter(
-                                _particles, GameBoard.cols, _gameBoard.rows, 2,
+                              painter: _AnimationOverlayPainter(
+                                slidingRows: _slidingRows,
+                                fallingCells: _fallingCells,
+                                cols: GameBoard.cols,
+                                rows: _gameBoard.rows,
+                                borderWidth: 2,
                               ),
                             ),
                           ),
@@ -614,13 +658,17 @@ class _TetrisWideScreenState extends State<TetrisWideScreen>
                     child: Stack(
                       clipBehavior: Clip.none,
                       children: [
-                        GameBoardWidget(gameBoard: _gameBoard),
-                        if (_particles.isNotEmpty)
+                        GameBoardWidget(gameBoard: _gameBoard, skipCells: _getSkipCells()),
+                        if (_slidingRows.isNotEmpty || _fallingCells.isNotEmpty)
                           Positioned.fill(
                             child: IgnorePointer(
                               child: CustomPaint(
-                                painter: _ParticlePainter(
-                                  _particles, GameBoard.cols, _gameBoard.rows, 2,
+                                painter: _AnimationOverlayPainter(
+                                  slidingRows: _slidingRows,
+                                  fallingCells: _fallingCells,
+                                  cols: GameBoard.cols,
+                                  rows: _gameBoard.rows,
+                                  borderWidth: 2,
                                 ),
                               ),
                             ),
@@ -881,45 +929,91 @@ class _TetrisWideScreenState extends State<TetrisWideScreen>
   }
 }
 
-class _Particle {
-  double x, y;
-  double vx, vy;
-  double size;
-  double opacity;
-  Color color;
-  double rotation;
-  double rotationSpeed;
+class _SlidingRow {
+  final int row;
+  final List<Color?> colors;
+  final int direction; // 1 = right, -1 = left
+  double time;
 
-  _Particle({
-    required this.x,
-    required this.y,
-    required this.vx,
-    required this.vy,
-    required this.size,
-    required this.color,
-    this.rotation = 0,
-    this.rotationSpeed = 0,
-  }) : opacity = 1.0;
+  static const double flashDuration = 0.12;
+  static const double slideDuration = 0.35;
+
+  _SlidingRow({
+    required this.row,
+    required this.colors,
+    required this.direction,
+  }) : time = 0.0;
 
   void update(double dt) {
-    x += vx * dt;
-    y += vy * dt;
-    vy += 15 * dt;
-    opacity -= 1.5 * dt;
-    rotation += rotationSpeed * dt;
-    if (opacity < 0) opacity = 0;
+    time += dt;
   }
 
-  bool get isDead => opacity <= 0;
+  double get flashOpacity {
+    if (time > flashDuration) return 0.0;
+    return (1.0 - time / flashDuration) * 0.7;
+  }
+
+  double get slideProgress {
+    if (time < flashDuration) return 0.0;
+    final t = ((time - flashDuration) / slideDuration).clamp(0.0, 1.0);
+    return 1.0 - (1.0 - t) * (1.0 - t); // ease-out quadratic
+  }
+
+  double get opacity {
+    if (time < flashDuration) return 1.0;
+    final t = ((time - flashDuration) / slideDuration).clamp(0.0, 1.0);
+    return 1.0 - t;
+  }
+
+  bool get isDone => time >= flashDuration + slideDuration;
 }
 
-class _ParticlePainter extends CustomPainter {
-  final List<_Particle> particles;
+class _FallingCell {
+  final int col;
+  final int fromRow;
+  final int toRow;
+  final Color color;
+  double time;
+
+  static const double delay = 0.35;
+  static const double duration = 0.25;
+
+  _FallingCell({
+    required this.col,
+    required this.fromRow,
+    required this.toRow,
+    required this.color,
+  }) : time = 0.0;
+
+  void update(double dt) {
+    time += dt;
+  }
+
+  double get currentRow {
+    if (time < delay) return fromRow.toDouble();
+    final t = ((time - delay) / duration).clamp(0.0, 1.0);
+    // ease-in: 가속 낙하 느낌
+    final eased = t * t;
+    return fromRow + (toRow - fromRow) * eased;
+  }
+
+  bool get isDone => time >= delay + duration;
+}
+
+class _AnimationOverlayPainter extends CustomPainter {
+  final List<_SlidingRow> slidingRows;
+  final List<_FallingCell> fallingCells;
   final int cols;
   final int rows;
   final double borderWidth;
 
-  _ParticlePainter(this.particles, this.cols, this.rows, this.borderWidth);
+  _AnimationOverlayPainter({
+    required this.slidingRows,
+    required this.fallingCells,
+    required this.cols,
+    required this.rows,
+    required this.borderWidth,
+  });
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -928,26 +1022,67 @@ class _ParticlePainter extends CustomPainter {
     final cellWidth = boardWidth / cols;
     final cellHeight = boardHeight / rows;
 
-    for (var p in particles) {
-      if (p.opacity <= 0) continue;
-      final paint = Paint()
-        ..color = p.color.withValues(alpha: p.opacity.clamp(0.0, 1.0));
+    canvas.save();
+    canvas.clipRect(Rect.fromLTWH(borderWidth, borderWidth, boardWidth, boardHeight));
 
-      final px = borderWidth + p.x * cellWidth;
-      final py = borderWidth + p.y * cellHeight;
-      final psize = p.size * cellWidth;
+    // 슬라이드 줄 그리기
+    for (var slidingRow in slidingRows) {
+      final offsetX = slidingRow.slideProgress * boardWidth * slidingRow.direction;
+      final alpha = slidingRow.opacity;
 
-      canvas.save();
-      canvas.translate(px, py);
-      canvas.rotate(p.rotation);
-      canvas.drawRect(
-        Rect.fromCenter(center: Offset.zero, width: psize, height: psize),
-        paint,
-      );
-      canvas.restore();
+      for (int col = 0; col < cols; col++) {
+        final color = slidingRow.colors[col];
+        if (color == null) continue;
+
+        final x = borderWidth + col * cellWidth + offsetX;
+        final y = borderWidth + slidingRow.row * cellHeight;
+        _drawCell(canvas, x, y, cellWidth, cellHeight, color, alpha);
+      }
+
+      if (slidingRow.flashOpacity > 0) {
+        final flashPaint = Paint()
+          ..color = Colors.white.withValues(alpha: slidingRow.flashOpacity);
+        final y = borderWidth + slidingRow.row * cellHeight;
+        canvas.drawRect(
+          Rect.fromLTWH(borderWidth, y, boardWidth, cellHeight),
+          flashPaint,
+        );
+      }
     }
+
+    // 낙하 셀 그리기
+    for (var cell in fallingCells) {
+      if (cell.isDone) continue;
+      final x = borderWidth + cell.col * cellWidth;
+      final y = borderWidth + cell.currentRow * cellHeight;
+      _drawCell(canvas, x, y, cellWidth, cellHeight, cell.color, 1.0);
+    }
+
+    canvas.restore();
+  }
+
+  void _drawCell(Canvas canvas, double x, double y, double width, double height, Color color, double alpha) {
+    final fillPaint = Paint()..color = color.withValues(alpha: alpha);
+    final borderPaint = Paint()
+      ..color = Colors.white.withValues(alpha: 0.3 * alpha)
+      ..strokeWidth = 1
+      ..style = PaintingStyle.stroke;
+    final shadowPaint = Paint()
+      ..color = Colors.black.withValues(alpha: 0.3 * alpha)
+      ..strokeWidth = 2
+      ..style = PaintingStyle.stroke;
+
+    canvas.drawRect(
+      Rect.fromLTWH(x + 1, y + 1, width - 2, height - 2),
+      fillPaint,
+    );
+    canvas.drawLine(Offset(x + 2, y + 2), Offset(x + width - 2, y + 2), borderPaint);
+    canvas.drawLine(Offset(x + 2, y + 2), Offset(x + 2, y + height - 2), borderPaint);
+    canvas.drawLine(Offset(x + width - 2, y + 2), Offset(x + width - 2, y + height - 2), shadowPaint);
+    canvas.drawLine(Offset(x + 2, y + height - 2), Offset(x + width - 2, y + height - 2), shadowPaint);
   }
 
   @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) => particles.isNotEmpty;
+  bool shouldRepaint(covariant CustomPainter oldDelegate) =>
+      slidingRows.isNotEmpty || fallingCells.isNotEmpty;
 }

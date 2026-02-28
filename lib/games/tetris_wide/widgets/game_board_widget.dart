@@ -3,8 +3,9 @@ import '../models/game_board.dart';
 
 class GameBoardWidget extends StatelessWidget {
   final GameBoard gameBoard;
+  final Set<int>? skipCells;
 
-  const GameBoardWidget({super.key, required this.gameBoard});
+  const GameBoardWidget({super.key, required this.gameBoard, this.skipCells});
 
   @override
   Widget build(BuildContext context) {
@@ -16,7 +17,7 @@ class GameBoardWidget extends StatelessWidget {
           color: Colors.black,
         ),
         child: CustomPaint(
-          painter: BoardPainter(gameBoard),
+          painter: BoardPainter(gameBoard, skipCells: skipCells),
         ),
       ),
     );
@@ -25,8 +26,9 @@ class GameBoardWidget extends StatelessWidget {
 
 class BoardPainter extends CustomPainter {
   final GameBoard gameBoard;
+  final Set<int>? skipCells;
 
-  BoardPainter(this.gameBoard);
+  BoardPainter(this.gameBoard, {this.skipCells});
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -55,6 +57,7 @@ class BoardPainter extends CustomPainter {
     for (int row = 0; row < gameBoard.rows; row++) {
       for (int col = 0; col < GameBoard.cols; col++) {
         if (gameBoard.board[row][col] != null) {
+          if (skipCells != null && skipCells!.contains(row * GameBoard.cols + col)) continue;
           _drawCell(
             canvas,
             col * cellWidth,

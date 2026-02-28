@@ -56,6 +56,7 @@ class GameBoard extends ChangeNotifier {
   }
 
   List<ClearedCell> lastClearedCells = [];
+  List<FallingCell> lastFallingCells = [];
 
   void _initGame() {
     board = List.generate(
@@ -282,7 +283,7 @@ class GameBoard extends ChangeNotifier {
       int row = cell[0];
       int col = cell[1];
       if (row >= 0 && row < rows && col >= 0 && col < cols) {
-        board[row][col] = currentPiece!.color;
+        board[row][col] = Piece.newBlockColor;
         affectedCols.add(col);
       }
     }
@@ -324,13 +325,56 @@ class GameBoard extends ChangeNotifier {
 
   void _clearLines(Set<int> affectedCols) {
     lastClearedCells = [];
+    lastFallingCells = [];
 
-    // 줄 클리어 → 중력 → 연쇄 클리어 반복
+    // 클리어 전 신규 셀 위치 기록 (원래 좌표계, 꽉 찬 줄 제외)
+    final Set<int> initialFullRows = {};
+    for (int row = 0; row < rows; row++) {
+      if (board[row].every((c) => c != null)) {
+        initialFullRows.add(row);
+      }
+    }
+
+    final Map<int, List<int>> newCellsBefore = {}; // col → rows (아래→위)
+    for (int col in affectedCols) {
+      for (int row = rows - 1; row >= 0; row--) {
+        if (board[row][col] == Piece.newBlockColor && !initialFullRows.contains(row)) {
+          newCellsBefore.putIfAbsent(col, () => []).add(row);
+        }
+      }
+    }
+
+    // 줄 클리어 → 중력(신규 셀만) → 연쇄 클리어 반복
     bool hadClears = true;
     while (hadClears) {
       hadClears = _clearFullRows();
       if (hadClears) {
         _applyGravity(affectedCols);
+      }
+    }
+
+    // 신규 셀의 이동 경로 계산
+    if (lastClearedCells.isNotEmpty) {
+      for (int col in affectedCols) {
+        final before = newCellsBefore[col];
+        if (before == null || before.isEmpty) continue;
+
+        // 최종 보드에서 신규 셀 위치 (아래→위)
+        List<int> after = [];
+        for (int row = rows - 1; row >= 0; row--) {
+          if (board[row][col] == Piece.newBlockColor) {
+            after.add(row);
+          }
+        }
+
+        final count = before.length < after.length ? before.length : after.length;
+        for (int i = 0; i < count; i++) {
+          if (before[i] != after[i]) {
+            lastFallingCells.add(FallingCell(
+              col, before[i], after[i], Piece.newBlockColor,
+            ));
+          }
+        }
       }
     }
   }
@@ -385,21 +429,37 @@ class GameBoard extends ChangeNotifier {
     return true;
   }
 
-  /// 지정된 열에서만 빈 칸 아래로 블록을 떨어뜨림
+  /// 신규 셀(newBlockColor)만 아래로 낙하시킴
   void _applyGravity(Set<int> affectedCols) {
     for (int col in affectedCols) {
-      // 열의 블록을 아래부터 모아서 바닥에 채움
-      List<Color> cells = [];
+      // 아래→위 순으로 처리: 아래쪽 신규 셀이 먼저 착지
       for (int row = rows - 1; row >= 0; row--) {
-        if (board[row][col] != null) {
-          cells.add(board[row][col]!);
+        if (board[row][col] == Piece.newBlockColor) {
+          int targetRow = row;
+          while (targetRow + 1 < rows && board[targetRow + 1][col] == null) {
+            targetRow++;
+          }
+          if (targetRow != row) {
+            board[targetRow][col] = Piece.newBlockColor;
+            board[row][col] = null;
+          }
         }
       }
-      for (int row = rows - 1; row >= 0; row--) {
-        int idx = rows - 1 - row;
-        board[row][col] = idx < cells.length ? cells[idx] : null;
+    }
+  }
+
+  /// 신규 셀(진한색)을 기존 색으로 변환
+  void normalizeNewCells() {
+    bool changed = false;
+    for (int row = 0; row < rows; row++) {
+      for (int col = 0; col < cols; col++) {
+        if (board[row][col] == Piece.newBlockColor) {
+          board[row][col] = Piece.blockColor;
+          changed = true;
+        }
       }
     }
+    if (changed) notifyListeners();
   }
 
   int getGhostY() {
@@ -425,4 +485,12 @@ class ClearedCell {
   final int col;
   final Color color;
   ClearedCell(this.row, this.col, this.color);
+}
+
+class FallingCell {
+  final int col;
+  final int fromRow;
+  final int toRow;
+  final Color color;
+  FallingCell(this.col, this.fromRow, this.toRow, this.color);
 }
