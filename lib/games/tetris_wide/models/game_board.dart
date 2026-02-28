@@ -297,9 +297,11 @@ class GameBoard extends ChangeNotifier {
       }
     }
 
-    // 2단계: 줄 제거 (아래→위 순서로 인덱스 유지)
+    // 2단계: 줄 제거 (아래→위 순서) 후 빈 줄 삽입
     for (int i = fullRows.length - 1; i >= 0; i--) {
       board.removeAt(fullRows[i]);
+    }
+    for (int i = 0; i < fullRows.length; i++) {
       board.insert(0, List.generate(cols, (_) => null));
     }
 
