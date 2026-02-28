@@ -46,6 +46,16 @@ class GameBoard extends ChangeNotifier {
     await prefs.setInt(_startLevelKey, startLevel);
   }
 
+  static const List<Color> _blockColors = [
+    Colors.cyan,
+    Colors.yellow,
+    Colors.purple,
+    Colors.green,
+    Colors.red,
+    Colors.blue,
+    Colors.orange,
+  ];
+
   void _initGame() {
     board = List.generate(
       rows,
@@ -56,8 +66,28 @@ class GameBoard extends ChangeNotifier {
     linesCleared = 0;
     isGameOver = false;
     isPaused = false;
+    _fillInitialBlocks();
     currentPiece = _generateRandomPiece();
     nextPiece = _generateRandomPiece();
+  }
+
+  void _fillInitialBlocks() {
+    final startRow = rows ~/ 2;
+    for (int row = startRow; row < rows; row++) {
+      // 각 행의 50~75% 를 랜덤으로 채움
+      final minFill = (cols * 0.5).round();
+      final maxFill = (cols * 0.75).round();
+      final fillCount = minFill + _random.nextInt(maxFill - minFill + 1);
+      final positions = List.generate(cols, (i) => i)..shuffle(_random);
+      for (int i = 0; i < fillCount; i++) {
+        board[row][positions[i]] = _blockColors[_random.nextInt(_blockColors.length)];
+      }
+      // 완성된 줄이 없도록 보장 (최소 1칸 빈칸)
+      bool isFull = board[row].every((c) => c != null);
+      if (isFull) {
+        board[row][_random.nextInt(cols)] = null;
+      }
+    }
   }
 
   void setStartLevel(int newLevel) {
