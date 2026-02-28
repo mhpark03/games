@@ -249,7 +249,16 @@ class _TetrisWideScreenState extends State<TetrisWideScreen>
     _levelCompleteDialogShown = true;
 
     final completedLevel = _gameBoard.level;
-    final nextFillRows = (5 + _gameBoard.level * 2).clamp(1, _gameBoard.rows - 4);
+
+    // 다음 레벨 정보 미리 계산
+    int nextFill = _gameBoard.currentFillRows + 2;
+    int nextSpeedBoost = _gameBoard.speedBoost;
+    final maxFill = (_gameBoard.rows * 2) ~/ 3;
+    if (nextFill > maxFill) {
+      nextFill = _gameBoard.rows ~/ 3;
+      nextSpeedBoost++;
+    }
+    final nextSpeed = (_gameBoard.speed - nextSpeedBoost * 20).clamp(50, 999);
 
     showDialog(
       context: context,
@@ -268,14 +277,14 @@ class _TetrisWideScreenState extends State<TetrisWideScreen>
               'games.tetrisWide.scoreValue'.tr(namedArgs: {'score': _gameBoard.score.toString()}),
               style: const TextStyle(color: Colors.white, fontSize: 20),
             ),
-            const SizedBox(height: 8),
-            Text(
-              'games.tetrisWide.linesValue'.tr(namedArgs: {'lines': _gameBoard.linesCleared.toString()}),
-              style: const TextStyle(color: Colors.white, fontSize: 16),
-            ),
             const SizedBox(height: 12),
             Text(
-              'games.tetrisWide.fillRows'.tr(namedArgs: {'rows': nextFillRows.toString()}),
+              'games.tetrisWide.fillRows'.tr(namedArgs: {'rows': nextFill.toString()}),
+              style: TextStyle(color: Colors.grey.shade400, fontSize: 14),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              'games.tetrisWide.speed'.tr(namedArgs: {'speed': nextSpeed.toString()}),
               style: TextStyle(color: Colors.grey.shade400, fontSize: 14),
             ),
           ],

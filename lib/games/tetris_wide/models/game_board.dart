@@ -20,9 +20,14 @@ class GameBoard extends ChangeNotifier {
   bool isLevelComplete = false;
   bool isPaused = false;
   int speed = 250;
+  int speedBoost = 0;
+  int currentFillRows = 0;
   Timer? _gameTimer;
 
   final Random _random = Random();
+
+  /// 실제 적용 속도 (설정 속도 - 부스트)
+  int get activeSpeed => (speed - speedBoost * 20).clamp(50, 999);
 
   GameBoard({this.rows = 20}) {
     board = List.generate(
@@ -52,9 +57,6 @@ class GameBoard extends ChangeNotifier {
 
   List<ClearedCell> lastClearedCells = [];
 
-  /// 레벨별 채울 줄 수: 1단계=5, 2단계=7, 3단계=9 ...
-  int get _fillRows => (5 + (level - 1) * 2).clamp(1, rows - 4);
-
   void _initGame() {
     board = List.generate(
       rows,
@@ -66,13 +68,15 @@ class GameBoard extends ChangeNotifier {
     isGameOver = false;
     isLevelComplete = false;
     isPaused = false;
+    speedBoost = 0;
+    currentFillRows = rows ~/ 3;
     _fillInitialBlocks();
     currentPiece = _generateRandomPiece();
     nextPiece = _generateRandomPiece();
   }
 
   void _fillInitialBlocks() {
-    final fillRows = _fillRows;
+    final fillRows = currentFillRows.clamp(1, rows - 4);
     final startRow = rows - fillRows;
     for (int row = startRow; row < rows; row++) {
       final minFill = (cols * 0.5).round();
@@ -98,6 +102,16 @@ class GameBoard extends ChangeNotifier {
   void nextLevel() {
     level++;
     isLevelComplete = false;
+
+    // 다음 레벨 채울 줄 수 계산
+    currentFillRows += 2;
+    final maxFill = (rows * 2) ~/ 3;
+    if (currentFillRows > maxFill) {
+      // 2/3 초과 시 1/3로 리셋, 속도 20ms 빠르게
+      currentFillRows = rows ~/ 3;
+      speedBoost++;
+    }
+
     board = List.generate(
       rows,
       (_) => List.generate(cols, (_) => null),
@@ -111,7 +125,7 @@ class GameBoard extends ChangeNotifier {
 
   void _startTimer() {
     _gameTimer?.cancel();
-    _gameTimer = Timer.periodic(Duration(milliseconds: speed), (_) {
+    _gameTimer = Timer.periodic(Duration(milliseconds: activeSpeed), (_) {
       if (!isPaused && !isGameOver && !isLevelComplete) {
         moveDown();
       }
