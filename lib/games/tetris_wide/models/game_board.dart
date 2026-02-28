@@ -255,15 +255,17 @@ class GameBoard extends ChangeNotifier {
   void _placePiece() {
     if (currentPiece == null) return;
 
+    Set<int> affectedCols = {};
     for (var cell in currentPiece!.cells) {
       int row = cell[0];
       int col = cell[1];
       if (row >= 0 && row < rows && col >= 0 && col < cols) {
         board[row][col] = currentPiece!.color;
+        affectedCols.add(col);
       }
     }
 
-    _clearLines();
+    _clearLines(affectedCols);
 
     currentPiece = nextPiece;
     nextPiece = _generateRandomPiece();
@@ -276,7 +278,7 @@ class GameBoard extends ChangeNotifier {
     notifyListeners();
   }
 
-  void _clearLines() {
+  void _clearLines(Set<int> affectedCols) {
     lastClearedCells = [];
 
     // 줄 클리어 → 중력 → 연쇄 클리어 반복
@@ -284,7 +286,7 @@ class GameBoard extends ChangeNotifier {
     while (hadClears) {
       hadClears = _clearFullRows();
       if (hadClears) {
-        _applyGravity();
+        _applyGravity(affectedCols);
       }
     }
   }
@@ -345,9 +347,9 @@ class GameBoard extends ChangeNotifier {
     return true;
   }
 
-  /// 각 열에서 빈 칸 아래로 블록을 떨어뜨림
-  void _applyGravity() {
-    for (int col = 0; col < cols; col++) {
+  /// 지정된 열에서만 빈 칸 아래로 블록을 떨어뜨림
+  void _applyGravity(Set<int> affectedCols) {
+    for (int col in affectedCols) {
       // 열의 블록을 아래부터 모아서 바닥에 채움
       List<Color> cells = [];
       for (int row = rows - 1; row >= 0; row--) {
