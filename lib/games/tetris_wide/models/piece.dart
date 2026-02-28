@@ -15,24 +15,9 @@ class Piece {
     this.y = 0,
   });
 
-  Color get color {
-    switch (type) {
-      case PieceType.I:
-        return Colors.cyan;
-      case PieceType.O:
-        return Colors.yellow;
-      case PieceType.T:
-        return Colors.purple;
-      case PieceType.S:
-        return Colors.green;
-      case PieceType.Z:
-        return Colors.red;
-      case PieceType.J:
-        return Colors.blue;
-      case PieceType.L:
-        return Colors.orange;
-    }
-  }
+  static const Color blockColor = Color(0xFF4DD0E1);
+
+  Color get color => blockColor;
 
   List<List<int>> get shape {
     switch (type) {

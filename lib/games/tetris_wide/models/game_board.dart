@@ -46,15 +46,7 @@ class GameBoard extends ChangeNotifier {
     await prefs.setInt(_startLevelKey, startLevel);
   }
 
-  static const List<Color> _blockColors = [
-    Colors.cyan,
-    Colors.yellow,
-    Colors.purple,
-    Colors.green,
-    Colors.red,
-    Colors.blue,
-    Colors.orange,
-  ];
+  List<ClearedCell> lastClearedCells = [];
 
   void _initGame() {
     board = List.generate(
@@ -74,15 +66,13 @@ class GameBoard extends ChangeNotifier {
   void _fillInitialBlocks() {
     final startRow = rows ~/ 2;
     for (int row = startRow; row < rows; row++) {
-      // 각 행의 50~75% 를 랜덤으로 채움
       final minFill = (cols * 0.5).round();
       final maxFill = (cols * 0.75).round();
       final fillCount = minFill + _random.nextInt(maxFill - minFill + 1);
       final positions = List.generate(cols, (i) => i)..shuffle(_random);
       for (int i = 0; i < fillCount; i++) {
-        board[row][positions[i]] = _blockColors[_random.nextInt(_blockColors.length)];
+        board[row][positions[i]] = Piece.blockColor;
       }
-      // 완성된 줄이 없도록 보장 (최소 1칸 빈칸)
       bool isFull = board[row].every((c) => c != null);
       if (isFull) {
         board[row][_random.nextInt(cols)] = null;
@@ -287,9 +277,11 @@ class GameBoard extends ChangeNotifier {
   }
 
   void _clearLines() {
-    int clearedCount = 0;
+    lastClearedCells = [];
+    List<int> fullRows = [];
 
-    for (int row = rows - 1; row >= 0; row--) {
+    // 1단계: 채워진 줄 찾기 + 셀 위치 기록
+    for (int row = 0; row < rows; row++) {
       bool isLineFull = true;
       for (int col = 0; col < cols; col++) {
         if (board[row][col] == null) {
@@ -297,15 +289,21 @@ class GameBoard extends ChangeNotifier {
           break;
         }
       }
-
       if (isLineFull) {
-        clearedCount++;
-        board.removeAt(row);
-        board.insert(0, List.generate(cols, (_) => null));
-        row++;
+        fullRows.add(row);
+        for (int col = 0; col < cols; col++) {
+          lastClearedCells.add(ClearedCell(row, col, board[row][col]!));
+        }
       }
     }
 
+    // 2단계: 줄 제거 (아래→위 순서로 인덱스 유지)
+    for (int i = fullRows.length - 1; i >= 0; i--) {
+      board.removeAt(fullRows[i]);
+      board.insert(0, List.generate(cols, (_) => null));
+    }
+
+    int clearedCount = fullRows.length;
     if (clearedCount > 0) {
       linesCleared += clearedCount;
 
@@ -348,4 +346,11 @@ class GameBoard extends ChangeNotifier {
     _gameTimer?.cancel();
     super.dispose();
   }
+}
+
+class ClearedCell {
+  final int row;
+  final int col;
+  final Color color;
+  ClearedCell(this.row, this.col, this.color);
 }

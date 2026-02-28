@@ -1,4 +1,6 @@
+import 'dart:math';
 import 'package:flutter/material.dart';
+import 'package:flutter/scheduler.dart';
 import 'package:flutter/services.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'models/game_board.dart';
@@ -14,10 +16,14 @@ class TetrisWideScreen extends StatefulWidget {
   State<TetrisWideScreen> createState() => _TetrisWideScreenState();
 }
 
-class _TetrisWideScreenState extends State<TetrisWideScreen> {
+class _TetrisWideScreenState extends State<TetrisWideScreen>
+    with SingleTickerProviderStateMixin {
   late GameBoard _gameBoard;
   final FocusNode _focusNode = FocusNode();
   bool _gameOverDialogShown = false;
+  final List<_Particle> _particles = [];
+  Ticker? _ticker;
+  Duration _lastTick = Duration.zero;
 
   int _calculateRows() {
     final view = WidgetsBinding.instance.platformDispatcher.views.first;
@@ -47,14 +53,67 @@ class _TetrisWideScreenState extends State<TetrisWideScreen> {
     _gameBoard = GameBoard(rows: _calculateRows());
     _gameBoard.addListener(_onGameUpdate);
     _gameBoard.startGame();
+    _ticker = createTicker(_onTick);
   }
 
   void _onGameUpdate() {
+    if (_gameBoard.lastClearedCells.isNotEmpty) {
+      _spawnParticles(_gameBoard.lastClearedCells);
+      _gameBoard.lastClearedCells = [];
+    }
     setState(() {});
+  }
+
+  void _onTick(Duration elapsed) {
+    if (_lastTick == Duration.zero) {
+      _lastTick = elapsed;
+      return;
+    }
+    final dt = (elapsed - _lastTick).inMicroseconds / 1000000.0;
+    _lastTick = elapsed;
+
+    for (var p in _particles) {
+      p.update(dt);
+    }
+    _particles.removeWhere((p) => p.isDead);
+
+    if (_particles.isEmpty) {
+      _ticker!.stop();
+    }
+    setState(() {});
+  }
+
+  void _spawnParticles(List<ClearedCell> cells) {
+    final random = Random();
+    for (var cell in cells) {
+      final cx = cell.col + 0.5;
+      final cy = cell.row + 0.5;
+      final count = 3 + random.nextInt(3);
+      for (int i = 0; i < count; i++) {
+        final angle = random.nextDouble() * 2 * pi;
+        final speed = 3 + random.nextDouble() * 7;
+        _particles.add(_Particle(
+          x: cx + (random.nextDouble() - 0.5) * 0.3,
+          y: cy + (random.nextDouble() - 0.5) * 0.3,
+          vx: cos(angle) * speed,
+          vy: sin(angle) * speed - 4,
+          size: 0.15 + random.nextDouble() * 0.3,
+          color: cell.color,
+          rotation: random.nextDouble() * pi * 2,
+          rotationSpeed: (random.nextDouble() - 0.5) * 12,
+        ));
+      }
+    }
+    if (!_ticker!.isActive) {
+      _lastTick = Duration.zero;
+      _ticker!.start();
+    }
   }
 
   @override
   void dispose() {
+    _ticker?.stop();
+    _ticker?.dispose();
     _gameBoard.removeListener(_onGameUpdate);
     _gameBoard.dispose();
     _focusNode.dispose();
@@ -322,8 +381,19 @@ class _TetrisWideScreenState extends State<TetrisWideScreen> {
                 padding: const EdgeInsets.symmetric(horizontal: 12.0),
                 child: Center(
                   child: Stack(
+                    clipBehavior: Clip.none,
                     children: [
                       GameBoardWidget(gameBoard: _gameBoard),
+                      if (_particles.isNotEmpty)
+                        Positioned.fill(
+                          child: IgnorePointer(
+                            child: CustomPaint(
+                              painter: _ParticlePainter(
+                                _particles, GameBoard.cols, _gameBoard.rows, 2,
+                              ),
+                            ),
+                          ),
+                        ),
                       if (_gameBoard.isPaused)
                         Positioned.fill(
                           child: Container(
@@ -477,8 +547,19 @@ class _TetrisWideScreenState extends State<TetrisWideScreen> {
                       border: Border.all(color: Colors.white, width: 2),
                     ),
                     child: Stack(
+                      clipBehavior: Clip.none,
                       children: [
                         GameBoardWidget(gameBoard: _gameBoard),
+                        if (_particles.isNotEmpty)
+                          Positioned.fill(
+                            child: IgnorePointer(
+                              child: CustomPaint(
+                                painter: _ParticlePainter(
+                                  _particles, GameBoard.cols, _gameBoard.rows, 2,
+                                ),
+                              ),
+                            ),
+                          ),
                         if (_gameBoard.isPaused)
                           Positioned.fill(
                             child: Container(
@@ -733,4 +814,75 @@ class _TetrisWideScreenState extends State<TetrisWideScreen> {
       ),
     );
   }
+}
+
+class _Particle {
+  double x, y;
+  double vx, vy;
+  double size;
+  double opacity;
+  Color color;
+  double rotation;
+  double rotationSpeed;
+
+  _Particle({
+    required this.x,
+    required this.y,
+    required this.vx,
+    required this.vy,
+    required this.size,
+    required this.color,
+    this.rotation = 0,
+    this.rotationSpeed = 0,
+  }) : opacity = 1.0;
+
+  void update(double dt) {
+    x += vx * dt;
+    y += vy * dt;
+    vy += 15 * dt;
+    opacity -= 1.5 * dt;
+    rotation += rotationSpeed * dt;
+    if (opacity < 0) opacity = 0;
+  }
+
+  bool get isDead => opacity <= 0;
+}
+
+class _ParticlePainter extends CustomPainter {
+  final List<_Particle> particles;
+  final int cols;
+  final int rows;
+  final double borderWidth;
+
+  _ParticlePainter(this.particles, this.cols, this.rows, this.borderWidth);
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final boardWidth = size.width - borderWidth * 2;
+    final boardHeight = size.height - borderWidth * 2;
+    final cellWidth = boardWidth / cols;
+    final cellHeight = boardHeight / rows;
+
+    for (var p in particles) {
+      if (p.opacity <= 0) continue;
+      final paint = Paint()
+        ..color = p.color.withValues(alpha: p.opacity.clamp(0.0, 1.0));
+
+      final px = borderWidth + p.x * cellWidth;
+      final py = borderWidth + p.y * cellHeight;
+      final psize = p.size * cellWidth;
+
+      canvas.save();
+      canvas.translate(px, py);
+      canvas.rotate(p.rotation);
+      canvas.drawRect(
+        Rect.fromCenter(center: Offset.zero, width: psize, height: psize),
+        paint,
+      );
+      canvas.restore();
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => particles.isNotEmpty;
 }
