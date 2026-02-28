@@ -71,7 +71,6 @@ class InputSdkService {
       case 'baseball':
       case 'minesweeper':
       case 'number_sums':
-      case 'maze':
         return 'puzzle';
 
       // 액션 게임
