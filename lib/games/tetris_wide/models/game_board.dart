@@ -19,7 +19,7 @@ class GameBoard extends ChangeNotifier {
   bool isGameOver = false;
   bool isLevelComplete = false;
   bool isPaused = false;
-  int speed = 250;
+  int speed = 300;
   int speedBoost = 0;
   int currentFillRows = 0;
   Timer? _gameTimer;
@@ -40,7 +40,7 @@ class GameBoard extends ChangeNotifier {
 
   Future<void> _loadSpeed() async {
     final prefs = await SharedPreferences.getInstance();
-    speed = prefs.getInt(_speedKey) ?? 250;
+    speed = prefs.getInt(_speedKey) ?? 300;
     notifyListeners();
   }
 

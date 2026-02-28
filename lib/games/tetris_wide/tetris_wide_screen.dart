@@ -182,8 +182,8 @@ class _TetrisWideScreenState extends State<TetrisWideScreen>
                 children: [
                   IconButton(
                     icon: const Icon(Icons.remove_circle, color: Colors.cyan, size: 40),
-                    onPressed: tempSpeed < 500
-                        ? () => setDialogState(() => tempSpeed += 50)
+                    onPressed: tempSpeed > 50
+                        ? () => setDialogState(() => tempSpeed -= 50)
                         : null,
                   ),
                   const SizedBox(width: 16),
@@ -203,8 +203,8 @@ class _TetrisWideScreenState extends State<TetrisWideScreen>
                   const SizedBox(width: 16),
                   IconButton(
                     icon: const Icon(Icons.add_circle, color: Colors.cyan, size: 40),
-                    onPressed: tempSpeed > 50
-                        ? () => setDialogState(() => tempSpeed -= 50)
+                    onPressed: tempSpeed < 500
+                        ? () => setDialogState(() => tempSpeed += 50)
                         : null,
                   ),
                 ],
