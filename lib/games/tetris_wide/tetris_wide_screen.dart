@@ -19,11 +19,32 @@ class _TetrisWideScreenState extends State<TetrisWideScreen> {
   final FocusNode _focusNode = FocusNode();
   bool _gameOverDialogShown = false;
 
+  int _calculateRows() {
+    final view = WidgetsBinding.instance.platformDispatcher.views.first;
+    final pixelRatio = view.devicePixelRatio;
+    final screenHeight = view.physicalSize.height / pixelRatio;
+    final screenWidth = view.physicalSize.width / pixelRatio;
+    final viewPaddingTop = view.padding.top / pixelRatio;
+    final viewPaddingBottom = view.padding.bottom / pixelRatio;
+
+    // UI element heights: AppBar(56) + InfoRow(~76) + Controls(~92) + bottom spacing(8)
+    const fixedHeight = 56.0 + 76.0 + 92.0 + 8.0;
+    final safeArea = viewPaddingTop + viewPaddingBottom;
+    final boardPadding = 24.0; // 12px top/bottom padding around board
+
+    final availableHeight = screenHeight - fixedHeight - safeArea - boardPadding;
+    final availableWidth = screenWidth - 24.0; // 12px horizontal padding each side
+    final cellSize = availableWidth / GameBoard.cols;
+    final rows = (availableHeight / cellSize).floor();
+
+    return rows.clamp(20, 50);
+  }
+
   @override
   void initState() {
     super.initState();
     InputSdkService.setActionGameContext();
-    _gameBoard = GameBoard();
+    _gameBoard = GameBoard(rows: _calculateRows());
     _gameBoard.addListener(_onGameUpdate);
     _gameBoard.startGame();
   }
@@ -450,7 +471,7 @@ class _TetrisWideScreenState extends State<TetrisWideScreen> {
               flex: 3,
               child: Center(
                 child: AspectRatio(
-                  aspectRatio: 20 / 20,
+                  aspectRatio: GameBoard.cols / _gameBoard.rows,
                   child: Container(
                     decoration: BoxDecoration(
                       border: Border.all(color: Colors.white, width: 2),

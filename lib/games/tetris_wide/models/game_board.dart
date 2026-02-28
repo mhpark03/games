@@ -5,14 +5,11 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'piece.dart';
 
 class GameBoard extends ChangeNotifier {
-  static const int rows = 20;
+  final int rows;
   static const int cols = 20;
   static const String _startLevelKey = 'tetris_wide_start_level';
 
-  List<List<Color?>> board = List.generate(
-    rows,
-    (_) => List.generate(cols, (_) => null),
-  );
+  late List<List<Color?>> board;
 
   Piece? currentPiece;
   Piece? nextPiece;
@@ -28,7 +25,11 @@ class GameBoard extends ChangeNotifier {
 
   static const int maxLevel = 10;
 
-  GameBoard() {
+  GameBoard({this.rows = 20}) {
+    board = List.generate(
+      rows,
+      (_) => List.generate(cols, (_) => null),
+    );
     _loadStartLevel();
     _initGame();
   }

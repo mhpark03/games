@@ -9,7 +9,7 @@ class GameBoardWidget extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return AspectRatio(
-      aspectRatio: GameBoard.cols / GameBoard.rows,
+      aspectRatio: GameBoard.cols / gameBoard.rows,
       child: Container(
         decoration: BoxDecoration(
           border: Border.all(color: Colors.white, width: 2),
@@ -31,7 +31,7 @@ class BoardPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     double cellWidth = size.width / GameBoard.cols;
-    double cellHeight = size.height / GameBoard.rows;
+    double cellHeight = size.height / gameBoard.rows;
 
     Paint gridPaint = Paint()
       ..color = Colors.grey.shade800
@@ -44,7 +44,7 @@ class BoardPainter extends CustomPainter {
         gridPaint,
       );
     }
-    for (int i = 0; i <= GameBoard.rows; i++) {
+    for (int i = 0; i <= gameBoard.rows; i++) {
       canvas.drawLine(
         Offset(0, i * cellHeight),
         Offset(size.width, i * cellHeight),
@@ -52,7 +52,7 @@ class BoardPainter extends CustomPainter {
       );
     }
 
-    for (int row = 0; row < GameBoard.rows; row++) {
+    for (int row = 0; row < gameBoard.rows; row++) {
       for (int col = 0; col < GameBoard.cols; col++) {
         if (gameBoard.board[row][col] != null) {
           _drawCell(
@@ -72,7 +72,7 @@ class BoardPainter extends CustomPainter {
       for (var cell in gameBoard.currentPiece!.cells) {
         int row = ghostY + (cell[0] - gameBoard.currentPiece!.y);
         int col = cell[1];
-        if (row >= 0 && row < GameBoard.rows && col >= 0 && col < GameBoard.cols) {
+        if (row >= 0 && row < gameBoard.rows && col >= 0 && col < GameBoard.cols) {
           _drawGhostCell(
             canvas,
             col * cellWidth,
@@ -89,7 +89,7 @@ class BoardPainter extends CustomPainter {
       for (var cell in gameBoard.currentPiece!.cells) {
         int row = cell[0];
         int col = cell[1];
-        if (row >= 0 && row < GameBoard.rows && col >= 0 && col < GameBoard.cols) {
+        if (row >= 0 && row < gameBoard.rows && col >= 0 && col < GameBoard.cols) {
           _drawCell(
             canvas,
             col * cellWidth,
