@@ -131,7 +131,10 @@
       "next": "次",
       "scoreValue": "スコア: {score}",
       "levelValueColon": "レベル: {level}",
-      "linesValue": "ライン: {lines}"
+      "linesValue": "ライン: {lines}",
+      "levelComplete": "レベル {level} クリア!",
+      "nextLevel": "次のレベル",
+      "fillRows": "埋める列: {rows}"
     },
     "gomoku": {
       "name": "五目並べ",

@@ -131,7 +131,10 @@
       "next": "下一个",
       "scoreValue": "得分: {score}",
       "levelValueColon": "等级: {level}",
-      "linesValue": "行数: {lines}"
+      "linesValue": "行数: {lines}",
+      "levelComplete": "第 {level} 关通过!",
+      "nextLevel": "下一关",
+      "fillRows": "填充行: {rows}"
     },
     "gomoku": {
       "name": "五子棋",

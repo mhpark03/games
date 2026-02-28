@@ -1,13 +1,11 @@
 import 'dart:async';
 import 'dart:math';
 import 'package:flutter/material.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import 'piece.dart';
 
 class GameBoard extends ChangeNotifier {
   final int rows;
   static const int cols = 20;
-  static const String _startLevelKey = 'tetris_wide_start_level';
 
   late List<List<Color?>> board;
 
@@ -15,38 +13,26 @@ class GameBoard extends ChangeNotifier {
   Piece? nextPiece;
   int score = 0;
   int level = 1;
-  int startLevel = 1;
   int linesCleared = 0;
   bool isGameOver = false;
+  bool isLevelComplete = false;
   bool isPaused = false;
   Timer? _gameTimer;
 
   final Random _random = Random();
-
-  static const int maxLevel = 10;
 
   GameBoard({this.rows = 20}) {
     board = List.generate(
       rows,
       (_) => List.generate(cols, (_) => null),
     );
-    _loadStartLevel();
     _initGame();
   }
 
-  Future<void> _loadStartLevel() async {
-    final prefs = await SharedPreferences.getInstance();
-    startLevel = prefs.getInt(_startLevelKey) ?? 1;
-    level = startLevel;
-    notifyListeners();
-  }
-
-  Future<void> _saveStartLevel() async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setInt(_startLevelKey, startLevel);
-  }
-
   List<ClearedCell> lastClearedCells = [];
+
+  /// 레벨별 채울 줄 수: 1단계=5, 2단계=7, 3단계=9 ...
+  int get _fillRows => (5 + (level - 1) * 2).clamp(1, rows - 4);
 
   void _initGame() {
     board = List.generate(
@@ -54,9 +40,10 @@ class GameBoard extends ChangeNotifier {
       (_) => List.generate(cols, (_) => null),
     );
     score = 0;
-    level = startLevel;
+    level = 1;
     linesCleared = 0;
     isGameOver = false;
+    isLevelComplete = false;
     isPaused = false;
     _fillInitialBlocks();
     currentPiece = _generateRandomPiece();
@@ -64,7 +51,8 @@ class GameBoard extends ChangeNotifier {
   }
 
   void _fillInitialBlocks() {
-    final startRow = rows ~/ 2;
+    final fillRows = _fillRows;
+    final startRow = rows - fillRows;
     for (int row = startRow; row < rows; row++) {
       final minFill = (cols * 0.5).round();
       final maxFill = (cols * 0.75).round();
@@ -80,26 +68,30 @@ class GameBoard extends ChangeNotifier {
     }
   }
 
-  void setStartLevel(int newLevel) {
-    if (newLevel >= 1 && newLevel <= maxLevel) {
-      startLevel = newLevel;
-      _saveStartLevel();
-      notifyListeners();
-    }
-  }
-
   void startGame() {
     _initGame();
     _startTimer();
     notifyListeners();
   }
 
+  void nextLevel() {
+    level++;
+    isLevelComplete = false;
+    board = List.generate(
+      rows,
+      (_) => List.generate(cols, (_) => null),
+    );
+    _fillInitialBlocks();
+    currentPiece = _generateRandomPiece();
+    nextPiece = _generateRandomPiece();
+    _startTimer();
+    notifyListeners();
+  }
+
   void _startTimer() {
     _gameTimer?.cancel();
-    int speed = 500 - (level - 1) * 50;
-    if (speed < 50) speed = 50;
-    _gameTimer = Timer.periodic(Duration(milliseconds: speed), (_) {
-      if (!isPaused && !isGameOver) {
+    _gameTimer = Timer.periodic(const Duration(milliseconds: 300), (_) {
+      if (!isPaused && !isGameOver && !isLevelComplete) {
         moveDown();
       }
     });
@@ -108,11 +100,6 @@ class GameBoard extends ChangeNotifier {
   void pauseGame() {
     isPaused = !isPaused;
     notifyListeners();
-  }
-
-  void _restartTimer() {
-    _gameTimer?.cancel();
-    _startTimer();
   }
 
   Piece _generateRandomPiece() {
@@ -137,7 +124,7 @@ class GameBoard extends ChangeNotifier {
   }
 
   void moveLeft() {
-    if (currentPiece == null || isGameOver || isPaused) return;
+    if (currentPiece == null || isGameOver || isPaused || isLevelComplete) return;
 
     currentPiece!.x--;
     if (!_isValidPosition(currentPiece!)) {
@@ -147,7 +134,7 @@ class GameBoard extends ChangeNotifier {
   }
 
   void moveRight() {
-    if (currentPiece == null || isGameOver || isPaused) return;
+    if (currentPiece == null || isGameOver || isPaused || isLevelComplete) return;
 
     currentPiece!.x++;
     if (!_isValidPosition(currentPiece!)) {
@@ -157,7 +144,7 @@ class GameBoard extends ChangeNotifier {
   }
 
   void moveDown() {
-    if (currentPiece == null || isGameOver || isPaused) return;
+    if (currentPiece == null || isGameOver || isPaused || isLevelComplete) return;
 
     currentPiece!.y++;
     if (!_isValidPosition(currentPiece!)) {
@@ -168,7 +155,7 @@ class GameBoard extends ChangeNotifier {
   }
 
   void hardDrop() {
-    if (currentPiece == null || isGameOver || isPaused) return;
+    if (currentPiece == null || isGameOver || isPaused || isLevelComplete) return;
 
     while (_isValidPosition(currentPiece!)) {
       currentPiece!.y++;
@@ -179,7 +166,7 @@ class GameBoard extends ChangeNotifier {
   }
 
   void rotate() {
-    if (currentPiece == null || isGameOver || isPaused) return;
+    if (currentPiece == null || isGameOver || isPaused || isLevelComplete) return;
 
     currentPiece!.rotate();
     if (!_isValidPosition(currentPiece!)) {
@@ -216,7 +203,7 @@ class GameBoard extends ChangeNotifier {
   }
 
   void rotateLeft() {
-    if (currentPiece == null || isGameOver || isPaused) return;
+    if (currentPiece == null || isGameOver || isPaused || isLevelComplete) return;
 
     currentPiece!.rotateBack();
     if (!_isValidPosition(currentPiece!)) {
@@ -267,6 +254,14 @@ class GameBoard extends ChangeNotifier {
 
     _clearLines(affectedCols);
 
+    // 보드가 비었으면 레벨 클리어
+    if (_isBoardEmpty()) {
+      isLevelComplete = true;
+      _gameTimer?.cancel();
+      notifyListeners();
+      return;
+    }
+
     currentPiece = nextPiece;
     nextPiece = _generateRandomPiece();
 
@@ -276,6 +271,15 @@ class GameBoard extends ChangeNotifier {
     }
 
     notifyListeners();
+  }
+
+  bool _isBoardEmpty() {
+    for (int row = 0; row < rows; row++) {
+      for (int col = 0; col < cols; col++) {
+        if (board[row][col] != null) return false;
+      }
+    }
+    return true;
   }
 
   void _clearLines(Set<int> affectedCols) {
@@ -336,12 +340,6 @@ class GameBoard extends ChangeNotifier {
       default:
         score += 800 * level;
         break;
-    }
-
-    int newLevel = startLevel + (linesCleared ~/ 10);
-    if (newLevel > level && newLevel <= maxLevel) {
-      level = newLevel;
-      _restartTimer();
     }
 
     return true;

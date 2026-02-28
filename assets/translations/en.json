@@ -131,7 +131,10 @@
       "next": "Next",
       "scoreValue": "Score: {score}",
       "levelValueColon": "Level: {level}",
-      "linesValue": "Lines: {lines}"
+      "linesValue": "Lines: {lines}",
+      "levelComplete": "Level {level} Clear!",
+      "nextLevel": "Next Level",
+      "fillRows": "Fill rows: {rows}"
     },
     "gomoku": {
       "name": "Gomoku",

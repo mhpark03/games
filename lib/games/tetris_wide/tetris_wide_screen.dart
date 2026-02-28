@@ -21,6 +21,7 @@ class _TetrisWideScreenState extends State<TetrisWideScreen>
   late GameBoard _gameBoard;
   final FocusNode _focusNode = FocusNode();
   bool _gameOverDialogShown = false;
+  bool _levelCompleteDialogShown = false;
   final List<_Particle> _particles = [];
   Ticker? _ticker;
   Duration _lastTick = Duration.zero;
@@ -60,6 +61,11 @@ class _TetrisWideScreenState extends State<TetrisWideScreen>
     if (_gameBoard.lastClearedCells.isNotEmpty) {
       _spawnParticles(_gameBoard.lastClearedCells);
       _gameBoard.lastClearedCells = [];
+    }
+    if (_gameBoard.isLevelComplete && !_levelCompleteDialogShown) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        _showLevelCompleteDialog();
+      });
     }
     setState(() {});
   }
@@ -150,97 +156,59 @@ class _TetrisWideScreenState extends State<TetrisWideScreen>
     }
   }
 
-  void _showLevelSelectDialog() {
-    _gameBoard.pauseGame();
+  void _showLevelCompleteDialog() {
+    if (_levelCompleteDialogShown) return;
+    _levelCompleteDialogShown = true;
+
+    final completedLevel = _gameBoard.level;
+    final nextFillRows = (5 + _gameBoard.level * 2).clamp(1, _gameBoard.rows - 4);
+
     showDialog(
       context: context,
+      barrierDismissible: false,
       builder: (context) => AlertDialog(
         backgroundColor: Colors.grey.shade900,
         title: Text(
-          'games.tetrisWide.selectStartLevel'.tr(),
-          style: const TextStyle(color: Colors.cyan, fontWeight: FontWeight.bold),
+          'games.tetrisWide.levelComplete'.tr(namedArgs: {'level': completedLevel.toString()}),
+          style: const TextStyle(color: Colors.greenAccent, fontWeight: FontWeight.bold, fontSize: 24),
           textAlign: TextAlign.center,
         ),
-        content: StatefulBuilder(
-          builder: (context, setDialogState) => Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text(
-                'games.tetrisWide.levelValue'.tr(namedArgs: {'level': _gameBoard.startLevel.toString()}),
-                style: const TextStyle(color: Colors.white, fontSize: 32),
-              ),
-              const SizedBox(height: 16),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  IconButton(
-                    icon: const Icon(Icons.remove_circle, color: Colors.cyan, size: 40),
-                    onPressed: _gameBoard.startLevel > 1
-                        ? () {
-                            _gameBoard.setStartLevel(_gameBoard.startLevel - 1);
-                            setDialogState(() {});
-                          }
-                        : null,
-                  ),
-                  const SizedBox(width: 16),
-                  Expanded(
-                    child: Slider(
-                      value: _gameBoard.startLevel.toDouble(),
-                      min: 1,
-                      max: GameBoard.maxLevel.toDouble(),
-                      divisions: GameBoard.maxLevel - 1,
-                      activeColor: Colors.cyan,
-                      inactiveColor: Colors.grey,
-                      onChanged: (value) {
-                        _gameBoard.setStartLevel(value.toInt());
-                        setDialogState(() {});
-                      },
-                    ),
-                  ),
-                  const SizedBox(width: 16),
-                  IconButton(
-                    icon: const Icon(Icons.add_circle, color: Colors.cyan, size: 40),
-                    onPressed: _gameBoard.startLevel < GameBoard.maxLevel
-                        ? () {
-                            _gameBoard.setStartLevel(_gameBoard.startLevel + 1);
-                            setDialogState(() {});
-                          }
-                        : null,
-                  ),
-                ],
-              ),
-              const SizedBox(height: 8),
-              Text(
-                'games.tetrisWide.speed'.tr(namedArgs: {'speed': (500 - (_gameBoard.startLevel - 1) * 50).toString()}),
-                style: TextStyle(color: Colors.grey.shade400, fontSize: 14),
-              ),
-            ],
-          ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              'games.tetrisWide.scoreValue'.tr(namedArgs: {'score': _gameBoard.score.toString()}),
+              style: const TextStyle(color: Colors.white, fontSize: 20),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'games.tetrisWide.linesValue'.tr(namedArgs: {'lines': _gameBoard.linesCleared.toString()}),
+              style: const TextStyle(color: Colors.white, fontSize: 16),
+            ),
+            const SizedBox(height: 12),
+            Text(
+              'games.tetrisWide.fillRows'.tr(namedArgs: {'rows': nextFillRows.toString()}),
+              style: TextStyle(color: Colors.grey.shade400, fontSize: 14),
+            ),
+          ],
         ),
         actions: [
           TextButton(
             onPressed: () {
               Navigator.of(context).pop();
-              _gameBoard.pauseGame();
+              _levelCompleteDialogShown = false;
+              _gameBoard.nextLevel();
             },
             child: Text(
-              'games.tetrisWide.cancel'.tr(),
-              style: const TextStyle(color: Colors.grey, fontSize: 16),
-            ),
-          ),
-          TextButton(
-            onPressed: () {
-              Navigator.of(context).pop();
-              _gameBoard.startGame();
-            },
-            child: Text(
-              'games.tetrisWide.startGame'.tr(),
-              style: const TextStyle(color: Colors.cyan, fontSize: 16),
+              'games.tetrisWide.nextLevel'.tr(),
+              style: const TextStyle(color: Colors.greenAccent, fontSize: 18, fontWeight: FontWeight.bold),
             ),
           ),
         ],
       ),
-    );
+    ).then((_) {
+      _levelCompleteDialogShown = false;
+    });
   }
 
   void _showGameOverDialog() {
@@ -343,10 +311,6 @@ class _TetrisWideScreenState extends State<TetrisWideScreen>
           IconButton(
             icon: const Icon(Icons.help_outline, color: Colors.white),
             onPressed: _showRulesDialog,
-          ),
-          IconButton(
-            icon: const Icon(Icons.settings, color: Colors.white),
-            onPressed: _showLevelSelectDialog,
           ),
           IconButton(
             icon: Icon(
@@ -595,11 +559,6 @@ class _TetrisWideScreenState extends State<TetrisWideScreen>
                         _buildCircleButton(
                           icon: Icons.help_outline,
                           onPressed: _showRulesDialog,
-                        ),
-                        const SizedBox(width: 8),
-                        _buildCircleButton(
-                          icon: Icons.settings,
-                          onPressed: _showLevelSelectDialog,
                         ),
                         const SizedBox(width: 8),
                         _buildCircleButton(

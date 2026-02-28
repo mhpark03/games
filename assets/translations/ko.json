@@ -131,7 +131,10 @@
       "next": "다음",
       "scoreValue": "점수: {score}",
       "levelValueColon": "레벨: {level}",
-      "linesValue": "줄: {lines}"
+      "linesValue": "줄: {lines}",
+      "levelComplete": "레벨 {level} 클리어!",
+      "nextLevel": "다음 레벨",
+      "fillRows": "채울 줄: {rows}"
     },
     "gomoku": {
       "name": "오목",
