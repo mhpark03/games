@@ -135,6 +135,7 @@
       "levelComplete": "Level {level} Clear!",
       "nextLevel": "Next Level",
       "fillRows": "Fill rows: {rows}",
+      "gameSetting": "Game Settings",
       "speedSetting": "Speed Setting",
       "speedDesc": "Lower value = faster speed"
     },

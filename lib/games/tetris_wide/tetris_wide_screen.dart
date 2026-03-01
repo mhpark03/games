@@ -9,7 +9,8 @@ import '../tetris/widgets/control_button.dart';
 import '../../services/input_sdk_service.dart';
 
 class TetrisWideScreen extends StatefulWidget {
-  const TetrisWideScreen({super.key});
+  final int startLevel;
+  const TetrisWideScreen({super.key, this.startLevel = 1});
 
   @override
   State<TetrisWideScreen> createState() => _TetrisWideScreenState();
@@ -51,7 +52,7 @@ class _TetrisWideScreenState extends State<TetrisWideScreen>
   void initState() {
     super.initState();
     InputSdkService.setActionGameContext();
-    _gameBoard = GameBoard(rows: _calculateRows());
+    _gameBoard = GameBoard(rows: _calculateRows(), startLevel: widget.startLevel);
     _gameBoard.addListener(_onGameUpdate);
     _gameBoard.startGame();
     _ticker = createTicker(_onTick);
@@ -198,35 +199,71 @@ class _TetrisWideScreenState extends State<TetrisWideScreen>
 
   void _showSpeedSettingDialog() {
     _gameBoard.pauseGame();
+    int tempLevel = _gameBoard.level;
     int tempSpeed = _gameBoard.speed;
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        backgroundColor: Colors.grey.shade900,
-        title: Text(
-          'games.tetrisWide.speedSetting'.tr(),
-          style: const TextStyle(color: Colors.cyan, fontWeight: FontWeight.bold),
-          textAlign: TextAlign.center,
-        ),
-        content: StatefulBuilder(
-          builder: (context, setDialogState) => Column(
+      builder: (context) => StatefulBuilder(
+        builder: (context, setDialogState) => AlertDialog(
+          backgroundColor: Colors.grey.shade900,
+          title: Text(
+            'games.tetrisWide.gameSetting'.tr(),
+            style: const TextStyle(color: Colors.cyan, fontWeight: FontWeight.bold),
+            textAlign: TextAlign.center,
+          ),
+          content: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
+              // 레벨 설정
               Text(
-                '${tempSpeed}ms',
-                style: const TextStyle(color: Colors.white, fontSize: 32),
+                'games.tetrisWide.level'.tr(),
+                style: TextStyle(color: Colors.grey.shade400, fontSize: 13, fontWeight: FontWeight.bold),
               ),
-              const SizedBox(height: 16),
+              const SizedBox(height: 4),
+              Text(
+                'games.tetrisWide.levelValue'.tr(namedArgs: {'level': tempLevel.toString()}),
+                style: const TextStyle(color: Colors.white, fontSize: 28, fontWeight: FontWeight.bold),
+              ),
               Row(
-                mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   IconButton(
-                    icon: const Icon(Icons.remove_circle, color: Colors.cyan, size: 40),
-                    onPressed: tempSpeed > 50
-                        ? () => setDialogState(() => tempSpeed -= 50)
-                        : null,
+                    icon: const Icon(Icons.remove_circle, color: Colors.cyan, size: 36),
+                    onPressed: tempLevel > 1 ? () => setDialogState(() => tempLevel--) : null,
                   ),
-                  const SizedBox(width: 16),
+                  Expanded(
+                    child: Slider(
+                      value: tempLevel.toDouble(),
+                      min: 1,
+                      max: 20,
+                      divisions: 19,
+                      activeColor: Colors.cyan,
+                      inactiveColor: Colors.grey,
+                      onChanged: (v) => setDialogState(() => tempLevel = v.toInt()),
+                    ),
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.add_circle, color: Colors.cyan, size: 36),
+                    onPressed: tempLevel < 20 ? () => setDialogState(() => tempLevel++) : null,
+                  ),
+                ],
+              ),
+              const Divider(color: Colors.grey, height: 24),
+              // 속도 설정
+              Text(
+                'games.tetrisWide.speedSetting'.tr(),
+                style: TextStyle(color: Colors.grey.shade400, fontSize: 13, fontWeight: FontWeight.bold),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                '${tempSpeed}ms',
+                style: const TextStyle(color: Colors.white, fontSize: 28),
+              ),
+              Row(
+                children: [
+                  IconButton(
+                    icon: const Icon(Icons.remove_circle, color: Colors.cyan, size: 36),
+                    onPressed: tempSpeed > 50 ? () => setDialogState(() => tempSpeed -= 50) : null,
+                  ),
                   Expanded(
                     child: Slider(
                       value: tempSpeed.toDouble(),
@@ -235,51 +272,46 @@ class _TetrisWideScreenState extends State<TetrisWideScreen>
                       divisions: 9,
                       activeColor: Colors.cyan,
                       inactiveColor: Colors.grey,
-                      onChanged: (value) {
-                        setDialogState(() => tempSpeed = value.toInt());
-                      },
+                      onChanged: (v) => setDialogState(() => tempSpeed = v.toInt()),
                     ),
                   ),
-                  const SizedBox(width: 16),
                   IconButton(
-                    icon: const Icon(Icons.add_circle, color: Colors.cyan, size: 40),
-                    onPressed: tempSpeed < 500
-                        ? () => setDialogState(() => tempSpeed += 50)
-                        : null,
+                    icon: const Icon(Icons.add_circle, color: Colors.cyan, size: 36),
+                    onPressed: tempSpeed < 500 ? () => setDialogState(() => tempSpeed += 50) : null,
                   ),
                 ],
               ),
-              const SizedBox(height: 8),
               Text(
                 'games.tetrisWide.speedDesc'.tr(),
-                style: TextStyle(color: Colors.grey.shade400, fontSize: 13),
+                style: TextStyle(color: Colors.grey.shade400, fontSize: 12),
               ),
             ],
           ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+                _gameBoard.pauseGame(); // 재개
+              },
+              child: Text(
+                'games.tetrisWide.cancel'.tr(),
+                style: const TextStyle(color: Colors.grey, fontSize: 16),
+              ),
+            ),
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+                _gameBoard.startLevel = tempLevel;
+                _gameBoard.setSpeed(tempSpeed);
+                _gameBoard.startGame();
+              },
+              child: Text(
+                'games.tetrisWide.startGame'.tr(),
+                style: const TextStyle(color: Colors.cyan, fontSize: 16, fontWeight: FontWeight.bold),
+              ),
+            ),
+          ],
         ),
-        actions: [
-          TextButton(
-            onPressed: () {
-              Navigator.of(context).pop();
-              _gameBoard.pauseGame();
-            },
-            child: Text(
-              'games.tetrisWide.cancel'.tr(),
-              style: const TextStyle(color: Colors.grey, fontSize: 16),
-            ),
-          ),
-          TextButton(
-            onPressed: () {
-              Navigator.of(context).pop();
-              _gameBoard.setSpeed(tempSpeed);
-              _gameBoard.startGame();
-            },
-            child: Text(
-              'games.tetrisWide.startGame'.tr(),
-              style: const TextStyle(color: Colors.cyan, fontSize: 16),
-            ),
-          ),
-        ],
       ),
     );
   }

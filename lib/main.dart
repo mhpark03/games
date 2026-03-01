@@ -3540,6 +3540,84 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
+  void _showTetrisWideLevelDialog(BuildContext context) {
+    int selectedLevel = 1;
+    showDialog(
+      context: context,
+      builder: (context) => StatefulBuilder(
+        builder: (context, setDialogState) => AlertDialog(
+          backgroundColor: Colors.grey.shade900,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+            side: BorderSide(color: Colors.teal.withValues(alpha: 0.5), width: 2),
+          ),
+          title: Text(
+            'games.tetrisWide.selectStartLevel'.tr(),
+            style: const TextStyle(color: Colors.teal, fontWeight: FontWeight.bold),
+            textAlign: TextAlign.center,
+          ),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                'games.tetrisWide.levelValue'.tr(namedArgs: {'level': selectedLevel.toString()}),
+                style: const TextStyle(color: Colors.white, fontSize: 32, fontWeight: FontWeight.bold),
+              ),
+              const SizedBox(height: 8),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  IconButton(
+                    icon: const Icon(Icons.remove_circle, color: Colors.teal, size: 40),
+                    onPressed: selectedLevel > 1
+                        ? () => setDialogState(() => selectedLevel--)
+                        : null,
+                  ),
+                  Expanded(
+                    child: Slider(
+                      value: selectedLevel.toDouble(),
+                      min: 1,
+                      max: 20,
+                      divisions: 19,
+                      activeColor: Colors.teal,
+                      inactiveColor: Colors.grey,
+                      onChanged: (v) => setDialogState(() => selectedLevel = v.toInt()),
+                    ),
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.add_circle, color: Colors.teal, size: 40),
+                    onPressed: selectedLevel < 20
+                        ? () => setDialogState(() => selectedLevel++)
+                        : null,
+                  ),
+                ],
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: Text('app.cancel'.tr(), style: const TextStyle(color: Colors.grey, fontSize: 16)),
+            ),
+            TextButton(
+              onPressed: () {
+                Navigator.pop(context);
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => TetrisWideScreen(startLevel: selectedLevel),
+                  ),
+                );
+              },
+              child: Text('games.tetrisWide.startGame'.tr(),
+                  style: const TextStyle(color: Colors.teal, fontSize: 16, fontWeight: FontWeight.bold)),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   void _showGameDescription(BuildContext context, String title, String description, Color color) {
     showDialog(
       context: context,

@@ -135,6 +135,7 @@
       "levelComplete": "第 {level} 关通过!",
       "nextLevel": "下一关",
       "fillRows": "填充行: {rows}",
+      "gameSetting": "游戏设置",
       "speedSetting": "速度设置",
       "speedDesc": "数值越小速度越快"
     },

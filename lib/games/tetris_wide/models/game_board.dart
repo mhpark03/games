@@ -23,13 +23,16 @@ class GameBoard extends ChangeNotifier {
   int speedBoost = 0;
   int currentFillRows = 0;
   Timer? _gameTimer;
+  late List<bool> _isDenseCol;
 
   final Random _random = Random();
 
   /// 실제 적용 속도 (설정 속도 - 부스트)
   int get activeSpeed => (speed - speedBoost * 20).clamp(50, 999);
 
-  GameBoard({this.rows = 20}) {
+  int startLevel;
+
+  GameBoard({this.rows = 20, this.startLevel = 1}) {
     board = List.generate(
       rows,
       (_) => List.generate(cols, (_) => null),
@@ -64,13 +67,25 @@ class GameBoard extends ChangeNotifier {
       (_) => List.generate(cols, (_) => null),
     );
     score = 0;
-    level = 1;
     linesCleared = 0;
     isGameOver = false;
     isLevelComplete = false;
     isPaused = false;
-    speedBoost = 0;
+
+    // startLevel에 맞춰 level, currentFillRows, speedBoost 계산
+    level = startLevel.clamp(1, 99);
     currentFillRows = rows ~/ 3;
+    speedBoost = 0;
+    final maxFill = (rows * 2) ~/ 3;
+    for (int i = 1; i < level; i++) {
+      currentFillRows += 2;
+      if (currentFillRows > maxFill) {
+        currentFillRows = rows ~/ 3;
+        speedBoost++;
+      }
+    }
+
+    _isDenseCol = List.generate(cols, (_) => _random.nextDouble() < 0.6);
     _fillInitialBlocks();
     currentPiece = _generateRandomPiece();
     nextPiece = _generateRandomPiece();
@@ -79,16 +94,45 @@ class GameBoard extends ChangeNotifier {
   void _fillInitialBlocks() {
     final fillRows = currentFillRows.clamp(1, rows - 4);
     final startRow = rows - fillRows;
+
+    // Step 1: 셀별 초기 랜덤 채움 (밀집/공백 열 기반)
     for (int row = startRow; row < rows; row++) {
-      final minFill = (cols * 0.5).round();
-      final maxFill = (cols * 0.75).round();
-      final fillCount = minFill + _random.nextInt(maxFill - minFill + 1);
-      final positions = List.generate(cols, (i) => i)..shuffle(_random);
-      for (int i = 0; i < fillCount; i++) {
-        board[row][positions[i]] = Piece.blockColor;
+      for (int col = 0; col < cols; col++) {
+        final prob = _isDenseCol[col] ? 0.72 : 0.48;
+        if (_random.nextDouble() < prob) {
+          board[row][col] = Piece.blockColor;
+        }
       }
-      bool isFull = board[row].every((c) => c != null);
-      if (isFull) {
+    }
+
+    // Step 2: CA 스무딩 2회 → 고립된 구멍·블록 제거, 덩어리 연속성 확보
+    // 규칙: 8방향 이웃(자신 포함 9칸) 중 채워진 수가 임계값 이상이면 채움
+    //       밀집 열 임계값=4, 공백 열 임계값=5 (더 강하게 비워짐)
+    for (int pass = 0; pass < 2; pass++) {
+      final next = List.generate(rows, (r) => List<Color?>.from(board[r]));
+      for (int row = startRow; row < rows; row++) {
+        for (int col = 0; col < cols; col++) {
+          int filled = 0;
+          for (int dr = -1; dr <= 1; dr++) {
+            for (int dc = -1; dc <= 1; dc++) {
+              final nr = row + dr, nc = col + dc;
+              if (nr >= 0 && nr < rows && nc >= 0 && nc < cols) {
+                if (board[nr][nc] != null) filled++;
+              }
+            }
+          }
+          final threshold = _isDenseCol[col] ? 4 : 5;
+          next[row][col] = filled >= threshold ? Piece.blockColor : null;
+        }
+      }
+      for (int row = startRow; row < rows; row++) {
+        board[row] = next[row];
+      }
+    }
+
+    // Step 3: 꽉 찬 줄 빈칸 보장
+    for (int row = 0; row < rows; row++) {
+      if (board[row].every((c) => c != null)) {
         board[row][_random.nextInt(cols)] = null;
       }
     }
@@ -278,20 +322,18 @@ class GameBoard extends ChangeNotifier {
   void _placePiece() {
     if (currentPiece == null) return;
 
-    Set<int> affectedCols = {};
     for (var cell in currentPiece!.cells) {
       int row = cell[0];
       int col = cell[1];
       if (row >= 0 && row < rows && col >= 0 && col < cols) {
         board[row][col] = Piece.newBlockColor;
-        affectedCols.add(col);
       }
     }
 
-    _clearLines(affectedCols);
+    _clearLines();
 
     // 남은 줄이 1줄 이하면 레벨 클리어
-    if (remainingRows <= 1) {
+    if (remainingRows <= 2) {
       isLevelComplete = true;
       _gameTimer?.cancel();
       notifyListeners();
@@ -323,64 +365,20 @@ class GameBoard extends ChangeNotifier {
     return count;
   }
 
-  void _clearLines(Set<int> affectedCols) {
+  void _clearLines() {
     lastClearedCells = [];
     lastFallingCells = [];
 
-    // 클리어 전 신규 셀 위치 기록 (원래 좌표계, 꽉 찬 줄 제외)
-    final Set<int> initialFullRows = {};
-    for (int row = 0; row < rows; row++) {
-      if (board[row].every((c) => c != null)) {
-        initialFullRows.add(row);
-      }
-    }
-
-    final Map<int, List<int>> newCellsBefore = {}; // col → rows (아래→위)
-    for (int col in affectedCols) {
-      for (int row = rows - 1; row >= 0; row--) {
-        if (board[row][col] == Piece.newBlockColor && !initialFullRows.contains(row)) {
-          newCellsBefore.putIfAbsent(col, () => []).add(row);
-        }
-      }
-    }
-
-    // 줄 클리어 → 중력(신규 셀만) → 연쇄 클리어 반복
-    bool hadClears = true;
-    while (hadClears) {
-      hadClears = _clearFullRows();
-      if (hadClears) {
-        _applyGravity(affectedCols);
-      }
-    }
-
-    // 신규 셀의 이동 경로 계산
-    if (lastClearedCells.isNotEmpty) {
-      for (int col in affectedCols) {
-        final before = newCellsBefore[col];
-        if (before == null || before.isEmpty) continue;
-
-        // 최종 보드에서 신규 셀 위치 (아래→위)
-        List<int> after = [];
-        for (int row = rows - 1; row >= 0; row--) {
-          if (board[row][col] == Piece.newBlockColor) {
-            after.add(row);
-          }
-        }
-
-        final count = before.length < after.length ? before.length : after.length;
-        for (int i = 0; i < count; i++) {
-          if (before[i] != after[i]) {
-            lastFallingCells.add(FallingCell(
-              col, before[i], after[i], Piece.newBlockColor,
-            ));
-          }
-        }
-      }
+    // 줄 클리어 → 제거된 줄 위 셀 중력 → 연쇄 반복
+    int maxClearedRow;
+    while ((maxClearedRow = _clearFullRows()) >= 0) {
+      _applyGravityAbove(maxClearedRow);
     }
   }
 
-  /// 채워진 줄을 찾아 제거. 클리어된 줄이 있으면 true 반환.
-  bool _clearFullRows() {
+  /// 채워진 줄을 찾아 제거.
+  /// 클리어된 가장 아래(bottommost) 줄 인덱스 반환, 없으면 -1.
+  int _clearFullRows() {
     List<int> fullRows = [];
 
     for (int row = 0; row < rows; row++) {
@@ -399,7 +397,7 @@ class GameBoard extends ChangeNotifier {
       }
     }
 
-    if (fullRows.isEmpty) return false;
+    if (fullRows.isEmpty) return -1;
 
     for (int i = fullRows.length - 1; i >= 0; i--) {
       board.removeAt(fullRows[i]);
@@ -426,23 +424,35 @@ class GameBoard extends ChangeNotifier {
         break;
     }
 
-    return true;
+    return fullRows.last; // bottommost cleared row
   }
 
-  /// 신규 셀(newBlockColor)만 아래로 낙하시킴
-  void _applyGravity(Set<int> affectedCols) {
-    for (int col in affectedCols) {
-      // 아래→위 순으로 처리: 아래쪽 신규 셀이 먼저 착지
-      for (int row = rows - 1; row >= 0; row--) {
-        if (board[row][col] == Piece.newBlockColor) {
-          int targetRow = row;
-          while (targetRow + 1 < rows && board[targetRow + 1][col] == null) {
-            targetRow++;
-          }
-          if (targetRow != row) {
-            board[targetRow][col] = Piece.newBlockColor;
-            board[row][col] = null;
-          }
+  /// 제거된 줄(maxClearedRow) 위에 있던 셀만 아래로 낙하.
+  /// 연쇄 클리어 시 동일 셀의 이동 경로를 합산(coalesce)해 lastFallingCells에 기록.
+  void _applyGravityAbove(int maxClearedRow) {
+    for (int col = 0; col < cols; col++) {
+      // maxClearedRow 이하 행(위에서 내려온 셀)만 대상, 아래→위 순
+      for (int row = maxClearedRow; row >= 0; row--) {
+        if (board[row][col] == null) continue;
+        int targetRow = row;
+        while (targetRow + 1 < rows && board[targetRow + 1][col] == null) {
+          targetRow++;
+        }
+        if (targetRow == row) continue;
+
+        final color = board[row][col]!;
+        board[targetRow][col] = color;
+        board[row][col] = null;
+
+        // 연쇄 낙하 합산: 이전 라운드에서 row까지 내려온 셀이면 fromRow를 유지
+        final existingIdx = lastFallingCells.indexWhere(
+          (c) => c.col == col && c.toRow == row,
+        );
+        if (existingIdx >= 0) {
+          final old = lastFallingCells[existingIdx];
+          lastFallingCells[existingIdx] = FallingCell(col, old.fromRow, targetRow, color);
+        } else {
+          lastFallingCells.add(FallingCell(col, row, targetRow, color));
         }
       }
     }

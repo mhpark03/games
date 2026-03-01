@@ -135,6 +135,7 @@
       "levelComplete": "レベル {level} クリア!",
       "nextLevel": "次のレベル",
       "fillRows": "埋める列: {rows}",
+      "gameSetting": "ゲーム設定",
       "speedSetting": "速度設定",
       "speedDesc": "値が小さいほど速くなります"
     },
