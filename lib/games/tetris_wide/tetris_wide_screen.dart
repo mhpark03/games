@@ -102,7 +102,15 @@ class _TetrisWideScreenState extends State<TetrisWideScreen>
 
     if (_slidingRows.isEmpty && _fallingCells.isEmpty) {
       _ticker!.stop();
-      _gameBoard.normalizeNewCells();
+      // 연쇄 클리어 확인: 낙하로 새 줄이 채워졌으면 다시 애니메이션 실행
+      if (!_gameBoard.isGameOver &&
+          !_gameBoard.isLevelComplete &&
+          _gameBoard.stepCascade()) {
+        // stepCascade()가 notifyListeners() 호출 → _onGameUpdate()에서
+        // 새 슬라이드/낙하 애니메이션이 시작되고 ticker가 재시작됨
+      } else {
+        _gameBoard.normalizeNewCells();
+      }
     }
     setState(() {});
   }
@@ -211,9 +219,10 @@ class _TetrisWideScreenState extends State<TetrisWideScreen>
             style: const TextStyle(color: Colors.cyan, fontWeight: FontWeight.bold),
             textAlign: TextAlign.center,
           ),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
+          content: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
               // 레벨 설정
               Text(
                 'games.tetrisWide.level'.tr(),
@@ -286,6 +295,7 @@ class _TetrisWideScreenState extends State<TetrisWideScreen>
                 style: TextStyle(color: Colors.grey.shade400, fontSize: 12),
               ),
             ],
+          ),
           ),
           actions: [
             TextButton(
@@ -967,8 +977,10 @@ class _SlidingRow {
   final int direction; // 1 = right, -1 = left
   double time;
 
-  static const double flashDuration = 0.12;
-  static const double slideDuration = 0.35;
+  static const double _blinkCycle = 0.18;  // 1회 깜빡임 주기
+  static const int _blinkCount = 3;         // 총 깜빡임 횟수
+  static const double _blinkDuration = _blinkCycle * _blinkCount; // 0.54s
+  static const double slideDuration = 0.28;
 
   _SlidingRow({
     required this.row,
@@ -980,24 +992,27 @@ class _SlidingRow {
     time += dt;
   }
 
-  double get flashOpacity {
-    if (time > flashDuration) return 0.0;
-    return (1.0 - time / flashDuration) * 0.7;
+  // 주기의 60%는 밝게, 40%는 꺼짐
+  bool get _isBlinkOn {
+    if (time >= _blinkDuration) return false;
+    return (time % _blinkCycle) < (_blinkCycle * 0.6);
   }
 
+  double get flashOpacity => _isBlinkOn ? 0.92 : 0.0;
+
   double get slideProgress {
-    if (time < flashDuration) return 0.0;
-    final t = ((time - flashDuration) / slideDuration).clamp(0.0, 1.0);
+    if (time < _blinkDuration) return 0.0;
+    final t = ((time - _blinkDuration) / slideDuration).clamp(0.0, 1.0);
     return 1.0 - (1.0 - t) * (1.0 - t); // ease-out quadratic
   }
 
   double get opacity {
-    if (time < flashDuration) return 1.0;
-    final t = ((time - flashDuration) / slideDuration).clamp(0.0, 1.0);
+    if (time < _blinkDuration) return 1.0;
+    final t = ((time - _blinkDuration) / slideDuration).clamp(0.0, 1.0);
     return 1.0 - t;
   }
 
-  bool get isDone => time >= flashDuration + slideDuration;
+  bool get isDone => time >= _blinkDuration + slideDuration;
 }
 
 class _FallingCell {
@@ -1073,7 +1088,7 @@ class _AnimationOverlayPainter extends CustomPainter {
 
       if (slidingRow.flashOpacity > 0) {
         final flashPaint = Paint()
-          ..color = Colors.white.withValues(alpha: slidingRow.flashOpacity);
+          ..color = const Color(0xFFFFEB3B).withValues(alpha: slidingRow.flashOpacity);
         final y = borderWidth + slidingRow.row * cellHeight;
         canvas.drawRect(
           Rect.fromLTWH(borderWidth, y, boardWidth, cellHeight),

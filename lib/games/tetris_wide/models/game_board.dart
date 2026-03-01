@@ -74,18 +74,18 @@ class GameBoard extends ChangeNotifier {
 
     // startLevel에 맞춰 level, currentFillRows, speedBoost 계산
     level = startLevel.clamp(1, 99);
-    currentFillRows = rows ~/ 3;
+    currentFillRows = rows ~/ 2;
     speedBoost = 0;
     final maxFill = (rows * 2) ~/ 3;
     for (int i = 1; i < level; i++) {
       currentFillRows += 2;
       if (currentFillRows > maxFill) {
-        currentFillRows = rows ~/ 3;
+        currentFillRows = rows ~/ 2;
         speedBoost++;
       }
     }
 
-    _isDenseCol = List.generate(cols, (_) => _random.nextDouble() < 0.6);
+    _isDenseCol = List.generate(cols, (_) => _random.nextDouble() < 0.70);
     _fillInitialBlocks();
     currentPiece = _generateRandomPiece();
     nextPiece = _generateRandomPiece();
@@ -94,47 +94,24 @@ class GameBoard extends ChangeNotifier {
   void _fillInitialBlocks() {
     final fillRows = currentFillRows.clamp(1, rows - 4);
     final startRow = rows - fillRows;
+    final center = cols ~/ 2; // 항상 비울 가운데 칸 인덱스
 
-    // Step 1: 셀별 초기 랜덤 채움 (밀집/공백 열 기반)
+    int sideCount = 1; // 맨 윗줄: 양 끝 1칸씩
     for (int row = startRow; row < rows; row++) {
-      for (int col = 0; col < cols; col++) {
-        final prob = _isDenseCol[col] ? 0.72 : 0.48;
-        if (_random.nextDouble() < prob) {
-          board[row][col] = Piece.blockColor;
-        }
-      }
-    }
+      final leftCount = sideCount.clamp(1, center);
+      final rightStart = (cols - sideCount).clamp(center + 1, cols - 1);
 
-    // Step 2: CA 스무딩 2회 → 고립된 구멍·블록 제거, 덩어리 연속성 확보
-    // 규칙: 8방향 이웃(자신 포함 9칸) 중 채워진 수가 임계값 이상이면 채움
-    //       밀집 열 임계값=4, 공백 열 임계값=5 (더 강하게 비워짐)
-    for (int pass = 0; pass < 2; pass++) {
-      final next = List.generate(rows, (r) => List<Color?>.from(board[r]));
-      for (int row = startRow; row < rows; row++) {
-        for (int col = 0; col < cols; col++) {
-          int filled = 0;
-          for (int dr = -1; dr <= 1; dr++) {
-            for (int dc = -1; dc <= 1; dc++) {
-              final nr = row + dr, nc = col + dc;
-              if (nr >= 0 && nr < rows && nc >= 0 && nc < cols) {
-                if (board[nr][nc] != null) filled++;
-              }
-            }
-          }
-          final threshold = _isDenseCol[col] ? 4 : 5;
-          next[row][col] = filled >= threshold ? Piece.blockColor : null;
-        }
+      // 왼쪽 채움
+      for (int col = 0; col < leftCount; col++) {
+        board[row][col] = Piece.blockColor;
       }
-      for (int row = startRow; row < rows; row++) {
-        board[row] = next[row];
+      // 오른쪽 채움 (가운데 칸 항상 비움)
+      for (int col = rightStart; col < cols; col++) {
+        board[row][col] = Piece.blockColor;
       }
-    }
 
-    // Step 3: 꽉 찬 줄 빈칸 보장
-    for (int row = 0; row < rows; row++) {
-      if (board[row].every((c) => c != null)) {
-        board[row][_random.nextInt(cols)] = null;
-      }
+      // 다음 행: 0~2칸 랜덤 증가
+      sideCount = (sideCount + _random.nextInt(3)).clamp(1, center);
     }
   }
 
@@ -153,7 +130,7 @@ class GameBoard extends ChangeNotifier {
     final maxFill = (rows * 2) ~/ 3;
     if (currentFillRows > maxFill) {
       // 2/3 초과 시 1/3로 리셋, 속도 20ms 빠르게
-      currentFillRows = rows ~/ 3;
+      currentFillRows = rows ~/ 2;
       speedBoost++;
     }
 
@@ -326,7 +303,7 @@ class GameBoard extends ChangeNotifier {
       int row = cell[0];
       int col = cell[1];
       if (row >= 0 && row < rows && col >= 0 && col < cols) {
-        board[row][col] = Piece.newBlockColor;
+        board[row][col] = currentPiece!.newColor;
       }
     }
 
@@ -368,12 +345,28 @@ class GameBoard extends ChangeNotifier {
   void _clearLines() {
     lastClearedCells = [];
     lastFallingCells = [];
-
-    // 줄 클리어 → 제거된 줄 위 셀 중력 → 연쇄 반복
-    int maxClearedRow;
-    while ((maxClearedRow = _clearFullRows()) >= 0) {
+    // 1회만 실행 — 연쇄 클리어는 낙하 애니메이션 완료 후 stepCascade()로 처리
+    final maxClearedRow = _clearFullRows();
+    if (maxClearedRow >= 0) {
       _applyGravityAbove(maxClearedRow);
     }
+  }
+
+  /// 낙하 애니메이션 완료 후 호출 — 연쇄 줄 클리어를 순차적으로 처리.
+  /// 클리어할 줄이 있으면 true 반환(애니메이션 재시작 필요), 없으면 false.
+  bool stepCascade() {
+    lastClearedCells = [];
+    lastFallingCells = [];
+    final maxClearedRow = _clearFullRows();
+    if (maxClearedRow < 0) return false;
+    _applyGravityAbove(maxClearedRow);
+    // 레벨 클리어 조건 재확인
+    if (remainingRows <= 2 && !isLevelComplete) {
+      isLevelComplete = true;
+      _gameTimer?.cancel();
+    }
+    notifyListeners();
+    return true;
   }
 
   /// 채워진 줄을 찾아 제거.
@@ -432,8 +425,9 @@ class GameBoard extends ChangeNotifier {
   void _applyGravityAbove(int maxClearedRow) {
     for (int col = 0; col < cols; col++) {
       // maxClearedRow 이하 행(위에서 내려온 셀)만 대상, 아래→위 순
+      // 신규 셀(newBlockColor)만 낙하 대상
       for (int row = maxClearedRow; row >= 0; row--) {
-        if (board[row][col] == null) continue;
+        if (!Piece.isNewColor(board[row][col])) continue;
         int targetRow = row;
         while (targetRow + 1 < rows && board[targetRow + 1][col] == null) {
           targetRow++;
@@ -463,8 +457,8 @@ class GameBoard extends ChangeNotifier {
     bool changed = false;
     for (int row = 0; row < rows; row++) {
       for (int col = 0; col < cols; col++) {
-        if (board[row][col] == Piece.newBlockColor) {
-          board[row][col] = Piece.blockColor;
+        if (Piece.isNewColor(board[row][col])) {
+          board[row][col] = Piece.normalizeColor(board[row][col]!);
           changed = true;
         }
       }
