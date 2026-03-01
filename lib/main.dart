@@ -84,15 +84,13 @@ void main() async {
   // 다국어 지원 초기화
   await EasyLocalization.ensureInitialized();
 
-  // AdMob 초기화
-  await AdService.initialize();
-
-  // 계정 정지 중에도 코드 레벨에서 테스트 기기를 강제 지정합니다.
-  await MobileAds.instance.updateRequestConfiguration(
-    RequestConfiguration(testDeviceIds: ["7e423abc-74c5-4cb7-9e7b-578adadeb80d"]),
-  );
-
-  AdService().loadRewardedAd();
+  // AdMob 초기화 (백그라운드에서 진행 - 앱 시작 속도 개선)
+  AdService.initialize().then((_) {
+    MobileAds.instance.updateRequestConfiguration(
+      RequestConfiguration(testDeviceIds: ["7e423abc-74c5-4cb7-9e7b-578adadeb80d"]),
+    );
+    AdService().loadRewardedAd();
+  });
 
   // Google Play Games for PC Input SDK 초기화
   InputSdkService.init().then((_) {
