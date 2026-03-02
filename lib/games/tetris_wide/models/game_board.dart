@@ -425,9 +425,9 @@ class GameBoard extends ChangeNotifier {
   void _applyGravityAbove(int maxClearedRow) {
     for (int col = 0; col < cols; col++) {
       // maxClearedRow 이하 행(위에서 내려온 셀)만 대상, 아래→위 순
-      // 신규 셀(newBlockColor)만 낙하 대상
+      // 모든 셀(신규/기존)이 낙하해야 함
       for (int row = maxClearedRow; row >= 0; row--) {
-        if (!Piece.isNewColor(board[row][col])) continue;
+        if (board[row][col] == null) continue;
         int targetRow = row;
         while (targetRow + 1 < rows && board[targetRow + 1][col] == null) {
           targetRow++;
@@ -438,15 +438,18 @@ class GameBoard extends ChangeNotifier {
         board[targetRow][col] = color;
         board[row][col] = null;
 
-        // 연쇄 낙하 합산: 이전 라운드에서 row까지 내려온 셀이면 fromRow를 유지
-        final existingIdx = lastFallingCells.indexWhere(
-          (c) => c.col == col && c.toRow == row,
-        );
-        if (existingIdx >= 0) {
-          final old = lastFallingCells[existingIdx];
-          lastFallingCells[existingIdx] = FallingCell(col, old.fromRow, targetRow, color);
-        } else {
-          lastFallingCells.add(FallingCell(col, row, targetRow, color));
+        // 신규 셀만 애니메이션 기록
+        if (Piece.isNewColor(color)) {
+          // 연쇄 낙하 합산: 이전 라운드에서 row까지 내려온 셀이면 fromRow를 유지
+          final existingIdx = lastFallingCells.indexWhere(
+            (c) => c.col == col && c.toRow == row,
+          );
+          if (existingIdx >= 0) {
+            final old = lastFallingCells[existingIdx];
+            lastFallingCells[existingIdx] = FallingCell(col, old.fromRow, targetRow, color);
+          } else {
+            lastFallingCells.add(FallingCell(col, row, targetRow, color));
+          }
         }
       }
     }
