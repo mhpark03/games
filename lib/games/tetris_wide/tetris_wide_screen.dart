@@ -42,10 +42,12 @@ class _TetrisWideScreenState extends State<TetrisWideScreen>
 
     final availableHeight = screenHeight - fixedHeight - safeArea - boardPadding;
     final availableWidth = screenWidth - 24.0; // 12px horizontal padding each side
-    final cellSize = availableWidth / GameBoard.cols;
+    final cellSizeFromWidth = availableWidth / GameBoard.cols;
+    // 웹 넓은 화면에서 셀이 너무 커지는 것을 방지 → 세로 칸수 확보
+    final cellSize = cellSizeFromWidth > 20.0 ? 20.0 : cellSizeFromWidth;
     final rows = (availableHeight / cellSize).floor();
 
-    return rows.clamp(20, 50);
+    return rows.clamp(20, 60);
   }
 
   @override

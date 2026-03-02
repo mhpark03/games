@@ -309,8 +309,8 @@ class GameBoard extends ChangeNotifier {
 
     _clearLines();
 
-    // 남은 줄이 1줄 이하면 레벨 클리어
-    if (remainingRows <= 2) {
+    // 초기 채움 블록이 모두 제거되면 레벨 클리어
+    if (remainingRows == 0) {
       isLevelComplete = true;
       _gameTimer?.cancel();
       notifyListeners();
@@ -328,12 +328,12 @@ class GameBoard extends ChangeNotifier {
     notifyListeners();
   }
 
-  /// 블록이 존재하는 줄 수
+  /// 초기 채움 블록(blockColor)이 포함된 줄 수
   int get remainingRows {
     int count = 0;
     for (int row = 0; row < rows; row++) {
       for (int col = 0; col < cols; col++) {
-        if (board[row][col] != null) {
+        if (board[row][col] == Piece.blockColor) {
           count++;
           break;
         }
@@ -361,7 +361,7 @@ class GameBoard extends ChangeNotifier {
     if (maxClearedRow < 0) return false;
     _applyGravityAbove(maxClearedRow);
     // 레벨 클리어 조건 재확인
-    if (remainingRows <= 2 && !isLevelComplete) {
+    if (remainingRows == 0 && !isLevelComplete) {
       isLevelComplete = true;
       _gameTimer?.cancel();
     }
