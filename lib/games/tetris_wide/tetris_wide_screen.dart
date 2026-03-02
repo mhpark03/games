@@ -35,10 +35,10 @@ class _TetrisWideScreenState extends State<TetrisWideScreen>
     final viewPaddingTop = view.padding.top / pixelRatio;
     final viewPaddingBottom = view.padding.bottom / pixelRatio;
 
-    // UI element heights: AppBar(56) + InfoRow(~76) + Controls(~92) + bottom spacing(8)
-    const fixedHeight = 56.0 + 76.0 + 92.0 + 8.0;
+    // UI element heights: AppBar(56) + InfoRow(~50) + Controls(~70) + bottom spacing(4)
+    const fixedHeight = 56.0 + 50.0 + 70.0 + 4.0;
     final safeArea = viewPaddingTop + viewPaddingBottom;
-    final boardPadding = 24.0; // 12px top/bottom padding around board
+    final boardPadding = 12.0; // 6px top/bottom padding around board
 
     final availableHeight = screenHeight - fixedHeight - safeArea - boardPadding;
     final availableWidth = screenWidth - 24.0; // 12px horizontal padding each side
@@ -509,15 +509,15 @@ class _TetrisWideScreenState extends State<TetrisWideScreen>
           children: [
             // Score, Level, Lines, Next block - all in one row
             Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 8.0),
+              padding: const EdgeInsets.symmetric(horizontal: 4.0, vertical: 4.0),
               child: Row(
                 children: [
                   Expanded(child: _buildInfoBox('games.tetrisWide.score'.tr(), _gameBoard.score.toString())),
-                  const SizedBox(width: 6),
+                  const SizedBox(width: 3),
                   Expanded(child: _buildInfoBox('games.tetrisWide.level'.tr(), _gameBoard.level.toString())),
-                  const SizedBox(width: 6),
+                  const SizedBox(width: 3),
                   Expanded(child: _buildInfoBox('games.tetrisWide.lines'.tr(), _gameBoard.remainingRows.toString())),
-                  const SizedBox(width: 6),
+                  const SizedBox(width: 3),
                   InlineNextPieceWidget(piece: _gameBoard.nextPiece),
                 ],
               ),
@@ -525,7 +525,7 @@ class _TetrisWideScreenState extends State<TetrisWideScreen>
             // Game board - full width
             Expanded(
               child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 12.0),
+                padding: const EdgeInsets.symmetric(horizontal: 4.0),
                 child: Center(
                   child: Stack(
                     clipBehavior: Clip.none,
@@ -682,7 +682,7 @@ class _TetrisWideScreenState extends State<TetrisWideScreen>
                         );
                       },
                     ),
-                    const SizedBox(height: 88),
+                    const SizedBox(height: 16),
                   ],
                 ),
               ),
@@ -791,7 +791,7 @@ class _TetrisWideScreenState extends State<TetrisWideScreen>
                         );
                       },
                     ),
-                    const SizedBox(height: 88),
+                    const SizedBox(height: 16),
                   ],
                 ),
               ),
