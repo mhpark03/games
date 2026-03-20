@@ -1,0 +1,48 @@
+{
+  "project_info": {
+    "project_number": "73667558032",
+    "project_id": "mighty-app-a02f1",
+    "storage_bucket": "mighty-app-a02f1.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:73667558032:android:db21f7fc89179cd3a9f615",
+        "android_client_info": {
+          "package_name": "com.mhpark.gamecenter"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDpZjvocfCOIgzY4eJ7_VgUJmBoxOjrHlk"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:73667558032:android:9f10955e54cc7c47a9f615",
+        "android_client_info": {
+          "package_name": "com.mhpark.mighty"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDpZjvocfCOIgzY4eJ7_VgUJmBoxOjrHlk"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

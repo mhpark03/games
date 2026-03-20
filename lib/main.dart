@@ -29,6 +29,7 @@ import 'games/bubble/bubble_screen.dart';
 import 'services/ad_service.dart';
 import 'services/input_sdk_service.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
+import 'package:firebase_core/firebase_core.dart';
 
 // 배너 표시/숨김을 위한 NavigatorObserver
 class BannerNavigatorObserver extends NavigatorObserver {
@@ -80,6 +81,9 @@ final bannerController = BannerController();
 void main() async {
   WidgetsBinding widgetsBinding = WidgetsFlutterBinding.ensureInitialized();
   FlutterNativeSplash.preserve(widgetsBinding: widgetsBinding);
+
+  // Firebase 초기화
+  await Firebase.initializeApp();
 
   // 다국어 지원 초기화
   await EasyLocalization.ensureInitialized();
