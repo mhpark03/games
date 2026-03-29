@@ -234,6 +234,7 @@ class _HulaScreenState extends State<HulaScreen> with TickerProviderStateMixin {
   int _thankYouCountdown = 0; // 땡큐 대기 카운트다운
   Timer? _thankYouTimer; // 땡큐 대기 타이머
   static const int _thankYouWaitSeconds = 5; // 땡큐 대기 시간 (초)
+  bool _showHint = false; // 힌트 표시 여부
 
   // 점수
   List<int> scores = [];
@@ -1267,6 +1268,54 @@ class _HulaScreenState extends State<HulaScreen> with TickerProviderStateMixin {
 
     melds[meldIndex] = Meld(cards: newCards, isRun: newIsRun);
     _mergeConsecutiveRuns(melds);
+  }
+
+  // 힌트: 버릴 카드 추천 인덱스
+  int? _getRecommendedDiscardCardIndex() {
+    if (playerHand.isEmpty) return null;
+    if (currentTurn != 0 || !hasDrawn) return null;
+
+    final recommendedCard = _selectCardToDiscard(playerHand);
+    return playerHand.indexOf(recommendedCard);
+  }
+
+  // 등록 가능한 카드 인덱스 반환 (멜드 등록 > 붙이기 > 7 단독 등록)
+  List<int>? _getRecommendedRegisterCardIndices() {
+    if (playerHand.isEmpty) return null;
+    if (currentTurn != 0 || !hasDrawn) return null;
+
+    // 1. 새로운 멜드 등록 가능한지 확인 (Group 또는 Run)
+    final bestMeld = _findBestMeld(playerHand);
+    if (bestMeld != null) {
+      final indices = <int>[];
+      for (final card in bestMeld) {
+        final idx = playerHand.indexOf(card);
+        if (idx >= 0) indices.add(idx);
+      }
+      if (indices.isNotEmpty) return indices;
+    }
+
+    // 2. 기존 멜드에 붙일 수 있는 카드 확인
+    for (int i = 0; i < playerHand.length; i++) {
+      final card = playerHand[i];
+      if (_canAttachToMeld(card) >= 0) {
+        return [i];
+      }
+      for (final melds in computerMelds) {
+        if (_canAttachToMeldList(card, melds) >= 0) {
+          return [i];
+        }
+      }
+    }
+
+    // 3. 7 카드 단독 등록
+    for (int i = 0; i < playerHand.length; i++) {
+      if (_isSeven(playerHand[i])) {
+        return [i];
+      }
+    }
+
+    return null;
   }
 
   // 스마트 카드 버리기: 버릴 카드 선택
@@ -3265,6 +3314,14 @@ class _HulaScreenState extends State<HulaScreen> with TickerProviderStateMixin {
         ),
         actions: [
           IconButton(
+            icon: Icon(Icons.lightbulb, color: _showHint ? Colors.yellow : Colors.white),
+            onPressed: () {
+              setState(() {
+                _showHint = !_showHint;
+              });
+            },
+          ),
+          IconButton(
             icon: const Icon(Icons.refresh, color: Colors.white),
             onPressed: _initGame,
           ),
@@ -3317,12 +3374,22 @@ class _HulaScreenState extends State<HulaScreen> with TickerProviderStateMixin {
                 ],
               ),
             ),
-            // 오른쪽 상단: 새 게임 + 도움말 버튼
+            // 오른쪽 상단: 힌트 + 새 게임 + 도움말 버튼
             Positioned(
               top: 4,
               right: 8,
               child: Row(
                 children: [
+                  _buildCircleButton(
+                    icon: Icons.lightbulb,
+                    onPressed: () {
+                      setState(() {
+                        _showHint = !_showHint;
+                      });
+                    },
+                    color: _showHint ? Colors.yellow : null,
+                  ),
+                  const SizedBox(width: 8),
                   _buildCircleButton(
                     icon: Icons.refresh,
                     onPressed: _initGame,
@@ -3344,6 +3411,7 @@ class _HulaScreenState extends State<HulaScreen> with TickerProviderStateMixin {
   Widget _buildCircleButton({
     required IconData icon,
     required VoidCallback onPressed,
+    Color? color,
   }) {
     return GestureDetector(
       onTap: onPressed,
@@ -3354,7 +3422,7 @@ class _HulaScreenState extends State<HulaScreen> with TickerProviderStateMixin {
           color: Colors.black.withValues(alpha: 0.5),
           shape: BoxShape.circle,
         ),
-        child: Icon(icon, color: Colors.white, size: 18),
+        child: Icon(icon, color: color ?? Colors.white, size: 18),
       ),
     );
   }
@@ -4034,9 +4102,18 @@ class _HulaScreenState extends State<HulaScreen> with TickerProviderStateMixin {
             (i) => cardsPerRow + i,
           );
 
+    // AI 추천 카드 인덱스 (등록 우선, 없으면 버리기)
+    final recommendedRegisterIndices = _showHint ? _getRecommendedRegisterCardIndices() : null;
+    final recommendedIndex = (recommendedRegisterIndices == null && _showHint) ? _getRecommendedDiscardCardIndex() : null;
+    final isRegisterHint = recommendedRegisterIndices != null;
+
     Widget buildCard(int index) {
       final card = playerHand[index];
       final isSelected = selectedCardIndices.contains(index);
+      final isRecommended = _showHint && (isRegisterHint
+          ? recommendedRegisterIndices.contains(index)
+          : recommendedIndex == index);
+      final hintColor = isRegisterHint ? Colors.green : Colors.lightBlueAccent;
 
       return GestureDetector(
         onTap: () => _toggleCardSelection(index),
@@ -4044,22 +4121,24 @@ class _HulaScreenState extends State<HulaScreen> with TickerProviderStateMixin {
           duration: const Duration(milliseconds: 150),
           transform: Matrix4.translationValues(
               0, isSelected ? (isLandscape ? -8 : -10) : 0, 0),
-          margin: EdgeInsets.symmetric(horizontal: isLandscape ? 2 : 2),
+          margin: const EdgeInsets.symmetric(horizontal: 2),
           width: cardWidth,
           height: cardHeight,
           decoration: BoxDecoration(
             color: Colors.white,
-            borderRadius: BorderRadius.circular(isLandscape ? 6 : 6),
+            borderRadius: BorderRadius.circular(6),
             border: Border.all(
-              color: isSelected ? Colors.amber : Colors.grey.shade400,
-              width: isSelected ? 3 : 1,
+              color: isRecommended ? hintColor : (isSelected ? Colors.amber : Colors.grey.shade400),
+              width: isRecommended ? 3 : (isSelected ? 3 : 1),
             ),
             boxShadow: [
               BoxShadow(
-                color: isSelected
-                    ? Colors.amber.withValues(alpha: 0.5)
-                    : Colors.black.withValues(alpha: 0.2),
-                blurRadius: isSelected ? 8 : 4,
+                color: isRecommended
+                    ? hintColor.withValues(alpha: 0.5)
+                    : (isSelected
+                        ? Colors.amber.withValues(alpha: 0.5)
+                        : Colors.black.withValues(alpha: 0.2)),
+                blurRadius: isRecommended ? 10 : (isSelected ? 8 : 4),
                 offset: const Offset(1, 2),
               ),
             ],
@@ -4067,6 +4146,8 @@ class _HulaScreenState extends State<HulaScreen> with TickerProviderStateMixin {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
+              if (isRecommended)
+                Icon(Icons.lightbulb, color: hintColor, size: 12),
               Text(
                 card.suitSymbol,
                 style: TextStyle(
