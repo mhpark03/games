@@ -30,7 +30,7 @@ class InputSdkService {
     await _setContext('menu');
   }
 
-  /// 보드 게임 컨텍스트로 설정 (오목, 오델로, 체스, 장기 등)
+  /// 보드 게임 컨텍스트로 설정 (오목, 오델로, 장기 등)
   static Future<void> setBoardGameContext() async {
     await _setContext('board');
   }
@@ -56,7 +56,6 @@ class InputSdkService {
       // 보드 게임
       case 'gomoku':
       case 'othello':
-      case 'chess':
       case 'janggi':
       case 'yutnori':
       case 'onecard':
