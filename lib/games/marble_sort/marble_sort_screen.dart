@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:math';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:easy_localization/easy_localization.dart' hide TextDirection;
 import '../../services/ad_service.dart';
 
@@ -103,16 +104,16 @@ _L _calcLayout(double w, double h, int nBoxes, int nColors) {
   // ── 벨트 ──
   final halfW = min(pw * 0.44, h * 0.22);
   final capR = max(halfW / (2 * pi), mR * 1.8);
-  final trackCy = basketTop - mR - capR;
+  final trackCy = basketTop - mR * 3 - capR;
   final geo = _Geo(w / 2, trackCy, halfW, capR);
 
-  // ── 깔대기 컨테이너 (박스 감싸기) ──
-  final funnelBot = trackCy - capR - 2;
+  // ── 깔대기 컨테이너 (넓고 낮게) ──
+  final funnelBot = trackCy - capR - mR * 2;
   final funnelTop = barH + 2;
   final funnelH = funnelBot - funnelTop;
-  final beltEntryW = mR * 4;
+  final beltEntryW = mR * 2.05;
 
-  // 박스 크기 (깔대기 상부 ~25%)
+  // 박스 크기
   final boxCols = min(max(nBoxes, 1), 6);
   final bxRows = max((nBoxes / boxCols).ceil(), 1);
   final boxAreaH = funnelH * 0.25;
@@ -121,12 +122,14 @@ _L _calcLayout(double w, double h, int nBoxes, int nColors) {
     (boxAreaH - (bxRows - 1) * gap) / bxRows,
   ).clamp(mR * 3, min(pw * 0.13, h * 0.065)).toDouble();
   final boxTotalW = boxCols * bSz + (boxCols - 1) * gap;
-  final containerW = min(boxTotalW + mR * 8, pw * 0.85);
+
+  // 컨테이너 폭 = 벨트 폭과 동일 (넓게)
+  final containerW = 2 * halfW;
   final boxTop = funnelTop + mR * 2.5;
 
-  // 좁아지는 시작점 (박스 아래 + 애니메이션 공간)
+  // 좁아지는 구간: 짧고 곡선 (벽에 부딪혀 튕기기)
   final boxBot = boxTop + bxRows * bSz + (bxRows - 1) * gap;
-  final narrowStart = min(boxBot + funnelH * 0.4, funnelBot - funnelH * 0.15);
+  final narrowStart = funnelBot - mR * 12;
 
   // 바구니 폭 = 벨트 하단 폭 (2*halfW) 에 맞춤
   final basketPw = 2 * halfW;
@@ -153,7 +156,7 @@ class MarbleSortScreen extends StatefulWidget {
 
 class _MarbleSortScreenState extends State<MarbleSortScreen> {
   int level = 1, score = 0, hiScore = 0, lives = 3;
-  bool playing = false, over = false;
+  bool playing = false, over = false, paused = false;
 
   List<MBox> boxes = [];
   List<Basket> baskets = [];
@@ -198,13 +201,14 @@ class _MarbleSortScreenState extends State<MarbleSortScreen> {
     combo = 0; comboTxt = null; comboAlpha = 0;
     trackOffset = 0; _clearDir = 1;
     speed = 0.0012 + level * 0.0003; if (speed > 0.005) speed = 0.005;
-    playing = true; over = false;
+    playing = true; over = false; paused = false;
     loop?.cancel();
     loop = Timer.periodic(const Duration(milliseconds: 16), (_) => _tick());
   }
 
   // ── 게임 루프 ──
   void _tick() {
+    if (paused) return;
     if (!playing && clearing.isEmpty && physMarbles.isEmpty) return;
     setState(() {
       trackOffset -= speed; if (trackOffset < 0) trackOffset += 1;
@@ -262,17 +266,27 @@ class _MarbleSortScreenState extends State<MarbleSortScreen> {
       m.x += m.vx;
       m.y += m.vy;
 
-      // 벽 충돌: 직사각형 구간 vs 좁아지는 구간
+      // 벽 충돌: 직사각형 구간 vs 곡선 좁아지는 구간
       double wallHalfW;
+      bool inNarrow = false;
+      double curveF = 0;
       if (m.y <= nStart) {
         wallHalfW = cHalfW - mR - 3;
       } else {
+        inNarrow = true;
         final f = ((m.y - nStart) / (fBot - nStart)).clamp(0.0, 1.0);
-        wallHalfW = (cHalfW + (eHalfW - cHalfW) * f) - mR;
+        curveF = f * f; // easeIn 곡선: 완만하게 시작 → 급격히 좁아짐
+        wallHalfW = (cHalfW + (eHalfW - cHalfW) * curveF) - mR;
       }
       final left = cx - wallHalfW, right = cx + wallHalfW;
-      if (m.x < left) { m.x = left; m.vx = m.vx.abs() * bounce; }
-      if (m.x > right) { m.x = right; m.vx = -m.vx.abs() * bounce; }
+      if (m.x < left) {
+        m.x = left; m.vx = m.vx.abs() * bounce;
+        if (inNarrow) m.vy = -m.vy.abs() * (0.4 + curveF * 0.5); // 곡선벽: 위로 튕김
+      }
+      if (m.x > right) {
+        m.x = right; m.vx = -m.vx.abs() * bounce;
+        if (inNarrow) m.vy = -m.vy.abs() * (0.4 + curveF * 0.5);
+      }
 
       // 상단 벽
       if (m.y < fTop + mR + 3) { m.y = fTop + mR + 3; m.vy = m.vy.abs() * bounce * 0.3; }
@@ -376,7 +390,7 @@ class _MarbleSortScreenState extends State<MarbleSortScreen> {
     }
   }
 
-  void _tap(Offset p) { if (!playing) return; _tapBox(p); }
+  void _tap(Offset p) { if (!playing || paused) return; _tapBox(p); }
 
   void _tapBox(Offset p) {
     if (_l == null) return;
@@ -403,13 +417,12 @@ class _MarbleSortScreenState extends State<MarbleSortScreen> {
     final rng = Random();
     final cx = l.w / 2, cols = l.boxCols;
     const gap = 4.0;
-    // 박스 위치에서 구슬 생성
-    final bx = cx - l.boxTotalW / 2 + (boxIdx % cols) * (l.bSz + gap) + l.bSz / 2;
-    final by = l.boxTop + (boxIdx ~/ cols) * (l.bSz + gap) + l.bSz;
+    // 구슬을 컨테이너 전체 폭에 퍼뜨려 생성
+    final by = l.boxTop + (boxIdx ~/ cols) * (l.bSz + gap) + l.bSz + l.mR;
     for (int j = 0; j < 9; j++) {
-      final px = bx + (rng.nextDouble() - 0.5) * l.bSz * 0.6;
-      final py = by + j * l.mR * 1.8 + rng.nextDouble() * l.mR;
-      final vx = (rng.nextDouble() - 0.5) * 3;
+      final px = cx + (rng.nextDouble() - 0.5) * l.containerW * 0.7;
+      final py = by + rng.nextDouble() * l.mR * 3;
+      final vx = (rng.nextDouble() - 0.5) * 8;
       final vy = rng.nextDouble() * 2;
       physMarbles.add(_PhysMarble(ci, px, py, vx, vy));
     }
@@ -477,7 +490,15 @@ class _MarbleSortScreenState extends State<MarbleSortScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFF1A1A2E),
-      body: SafeArea(child: GestureDetector(
+      body: SafeArea(child: KeyboardListener(
+        focusNode: FocusNode()..requestFocus(),
+        autofocus: true,
+        onKeyEvent: (e) {
+          if (e is KeyDownEvent && e.logicalKey == LogicalKeyboardKey.space && playing) {
+            setState(() { paused = !paused; });
+          }
+        },
+        child: GestureDetector(
         onTapDown: (d) => _tap(d.localPosition),
         child: LayoutBuilder(builder: (ctx, cons) {
           sz = Size(cons.maxWidth, cons.maxHeight);
@@ -492,7 +513,26 @@ class _MarbleSortScreenState extends State<MarbleSortScreen> {
               Positioned(top: 4, left: 4, child: IconButton(
                   icon: const Icon(Icons.arrow_back, color: Colors.white70, size: 22),
                   onPressed: () => Navigator.pop(context))),
-              if (playing && lives <= 1)
+              if (playing)
+                Positioned(top: 4, right: 40, child: IconButton(
+                    icon: Icon(paused ? Icons.play_arrow : Icons.pause, color: Colors.white70, size: 24),
+                    onPressed: () => setState(() { paused = !paused; }))),
+              if (paused)
+                Positioned.fill(child: GestureDetector(
+                  onTap: () => setState(() { paused = false; }),
+                  child: Container(
+                    color: Colors.black.withValues(alpha: 0.5),
+                    alignment: Alignment.center,
+                    child: Column(mainAxisSize: MainAxisSize.min, children: [
+                      const Icon(Icons.pause_circle_outline, color: Colors.white, size: 64),
+                      const SizedBox(height: 12),
+                      Text('common.paused'.tr(), style: const TextStyle(color: Colors.white, fontSize: 24, fontWeight: FontWeight.bold)),
+                      const SizedBox(height: 8),
+                      Text('games.marbleSort.tapToSort'.tr(), style: const TextStyle(color: Colors.white60, fontSize: 14)),
+                    ]),
+                  ),
+                )),
+              if (playing && !paused && lives <= 1)
                 Positioned(top: 4, right: 4, child: IconButton(
                     icon: const Icon(Icons.favorite_border, color: Colors.green, size: 24),
                     onPressed: () {
@@ -517,7 +557,7 @@ class _MarbleSortScreenState extends State<MarbleSortScreen> {
             ])),
           );
         }),
-      )),
+      ))),
     );
   }
 }
@@ -574,47 +614,67 @@ class _P extends CustomPainter {
     final top = l.funnelTop, nStart = l.narrowStart, bot = l.funnelBot;
     const cR = 14.0;
 
-    // 외곽 (둥근 상단 + 좁아지는 하단)
-    final outer = Path()
+    // 채우기용 닫힌 경로 (배경)
+    final fill = Path()
       ..moveTo(cx - topW / 2, top + cR)
       ..quadraticBezierTo(cx - topW / 2, top, cx - topW / 2 + cR, top)
       ..lineTo(cx + topW / 2 - cR, top)
       ..quadraticBezierTo(cx + topW / 2, top, cx + topW / 2, top + cR)
       ..lineTo(cx + topW / 2, nStart)
-      ..lineTo(cx + botW / 2, bot)
+      ..quadraticBezierTo(cx + topW / 2, bot, cx + botW / 2, bot)
       ..lineTo(cx - botW / 2, bot)
-      ..lineTo(cx - topW / 2, nStart)
+      ..quadraticBezierTo(cx - topW / 2, bot, cx - topW / 2, nStart)
       ..close();
-    canvas.drawPath(outer, Paint()..color = const Color(0xFF2A2A4A));
+    canvas.drawPath(fill, Paint()..color = const Color(0xFF2A2A4A));
 
-    // 내부 배경 (약간 작게)
+    // 내부 배경
     final inner = Path()
       ..moveTo(cx - topW / 2 + 3, top + cR)
       ..quadraticBezierTo(cx - topW / 2 + 3, top + 3, cx - topW / 2 + cR, top + 3)
       ..lineTo(cx + topW / 2 - cR, top + 3)
       ..quadraticBezierTo(cx + topW / 2 - 3, top + 3, cx + topW / 2 - 3, top + cR)
       ..lineTo(cx + topW / 2 - 3, nStart)
-      ..lineTo(cx + botW / 2 - 2, bot - 2)
+      ..quadraticBezierTo(cx + topW / 2 - 3, bot - 2, cx + botW / 2 - 2, bot - 2)
       ..lineTo(cx - botW / 2 + 2, bot - 2)
-      ..lineTo(cx - topW / 2 + 3, nStart)
+      ..quadraticBezierTo(cx - topW / 2 + 3, bot - 2, cx - topW / 2 + 3, nStart)
       ..close();
     canvas.drawPath(inner, Paint()..color = const Color(0xFF151528));
 
-    // 테두리 글로우
-    canvas.drawPath(outer, Paint()
+    // 테두리: 하단 출구 부분 열린 상태로 개별 선 그리기
+    final sp = Paint()
       ..color = Colors.cyanAccent.withValues(alpha: 0.2)
-      ..style = PaintingStyle.stroke..strokeWidth = 2);
+      ..style = PaintingStyle.stroke..strokeWidth = 2;
+    // 좌측 벽 (상단 → 좁아지는 곡선 → 출구)
+    final leftWall = Path()
+      ..moveTo(cx - botW / 2, bot)
+      ..quadraticBezierTo(cx - topW / 2, bot, cx - topW / 2, nStart)
+      ..lineTo(cx - topW / 2, top + cR)
+      ..quadraticBezierTo(cx - topW / 2, top, cx - topW / 2 + cR, top);
+    canvas.drawPath(leftWall, sp);
+    // 상단
+    canvas.drawLine(Offset(cx - topW / 2 + cR, top), Offset(cx + topW / 2 - cR, top), sp);
+    // 우측 벽
+    final rightWall = Path()
+      ..moveTo(cx + topW / 2 - cR, top)
+      ..quadraticBezierTo(cx + topW / 2, top, cx + topW / 2, top + cR)
+      ..lineTo(cx + topW / 2, nStart)
+      ..quadraticBezierTo(cx + topW / 2, bot, cx + botW / 2, bot);
+    canvas.drawPath(rightWall, sp);
 
-    // 좁아지는 구간 강조선
-    final lp = Paint()..color = Colors.white.withValues(alpha: 0.06)..strokeWidth = 1;
-    canvas.drawLine(Offset(cx - topW / 2, nStart), Offset(cx - botW / 2, bot), lp);
-    canvas.drawLine(Offset(cx + topW / 2, nStart), Offset(cx + botW / 2, bot), lp);
+    // 출구 양쪽에서 아래로 내려가는 선
+    final exitLen = l.mR * 3;
+    final ep = Paint()
+      ..color = Colors.cyanAccent.withValues(alpha: 0.3)
+      ..style = PaintingStyle.stroke..strokeWidth = 2
+      ..strokeCap = StrokeCap.round;
+    canvas.drawLine(Offset(cx - botW / 2, bot), Offset(cx - botW / 2, bot + exitLen), ep);
+    canvas.drawLine(Offset(cx + botW / 2, bot), Offset(cx + botW / 2, bot + exitLen), ep);
 
     // 하단 화살표
     final ap = Paint()..color = Colors.amber.withValues(alpha: 0.35)..strokeWidth = 2
       ..style = PaintingStyle.stroke..strokeCap = StrokeCap.round;
-    final aTop = nStart + (bot - nStart) * 0.3, aBot = bot - 4;
-    canvas.drawLine(Offset(cx, aTop), Offset(cx, aBot), ap);
+    final aBot = bot + exitLen - 4;
+    canvas.drawLine(Offset(cx, bot + 2), Offset(cx, aBot), ap);
     canvas.drawLine(Offset(cx - 4, aBot - 8), Offset(cx, aBot), ap);
     canvas.drawLine(Offset(cx + 4, aBot - 8), Offset(cx, aBot), ap);
   }
