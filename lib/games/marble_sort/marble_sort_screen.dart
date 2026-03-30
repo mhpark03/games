@@ -10,7 +10,8 @@ import '../../services/ad_service.dart';
 const List<Color> _colors = [
   Color(0xFFE53935), Color(0xFF1E88E5), Color(0xFF43A047),
   Color(0xFFFDD835), Color(0xFF8E24AA), Color(0xFFFF6D00),
-  Color(0xFF00ACC1), Color(0xFFD81B60),
+  Color(0xFF00ACC1), Color(0xFFD81B60), Color(0xFF26A69A),
+  Color(0xFFFF7043), Color(0xFF5C6BC0), Color(0xFF9CCC65),
 ];
 
 const int _nSlots = 30;
@@ -64,37 +65,36 @@ class _Geo {
 
 // ─── 레이아웃 (하단 고정, 상단 가변) ────────────────────────
 class _L {
-  final double w, h, mg, pw, barH, mR, bktH, trackW;
+  final double w, h, mg, pw, barH, mR, drawR, bktH, trackW;
   final int gridCols, boxCols;
   final double funnelTop, funnelBot, containerW, narrowStart, beltEntryW;
-  final double bSz, boxTop, boxTotalW;
+  final double bSz, boxTop, boxTotalW, boxAreaH;
   final _Geo geo;
   final double basketTop, basketMg, basketPw;
   const _L({
     required this.w, required this.h, required this.mg, required this.pw,
-    required this.barH, required this.mR, required this.bktH, required this.trackW,
+    required this.barH, required this.mR, required this.drawR, required this.bktH, required this.trackW,
     required this.gridCols, required this.boxCols,
     required this.funnelTop, required this.funnelBot, required this.containerW,
     required this.narrowStart, required this.beltEntryW,
-    required this.bSz, required this.boxTop, required this.boxTotalW,
+    required this.bSz, required this.boxTop, required this.boxTotalW, required this.boxAreaH,
     required this.geo, required this.basketTop,
     required this.basketMg, required this.basketPw,
   });
 }
 
-_L _calcLayout(double w, double h, int nBoxes, int nColors) {
+_L _calcLayout(double w, double h, int nBoxes, int nBaskets) {
   final mg = w * 0.03, pw = w - mg * 2;
   final barH = h * 0.045;
   final mR = max(min(pw * 0.023, h * 0.015), 8.0);
-  final bktH = mR * 3.8;
+  final bktH = mR * 2.8;
   final trackW = mR * 3.2;
   const gap = 4.0;
 
-  // 바구니 그리드 열 수 (5줄 이내)
-  final total = nColors * 3;
+  // 바구니 그리드 열 수 (화면 밖 확장 허용)
   int gridCols = 4;
   for (int c = 4; c <= 6; c++) {
-    if ((total / c).ceil() <= _maxBasketRows) { gridCols = c; break; }
+    if ((nBaskets / c).ceil() <= 12) { gridCols = c; break; }
   }
 
   // ── 하단 고정: 바구니 5줄 ──
@@ -113,19 +113,20 @@ _L _calcLayout(double w, double h, int nBoxes, int nColors) {
   final funnelH = funnelBot - funnelTop;
   final beltEntryW = mR * 2.05;
 
-  // 박스 크기
-  final boxCols = min(max(nBoxes, 1), 6);
-  final bxRows = max((nBoxes / boxCols).ceil(), 1);
-  final boxAreaH = funnelH * 0.25;
-  final bSz = min(
-    (pw * 0.7 - (boxCols - 1) * gap) / boxCols,
-    (boxAreaH - (bxRows - 1) * gap) / bxRows,
-  ).clamp(mR * 3, min(pw * 0.13, h * 0.065)).toDouble();
-  final boxTotalW = boxCols * bSz + (boxCols - 1) * gap;
-
   // 컨테이너 폭 = 벨트 폭과 동일 (넓게)
   final containerW = 2 * halfW;
   final boxTop = funnelTop + mR * 2.5;
+
+  // 박스 크기 (6열 고정, 9구슬 3x3, 깔대기 안에 맞춤)
+  final boxCols = min(max(nBoxes, 1), 6);
+  final bxRows = max((nBoxes / boxCols).ceil(), 1);
+  final boxAreaH = funnelH * 0.65;
+  final bSzW = (containerW * 0.95 - (boxCols - 1) * gap) / boxCols;
+  final bSzH = (boxAreaH - (bxRows - 1) * gap) / bxRows;
+  final bSz = min(bSzW, bSzH).clamp(mR * 2.5, double.infinity).toDouble();
+  final boxTotalW = boxCols * bSz + (boxCols - 1) * gap;
+  // 통일 구슬 크기: 박스 안에도 맞는 크기 (작게)
+  final drawR = min(mR * 0.7, bSz / 7.0);
 
   // 좁아지는 구간: 짧고 곡선 (벽에 부딪혀 튕기기)
   final boxBot = boxTop + bxRows * bSz + (bxRows - 1) * gap;
@@ -137,11 +138,11 @@ _L _calcLayout(double w, double h, int nBoxes, int nColors) {
 
   return _L(
     w: w, h: h, mg: mg, pw: pw, barH: barH,
-    mR: mR, bktH: bktH, trackW: trackW,
+    mR: mR, drawR: drawR, bktH: bktH, trackW: trackW,
     gridCols: gridCols, boxCols: boxCols,
     funnelTop: funnelTop, funnelBot: funnelBot,
     containerW: containerW, narrowStart: narrowStart, beltEntryW: beltEntryW,
-    bSz: bSz, boxTop: boxTop, boxTotalW: boxTotalW,
+    bSz: bSz, boxTop: boxTop, boxTotalW: boxTotalW, boxAreaH: boxAreaH,
     geo: geo, basketTop: basketTop,
     basketMg: basketMg, basketPw: basketPw,
   );
@@ -172,7 +173,6 @@ class _MarbleSortScreenState extends State<MarbleSortScreen> {
   _L? _l;
   int _clearDir = 1;
 
-  int get nColors => min(3 + (level - 1) ~/ 2, 8);
   int get _emptySlots {
     final occupied = slots.where((s) => s != null).length;
     final pending = physMarbles.where((m) => m.state < 2).length;
@@ -182,17 +182,33 @@ class _MarbleSortScreenState extends State<MarbleSortScreen> {
   @override void initState() { super.initState(); level = widget.startLevel; _start(); }
   @override void dispose() { loop?.cancel(); super.dispose(); }
 
-  int _gridColsFor(int n) {
-    final t = n * 3;
-    for (int c = 4; c <= 6; c++) { if ((t / c).ceil() <= _maxBasketRows) return c; }
+  int _gridColsFor(int totalBaskets) {
+    for (int c = 4; c <= 6; c++) { if ((totalBaskets / c).ceil() <= 12) return c; }
     return 6;
   }
 
   void _start() {
-    final r = Random(), n = nColors, gc = _gridColsFor(n);
-    boxes = List.generate(n, (i) => MBox(i))..shuffle(r);
+    final r = Random();
+    // 박스 수: 15~36 균등 랜덤
+    final nBoxes = 15 + r.nextInt(22); // 15~36
+    // 색상 수: 박스를 균등 배분할 수 있도록 (3~12색)
+    final nCol = min(max(nBoxes ~/ 3, 3), _colors.length);
+    // 색상별 박스 수 배분
+    final perColor = List.filled(nCol, nBoxes ~/ nCol);
+    for (int i = 0; i < nBoxes % nCol; i++) perColor[i]++;
+
+    boxes = <MBox>[];
+    for (int c = 0; c < nCol; c++) {
+      for (int j = 0; j < perColor[c]; j++) boxes.add(MBox(c));
+    }
+    boxes.shuffle(r);
+
+    // 바구니: 색상당 (박스수 × 9구슬) / 3칸 = 박스수 × 3
     final raw = <Basket>[];
-    for (int c = 0; c < n; c++) for (int j = 0; j < 3; j++) raw.add(Basket(c, 0, 0));
+    for (int c = 0; c < nCol; c++) {
+      for (int j = 0; j < perColor[c] * 3; j++) raw.add(Basket(c, 0, 0));
+    }
+    final gc = _gridColsFor(raw.length);
     raw.shuffle(r);
     for (int i = 0; i < raw.length; i++) { raw[i].col = i % gc; raw[i].row = i ~/ gc; }
     baskets = raw;
@@ -227,6 +243,17 @@ class _MarbleSortScreenState extends State<MarbleSortScreen> {
       }
 
       if (playing) _autoCheck();
+
+      // 벨트 꽉 참 + 깔대기에 대기 구슬 있으면 게임오버
+      if (playing) {
+        final fullSlots = slots.where((s) => s != null).length;
+        final waitingInFunnel = physMarbles.where((m) => m.state == 0).length;
+        if (fullSlots >= _nSlots && waitingInFunnel > 0) {
+          playing = false; over = true;
+          loop?.cancel();
+          Future.delayed(const Duration(milliseconds: 300), () => _showOver());
+        }
+      }
 
       for (int i = clearing.length - 1; i >= 0; i--) {
         clearing[i].progress += 0.035;
@@ -295,10 +322,17 @@ class _MarbleSortScreenState extends State<MarbleSortScreen> {
       if (m.vx.abs() > 8) m.vx = 8 * m.vx.sign;
       if (m.vy.abs() > 12) m.vy = 12 * m.vy.sign;
 
-      // 깔대기 탈출 → 슬롯 이동
+      // 깔대기 탈출 → 빈 홈이 출구 아래를 지날 때만 이동
       if (m.y >= fBot) {
-        m.state = 1; m.startX = m.x; m.startY = fBot;
-        m.transProgress = 0; m.targetSlot = _findNextEmptySlot(m);
+        final slot = _findNextEmptySlot(m);
+        if (slot >= 0) {
+          m.state = 1; m.startX = m.x; m.startY = fBot;
+          m.transProgress = 0; m.targetSlot = slot;
+        } else {
+          // 빈 홈 없으면 튕겨서 대기
+          m.y = fBot - 1;
+          m.vy = -m.vy.abs() * 0.4;
+        }
       }
     }
 
@@ -324,17 +358,17 @@ class _MarbleSortScreenState extends State<MarbleSortScreen> {
   }
 
   int _findNextEmptySlot(_PhysMarble pm) {
-    final indices = List.generate(_nSlots, (i) => i);
-    indices.sort((a, b) {
-      final ta = (a / _nSlots + trackOffset) % 1.0, tb = (b / _nSlots + trackOffset) % 1.0;
-      return min(ta, 1 - ta).compareTo(min(tb, 1 - tb));
-    });
-    for (final idx in indices) {
+    // 벨트 상단 중앙(t≈0) 근처 빈 홈만 허용
+    const topRange = 0.06;
+    int best = -1; double bestDist = topRange;
+    for (int idx = 0; idx < _nSlots; idx++) {
       if (slots[idx] != null) continue;
       if (physMarbles.any((p) => p != pm && p.targetSlot == idx && p.state >= 0)) continue;
-      return idx;
+      final t = (idx / _nSlots + trackOffset) % 1.0;
+      final d = min(t, 1.0 - t);
+      if (d < bestDist) { bestDist = d; best = idx; }
     }
-    return -1;
+    return best;
   }
 
   // ── 벨트→바구니 자동 체크 ──
@@ -392,18 +426,28 @@ class _MarbleSortScreenState extends State<MarbleSortScreen> {
 
   void _tap(Offset p) { if (!playing || paused) return; _tapBox(p); }
 
+  // 박스 인덱스 → 화면 좌표 (아래부터 채움)
+  Rect _boxRect(int i) {
+    final l = _l!;
+    final cols = l.boxCols;
+    const gap = 4.0;
+    final cx = l.w / 2;
+    final sx = cx - l.boxTotalW / 2;
+    final totalRows = (boxes.length / cols).ceil();
+    final col = i % cols, topRow = i ~/ cols;
+    final row = totalRows - 1 - topRow;
+    final bx = sx + col * (l.bSz + gap);
+    final by = l.boxTop + l.boxAreaH - (row + 1) * (l.bSz + gap) + gap;
+    return Rect.fromLTWH(bx, by, l.bSz, l.bSz);
+  }
+
   void _tapBox(Offset p) {
     if (_l == null) return;
-    final l = _l!;
-    final cx = l.w / 2, cols = l.boxCols;
-    const gap = 4.0;
-    final sx = cx - l.boxTotalW / 2;
     for (int i = 0; i < boxes.length; i++) {
       if (boxes[i].released) continue;
-      final c = i % cols, r = i ~/ cols;
-      final bx = sx + c * (l.bSz + gap), by = l.boxTop + r * (l.bSz + gap);
-      if (p.dx >= bx && p.dx <= bx + l.bSz && p.dy >= by && p.dy <= by + l.bSz) {
-        if (_emptySlots >= 9) _releaseBox(i);
+      final r = _boxRect(i);
+      if (r.contains(p)) {
+        _releaseBox(i);
         return;
       }
     }
@@ -415,10 +459,10 @@ class _MarbleSortScreenState extends State<MarbleSortScreen> {
     if (_l == null) return;
     final l = _l!;
     final rng = Random();
-    final cx = l.w / 2, cols = l.boxCols;
-    const gap = 4.0;
+    final cx = l.w / 2;
     // 구슬을 컨테이너 전체 폭에 퍼뜨려 생성
-    final by = l.boxTop + (boxIdx ~/ cols) * (l.bSz + gap) + l.bSz + l.mR;
+    final br = _boxRect(boxIdx);
+    final by = br.bottom + l.mR;
     for (int j = 0; j < 9; j++) {
       final px = cx + (rng.nextDouble() - 0.5) * l.containerW * 0.7;
       final py = by + rng.nextDouble() * l.mR * 3;
@@ -480,7 +524,19 @@ class _MarbleSortScreenState extends State<MarbleSortScreen> {
         TextButton(onPressed: () { Navigator.pop(c); Navigator.pop(c); },
             child: Text('app.close'.tr(), style: const TextStyle(color: Colors.grey))),
         ElevatedButton(style: ElevatedButton.styleFrom(backgroundColor: Colors.amber),
-            onPressed: () { Navigator.pop(c); setState(() { score = 0; lives = 3; level = 1; _start(); }); },
+            onPressed: () async {
+              Navigator.pop(c);
+              final adService = AdService();
+              final result = await adService.showRewardedAd(
+                onUserEarnedReward: (ad, reward) {
+                  setState(() { score = 0; lives = 3; level = 1; _start(); });
+                },
+              );
+              if (!result && mounted) {
+                setState(() { score = 0; lives = 3; level = 1; _start(); });
+                adService.loadRewardedAd();
+              }
+            },
             child: Text('common.tryAgain'.tr(), style: const TextStyle(color: Colors.black))),
       ],
     ));
@@ -502,7 +558,7 @@ class _MarbleSortScreenState extends State<MarbleSortScreen> {
         onTapDown: (d) => _tap(d.localPosition),
         child: LayoutBuilder(builder: (ctx, cons) {
           sz = Size(cons.maxWidth, cons.maxHeight);
-          _l = _calcLayout(sz.width, sz.height, boxes.length, nColors);
+          _l = _calcLayout(sz.width, sz.height, boxes.length, baskets.length);
           return CustomPaint(
             painter: _P(l: _l!, boxes: boxes, baskets: baskets, slots: slots,
               trackOffset: trackOffset, physMarbles: physMarbles,
@@ -684,10 +740,16 @@ class _P extends CustomPainter {
     final cx = l.w / 2, cols = l.boxCols;
     const gap = 4.0;
     final sx = cx - l.boxTotalW / 2;
-    final miniR = l.mR * 0.45;
+    final r = l.drawR;
+    final sp = r * 2; // 간격 없이 지름만큼 배치
+    final gridW = sp * 2; // 3개: 0, sp, sp*2
+    final totalRows = (boxes.length / cols).ceil();
     for (int i = 0; i < boxes.length; i++) {
-      final b = boxes[i]; final col = i % cols, row = i ~/ cols;
-      final bx = sx + col * (l.bSz + gap), by = l.boxTop + row * (l.bSz + gap);
+      final b = boxes[i]; final col = i % cols, topRow = i ~/ cols;
+      // 아래부터 채우기: 마지막 행 → boxBot 기준
+      final row = totalRows - 1 - topRow;
+      final bx = sx + col * (l.bSz + gap);
+      final by = l.boxTop + l.boxAreaH - (row + 1) * (l.bSz + gap) + gap;
       final clr = _colors[b.colorIndex % _colors.length];
       final rr = RRect.fromRectAndRadius(Rect.fromLTWH(bx, by, l.bSz, l.bSz), const Radius.circular(6));
       if (b.released) {
@@ -696,11 +758,9 @@ class _P extends CustomPainter {
       } else {
         canvas.drawRRect(rr, Paint()..color = clr.withValues(alpha: 0.25));
         canvas.drawRRect(rr, Paint()..color = clr.withValues(alpha: 0.7)..style = PaintingStyle.stroke..strokeWidth = 1.5);
+        final ox = bx + (l.bSz - gridW) / 2, oy = by + (l.bSz - gridW) / 2;
         for (int ry = 0; ry < 3; ry++) for (int cx2 = 0; cx2 < 3; cx2++) {
-          final mx = bx + l.bSz * (0.2 + cx2 * 0.3), my = by + l.bSz * (0.2 + ry * 0.3);
-          canvas.drawCircle(Offset(mx, my), miniR, Paint()..color = clr);
-          canvas.drawCircle(Offset(mx - miniR * 0.2, my - miniR * 0.2), miniR * 0.3,
-              Paint()..color = Colors.white.withValues(alpha: 0.3));
+          _marble(canvas, ox + cx2 * sp, oy + ry * sp, r, b.colorIndex);
         }
       }
     }
@@ -709,16 +769,24 @@ class _P extends CustomPainter {
   // ── 물리 구슬 (깔대기 안 + 슬롯 이동) ──
   void _drawPhysMarbles(Canvas canvas) {
     final g = l.geo;
+    // 깔대기 안 구슬 클리핑
+    canvas.save();
+    canvas.clipRect(Rect.fromLTRB(0, l.funnelTop, l.w, l.funnelBot));
     for (final pm in physMarbles) {
       if (pm.state == 0) {
-        _marble(canvas, pm.x, pm.y, l.mR, pm.colorIndex);
-      } else if (pm.state == 1 && pm.targetSlot >= 0) {
+        _marble(canvas, pm.x, pm.y, l.drawR, pm.colorIndex);
+      }
+    }
+    canvas.restore();
+    // 슬롯 이동 중 구슬은 클리핑 없이
+    for (final pm in physMarbles) {
+      if (pm.state == 1 && pm.targetSlot >= 0) {
         final p = pm.transProgress.clamp(0.0, 1.0);
         final slotT = (pm.targetSlot / _nSlots + trackOffset) % 1.0;
         final sp = g.pos(slotT);
         final mx = pm.startX + (sp.dx - pm.startX) * p;
         final my = pm.startY + (sp.dy - pm.startY) * p;
-        _marble(canvas, mx, my, l.mR, pm.colorIndex, a: 1.0 - p * 0.1);
+        _marble(canvas, mx, my, l.drawR, pm.colorIndex, a: 1.0 - p * 0.1);
       }
     }
   }
@@ -733,7 +801,7 @@ class _P extends CustomPainter {
       if (i == 0) center.moveTo(p.dx, p.dy); else center.lineTo(p.dx, p.dy); }
     center.close();
     canvas.drawPath(center, Paint()..color = Colors.white.withValues(alpha: 0.1)..style = PaintingStyle.stroke..strokeWidth = 1.5);
-    final slotR = l.mR * 0.6;
+    final slotR = l.drawR * 0.6;
     for (int i = 0; i < _nSlots; i++) {
       final t = (i / _nSlots + trackOffset) % 1.0, p = g.pos(t);
       if (slots[i] == null) {
@@ -770,7 +838,7 @@ class _P extends CustomPainter {
     for (int i = 0; i < _nSlots; i++) {
       if (slots[i] == null) continue;
       final t = (i / _nSlots + trackOffset) % 1.0, p = g.pos(t);
-      _marble(canvas, p.dx, p.dy, l.mR, slots[i]!);
+      _marble(canvas, p.dx, p.dy, l.drawR, slots[i]!);
     }
   }
 
@@ -778,6 +846,9 @@ class _P extends CustomPainter {
   void _drawBaskets(Canvas canvas) {
     const gap = 4.0;
     final bw = (l.basketPw - gap * (l.gridCols - 1)) / l.gridCols;
+    // 화면 밖 바구니 클리핑
+    canvas.save();
+    canvas.clipRect(Rect.fromLTWH(0, l.basketTop, l.w, l.h - l.basketTop));
     for (final b in baskets) {
       final bx = l.basketMg + b.col * (bw + gap);
       final by = l.basketTop + b.row * (l.bktH + gap) + b.slideY * (l.bktH + gap);
@@ -785,15 +856,20 @@ class _P extends CustomPainter {
       final rect = RRect.fromRectAndRadius(Rect.fromLTWH(bx, by, bw, l.bktH), const Radius.circular(5));
       canvas.drawRRect(rect, Paint()..color = clr.withValues(alpha: 0.25));
       canvas.drawRRect(rect, Paint()..color = clr.withValues(alpha: 0.7)..style = PaintingStyle.stroke..strokeWidth = 2);
+      final r = l.drawR;
+      final msp = r * 2.2;
+      final mgw = msp * 2;
+      final mox = bx + (bw - mgw) / 2;
       for (int k = 0; k < 3; k++) {
-        final mx = bx + bw * (0.2 + k * 0.3), my = by + l.bktH / 2;
-        if (k < b.filled) { _marble(canvas, mx, my, l.mR, b.colorIndex); }
+        final mx = mox + k * msp, my = by + l.bktH / 2;
+        if (k < b.filled) { _marble(canvas, mx, my, r, b.colorIndex); }
         else {
-          canvas.drawCircle(Offset(mx, my), l.mR, Paint()..color = clr.withValues(alpha: 0.12));
-          canvas.drawCircle(Offset(mx, my), l.mR, Paint()..color = clr.withValues(alpha: 0.35)..style = PaintingStyle.stroke..strokeWidth = 1);
+          canvas.drawCircle(Offset(mx, my), r, Paint()..color = clr.withValues(alpha: 0.12));
+          canvas.drawCircle(Offset(mx, my), r, Paint()..color = clr.withValues(alpha: 0.35)..style = PaintingStyle.stroke..strokeWidth = 1);
         }
       }
     }
+    canvas.restore();
   }
 
   // ── 사라지는 바구니 ──
@@ -811,10 +887,14 @@ class _P extends CustomPainter {
       final rect = RRect.fromRectAndRadius(Rect.fromLTWH(bx, by, bw, l.bktH), const Radius.circular(5));
       canvas.drawRRect(rect, Paint()..color = clr.withValues(alpha: 0.55 * alpha));
       canvas.drawRRect(rect, Paint()..color = clr.withValues(alpha: 0.9 * alpha)..style = PaintingStyle.stroke..strokeWidth = 2);
+      final r = l.drawR;
+      final msp = r * 2.2;
+      final mgw = msp * 2;
+      final mox = bx + (bw - mgw) / 2;
       for (int k = 0; k < 3; k++) {
-        final mx = bx + bw * (0.2 + k * 0.3), my = by + l.bktH / 2;
-        canvas.drawCircle(Offset(mx, my), l.mR, Paint()..color = clr.withValues(alpha: alpha));
-        canvas.drawCircle(Offset(mx - l.mR * 0.2, my - l.mR * 0.2), l.mR * 0.3,
+        final mx = mox + k * msp, my = by + l.bktH / 2;
+        canvas.drawCircle(Offset(mx, my), r, Paint()..color = clr.withValues(alpha: alpha));
+        canvas.drawCircle(Offset(mx - r * 0.2, my - r * 0.2), r * 0.3,
             Paint()..color = Colors.white.withValues(alpha: 0.3 * alpha));
       }
       canvas.restore();
