@@ -26,6 +26,7 @@ import 'games/number_sums/models/number_sums_generator.dart' as number_sums;
 import 'games/number_sums/services/game_storage.dart' as number_sums;
 import 'games/mole/mole_screen.dart';
 import 'games/bubble/bubble_screen.dart';
+import 'games/marble_sort/marble_sort_screen.dart';
 import 'services/ad_service.dart';
 import 'services/input_sdk_service.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
@@ -82,8 +83,10 @@ void main() async {
   WidgetsBinding widgetsBinding = WidgetsFlutterBinding.ensureInitialized();
   FlutterNativeSplash.preserve(widgetsBinding: widgetsBinding);
 
-  // Firebase 초기화
-  await Firebase.initializeApp();
+  // Firebase 초기화 (Windows 등 미지원 플랫폼에서는 무시)
+  try {
+    await Firebase.initializeApp();
+  } catch (_) {}
 
   // 다국어 지원 초기화
   await EasyLocalization.ensureInitialized();
@@ -3324,7 +3327,7 @@ class _HomeScreenState extends State<HomeScreen> {
                           if (isLandscapeGrid) {
                             aspectRatio = 2.3;
                           } else {
-                            const itemCount = 18;
+                            const itemCount = 19;
                             final rowCount = (itemCount / crossAxisCount).ceil();
                             final tileWidth = (constraints.maxWidth - (crossAxisCount - 1) * 6) / crossAxisCount;
                             final tileHeight = (constraints.maxHeight - (rowCount - 1) * 4) / rowCount;
@@ -3523,6 +3526,20 @@ class _HomeScreenState extends State<HomeScreen> {
                                   context,
                                   MaterialPageRoute(
                                     builder: (context) => const BubbleScreen(),
+                                  ),
+                                ),
+                              ),
+                              _buildGameTile(
+                                context,
+                                title: 'games.marbleSort.name'.tr(),
+                                subtitle: 'games.marbleSort.subtitle'.tr(),
+                                icon: Icons.sort,
+                                color: Colors.orangeAccent,
+                                description: 'games.marbleSort.description'.tr(),
+                                onTap: () => Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) => const MarbleSortScreen(),
                                   ),
                                 ),
                               ),

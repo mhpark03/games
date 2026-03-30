@@ -620,6 +620,21 @@
       "rulesTipsDesc": "• 壁を使って跳ね返せます\n• 上のバブルを消すと下も落ちます\n• バブルが底に着くとゲームオーバー！",
       "hintTitle": "照準ガイド",
       "hintMessage": "広告を見ると、バブルの軌道を常に表示します。\n(ゲームオーバーまで有効)"
+    },
+    "marbleSort": {
+      "name": "ビー玉ソート",
+      "subtitle": "ビー玉をバスケットに仕分けよう！",
+      "description": "レール上を移動するビー玉を同じ色のバスケットに入れよう！タイミングが重要です。",
+      "levelClear": "レベルクリア！",
+      "levelValue": "レベル {level}",
+      "scoreValue": "スコア: {score}",
+      "finalScore": "最終スコア: {score}",
+      "highScoreLabel": "ハイスコア: {score}",
+      "levelReached": "到達レベル: {level}",
+      "nextLevel": "次のレベル",
+      "extraLife": "追加ライフ",
+      "extraLifeMessage": "広告を見てライフを1つ追加できます。",
+      "tapToSort": "タップしてビー玉を落とそう！"
     }
   },
   "dialog": {

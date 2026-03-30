@@ -620,6 +620,21 @@
       "rulesTipsDesc": "• 可以利用墙壁反弹\n• 消除上方泡泡会使下方泡泡掉落\n• 泡泡触底则游戏结束！",
       "hintTitle": "瞄准辅助线",
       "hintMessage": "观看广告后将始终显示泡泡的移动轨迹。\n(持续到游戏结束)"
+    },
+    "marbleSort": {
+      "name": "弹珠排序",
+      "subtitle": "将弹珠分类到篮子中！",
+      "description": "将轨道上移动的弹珠放入相同颜色的篮子中！把握时机是关键。",
+      "levelClear": "关卡通过！",
+      "levelValue": "关卡 {level}",
+      "scoreValue": "分数: {score}",
+      "finalScore": "最终分数: {score}",
+      "highScoreLabel": "最高分: {score}",
+      "levelReached": "到达关卡: {level}",
+      "nextLevel": "下一关",
+      "extraLife": "额外生命",
+      "extraLifeMessage": "观看广告可获得一条额外生命。",
+      "tapToSort": "点击屏幕放下弹珠！"
     }
   },
   "dialog": {

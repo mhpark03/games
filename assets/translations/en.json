@@ -620,6 +620,21 @@
       "rulesTipsDesc": "• Use walls to bounce shots\n• Clear top bubbles to drop those below\n• Game over if bubbles reach the bottom!",
       "hintTitle": "Aim Guide",
       "hintMessage": "Watch an ad to always display the bubble's trajectory.\n(Lasts until game over)"
+    },
+    "marbleSort": {
+      "name": "Marble Sort",
+      "subtitle": "Sort marbles into baskets!",
+      "description": "Drop marbles from the rail into matching color baskets! Timing is key.",
+      "levelClear": "Level Clear!",
+      "levelValue": "Level {level}",
+      "scoreValue": "Score: {score}",
+      "finalScore": "Final Score: {score}",
+      "highScoreLabel": "High Score: {score}",
+      "levelReached": "Level Reached: {level}",
+      "nextLevel": "Next Level",
+      "extraLife": "Extra Life",
+      "extraLifeMessage": "Watch an ad to get an extra life.",
+      "tapToSort": "Tap to drop the marble!"
     }
   },
   "dialog": {
