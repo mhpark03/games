@@ -25,7 +25,11 @@ const List<Color> _colors = [
 const int _nSlots = 30;
 const int _maxBasketRows = 5;
 
-class MBox { final int colorIndex; bool released; bool locked; MBox(this.colorIndex, [this.released = false, this.locked = true]); }
+class MBox {
+  final int colorIndex; bool released; bool locked; int multiplier;
+  MBox(this.colorIndex, [this.released = false, this.locked = true, this.multiplier = 1]);
+  int get marbleCount => 9 * multiplier;
+}
 
 class Basket {
   final int colorIndex; int filled, col, row; double slideY;
@@ -163,6 +167,7 @@ class MarbleSortScreen extends StatefulWidget {
 class _MarbleSortScreenState extends State<MarbleSortScreen> {
   int level = 1, score = 0, hiScore = 0, lives = 3;
   bool playing = false, over = false, paused = false;
+  double _fullBeltTimer = 0; // 벨트 꽉 참 후 한 바퀴 대기 타이머
 
   List<MBox> boxes = [];
   List<Basket> baskets = [];
@@ -206,6 +211,13 @@ class _MarbleSortScreenState extends State<MarbleSortScreen> {
     }
     boxes.shuffle(r);
 
+    // 10% 이하 박스에 멀티플라이어(2~5) 지정
+    final multiCount = max(1, (nBoxes * 0.1).floor());
+    final multiIndices = List.generate(nBoxes, (i) => i)..shuffle(r);
+    for (int i = 0; i < multiCount; i++) {
+      boxes[multiIndices[i]].multiplier = 2 + r.nextInt(4); // 2~5
+    }
+
     // 2) 박스 잠금 설정 (화면상 맨 아래 줄 = topRow 0)
     final bCols = min(max(nBoxes, 1), 6);
     final bRows = (nBoxes / bCols).ceil();
@@ -237,34 +249,37 @@ class _MarbleSortScreenState extends State<MarbleSortScreen> {
       }
     }
 
-    // 4) 바구니 생성: 우선순위 기반 + 행 내 셔플로 다양하게 배치
+    // 4) 바구니 생성: 박스 아래줄 색 → 바구니 상단에 흩어서 배치
     final gc = 4; // 4열 고정
-    final sortedColors = colorPriority.keys.toList()
-      ..sort((a, b) => colorPriority[a]!.compareTo(colorPriority[b]!));
 
-    final raw = <Basket>[];
-    for (final c in sortedColors) {
-      final cnt = perColor[c] * 3;
-      for (int j = 0; j < cnt; j++) raw.add(Basket(c, 0, 0));
+    // 색상별 총 구슬 수 계산 (멀티플라이어 반영)
+    final marblesPerColor = List.filled(nCol, 0);
+    for (final b in boxes) marblesPerColor[b.colorIndex] += b.marbleCount;
+
+    // 박스 오픈 순서(아래→위)로 색상 순서 결정
+    final colorOrder = <int>[];
+    for (int i = 0; i < boxes.length; i++) {
+      final ci = boxes[i].colorIndex;
+      if (!colorOrder.contains(ci)) colorOrder.add(ci);
     }
 
-    // 인접 2색씩 그룹으로 묶어 셔플 (우선순위 대역 유지하면서 색 혼합)
-    int basketIdx = 0;
-    final colorGroups = <List<Basket>>[];
-    for (int ci = 0; ci < sortedColors.length; ci += 2) {
-      final group = <Basket>[];
-      for (int k = ci; k < min(ci + 2, sortedColors.length); k++) {
-        final c = sortedColors[k];
-        final cnt = perColor[c] * 3;
-        group.addAll(raw.sublist(basketIdx, basketIdx + cnt));
-        basketIdx += cnt;
+    // 색상별 바구니 리스트 생성
+    final basketsByColor = <int, List<Basket>>{};
+    for (final ci in colorOrder) {
+      final cnt = (marblesPerColor[ci] / 3).ceil();
+      basketsByColor[ci] = List.generate(cnt, (_) => Basket(ci, 0, 0));
+    }
+
+    // 라운드 로빈 방식으로 흩어서 배치: 각 색에서 1개씩 번갈아 넣기
+    final mixed = <Basket>[];
+    final queues = colorOrder.map((ci) => List<Basket>.from(basketsByColor[ci]!)).toList();
+    while (queues.any((q) => q.isNotEmpty)) {
+      for (final q in queues) {
+        if (q.isNotEmpty) mixed.add(q.removeAt(0));
       }
-      group.shuffle(r);
-      colorGroups.add(group);
     }
-    final mixed = colorGroups.expand((g) => g).toList();
 
-    // 행 단위로 한번 더 셔플 (같은 행 내 색상 혼합)
+    // 행 단위 열 위치 셔플 (같은 행 내 다양하게)
     final totalBasketRows = (mixed.length / gc).ceil();
     for (int row = 0; row < totalBasketRows; row++) {
       final start = row * gc;
@@ -278,7 +293,7 @@ class _MarbleSortScreenState extends State<MarbleSortScreen> {
     slots = List.filled(_nSlots, null);
     physMarbles = []; clearing = []; fx = [];
     combo = 0; comboTxt = null; comboAlpha = 0;
-    trackOffset = 0; _clearDir = 1;
+    trackOffset = 0; _clearDir = 1; _fullBeltTimer = 0;
     speed = 0.0012 + level * 0.0003; if (speed > 0.005) speed = 0.005;
     playing = true; over = false; paused = false;
     loop?.cancel();
@@ -307,14 +322,19 @@ class _MarbleSortScreenState extends State<MarbleSortScreen> {
 
       if (playing) _autoCheck();
 
-      // 벨트 꽉 참 + 깔대기에 대기 구슬 있으면 게임오버
+      // 벨트 꽉 참: 한 바퀴(trackOffset 1.0) 돌 때까지 대기 후 종료
       if (playing) {
         final fullSlots = slots.where((s) => s != null).length;
         final waitingInFunnel = physMarbles.where((m) => m.state == 0).length;
         if (fullSlots >= _nSlots && waitingInFunnel > 0) {
-          playing = false; over = true;
-          loop?.cancel();
-          Future.delayed(const Duration(milliseconds: 300), () => _showOver());
+          _fullBeltTimer += speed.abs();
+          if (_fullBeltTimer >= 1.0) {
+            playing = false; over = true;
+            loop?.cancel();
+            Future.delayed(const Duration(milliseconds: 300), () => _showOver());
+          }
+        } else {
+          _fullBeltTimer = 0;
         }
       }
 
@@ -544,7 +564,8 @@ class _MarbleSortScreenState extends State<MarbleSortScreen> {
     // 구슬을 컨테이너 전체 폭에 퍼뜨려 생성
     final br = _boxRect(boxIdx);
     final by = br.bottom + l.mR;
-    for (int j = 0; j < 9; j++) {
+    final mc = boxes[boxIdx].marbleCount;
+    for (int j = 0; j < mc; j++) {
       final px = cx + (rng.nextDouble() - 0.5) * l.containerW * 0.7;
       final py = by + rng.nextDouble() * l.mR * 3;
       final vx = (rng.nextDouble() - 0.5) * 8;
@@ -855,6 +876,19 @@ class _P extends CustomPainter {
         for (int ry = 0; ry < 3; ry++) for (int cx2 = 0; cx2 < 3; cx2++) {
           _marble(canvas, ox + cx2 * sp, oy + ry * sp, r, b.colorIndex);
         }
+      }
+      // 멀티플라이어 오버레이 (박스 중앙)
+      if (!b.released && b.multiplier > 1) {
+        final badge = 'x${b.multiplier}';
+        final mcx = bx + l.bSz / 2, mcy = by + l.bSz / 2;
+        final fs = l.bSz * 0.45;
+        // 반투명 배경 원
+        canvas.drawCircle(Offset(mcx, mcy), fs * 0.7,
+          Paint()..color = Colors.black.withValues(alpha: 0.6));
+        canvas.drawCircle(Offset(mcx, mcy), fs * 0.7,
+          Paint()..color = Colors.amber.withValues(alpha: 0.9)..style = PaintingStyle.stroke..strokeWidth = 2);
+        _txt(canvas, badge, mcx, mcy,
+          TextStyle(color: Colors.amber, fontSize: fs, fontWeight: FontWeight.bold), c: true);
       }
     }
   }
