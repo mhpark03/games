@@ -8,16 +8,24 @@ import '../../services/ad_service.dart';
 /// Marble Sort Game
 
 const List<Color> _colors = [
-  Color(0xFFE53935), Color(0xFF1E88E5), Color(0xFF43A047),
-  Color(0xFFFDD835), Color(0xFF8E24AA), Color(0xFFFF6D00),
-  Color(0xFF00ACC1), Color(0xFFD81B60), Color(0xFF26A69A),
-  Color(0xFFFF7043), Color(0xFF5C6BC0), Color(0xFF9CCC65),
+  Color(0xFFFF1744), // 빨강
+  Color(0xFF2979FF), // 파랑
+  Color(0xFF00E676), // 초록
+  Color(0xFFFFEA00), // 노랑
+  Color(0xFFAA00FF), // 보라
+  Color(0xFFFF9100), // 주황
+  Color(0xFF00E5FF), // 시안
+  Color(0xFFFF4081), // 핑크
+  Color(0xFF76FF03), // 라임
+  Color(0xFF651FFF), // 인디고
+  Color(0xFFFFFFFF), // 흰색
+  Color(0xFFFF6E40), // 코랄
 ];
 
 const int _nSlots = 30;
 const int _maxBasketRows = 5;
 
-class MBox { final int colorIndex; bool released; MBox(this.colorIndex, [this.released = false]); }
+class MBox { final int colorIndex; bool released; bool locked; MBox(this.colorIndex, [this.released = false, this.locked = true]); }
 
 class Basket {
   final int colorIndex; int filled, col, row; double slideY;
@@ -91,11 +99,8 @@ _L _calcLayout(double w, double h, int nBoxes, int nBaskets) {
   final trackW = mR * 3.2;
   const gap = 4.0;
 
-  // 바구니 그리드 열 수 (화면 밖 확장 허용)
-  int gridCols = 4;
-  for (int c = 4; c <= 6; c++) {
-    if ((nBaskets / c).ceil() <= 12) { gridCols = c; break; }
-  }
+  // 바구니 그리드 4열 고정
+  const int gridCols = 4;
 
   // ── 하단 고정: 바구니 5줄 ──
   final basketAreaH = _maxBasketRows * bktH + (_maxBasketRows - 1) * gap;
@@ -183,35 +188,93 @@ class _MarbleSortScreenState extends State<MarbleSortScreen> {
   @override void dispose() { loop?.cancel(); super.dispose(); }
 
   int _gridColsFor(int totalBaskets) {
-    for (int c = 4; c <= 6; c++) { if ((totalBaskets / c).ceil() <= 12) return c; }
-    return 6;
+    return 4; // 하단 바구니 4열 고정
   }
 
   void _start() {
     final r = Random();
     // 박스 수: 15~36 균등 랜덤
     final nBoxes = 15 + r.nextInt(22); // 15~36
-    // 색상 수: 박스를 균등 배분할 수 있도록 (3~12색)
     final nCol = min(max(nBoxes ~/ 3, 3), _colors.length);
-    // 색상별 박스 수 배분
     final perColor = List.filled(nCol, nBoxes ~/ nCol);
     for (int i = 0; i < nBoxes % nCol; i++) perColor[i]++;
 
+    // 1) 박스 생성 및 셔플
     boxes = <MBox>[];
     for (int c = 0; c < nCol; c++) {
       for (int j = 0; j < perColor[c]; j++) boxes.add(MBox(c));
     }
     boxes.shuffle(r);
 
-    // 바구니: 색상당 (박스수 × 9구슬) / 3칸 = 박스수 × 3
-    final raw = <Basket>[];
-    for (int c = 0; c < nCol; c++) {
-      for (int j = 0; j < perColor[c] * 3; j++) raw.add(Basket(c, 0, 0));
+    // 2) 박스 잠금 설정 (화면상 맨 아래 줄 = topRow 0)
+    final bCols = min(max(nBoxes, 1), 6);
+    final bRows = (nBoxes / bCols).ceil();
+    for (int i = 0; i < boxes.length; i++) {
+      final topRow = i ~/ bCols;
+      // 화면상 row = bRows-1-topRow (아래부터 채움)
+      // topRow 0 = 화면 맨 아래, topRow 1 = 두 번째 줄
+      if (topRow == 0) {
+        boxes[i].locked = false; // 맨 아래 줄 모두 오픈
+      } else if (topRow == 1) {
+        boxes[i].locked = r.nextBool(); // 두 번째 줄 랜덤 오픈
+      } else {
+        boxes[i].locked = true;
+      }
     }
-    final gc = _gridColsFor(raw.length);
-    raw.shuffle(r);
-    for (int i = 0; i < raw.length; i++) { raw[i].col = i % gc; raw[i].row = i ~/ gc; }
-    baskets = raw;
+
+    // 3) 박스 접근 우선순위: 열린 박스 → 잠긴 박스 순서로 색상 우선순위 산출
+    final colorPriority = <int, int>{};
+    int priority = 0;
+    // 먼저 열린 박스(아래쪽)의 색상
+    for (int row = bRows - 1; row >= 0; row--) {
+      for (int col = 0; col < bCols; col++) {
+        final idx = row * bCols + col;
+        if (idx >= boxes.length) continue;
+        final ci = boxes[idx].colorIndex;
+        if (!colorPriority.containsKey(ci)) {
+          colorPriority[ci] = priority++;
+        }
+      }
+    }
+
+    // 4) 바구니 생성: 우선순위 기반 + 행 내 셔플로 다양하게 배치
+    final gc = 4; // 4열 고정
+    final sortedColors = colorPriority.keys.toList()
+      ..sort((a, b) => colorPriority[a]!.compareTo(colorPriority[b]!));
+
+    final raw = <Basket>[];
+    for (final c in sortedColors) {
+      final cnt = perColor[c] * 3;
+      for (int j = 0; j < cnt; j++) raw.add(Basket(c, 0, 0));
+    }
+
+    // 인접 2색씩 그룹으로 묶어 셔플 (우선순위 대역 유지하면서 색 혼합)
+    int basketIdx = 0;
+    final colorGroups = <List<Basket>>[];
+    for (int ci = 0; ci < sortedColors.length; ci += 2) {
+      final group = <Basket>[];
+      for (int k = ci; k < min(ci + 2, sortedColors.length); k++) {
+        final c = sortedColors[k];
+        final cnt = perColor[c] * 3;
+        group.addAll(raw.sublist(basketIdx, basketIdx + cnt));
+        basketIdx += cnt;
+      }
+      group.shuffle(r);
+      colorGroups.add(group);
+    }
+    final mixed = colorGroups.expand((g) => g).toList();
+
+    // 행 단위로 한번 더 셔플 (같은 행 내 색상 혼합)
+    final totalBasketRows = (mixed.length / gc).ceil();
+    for (int row = 0; row < totalBasketRows; row++) {
+      final start = row * gc;
+      final end = min(start + gc, mixed.length);
+      final rowItems = mixed.sublist(start, end)..shuffle(r);
+      for (int j = 0; j < rowItems.length; j++) mixed[start + j] = rowItems[j];
+    }
+
+    for (int i = 0; i < mixed.length; i++) { mixed[i].col = i % gc; mixed[i].row = i ~/ gc; }
+    baskets = mixed;
     slots = List.filled(_nSlots, null);
     physMarbles = []; clearing = []; fx = [];
     combo = 0; comboTxt = null; comboAlpha = 0;
@@ -433,18 +496,16 @@ class _MarbleSortScreenState extends State<MarbleSortScreen> {
     const gap = 4.0;
     final cx = l.w / 2;
     final sx = cx - l.boxTotalW / 2;
-    final totalRows = (boxes.length / cols).ceil();
     final col = i % cols, topRow = i ~/ cols;
-    final row = totalRows - 1 - topRow;
     final bx = sx + col * (l.bSz + gap);
-    final by = l.boxTop + l.boxAreaH - (row + 1) * (l.bSz + gap) + gap;
+    final by = l.boxTop + l.boxAreaH - (topRow + 1) * (l.bSz + gap) + gap;
     return Rect.fromLTWH(bx, by, l.bSz, l.bSz);
   }
 
   void _tapBox(Offset p) {
     if (_l == null) return;
     for (int i = 0; i < boxes.length; i++) {
-      if (boxes[i].released) continue;
+      if (boxes[i].released || boxes[i].locked) continue;
       final r = _boxRect(i);
       if (r.contains(p)) {
         _releaseBox(i);
@@ -453,8 +514,28 @@ class _MarbleSortScreenState extends State<MarbleSortScreen> {
     }
   }
 
+  // 인접 박스 잠금 해제 (상하좌우)
+  void _unlockAdjacent(int idx) {
+    final cols = _l!.boxCols;
+    final col = idx % cols, row = idx ~/ cols;
+    final neighbors = <int>[];
+    if (col > 0) neighbors.add(idx - 1);           // 왼쪽
+    if (col < cols - 1) neighbors.add(idx + 1);     // 오른쪽
+    if (row > 0) neighbors.add(idx - cols);          // 위
+    if (row + 1 < (boxes.length / cols).ceil()) {
+      final below = idx + cols;
+      if (below < boxes.length) neighbors.add(below); // 아래
+    }
+    for (final ni in neighbors) {
+      if (ni >= 0 && ni < boxes.length && !boxes[ni].released) {
+        boxes[ni].locked = false;
+      }
+    }
+  }
+
   void _releaseBox(int boxIdx) {
     boxes[boxIdx].released = true;
+    _unlockAdjacent(boxIdx);
     final ci = boxes[boxIdx].colorIndex;
     if (_l == null) return;
     final l = _l!;
@@ -743,19 +824,31 @@ class _P extends CustomPainter {
     final r = l.drawR;
     final sp = r * 2; // 간격 없이 지름만큼 배치
     final gridW = sp * 2; // 3개: 0, sp, sp*2
-    final totalRows = (boxes.length / cols).ceil();
     for (int i = 0; i < boxes.length; i++) {
       final b = boxes[i]; final col = i % cols, topRow = i ~/ cols;
-      // 아래부터 채우기: 마지막 행 → boxBot 기준
-      final row = totalRows - 1 - topRow;
       final bx = sx + col * (l.bSz + gap);
-      final by = l.boxTop + l.boxAreaH - (row + 1) * (l.bSz + gap) + gap;
+      final by = l.boxTop + l.boxAreaH - (topRow + 1) * (l.bSz + gap) + gap;
       final clr = _colors[b.colorIndex % _colors.length];
       final rr = RRect.fromRectAndRadius(Rect.fromLTWH(bx, by, l.bSz, l.bSz), const Radius.circular(6));
       if (b.released) {
         canvas.drawRRect(rr, Paint()..color = Colors.white.withValues(alpha: 0.03));
         canvas.drawRRect(rr, Paint()..color = Colors.white.withValues(alpha: 0.08)..style = PaintingStyle.stroke..strokeWidth = 1);
+      } else if (b.locked) {
+        // 잠긴 박스: 어두운 뚜껑
+        canvas.drawRRect(rr, Paint()..color = const Color(0xFF2A2A40));
+        canvas.drawRRect(rr, Paint()..color = Colors.white.withValues(alpha: 0.15)..style = PaintingStyle.stroke..strokeWidth = 1.5);
+        // 자물쇠 아이콘
+        final lcx = bx + l.bSz / 2, lcy = by + l.bSz / 2;
+        final ls = l.bSz * 0.18;
+        final lockBody = RRect.fromRectAndRadius(
+          Rect.fromCenter(center: Offset(lcx, lcy + ls * 0.2), width: ls * 1.4, height: ls * 1.1),
+          Radius.circular(ls * 0.15));
+        canvas.drawRRect(lockBody, Paint()..color = Colors.white.withValues(alpha: 0.3));
+        final arc = Path()
+          ..addArc(Rect.fromCenter(center: Offset(lcx, lcy - ls * 0.3), width: ls * 0.9, height: ls * 0.9), pi, pi);
+        canvas.drawPath(arc, Paint()..color = Colors.white.withValues(alpha: 0.3)..style = PaintingStyle.stroke..strokeWidth = 2);
       } else {
+        // 열린 박스: 구슬 보임
         canvas.drawRRect(rr, Paint()..color = clr.withValues(alpha: 0.25));
         canvas.drawRRect(rr, Paint()..color = clr.withValues(alpha: 0.7)..style = PaintingStyle.stroke..strokeWidth = 1.5);
         final ox = bx + (l.bSz - gridW) / 2, oy = by + (l.bSz - gridW) / 2;
@@ -854,8 +947,8 @@ class _P extends CustomPainter {
       final by = l.basketTop + b.row * (l.bktH + gap) + b.slideY * (l.bktH + gap);
       final clr = _colors[b.colorIndex % _colors.length];
       final rect = RRect.fromRectAndRadius(Rect.fromLTWH(bx, by, bw, l.bktH), const Radius.circular(5));
-      canvas.drawRRect(rect, Paint()..color = clr.withValues(alpha: 0.25));
-      canvas.drawRRect(rect, Paint()..color = clr.withValues(alpha: 0.7)..style = PaintingStyle.stroke..strokeWidth = 2);
+      canvas.drawRRect(rect, Paint()..color = clr.withValues(alpha: 0.45));
+      canvas.drawRRect(rect, Paint()..color = clr.withValues(alpha: 0.9)..style = PaintingStyle.stroke..strokeWidth = 2.5);
       final r = l.drawR;
       final msp = r * 2.2;
       final mgw = msp * 2;
@@ -864,8 +957,8 @@ class _P extends CustomPainter {
         final mx = mox + k * msp, my = by + l.bktH / 2;
         if (k < b.filled) { _marble(canvas, mx, my, r, b.colorIndex); }
         else {
-          canvas.drawCircle(Offset(mx, my), r, Paint()..color = clr.withValues(alpha: 0.12));
-          canvas.drawCircle(Offset(mx, my), r, Paint()..color = clr.withValues(alpha: 0.35)..style = PaintingStyle.stroke..strokeWidth = 1);
+          canvas.drawCircle(Offset(mx, my), r, Paint()..color = clr.withValues(alpha: 0.2));
+          canvas.drawCircle(Offset(mx, my), r, Paint()..color = clr.withValues(alpha: 0.5)..style = PaintingStyle.stroke..strokeWidth = 1);
         }
       }
     }
