@@ -211,20 +211,31 @@ class _MarbleSortScreenState extends State<MarbleSortScreen> {
     }
     boxes.shuffle(r);
 
-    // 10% 이하 박스에 멀티플라이어(2~5) 지정
-    final multiCount = max(1, (nBoxes * 0.1).floor());
-    final multiIndices = List.generate(nBoxes, (i) => i)..shuffle(r);
-    for (int i = 0; i < multiCount; i++) {
-      boxes[multiIndices[i]].multiplier = 2 + r.nextInt(4); // 2~5
-    }
-
     // 2) 박스 잠금 설정 (화면상 맨 아래 줄 = topRow 0)
     final bCols = min(max(nBoxes, 1), 6);
     final bRows = (nBoxes / bCols).ceil();
+
+    // 10% 이하 박스에 멀티플라이어(2~5) 지정 — 윗줄(row>=2)에만 배치
+    final multiCount = max(1, (nBoxes * 0.1).floor());
+    final upperIndices = <int>[];
+    for (int i = 0; i < boxes.length; i++) {
+      if (i ~/ bCols >= 2) upperIndices.add(i); // topRow 2 이상만
+    }
+    if (upperIndices.isEmpty) {
+      // 줄이 2줄 이하면 topRow 1에 배치
+      for (int i = 0; i < boxes.length; i++) {
+        if (i ~/ bCols >= 1) upperIndices.add(i);
+      }
+    }
+    upperIndices.shuffle(r);
+    for (int i = 0; i < min(multiCount, upperIndices.length); i++) {
+      // 가중치: x2(40%), x3(30%), x4(20%), x5(10%)
+      final roll = r.nextInt(10);
+      boxes[upperIndices[i]].multiplier = roll < 4 ? 2 : roll < 7 ? 3 : roll < 9 ? 4 : 5;
+    }
+
     for (int i = 0; i < boxes.length; i++) {
       final topRow = i ~/ bCols;
-      // 화면상 row = bRows-1-topRow (아래부터 채움)
-      // topRow 0 = 화면 맨 아래, topRow 1 = 두 번째 줄
       if (topRow == 0) {
         boxes[i].locked = false; // 맨 아래 줄 모두 오픈
       } else if (topRow == 1) {
@@ -270,9 +281,22 @@ class _MarbleSortScreenState extends State<MarbleSortScreen> {
       basketsByColor[ci] = List.generate(cnt, (_) => Basket(ci, 0, 0));
     }
 
-    // 라운드 로빈 방식으로 흩어서 배치: 각 색에서 1개씩 번갈아 넣기
+    // 고배수 색상 파악 (멀티플라이어 박스가 있는 색)
+    final highMultiColors = <int>{};
+    for (final b in boxes) {
+      if (b.multiplier >= 3) highMultiColors.add(b.colorIndex);
+    }
+
+    // 라운드 로빈 방식으로 흩어서 배치 — 고배수 색은 큐 앞에 배치
     final mixed = <Basket>[];
-    final queues = colorOrder.map((ci) => List<Basket>.from(basketsByColor[ci]!)).toList();
+    // 고배수 색 큐를 앞에, 일반 색 큐를 뒤에 정렬
+    final highQueues = <List<Basket>>[];
+    final normalQueues = <List<Basket>>[];
+    for (final ci in colorOrder) {
+      final q = List<Basket>.from(basketsByColor[ci]!);
+      if (highMultiColors.contains(ci)) { highQueues.add(q); } else { normalQueues.add(q); }
+    }
+    final queues = [...highQueues, ...normalQueues];
     while (queues.any((q) => q.isNotEmpty)) {
       for (final q in queues) {
         if (q.isNotEmpty) mixed.add(q.removeAt(0));
@@ -364,7 +388,7 @@ class _MarbleSortScreenState extends State<MarbleSortScreen> {
     final cHalfW = l.containerW / 2;
     final eHalfW = l.beltEntryW / 2;
     final mR = l.mR;
-    const gravity = 0.35, bounce = 0.6, friction = 0.97;
+    const gravity = 0.35, bounce = 0.8, friction = 0.97;
 
     final active = <_PhysMarble>[];
     for (final m in physMarbles) {
@@ -402,8 +426,8 @@ class _MarbleSortScreenState extends State<MarbleSortScreen> {
       if (m.y < fTop + mR + 3) { m.y = fTop + mR + 3; m.vy = m.vy.abs() * bounce * 0.3; }
 
       // 속도 제한
-      if (m.vx.abs() > 8) m.vx = 8 * m.vx.sign;
-      if (m.vy.abs() > 12) m.vy = 12 * m.vy.sign;
+      if (m.vx.abs() > 12) m.vx = 12 * m.vx.sign;
+      if (m.vy.abs() > 16) m.vy = 16 * m.vy.sign;
 
       // 깔대기 탈출 → 빈 홈이 출구 아래를 지날 때만 이동
       if (m.y >= fBot) {
@@ -419,7 +443,8 @@ class _MarbleSortScreenState extends State<MarbleSortScreen> {
       }
     }
 
-    // 구슬 간 충돌 (탄성)
+    // 구슬 간 충돌 (탄성) — 다른 색은 50% 확률로 통과
+    final rng = Random();
     for (int i = 0; i < active.length; i++) {
       for (int j = i + 1; j < active.length; j++) {
         final a = active[i], b = active[j];
@@ -427,6 +452,13 @@ class _MarbleSortScreenState extends State<MarbleSortScreen> {
         final dist = sqrt(dx * dx + dy * dy);
         final minDist = mR * 2.1;
         if (dist < minDist && dist > 0.1) {
+          // 다른 색 구슬은 50% 확률로 통과 (겹침만 해소)
+          if (a.colorIndex != b.colorIndex && rng.nextDouble() < 0.5) {
+            final nx = dx / dist, ny = dy / dist, overlap = minDist - dist;
+            a.x -= nx * overlap / 2; a.y -= ny * overlap / 2;
+            b.x += nx * overlap / 2; b.y += ny * overlap / 2;
+            continue;
+          }
           final nx = dx / dist, ny = dy / dist, overlap = minDist - dist;
           a.x -= nx * overlap / 2; a.y -= ny * overlap / 2;
           b.x += nx * overlap / 2; b.y += ny * overlap / 2;
@@ -568,8 +600,8 @@ class _MarbleSortScreenState extends State<MarbleSortScreen> {
     for (int j = 0; j < mc; j++) {
       final px = cx + (rng.nextDouble() - 0.5) * l.containerW * 0.7;
       final py = by + rng.nextDouble() * l.mR * 3;
-      final vx = (rng.nextDouble() - 0.5) * 8;
-      final vy = rng.nextDouble() * 2;
+      final vx = (rng.nextDouble() - 0.5) * 14;
+      final vy = rng.nextDouble() * 4;
       physMarbles.add(_PhysMarble(ci, px, py, vx, vy));
     }
   }
@@ -757,12 +789,6 @@ class _P extends CustomPainter {
     canvas.drawRect(Rect.fromLTWH(0, 0, l.w, l.barH), Paint()..color = const Color(0xFF0F0F23));
     _txt(canvas, 'Lv.$level', 48, l.barH / 2, const TextStyle(color: Colors.amber, fontSize: 14, fontWeight: FontWeight.bold));
     _txt(canvas, '$score', l.w / 2, l.barH / 2, const TextStyle(color: Colors.white, fontSize: 17, fontWeight: FontWeight.bold), c: true);
-    final p = Paint()..color = Colors.red;
-    for (int i = 0; i < lives; i++) {
-      final x = l.w - 28 - i * 22.0, y = l.barH / 2;
-      canvas.drawCircle(Offset(x - 3, y - 2), 5, p); canvas.drawCircle(Offset(x + 3, y - 2), 5, p);
-      canvas.drawPath(Path()..moveTo(x - 8, y)..lineTo(x, y + 8)..lineTo(x + 8, y)..close(), p);
-    }
   }
 
   // ── 깔대기 컨테이너 (박스 감싸기 + 구슬 낙하 공간) ──
