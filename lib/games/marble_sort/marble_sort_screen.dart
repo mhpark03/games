@@ -443,22 +443,15 @@ class _MarbleSortScreenState extends State<MarbleSortScreen> {
       }
     }
 
-    // 구슬 간 충돌 (탄성) — 다른 색은 50% 확률로 통과
-    final rng = Random();
+    // 구슬 간 충돌 (탄성) — 다른 색은 충돌 거리를 줄여 대부분 통과
     for (int i = 0; i < active.length; i++) {
       for (int j = i + 1; j < active.length; j++) {
         final a = active[i], b = active[j];
         final dx = b.x - a.x, dy = b.y - a.y;
         final dist = sqrt(dx * dx + dy * dy);
-        final minDist = mR * 2.1;
+        // 같은 색: 정상 충돌, 다른 색: 거의 겹쳐야 반응 (반지름 60%)
+        final minDist = a.colorIndex == b.colorIndex ? mR * 2.1 : mR * 0.6;
         if (dist < minDist && dist > 0.1) {
-          // 다른 색 구슬은 50% 확률로 통과 (겹침만 해소)
-          if (a.colorIndex != b.colorIndex && rng.nextDouble() < 0.5) {
-            final nx = dx / dist, ny = dy / dist, overlap = minDist - dist;
-            a.x -= nx * overlap / 2; a.y -= ny * overlap / 2;
-            b.x += nx * overlap / 2; b.y += ny * overlap / 2;
-            continue;
-          }
           final nx = dx / dist, ny = dy / dist, overlap = minDist - dist;
           a.x -= nx * overlap / 2; a.y -= ny * overlap / 2;
           b.x += nx * overlap / 2; b.y += ny * overlap / 2;
