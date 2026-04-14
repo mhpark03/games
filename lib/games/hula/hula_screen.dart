@@ -3872,25 +3872,31 @@ class _HulaScreenState extends State<HulaScreen> with TickerProviderStateMixin {
         color: Colors.white,
         borderRadius: BorderRadius.circular(small ? 6 : 8),
       ),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Text(
-            card.suitSymbol,
-            style: TextStyle(
-              fontSize: fontSize + 4,
-              color: card.suitColor,
-            ),
+      child: FittedBox(
+        fit: BoxFit.scaleDown,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 2),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Text(
+                card.suitSymbol,
+                style: TextStyle(
+                  fontSize: fontSize + 4,
+                  color: card.suitColor,
+                ),
+              ),
+              Text(
+                card.rankString,
+                style: TextStyle(
+                  fontSize: fontSize,
+                  fontWeight: FontWeight.bold,
+                  color: card.suitColor,
+                ),
+              ),
+            ],
           ),
-          Text(
-            card.rankString,
-            style: TextStyle(
-              fontSize: fontSize,
-              fontWeight: FontWeight.bold,
-              color: card.suitColor,
-            ),
-          ),
-        ],
+        ),
       ),
     );
   }
@@ -4143,27 +4149,33 @@ class _HulaScreenState extends State<HulaScreen> with TickerProviderStateMixin {
               ),
             ],
           ),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              if (isRecommended)
-                Icon(Icons.lightbulb, color: hintColor, size: 12),
-              Text(
-                card.suitSymbol,
-                style: TextStyle(
-                  fontSize: symbolSize,
-                  color: card.suitColor,
-                ),
+          child: FittedBox(
+            fit: BoxFit.scaleDown,
+            child: Padding(
+              padding: const EdgeInsets.symmetric(vertical: 2),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  if (isRecommended)
+                    Icon(Icons.lightbulb, color: hintColor, size: 12),
+                  Text(
+                    card.suitSymbol,
+                    style: TextStyle(
+                      fontSize: symbolSize,
+                      color: card.suitColor,
+                    ),
+                  ),
+                  Text(
+                    card.rankString,
+                    style: TextStyle(
+                      fontSize: rankSize,
+                      fontWeight: FontWeight.bold,
+                      color: card.suitColor,
+                    ),
+                  ),
+                ],
               ),
-              Text(
-                card.rankString,
-                style: TextStyle(
-                  fontSize: rankSize,
-                  fontWeight: FontWeight.bold,
-                  color: card.suitColor,
-                ),
-              ),
-            ],
+            ),
           ),
         ),
       );

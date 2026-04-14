@@ -1589,61 +1589,67 @@ class _OneCardScreenState extends State<OneCardScreen> with TickerProviderStateM
         ],
       ),
       child: card.isJoker
-          ? Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(
-                    Icons.star,
-                    color: card.isBlackJoker ? Colors.grey.shade800 : Colors.red,
-                    size: 16,
-                  ),
-                  Text(
-                    card.isBlackJoker ? 'B' : 'C',
-                    style: TextStyle(
-                      color: card.isBlackJoker ? Colors.grey.shade800 : Colors.red,
-                      fontSize: 8,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ],
+          ? Container(
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(6),
+                gradient: const LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [Color(0xFF7B1FA2), Color(0xFFAB47BC)],
+                ),
               ),
-            )
-          : Stack(
-              children: [
-                Positioned(
-                  left: 3,
-                  top: 2,
+              child: Center(
+                child: FittedBox(
+                  fit: BoxFit.scaleDown,
                   child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    mainAxisSize: MainAxisSize.min,
                     children: [
+                      const Icon(Icons.auto_awesome, color: Colors.yellowAccent, size: 18),
                       Text(
-                        card.rankString,
+                        'JK',
                         style: TextStyle(
-                          color: card.suitColor,
-                          fontSize: 10,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      Text(
-                        card.suitSymbol,
-                        style: TextStyle(
-                          color: card.suitColor,
+                          color: Colors.white,
                           fontSize: 8,
+                          fontWeight: FontWeight.bold,
+                          shadows: const [Shadow(color: Colors.black54, blurRadius: 2)],
                         ),
                       ),
                     ],
                   ),
                 ),
-                Center(
-                  child: Text(
-                    card.suitSymbol,
-                    style: TextStyle(
-                      color: card.suitColor,
-                      fontSize: 20,
+              ),
+            )
+          : Padding(
+              padding: const EdgeInsets.all(2),
+              child: Column(
+                children: [
+                  Align(
+                    alignment: Alignment.topLeft,
+                    child: Text(
+                      '${card.rankString}\n${card.suitSymbol}',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        fontSize: 8,
+                        fontWeight: FontWeight.bold,
+                        color: card.suitColor,
+                        height: 1.0,
+                      ),
                     ),
                   ),
-                ),
-              ],
+                  Expanded(
+                    child: Center(
+                      child: Text(
+                        card.suitSymbol,
+                        style: TextStyle(
+                          color: card.suitColor,
+                          fontSize: 20,
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
             ),
     );
   }
@@ -2089,98 +2095,82 @@ class _OneCardScreenState extends State<OneCardScreen> with TickerProviderStateM
         ],
       ),
       child: card.isJoker
-          ? Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(
-                    Icons.star,
-                    color: card.isBlackJoker ? Colors.grey.shade800 : Colors.red,
-                    size: 20 * size,
-                  ),
-                  Text(
-                    'JOKER',
-                    style: TextStyle(
-                      color: card.isBlackJoker ? Colors.grey.shade800 : Colors.red,
-                      fontSize: 8 * size,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  Text(
-                    card.isBlackJoker ? 'games.onecard.blackJoker'.tr() : 'games.onecard.colorJoker'.tr(),
-                    style: TextStyle(
-                      color: card.isBlackJoker ? Colors.grey.shade600 : Colors.red.shade400,
-                      fontSize: 6 * size,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ],
+          ? Container(
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(8 * size),
+                gradient: const LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [Color(0xFF7B1FA2), Color(0xFFAB47BC)],
+                ),
               ),
-            )
-          : Stack(
-              children: [
-                // 좌상단
-                Positioned(
-                  left: 4 * size,
-                  top: 4 * size,
+              child: Center(
+                child: FittedBox(
+                  fit: BoxFit.scaleDown,
                   child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    mainAxisSize: MainAxisSize.min,
                     children: [
+                      Icon(
+                        Icons.auto_awesome,
+                        color: Colors.yellowAccent,
+                        size: 28 * size,
+                      ),
+                      const SizedBox(height: 2),
                       Text(
-                        card.rankString,
+                        'JOKER',
+                        softWrap: false,
                         style: TextStyle(
-                          color: card.suitColor,
-                          fontSize: 14 * size,
+                          color: Colors.white,
+                          fontSize: 11 * size,
                           fontWeight: FontWeight.bold,
+                          letterSpacing: 1.2,
+                          shadows: const [Shadow(color: Colors.black54, blurRadius: 2)],
                         ),
                       ),
                       Text(
-                        card.suitSymbol,
+                        card.isBlackJoker ? 'games.onecard.blackJoker'.tr() : 'games.onecard.colorJoker'.tr(),
                         style: TextStyle(
-                          color: card.suitColor,
-                          fontSize: 12 * size,
+                          color: Colors.white70,
+                          fontSize: 6 * size,
+                          fontWeight: FontWeight.bold,
                         ),
                       ),
                     ],
                   ),
                 ),
-                // 중앙
-                Center(
-                  child: Text(
-                    card.suitSymbol,
-                    style: TextStyle(
-                      color: card.suitColor,
-                      fontSize: 28 * size,
+              ),
+            )
+          : Padding(
+              padding: EdgeInsets.all(2 * size),
+              child: Column(
+                children: [
+                  Align(
+                    alignment: Alignment.topLeft,
+                    child: Text(
+                      '${card.rankString}\n${card.suitSymbol}',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        fontSize: height * 0.12,
+                        fontWeight: FontWeight.bold,
+                        color: card.suitColor,
+                        height: 1.0,
+                      ),
                     ),
                   ),
-                ),
-                // 우하단 (뒤집힌)
-                Positioned(
-                  right: 4 * size,
-                  bottom: 4 * size,
-                  child: Transform.rotate(
-                    angle: 3.14159,
-                    child: Column(
-                      children: [
-                        Text(
-                          card.rankString,
-                          style: TextStyle(
-                            color: card.suitColor,
-                            fontSize: 14 * size,
-                            fontWeight: FontWeight.bold,
-                          ),
+                  Expanded(
+                    child: Center(
+                      child: Text(
+                        card.suitSymbol,
+                        style: TextStyle(
+                          color: card.suitColor,
+                          fontSize: height * 0.30,
                         ),
-                        Text(
-                          card.suitSymbol,
-                          style: TextStyle(
-                            color: card.suitColor,
-                            fontSize: 12 * size,
-                          ),
-                        ),
-                      ],
+                      ),
                     ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
     );
   }
